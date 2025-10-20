@@ -1,7 +1,11 @@
 ﻿// webapp/script.js
 (function () {
     const tg = window.Telegram.WebApp;
-    const API_BASE_URL = "http://91.107.131.254:8000"; // ⚠️ این باید IP سرور تو و پورت 8000 باشد
+    
+    // --- <<< شروع تغییر: استفاده از آدرس تونل امن >>> ---
+    const API_BASE_URL = "https://purchases-mercy-billy-jeffrey.trycloudflare.com"; // <-- آدرس جدید Cloudflare
+    // --- <<< پایان تغییر >>> ---
+
     const loader = document.getElementById('loader');
     const appContainer = document.getElementById('app-container');
 
@@ -117,6 +121,9 @@
         const progressBar = document.getElementById('progress-bar');
         const percentage = parseFloat(data.level_progress_bar.match(/(\d+(\.\d+)?)%/)?.[1] || 0);
         progressBar.style.width = `${percentage}%`;
+
+        // دکمه‌ها را از حالت لودینگ خارج کن
+        document.querySelectorAll('.action-btn').forEach(btn => btn.classList.remove('loading'));
 
         hideLoader();
     }

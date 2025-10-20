@@ -2,8 +2,8 @@
 (function () {
     const tg = window.Telegram.WebApp;
     
-    // --- <<< شروع تغییر: استفاده از آدرس تونل امن >>> ---
-    const API_BASE_URL = "https://purchases-mercy-billy-jeffrey.trycloudflare.com"; // <-- آدرس جدید Cloudflare
+    // --- <<< شروع تغییر: استفاده از آدرس تونل امن جدید >>> ---
+    const API_BASE_URL = "https://payment-crm-george-reliable.trycloudflare.com"; // <-- آدرس جدید Cloudflare
     // --- <<< پایان تغییر >>> ---
 
     const loader = document.getElementById('loader');

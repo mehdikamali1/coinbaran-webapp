@@ -3,7 +3,7 @@
     const tg = window.Telegram.WebApp;
     
     // --- <<< شروع تغییر: استفاده از آدرس تونل امن جدید >>> ---
-    const API_BASE_URL = "https://istanbul-arrangement-gcc-sense.trycloudflare.com"; // <-- آدرس جدید Cloudflare
+    const API_BASE_URL = "https://becoming-nowhere-detail-isolation.trycloudflare.com"; // <-- آدرس جدید Cloudflare
     // --- <<< پایان تغییر >>> ---
 
     const loader = document.getElementById('loader');

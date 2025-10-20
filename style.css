@@ -1,0 +1,230 @@
+/* webapp/style.css */
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700&display=swap');
+
+:root {
+    --bg-color: var(--tg-theme-bg-color, #18222d);
+    --text-color: var(--tg-theme-text-color, #ffffff);
+    --hint-color: var(--tg-theme-hint-color, #b1b8c0);
+    --button-color: var(--tg-theme-button-color, #2ea6ff);
+    --button-text-color: var(--tg-theme-button-text-color, #ffffff);
+    --secondary-bg-color: var(--tg-theme-secondary-bg-color, #232e3c);
+    
+    --color-success: #28a745;
+    --color-warning: #ffc107;
+    --color-danger: #dc3545;
+    --color-xp: #fbc02d;
+    --color-progress-bar: #007bff;
+    
+    --border-radius: 12px;
+}
+
+body {
+    font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 15px;
+    overscroll-behavior-y: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+#app-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.hidden { display: none; }
+.loading {
+    color: transparent !important;
+    background: linear-gradient(100deg, var(--secondary-bg-color) 40%, #344152 50%, var(--secondary-bg-color) 60%) var(--secondary-bg-color);
+    background-size: 200% 100%;
+    animation: 1.5s loading-shimmer infinite linear;
+    border-radius: 4px;
+    display: inline-block;
+    min-width: 60px;
+    min-height: 1em;
+}
+
+@keyframes loading-shimmer {
+    0% { background-position: 100% 0; }
+    100% { background-position: -100% 0; }
+}
+
+/* --- Loader --- */
+#loader {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 80vh;
+    color: var(--hint-color);
+}
+.spinner {
+    border: 4px solid var(--secondary-bg-color);
+    border-top: 4px solid var(--button-color);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 10px;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* --- Header --- */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--secondary-bg-color);
+}
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.user-icon {
+    font-size: 24px;
+    line-height: 1;
+}
+.user-info h1 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--text-color);
+}
+#welcome-name { min-width: 120px; }
+
+.kyc-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 6px 10px;
+    border-radius: 20px;
+}
+.kyc-status.approved { background-color: rgba(40, 167, 69, 0.15); color: var(--color-success); }
+.kyc-status.pending { background-color: rgba(255, 193, 7, 0.15); color: var(--color-warning); }
+.kyc-status.rejected { background-color: rgba(220, 53, 69, 0.15); color: var(--color-danger); }
+.kyc-status.not_submitted { background-color: var(--secondary-bg-color); color: var(--hint-color); }
+.kyc-status i { font-size: 0.8rem; }
+
+/* --- Balance Card --- */
+.balance-card {
+    background-color: var(--secondary-bg-color);
+    border-radius: var(--border-radius);
+    padding: 20px;
+}
+.balance-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.balance-row.xp {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid var(--bg-color);
+}
+.balance-label {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--hint-color);
+}
+.balance-row.xp .balance-label {
+    color: var(--color-xp);
+}
+.balance-amount {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+    direction: ltr;
+}
+#toman-balance { min-width: 100px; }
+#xp-balance { min-width: 80px; color: var(--color-xp); }
+
+/* --- Level Card --- */
+.level-card {
+    background-color: var(--secondary-bg-color);
+    border-radius: var(--border-radius);
+    padding: 15px 20px;
+}
+.level-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 1rem;
+    font-weight: 500;
+}
+.level-header #level-name {
+    font-weight: 700;
+    font-size: 1.1rem;
+    min-width: 100px;
+}
+.level-header span:last-child {
+    font-size: 0.9rem;
+    color: var(--hint-color);
+}
+.progress-bar-container {
+    width: 100%;
+    background-color: var(--bg-color);
+    border-radius: 20px;
+    height: 8px;
+    margin-top: 12px;
+    overflow: hidden;
+}
+.progress-bar {
+    height: 100%;
+    width: 0%;
+    background-color: var(--color-progress-bar);
+    border-radius: 20px;
+    transition: width 0.5s ease-out;
+}
+.progress-text {
+    display: block;
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--hint-color);
+    margin-top: 8px;
+    min-height: 1em;
+}
+
+/* --- Action Buttons --- */
+.action-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+}
+.action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--secondary-bg-color);
+    color: var(--text-color);
+    border: none;
+    border-radius: var(--border-radius);
+    padding: 15px 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    font-family: 'Vazirmatn', sans-serif;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    height: 80px;
+}
+.action-btn i {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+}
+.action-btn.deposit i { color: var(--color-success); }
+.action-btn.withdraw i { color: var(--color-danger); }
+.action-btn.trade i { color: var(--color-progress-bar); }
+
+.action-btn:active {
+    background-color: #344152; /* Darker secondary bg */
+}

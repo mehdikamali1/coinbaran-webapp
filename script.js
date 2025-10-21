@@ -3,7 +3,7 @@
     const tg = window.Telegram.WebApp;
     
     // --- <<< شروع تغییر: استفاده از آدرس تونل امن جدید >>> ---
-    const API_BASE_URL = "https://becoming-nowhere-detail-isolation.trycloudflare.com"; // <-- آدرس جدید Cloudflare
+    const API_BASE_URL = "https://functioning-tale-print-laughing.trycloudflare.com"; // <-- آدرس جدید Cloudflare
     // --- <<< پایان تغییر >>> ---
 
     const loader = document.getElementById('loader');
@@ -27,15 +27,15 @@
     }
 
     async function fetchUserData() {
+        // 1. اطمینان از اینکه initData وجود دارد
         if (!tg.initData) {
             console.error("Telegram initData not available.");
-            // این برای تست مستقیم در مرورگر است
-            // return spoofUserData(); 
             document.getElementById('loader').innerHTML = '<p style="color: red;">خطا: لطفاً این صفحه را فقط از داخل ربات تلگرام باز کنید.</p>';
             return;
         }
 
         try {
+            // 2. ارسال درخواست به سرور API
             const response = await fetch(`${API_BASE_URL}/webapp/get_user_data`, {
                 method: 'POST',
                 headers: {
@@ -44,22 +44,35 @@
                 body: JSON.stringify({ initData: tg.initData })
             });
 
+            // 3. مدیریت خطاهای شبکه یا سرور
             if (!response.ok) {
-                const errorData = await response.json();
+                const errorData = await response.json().catch(() => ({"detail": "پاسخ ناشناخته از سرور"}));
+                // اگر سرور (FastAPI) خطای 401 (Unauthorized) بدهد، یعنی اعتبارسنجی شکست خورده
+                if (response.status === 401) {
+                    console.error("Validation Error:", errorData.detail);
+                    throw new Error("خطای اعتبارسنجی: امضا مطابقت ندارد.");
+                }
                 throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
             }
 
+            // 4. مدیریت پاسخ موفق
             const data = await response.json();
             
             if (data.status === "success") {
-                updateDashboard(data);
+                updateDashboard(data); // <-- فراخوانی تابع نمایش اطلاعات
             } else {
-                throw new Error(data.message || "Failed to load user data.");
+                throw new Error(data.message || "سرور موفقیت‌آمیز نبود.");
             }
 
         } catch (error) {
+            // 5. مدیریت خطای نهایی (مثل قطع بودن تونل)
             console.error("Error fetching user data:", error);
-            document.getElementById('loader').innerHTML = `<p style="color: red;">خطا در بارگذاری اطلاعات: ${error.message}</p>`;
+            // خطای Load failed معمولاً یعنی تونل قطع است
+            if (error.message.includes("Failed to fetch")) {
+                 document.getElementById('loader').innerHTML = `<p style="color: red;">خطا در بارگذاری (Load failed):<br>اتصال به سرور API برقرار نشد. لطفاً مطمئن شوید تونل Cloudflare فعال است.</p>`;
+            } else {
+                 document.getElementById('loader').innerHTML = `<p style="color: red;">خطا در بارگذاری اطلاعات: ${error.message}</p>`;
+            }
         }
     }
 
@@ -130,7 +143,6 @@
 
     // --- Event Listeners for Buttons ---
     document.getElementById('btn-deposit').addEventListener('click', () => {
-        // این دستور یک "رویداد" به ربات پایتون می‌فرستد
         tg.sendData("action_deposit");
         tg.close();
     });

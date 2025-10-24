@@ -2,7 +2,7 @@
     const tg = window.Telegram.WebApp;
     
     // --- <<< شروع تغییر: استفاده از آدرس تونل امن جدید >>> ---
-    const API_BASE_URL = "https://mine-maker-clinton-face.trycloudflare.com"; // <-- آدرس جدید از لاگ شما
+    const API_BASE_URL = "https://emissions-chancellor-boolean-boc.trycloudflare.com"; // <-- آدرس جدید از لاگ شما
     // --- <<< پایان تغییر >>> ---
 
     const loader = document.getElementById('loader');

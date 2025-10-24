@@ -1,9 +1,8 @@
-﻿// webapp/script.js
-(function () {
+﻿(function () {
     const tg = window.Telegram.WebApp;
     
     // --- <<< شروع تغییر: استفاده از آدرس تونل امن جدید >>> ---
-    const API_BASE_URL = "https://precious-express-comparative-connected.trycloudflare.com"; // <-- آدرس جدید Cloudflare
+    const API_BASE_URL = "https://mine-maker-clinton-face.trycloudflare.com"; // <-- آدرس جدید از لاگ شما
     // --- <<< پایان تغییر >>> ---
 
     const loader = document.getElementById('loader');

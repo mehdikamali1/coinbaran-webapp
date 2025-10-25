@@ -1,7 +1,7 @@
 ﻿(function () {
     const tg = window.Telegram.WebApp;
     
-    const API_BASE_URL = " https://sends-educated-index-finds.trycloudflare.com"; // <-- این آدرس تونل شماست
+    const API_BASE_URL = " https://relations-sea-exemption-sublime.trycloudflare.com"; // <-- آدرس تونل شما
 
     const loader = document.getElementById('loader');
     const appContainer = document.getElementById('app-container');
@@ -23,8 +23,8 @@
         tg.setBackgroundColor('bg_color');
     }
 
+    // --- <<< شروع بازنویسی کامل تابع fetchUserData >>> ---
     async function fetchUserData() {
-        // 1. اطمینان از اینکه initData وجود دارد
         if (!tg.initData) {
             console.error("Telegram initData not available.");
             document.getElementById('loader').innerHTML = '<p style="color: red;">خطا: لطفاً این صفحه را فقط از داخل ربات تلگرام باز کنید.</p>';
@@ -32,49 +32,50 @@
         }
 
         try {
-            // 2. ارسال همزمان دو درخواست (یکی برای داشبورد، یکی برای گیمیفیکیشن)
-            const [userDataResponse, gamificationDataResponse] = await Promise.all([
-                fetch(`${API_BASE_URL}/webapp/get_user_data`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ initData: tg.initData })
-                }),
-                fetch(`${API_BASE_URL}/webapp/get_gamification_data`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ initData: tg.initData })
-                })
-            ]);
+            // --- مرحله 1: دریافت اطلاعات اصلی کاربر ---
+            const userDataResponse = await fetch(`${API_BASE_URL}/webapp/get_user_data`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ initData: tg.initData })
+            });
 
-            // 3. مدیریت خطاهای شبکه یا سرور
-            if (!userDataResponse.ok || !gamificationDataResponse.ok) {
-                // بررسی خطای اعتبارسنجی (401)
-                if (userDataResponse.status === 401 || gamificationDataResponse.status === 401) {
-                    throw new Error("خطای اعتبارسنجی: امضا مطابقت ندارد.");
-                }
-                // بررسی خطاهای دیگر
-                if (!userDataResponse.ok) throw new Error(`خطای دریافت اطلاعات کاربر: ${userDataResponse.statusText}`);
-                if (!gamificationDataResponse.ok) throw new Error(`خطای دریافت اطلاعات گیمیفیکیشن: ${gamificationDataResponse.statusText}`);
+            if (!userDataResponse.ok) {
+                if (userDataResponse.status === 401) throw new Error("خطای اعتبارسنجی (401).");
+                throw new Error(`خطای سرور کاربر (${userDataResponse.status})`);
             }
-
-            // 4. مدیریت پاسخ موفق
-            const userData = await userDataResponse.json();
-            const gamificationData = await gamificationDataResponse.json();
             
+            const userData = await userDataResponse.json();
             if (userData.status === "success") {
-                updateDashboard(userData); // <-- فراخوانی تابع نمایش اطلاعات داشبورد
+                updateDashboard(userData); // اطلاعات داشبورد را بلافاصله نمایش بده
             } else {
                 throw new Error(userData.message || "خطا در دریافت اطلاعات کاربر.");
             }
-            
+
+            // --- مرحله 2: دریافت اطلاعات گیمیفیکیشن ---
+            // این درخواست *فقط* پس از موفقیت درخواست اول اجرا می‌شود
+            const gamificationDataResponse = await fetch(`${API_BASE_URL}/webapp/get_gamification_data`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ initData: tg.initData })
+            });
+
+            if (!gamificationDataResponse.ok) {
+                 throw new Error(`خطای سرور گیمیفیکیشن (${gamificationDataResponse.status})`);
+            }
+
+            const gamificationData = await gamificationDataResponse.json();
             if (gamificationData.status === "success") {
-                updateGamification(gamificationData); // <-- فراخوانی تابع جدید گیمیفیکیشن
+                updateGamification(gamificationData); // کارت‌های گیمیفیکیشن را اضافه کن
             } else {
                 throw new Error(gamificationData.message || "خطا در دریافت اطلاعات گیمیفیکیشن.");
             }
 
+            // --- مرحله 3: نمایش کامل برنامه ---
+            // لودر فقط *بعد* از بارگذاری موفق هر دو بخش پنهان می‌شود
+            hideLoader();
+
         } catch (error) {
-            // 5. مدیریت خطای نهایی (مثل قطع بودن تونل)
+            // مدیریت خطای نهایی
             console.error("Error fetching data:", error);
             if (error.message.includes("Failed to fetch")) {
                  document.getElementById('loader').innerHTML = `<p style="color: red;">خطا در بارگذاری (Load failed):<br>اتصال به سرور API برقرار نشد. لطفاً مطمئن شوید تونل Cloudflare فعال است.</p>`;
@@ -83,8 +84,11 @@
             }
         }
     }
+    // --- <<< پایان بازنویسی کامل تابع fetchUserData >>> ---
 
     function updateDashboard(data) {
+        // این تابع دیگر لودر را پنهان نمی‌کند
+        
         // Header
         document.getElementById('welcome-name').textContent = `سلام، ${data.first_name}`;
         document.getElementById('welcome-name').classList.remove('loading');
@@ -124,14 +128,8 @@
         const progressBar = document.getElementById('progress-bar');
         const percentage = parseFloat(data.level_progress_bar.match(/(\d+(\.\d+)?)%/)?.[1] || 0);
         progressBar.style.width = `${percentage}%`;
-
-        // دکمه‌ها را از حالت لودینگ خارج کن
-        document.querySelectorAll('.action-btn').forEach(btn => btn.classList.remove('loading'));
-
-        hideLoader();
     }
     
-    // --- <<< شروع تابع جدید: ساخت کارت‌های گیمیفیکیشن >>> ---
     function updateGamification(data) {
         const predictionsContainer = document.getElementById('predictions-container');
         const campaignsContainer = document.getElementById('campaigns-container');
@@ -146,7 +144,6 @@
             data.predictions.forEach(match => {
                 let optionsHtml = '';
                 match.options.forEach(opt => {
-                    // TODO: افزودن منطق ارسال پیش‌بینی با tg.sendData
                     optionsHtml += `<button class="card-btn prediction-btn" data-match-id="${match.id}" data-option-key="${opt.key}">${opt.text}</button>`;
                 });
 
@@ -192,24 +189,12 @@
             campaignsSection.classList.add('hidden');
         }
     }
-    // --- <<< پایان تابع جدید >>> ---
 
 
-    // --- Event Listeners for Buttons ---
-    document.getElementById('btn-deposit').addEventListener('click', () => {
-        tg.sendData("action_deposit");
-        tg.close();
-    });
+    // --- Event Listeners for Buttons (حذف شده‌اند چون در HTML پاک شدند) ---
+    // (اطمینان حاصل می‌کنیم که هیچ listener ای برای دکمه‌های حذف شده وجود ندارد)
+    // --- <<< پایان حذف listener ها >>> ---
 
-    document.getElementById('btn-withdraw').addEventListener('click', () => {
-        tg.sendData("action_withdraw");
-        tg.close();
-    });
-
-    document.getElementById('btn-trade').addEventListener('click', () => {
-        tg.sendData("action_trade");
-        tg.close();
-    });
 
     // --- Entry Point ---
     document.addEventListener("DOMContentLoaded", () => {

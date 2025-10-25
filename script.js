@@ -1,7 +1,7 @@
 ﻿(function () {
     const tg = window.Telegram.WebApp;
     
-    const API_BASE_URL = " https://upper-catalog-wool-tub.trycloudflare.com"; // <-- این آدرس تونل شماست
+    const API_BASE_URL = " https://sends-educated-index-finds.trycloudflare.com"; // <-- این آدرس تونل شماست
 
     const loader = document.getElementById('loader');
     const appContainer = document.getElementById('app-container');

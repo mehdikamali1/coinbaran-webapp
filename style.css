@@ -1,4 +1,4 @@
-﻿/* webapp/style.css (نسخه 2.0 - حرفه‌ای) */
+﻿/* webapp/style.css (نسخه 3.0 - تمرکز روی گیمیفیکیشن) */
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800&display=swap');
 
 :root {
@@ -63,14 +63,6 @@ body {
 @keyframes loading-shimmer {
     0% { background-position: 100% 0; }
     100% { background-position: -100% 0; }
-}
-/* حالت لودینگ برای دکمه‌ها */
-.action-btn.loading {
-    background: var(--secondary-bg-color);
-    animation: 1.5s loading-shimmer infinite linear;
-}
-.action-btn.loading * {
-    visibility: hidden;
 }
 
 /* --- لودر اولیه --- */
@@ -229,44 +221,100 @@ body {
 #progress-text.loading { min-width: 200px; margin-left: auto; margin-right: auto; }
 
 
-/* --- دکمه‌های عملیاتی --- */
-.action-buttons {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 12px;
-    margin-top: auto; /* دکمه‌ها را به پایین صفحه می‌چسباند */
-    padding-top: 10px;
+/* --- <<< شروع تغییر: استایل‌های گیمیفیکیشن >>> --- */
+.gamification-section {
+    margin-top: 8px;
 }
-.action-btn {
+.gamification-section h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-color);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.gamification-section h3 i {
+    color: var(--color-primary);
+}
+.gamification-section#campaigns-section h3 i {
+    color: var(--color-xp);
+}
+
+.card-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+
+.card {
+    background-color: var(--secondary-bg-color);
+    border-radius: var(--border-radius-md);
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+.card-header {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background-color: var(--secondary-bg-color);
+    gap: 2px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--bg-color);
+}
+.card-title {
+    font-size: 1.1rem;
+    font-weight: 700;
     color: var(--text-color);
-    border: 1px solid var(--secondary-bg-color);
-    border-radius: var(--border-radius-lg);
-    padding: 12px 10px;
+}
+.card-subtitle {
+    font-size: 0.85rem;
+    color: var(--hint-color);
+}
+.card-question {
+    font-size: 0.95rem;
+    color: var(--text-color);
+    margin: 12px 0;
+    line-height: 1.6;
+}
+.card-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 8px;
+    margin-top: 12px;
+}
+.card-btn {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    border: 1px solid var(--bg-color);
+    padding: 10px;
+    border-radius: var(--border-radius-sm);
+    font-family: 'Vazirmatn', sans-serif;
     font-size: 0.9rem;
     font-weight: 500;
-    font-family: 'Vazirmatn', sans-serif;
     cursor: pointer;
-    transition: all 0.2s ease-in-out;
-    height: 85px; /* ارتفاع ثابت */
+    transition: background-color 0.2s ease, border-color 0.2s ease;
 }
-.action-btn:hover {
-    transform: translateY(-2px); /* هاور ظریف */
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+.card-btn:hover {
+    border-color: var(--button-color);
 }
-.action-btn:active {
-    transform: translateY(0px);
-    background-color: #344152; /* کمی تیره‌تر */
+.card-btn.prediction-btn:active {
+    background-color: var(--button-color);
+    color: var(--button-text-color);
 }
-.action-btn i {
-    font-size: 1.6rem;
-    margin-bottom: 10px;
-    line-height: 1;
+.card-btn.campaign-btn {
+    grid-column: 1 / -1; /* دکمه کمپین تمام عرض باشد */
+    background-color: var(--color-xp);
+    border-color: var(--color-xp);
+    color: #111; /* رنگ متن تیره برای خوانایی روی زرد */
+    font-weight: 700;
 }
-.action-btn.deposit i { color: var(--color-success); }
-.action-btn.withdraw i { color: var(--color-danger); }
-.action-btn.trade i { color: var(--color-primary); }
+.card-btn.campaign-btn:active {
+    background-color: #d4a01c;
+}
+/* --- <<< پایان تغییر >>> --- */
+
+
+/* --- <<< شروع تغییر: حذف کامل فوتر و دکمه‌های عملیاتی >>> --- */
+.action-buttons {
+    display: none; /* دیگر نیازی به این دکمه‌ها در فوتر نداریم */
+}
+/* --- <<< پایان تغییر >>> --- */

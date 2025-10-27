@@ -1,7 +1,7 @@
 ﻿(function () {
     const tg = window.Telegram.WebApp;
     
-    const API_BASE_URL = " https://both-accommodation-opponents-turn.trycloudflare.com"; // <-- آدرس تونل شما
+    const API_BASE_URL = "https://emperor-sharing-opportunity-poison.trycloudflare.com"; // <-- آدرس تونل شما
 
     const loader = document.getElementById('loader');
     const appContainer = document.getElementById('app-container');

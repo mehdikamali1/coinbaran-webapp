@@ -1,4 +1,4 @@
-﻿/* webapp/style.css (نسخه 3.0 - تمرکز روی گیمیفیکیشن) */
+﻿/* webapp/style.css (نسخه 3.1 - استایل دکمه‌های تعاملی) */
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800&display=swap');
 
 :root {
@@ -221,7 +221,7 @@ body {
 #progress-text.loading { min-width: 200px; margin-left: auto; margin-right: auto; }
 
 
-/* --- <<< شروع تغییر: استایل‌های گیمیفیکیشن >>> --- */
+/* --- استایل‌های گیمیفیکیشن --- */
 .gamification-section {
     margin-top: 8px;
 }
@@ -245,6 +245,7 @@ body {
     display: grid;
     grid-template-columns: 1fr;
     gap: 12px;
+    margin-bottom: 24px; /* فاصله از پایین صفحه */
 }
 
 .card {
@@ -252,6 +253,7 @@ body {
     border-radius: var(--border-radius-md);
     padding: 16px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: opacity 0.3s ease;
 }
 .card-header {
     display: flex;
@@ -291,7 +293,7 @@ body {
     font-size: 0.9rem;
     font-weight: 500;
     cursor: pointer;
-    transition: background-color 0.2s ease, border-color 0.2s ease;
+    transition: all 0.2s ease;
 }
 .card-btn:hover {
     border-color: var(--button-color);
@@ -310,11 +312,33 @@ body {
 .card-btn.campaign-btn:active {
     background-color: #d4a01c;
 }
-/* --- <<< پایان تغییر >>> --- */
 
+/* --- <<< شروع تغییر: استایل دکمه‌های غیرفعال و انتخاب شده >>> --- */
+.card.disabled {
+    opacity: 0.6;
+    pointer-events: none; /* جلوگیری از کلیک مجدد */
+}
 
-/* --- <<< شروع تغییر: حذف کامل فوتر و دکمه‌های عملیاتی >>> --- */
-.action-buttons {
-    display: none; /* دیگر نیازی به این دکمه‌ها در فوتر نداریم */
+.card-btn.prediction-btn.selected {
+    background-color: var(--color-success); /* سبز برای انتخاب شده */
+    color: var(--button-text-color);
+    border-color: var(--color-success);
+    font-weight: 700;
+}
+
+.card-btn:disabled {
+    cursor: not-allowed;
+    background-color: var(--bg-color);
+    opacity: 0.5;
+}
+
+.card-btn.selected:disabled {
+    opacity: 1; /* دکمه انتخاب شده نباید محو شود */
 }
 /* --- <<< پایان تغییر >>> --- */
+
+
+/* --- حذف کامل فوتر و دکمه‌های عملیاتی --- */
+.action-buttons {
+    display: none; 
+}

@@ -1,7 +1,7 @@
 ﻿(function () {
     const tg = window.Telegram.WebApp;
     
-    const API_BASE_URL = " https://relations-sea-exemption-sublime.trycloudflare.com"; // <-- آدرس تونل شما
+    const API_BASE_URL = " https://both-accommodation-opponents-turn.trycloudflare.com"; // <-- آدرس تونل شما
 
     const loader = document.getElementById('loader');
     const appContainer = document.getElementById('app-container');
@@ -23,7 +23,6 @@
         tg.setBackgroundColor('bg_color');
     }
 
-    // --- <<< شروع بازنویسی کامل تابع fetchUserData >>> ---
     async function fetchUserData() {
         if (!tg.initData) {
             console.error("Telegram initData not available.");
@@ -52,7 +51,6 @@
             }
 
             // --- مرحله 2: دریافت اطلاعات گیمیفیکیشن ---
-            // این درخواست *فقط* پس از موفقیت درخواست اول اجرا می‌شود
             const gamificationDataResponse = await fetch(`${API_BASE_URL}/webapp/get_gamification_data`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -71,7 +69,6 @@
             }
 
             // --- مرحله 3: نمایش کامل برنامه ---
-            // لودر فقط *بعد* از بارگذاری موفق هر دو بخش پنهان می‌شود
             hideLoader();
 
         } catch (error) {
@@ -84,11 +81,8 @@
             }
         }
     }
-    // --- <<< پایان بازنویسی کامل تابع fetchUserData >>> ---
 
     function updateDashboard(data) {
-        // این تابع دیگر لودر را پنهان نمی‌کند
-        
         // Header
         document.getElementById('welcome-name').textContent = `سلام، ${data.first_name}`;
         document.getElementById('welcome-name').classList.remove('loading');
@@ -130,36 +124,40 @@
         progressBar.style.width = `${percentage}%`;
     }
     
+    // --- <<< شروع بازنویسی کامل تابع گیمیفیکیشن >>> ---
     function updateGamification(data) {
         const predictionsContainer = document.getElementById('predictions-container');
         const campaignsContainer = document.getElementById('campaigns-container');
         const predictionsSection = document.getElementById('predictions-section');
         const campaignsSection = document.getElementById('campaigns-section');
 
-        predictionsContainer.innerHTML = ''; // پاک کردن محتوای قبلی
-        campaignsContainer.innerHTML = ''; // پاک کردن محتوای قبلی
+        predictionsContainer.innerHTML = '';
+        campaignsContainer.innerHTML = '';
 
         // 1. ساخت کارت‌های پیش‌بینی
         if (data.predictions && data.predictions.length > 0) {
             data.predictions.forEach(match => {
+                const card = document.createElement('div');
+                card.className = 'card prediction-card';
+                card.dataset.matchId = match.id; // شناسه بازی را روی خود کارت ذخیره می‌کنیم
+
                 let optionsHtml = '';
                 match.options.forEach(opt => {
-                    optionsHtml += `<button class="card-btn prediction-btn" data-match-id="${match.id}" data-option-key="${opt.key}">${opt.text}</button>`;
+                    // دکمه‌ها اکنون کلاس و دیتا-اتریبیوت دارند
+                    optionsHtml += `<button class="card-btn prediction-btn" data-option-key="${opt.key}">${opt.text}</button>`;
                 });
 
-                const cardHtml = `
-                    <div class="card prediction-card">
-                        <div class="card-header">
-                            <span class="card-title">${match.title}</span>
-                            <span class="card-subtitle">${match.subtitle}</span>
-                        </div>
-                        <p class="card-question">${match.question}</p>
-                        <div class="card-options">
-                            ${optionsHtml}
-                        </div>
+                card.innerHTML = `
+                    <div class="card-header">
+                        <span class="card-title">${match.title}</span>
+                        <span class="card-subtitle">${match.subtitle}</span>
+                    </div>
+                    <p class="card-question">${match.question}</p>
+                    <div class="card-options">
+                        ${optionsHtml}
                     </div>
                 `;
-                predictionsContainer.innerHTML += cardHtml;
+                predictionsContainer.appendChild(card);
             });
             predictionsSection.classList.remove('hidden');
         } else {
@@ -169,32 +167,116 @@
         // 2. ساخت کارت‌های کمپین
         if (data.campaigns && data.campaigns.length > 0) {
             data.campaigns.forEach(campaign => {
-                const cardHtml = `
-                    <div class="card campaign-card" data-product-target="${campaign.product_target}">
-                        <div class="card-header">
-                            <span class="card-title">${campaign.title}</span>
-                        </div>
-                        <p class="card-subtitle">${campaign.subtitle}</p>
-                        <div class="card-options">
-                            <button class="card-btn campaign-btn" data-product-target="${campaign.product_target}">
-                                <i class="fas fa-percent"></i> استفاده از تخفیف
-                            </button>
-                        </div>
+                const card = document.createElement('div');
+                card.className = 'card campaign-card';
+                // دیتا-اتریبیوت برای اینکه بدانیم کدام دکمه ربات را صدا بزنیم
+                card.dataset.productTarget = campaign.product_target; 
+                
+                card.innerHTML = `
+                    <div class="card-header">
+                        <span class="card-title">${campaign.title}</span>
+                    </div>
+                    <p class="card-subtitle">${campaign.subtitle}</p>
+                    <div class="card-options">
+                        <button class="card-btn campaign-btn">
+                            <i class="fas fa-percent"></i> استفاده از تخفیف
+                        </button>
                     </div>
                 `;
-                campaignsContainer.innerHTML += cardHtml;
+                campaignsContainer.appendChild(card);
             });
-            campaignsSection.classList.remove('hidden');
+            campaignsSection.classList.add('hidden');
         } else {
             campaignsSection.classList.add('hidden');
         }
+
+        // 3. افزودن Event Listener ها پس از ساخت کارت‌ها
+        addCardListeners();
+    }
+    
+    // --- تابع جدید برای ارسال پیش‌بینی ---
+    async function submitPrediction(matchId, outcome, cardElement) {
+        tg.MainButton.showProgress(); // نمایش لودینگ روی دکمه اصلی تلگرام
+        
+        try {
+            const response = await fetch(`${API_BASE_URL}/webapp/submit_prediction`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    initData: tg.initData,
+                    match_id: parseInt(matchId.replace('match_', '')), // 'match_123' -> 123
+                    outcome: outcome
+                })
+            });
+
+            const result = await response.json();
+            tg.MainButton.hideProgress();
+
+            if (result.status === "success") {
+                // موفقیت‌آمیز
+                tg.showAlert(`✅ ${result.message}`);
+                // غیرفعال کردن کارت
+                cardElement.classList.add('disabled');
+                // علامت‌گذاری دکمه انتخابی
+                cardElement.querySelectorAll('.prediction-btn').forEach(btn => {
+                    if (btn.dataset.optionKey === outcome) {
+                        btn.classList.add('selected');
+                    }
+                    btn.disabled = true;
+                });
+            } else {
+                // خطا (مثلاً: قبلاً ثبت کرده)
+                tg.showAlert(`⚠️ ${result.message}`);
+                cardElement.classList.add('disabled'); // کارت را غیرفعال می‌کنیم
+            }
+
+        } catch (error) {
+            tg.MainButton.hideProgress();
+            tg.showAlert("❌ خطایی در ارتباط با سرور رخ داد. لطفاً دوباره تلاش کنید.");
+            console.error("Failed to submit prediction:", error);
+        }
     }
 
+    // --- تابع جدید برای افزودن Listener ها ---
+    function addCardListeners() {
+        // 1. Listener برای دکمه‌های پیش‌بینی
+        document.querySelectorAll('.prediction-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const btn = e.currentTarget;
+                const card = btn.closest('.prediction-card');
+                const matchId = card.dataset.matchId;
+                const outcome = btn.dataset.optionKey;
+                
+                // نمایش پاپ‌آپ تایید تلگرامی
+                tg.showConfirm(`آیا از ثبت پیش‌بینی «${btn.textContent}» مطمئن هستید؟`, (confirmed) => {
+                    if (confirmed) {
+                        submitPrediction(matchId, outcome, card);
+                    }
+                });
+            });
+        });
 
-    // --- Event Listeners for Buttons (حذف شده‌اند چون در HTML پاک شدند) ---
-    // (اطمینان حاصل می‌کنیم که هیچ listener ای برای دکمه‌های حذف شده وجود ندارد)
-    // --- <<< پایان حذف listener ها >>> ---
+        // 2. Listener برای دکمه‌های کمپین
+        document.querySelectorAll('.campaign-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const card = e.currentTarget.closest('.campaign-card');
+                const target = card.dataset.productTarget; // 'usdt_buy' or 'utopia_voucher'
+                
+                let action = '';
+                if (target === 'usdt_buy') {
+                    action = 'action_trade'; // فعلا به منوی خرید و فروش می‌فرستیم
+                } else if (target === 'utopia_voucher') {
+                    action = 'action_trade'; // فعلا به منوی خرید و فروش می‌فرستیم
+                }
 
+                if (action) {
+                    tg.sendData(action); // ارسال دستور به ربات
+                    tg.close();
+                }
+            });
+        });
+    }
+    // --- <<< پایان بازنویسی‌ها >>> ---
 
     // --- Entry Point ---
     document.addEventListener("DOMContentLoaded", () => {

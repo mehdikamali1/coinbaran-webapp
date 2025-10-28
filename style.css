@@ -1,4 +1,4 @@
-﻿/* webapp/style.css (نسخه 3.3 - استایل تالار افتخارات) */
+﻿/* webapp/style.css (نسخه 3.4 - استایل فروشگاه جوایز) */
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800&display=swap');
 
 :root {
@@ -244,11 +244,14 @@ body {
 .gamification-section#leaderboard-section h3 i {
     color: var(--color-gold);
 }
-/* --- <<< شروع استایل تالار افتخارات >>> --- */
 .gamification-section#achievements-section h3 i {
     color: var(--color-bronze);
 }
-/* --- <<< پایان استایل تالار افتخارات >>> --- */
+/* --- <<< شروع استایل فروشگاه >>> --- */
+.gamification-section#store-section h3 i {
+    color: var(--color-success);
+}
+/* --- <<< پایان استایل فروشگاه >>> --- */
 
 
 /* --- استایل تابلوی امتیازات --- */
@@ -346,20 +349,17 @@ body {
     margin-bottom: 24px; /* فاصله از پایین صفحه */
 }
 
-/* --- <<< شروع استایل اسکرول افقی مدال‌ها >>> --- */
 .card-container.horizontal-scroll {
     grid-template-columns: none; /* غیرفعال کردن گرید عمودی */
     display: flex;
     overflow-x: auto;
     padding-bottom: 10px; /* فضایی برای اسکرول‌بار */
-    /* مخفی کردن اسکرول‌بار در مرورگرها */
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;  /* Firefox */
 }
 .card-container.horizontal-scroll::-webkit-scrollbar {
     display: none; /* Chrome, Safari */
 }
-/* --- <<< پایان استایل اسکرول افقی مدال‌ها >>> --- */
 
 
 .card {
@@ -449,7 +449,7 @@ body {
     opacity: 1; /* دکمه انتخاب شده نباید محو شود */
 }
 
-/* --- <<< شروع استایل کارت‌های مدال >>> --- */
+/* --- استایل کارت‌های مدال --- */
 .achievement-card {
     flex: 0 0 130px; /* عرض ثابت برای هر مدال */
     height: 150px;
@@ -501,8 +501,54 @@ body {
     background-size: 200% 100%;
     animation: 1.5s loading-shimmer infinite linear;
 }
-/* --- <<< پایان استایل کارت‌های مدال >>> --- */
 
+/* --- <<< شروع استایل کارت‌های فروشگاه >>> --- */
+.card.store-card {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+}
+.store-item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.store-item-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+.store-item-desc {
+    font-size: 0.9rem;
+    color: var(--hint-color);
+}
+.store-item-btn {
+    background-color: var(--color-success);
+    color: var(--button-text-color);
+    border: none;
+    border-radius: var(--border-radius-sm);
+    padding: 10px 16px;
+    font-family: 'Vazirmatn', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    white-space: nowrap; /* جلوگیری از شکستن متن دکمه */
+}
+.store-item-btn:hover {
+    background-color: #218838;
+}
+.store-item-btn:disabled {
+    background-color: var(--hint-color);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+.store-item-btn .xp-icon {
+    color: var(--color-xp);
+    margin-right: 4px;
+}
+/* --- <<< پایان استایل کارت‌های فروشگاه >>> --- */
 
 /* --- حذف کامل فوتر و دکمه‌های عملیاتی --- */
 .action-buttons {

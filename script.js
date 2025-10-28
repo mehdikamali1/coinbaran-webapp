@@ -1,10 +1,24 @@
 ﻿(function () {
     const tg = window.Telegram.WebApp;
     
-    const API_BASE_URL = "https://starsmerchant-curious-calculations-wagner.trycloudflare.com"; // <-- آدرس تونل شما
+    const API_BASE_URL = "https://arise-literally-computational-footwear.trycloudflare.com"; // <-- آدرس تونل شما
+
+    // --- <<< شروع تغییر: تعریف هزینه‌های فروشگاه در JS >>> ---
+    // این مقادیر باید با config.py هماهنگ باشند
+    const XP_COST_FOR_VOUCHER = 100;
+    const USER_LEVELS_XP_COST = {
+        'bronze': 500,  // هزینه ارتقا به Silver
+        'silver': 2500, // هزینه ارتقا به Gold
+        'gold': 10000,  // هزینه ارتقا به Platinum
+        'platinum': Infinity
+    };
+    // --- <<< پایان تغییر >>> ---
 
     const loader = document.getElementById('loader');
     const appContainer = document.getElementById('app-container');
+
+    // آبجکت سراسری برای نگهداری اطلاعات کاربر
+    let currentUserData = {};
 
     function showLoader() {
         loader.classList.remove('hidden');
@@ -45,7 +59,8 @@
             
             const userData = await userDataResponse.json();
             if (userData.status === "success") {
-                updateDashboard(userData); // اطلاعات داشبورد را بلافاصله نمایش بده
+                currentUserData = userData; // <-- ذخیره اطلاعات کاربر در متغیر سراسری
+                updateDashboard(userData); 
             } else {
                 throw new Error(userData.message || "خطا در دریافت اطلاعات کاربر.");
             }
@@ -65,8 +80,9 @@
             if (gamificationData.status === "success") {
                 updateGamification(gamificationData); 
                 updateLeaderboards(gamificationData.leaderboards, userData);
-                // --- <<< شروع تغییر: فراخوانی تابع جدید دستاوردها >>> ---
                 updateAchievements(gamificationData.achievements);
+                // --- <<< شروع تغییر: فراخوانی تابع جدید فروشگاه >>> ---
+                updateStore(userData); // <-- تابع جدید فراخوانی می‌شود
                 // --- <<< پایان تغییر >>> ---
             } else {
                 throw new Error(gamificationData.message || "خطا در دریافت اطلاعات گیمیفیکیشن.");
@@ -110,8 +126,12 @@
         kycIconEl.classList.add('fas', iconMap[data.kyc_status_code || 'not_submitted']);
 
         // Balance Card
+        // --- <<< شروع تغییر: آپدیت موجودی XP از متغیر سراسری >>> ---
+        const xpBalanceNum = parseFloat(data.xp_balance.replace(/,/g, '')) || 0;
+        currentUserData.numeric_xp_balance = xpBalanceNum; // ذخیره عددی
         document.getElementById('toman-balance').textContent = `${data.toman_balance} تومان`;
-        document.getElementById('xp-balance').textContent = `${data.xp_balance} XP`;
+        document.getElementById('xp-balance').textContent = `${xpBalanceNum.toLocaleString('fa-IR', { maximumFractionDigits: 0 })} XP`;
+        // --- <<< پایان تغییر >>> ---
         document.getElementById('toman-balance').classList.remove('loading');
         document.getElementById('xp-balance').classList.remove('loading');
 
@@ -239,22 +259,19 @@
             predictorsListEl.innerHTML = "<li>هنوز رتبه‌بندی وجود ندارد.</li>";
         }
         
-        // نمایش کل بخش تابلوی امتیازات
         leaderboardSection.classList.remove('hidden');
     }
 
-    // --- <<< شروع تابع جدید: پر کردن تالار افتخارات >>> ---
     function updateAchievements(achievementsData) {
         const achievementsContainer = document.getElementById('achievements-container');
         const achievementsSection = document.getElementById('achievements-section');
         
-        achievementsContainer.innerHTML = ''; // پاک کردن لودرهای پیش‌فرض
+        achievementsContainer.innerHTML = ''; 
 
         if (achievementsData && achievementsData.length > 0) {
             achievementsData.forEach(ach => {
                 const card = document.createElement('div');
                 card.className = 'achievement-card';
-                // اگر کاربر مدال را کسب نکرده، کلاس 'locked' اضافه می‌شود
                 if (!ach.is_earned) {
                     card.classList.add('locked');
                 }
@@ -265,29 +282,85 @@
                     <span class="ach-xp">+${ach.xp_reward} XP</span>
                 `;
                 
-                // افزودن Tooltip (عنوان) برای نمایش توضیحات
                 card.title = ach.description; 
                 
                 achievementsContainer.appendChild(card);
             });
-            achievementsSection.classList.remove('hidden'); // نمایش بخش
+            achievementsSection.classList.remove('hidden'); 
         } else {
-            achievementsSection.classList.add('hidden'); // اگر هیچ دستاوردی تعریف نشده باشد
+            achievementsSection.classList.add('hidden'); 
+        }
+    }
+
+    // --- <<< شروع تابع جدید: ساخت فروشگاه >>> ---
+    function updateStore(userData) {
+        const storeContainer = document.getElementById('store-container');
+        const storeSection = document.getElementById('store-section');
+        storeContainer.innerHTML = ''; // پاک کردن لودرها
+
+        const currentXP = userData.numeric_xp_balance;
+        const currentLevel = userData.kyc_status_code === 'approved' ? userData.level_name.split(' ')[0].toLowerCase() : 'bronze';
+
+        let itemsAdded = 0;
+
+        // 1. آیتم ارتقاء سطح
+        if (currentLevel !== 'platinum') {
+            const nextLevelXP = USER_LEVELS_XP_COST[currentLevel];
+            const canAfford = currentXP >= nextLevelXP;
+            
+            const levelUpCard = document.createElement('div');
+            levelUpCard.className = 'card store-card';
+            levelUpCard.innerHTML = `
+                <div class="store-item-info">
+                    <span class="store-item-title">💎 ارتقاء به سطح بعدی</span>
+                    <span class="store-item-desc">سطح خود را ارتقا دهید و کارمزد کمتری بپردازید.</span>
+                </div>
+                <button id="btn-buy-levelup" class="store-item-btn" data-item-id="buy_levelup" ${!canAfford ? 'disabled' : ''}>
+                    ${nextLevelXP.toLocaleString('fa-IR')} <i class="fas fa-star xp-icon"></i>
+                </button>
+            `;
+            storeContainer.appendChild(levelUpCard);
+            itemsAdded++;
+        }
+
+        // 2. آیتم ووچر
+        const canAffordVoucher = currentXP >= XP_COST_FOR_VOUCHER;
+        const voucherCard = document.createElement('div');
+        voucherCard.className = 'card store-card';
+        voucherCard.innerHTML = `
+            <div class="store-item-info">
+                <span class="store-item-title">🎟️ ووچر ۱ دلاری یوتوپیا</span>
+                <span class="store-item-desc">امتیاز خود را به ووچر تبدیل کنید.</span>
+            </div>
+            <button id="btn-buy-voucher" class="store-item-btn" data-item-id="buy_voucher" ${!canAffordVoucher ? 'disabled' : ''}>
+                ${XP_COST_FOR_VOUCHER.toLocaleString('fa-IR')} <i class="fas fa-star xp-icon"></i>
+            </button>
+        `;
+        storeContainer.appendChild(voucherCard);
+        itemsAdded++;
+
+        // 3. افزودن Listener ها
+        if (itemsAdded > 0) {
+            addStoreListeners();
+            storeSection.classList.remove('hidden');
+        } else {
+            storeSection.classList.add('hidden');
         }
     }
     // --- <<< پایان تابع جدید >>> ---
 
-    async function submitPrediction(matchId, outcome, cardElement) {
+
+    // --- <<< شروع تابع جدید: ارسال خرید از فروشگاه >>> ---
+    async function submitStorePurchase(itemId, buttonElement) {
         tg.MainButton.showProgress();
         
         try {
-            const response = await fetch(`${API_BASE_URL}/webapp/submit_prediction`, {
+            const response = await fetch(`${API_BASE_URL}/webapp/purchase_with_xp`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
                     initData: tg.initData,
-                    match_id: parseInt(matchId.replace('match_', '')), 
-                    outcome: outcome
+                    item_id: itemId
                 })
             });
 
@@ -296,24 +369,44 @@
 
             if (result.status === "success") {
                 tg.showAlert(`✅ ${result.message}`);
-                cardElement.classList.add('disabled');
-                cardElement.querySelectorAll('.prediction-btn').forEach(btn => {
-                    if (btn.dataset.optionKey === outcome) {
-                        btn.classList.add('selected');
-                    }
-                    btn.disabled = true;
-                });
+                
+                // به‌روزرسانی فوری موجودی XP در UI
+                if (result.new_xp_balance) {
+                    const newXPNum = parseFloat(result.new_xp_balance.replace(/,/g, '')) || 0;
+                    currentUserData.numeric_xp_balance = newXPNum;
+                    document.getElementById('xp-balance').textContent = `${newXPNum.toLocaleString('fa-IR', { maximumFractionDigits: 0 })} XP`;
+                    // آپدیت کردن دکمه‌های فروشگاه بر اساس موجودی جدید
+                    updateStoreButtonStatus();
+                }
             } else {
                 tg.showAlert(`⚠️ ${result.message}`);
-                cardElement.classList.add('disabled'); 
             }
 
         } catch (error) {
             tg.MainButton.hideProgress();
             tg.showAlert("❌ خطایی در ارتباط با سرور رخ داد. لطفاً دوباره تلاش کنید.");
-            console.error("Failed to submit prediction:", error);
+            console.error("Failed to submit store purchase:", error);
         }
     }
+    
+    // --- تابع کمکی برای آپدیت دکمه‌های فروشگاه ---
+    function updateStoreButtonStatus() {
+        const currentXP = currentUserData.numeric_xp_balance;
+        
+        const levelUpBtn = document.getElementById('btn-buy-levelup');
+        if(levelUpBtn) {
+            const currentLevel = currentUserData.level_name.split(' ')[0].toLowerCase();
+            const cost = USER_LEVELS_XP_COST[currentLevel];
+            levelUpBtn.disabled = currentXP < cost;
+        }
+
+        const voucherBtn = document.getElementById('btn-buy-voucher');
+        if(voucherBtn) {
+            voucherBtn.disabled = currentXP < XP_COST_FOR_VOUCHER;
+        }
+    }
+    // --- <<< پایان توابع جدید >>> ---
+
 
     function addCardListeners() {
         // 1. Listener برای دکمه‌های پیش‌بینی
@@ -352,6 +445,34 @@
             });
         });
     }
+
+    // --- <<< شروع تابع جدید: افزودن Listener برای فروشگاه >>> ---
+    function addStoreListeners() {
+        document.querySelectorAll('.store-item-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const btn = e.currentTarget;
+                const itemId = btn.dataset.itemId;
+                
+                let confirmText = "";
+                if (itemId === 'buy_levelup') {
+                    const cost = btn.textContent.trim();
+                    confirmText = `آیا مطمئن هستید که می‌خواهید با ${cost} امتیاز، سطح خود را ارتقا دهید؟`;
+                } else if (itemId === 'buy_voucher') {
+                    const cost = btn.textContent.trim();
+                    confirmText = `آیا مطمئن هستید که می‌خواهید با ${cost} امتیاز، ووچر ۱ دلاری دریافت کنید؟`;
+                }
+                
+                if (confirmText) {
+                    tg.showConfirm(confirmText, (confirmed) => {
+                        if (confirmed) {
+                            submitStorePurchase(itemId, btn);
+                        }
+                    });
+                }
+            });
+        });
+    }
+    // --- <<< پایان تابع جدید >>> ---
 
     // --- Entry Point ---
     document.addEventListener("DOMContentLoaded", () => {

@@ -1,4 +1,4 @@
-﻿/* webapp/style.css (نسخه 3.1 - استایل دکمه‌های تعاملی) */
+﻿/* webapp/style.css (نسخه 3.2 - استایل تابلوی امتیازات) */
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800&display=swap');
 
 :root {
@@ -240,6 +240,96 @@ body {
 .gamification-section#campaigns-section h3 i {
     color: var(--color-xp);
 }
+/* --- <<< شروع استایل تابلوی امتیازات >>> --- */
+.gamification-section#leaderboard-section h3 i {
+    color: var(--color-gold);
+}
+.user-rank-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+.rank-box {
+    background-color: var(--secondary-bg-color);
+    border-radius: var(--border-radius-md);
+    padding: 16px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.rank-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--hint-color);
+    margin-bottom: 8px;
+}
+.rank-value {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--text-color);
+    line-height: 1.2;
+}
+.rank-subtext {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--hint-color);
+    direction: ltr;
+}
+.rank-box.trade-rank .rank-value {
+    color: var(--color-success);
+}
+.rank-box.prediction-rank .rank-value {
+    color: var(--color-primary);
+}
+.rank-value.loading { min-width: 50px; min-height: 1.2em; margin-bottom: 4px;}
+.rank-subtext.loading { min-width: 80px; min-height: 1em; }
+
+.leaderboard-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+.leaderboard-column {
+    background-color: var(--secondary-bg-color);
+    border-radius: var(--border-radius-md);
+    padding: 16px;
+}
+.leaderboard-column h4 {
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin: 0 0 12px 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--bg-color);
+    color: var(--hint-color);
+}
+.leaderboard-list {
+    margin: 0;
+    padding-right: 20px; /* برای جا دادن شماره ردیف */
+    font-size: 0.9rem;
+}
+.leaderboard-list li {
+    margin-bottom: 10px;
+    color: var(--text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.leaderboard-list li.loading {
+    min-height: 1.2em;
+    width: 80%;
+    margin-bottom: 10px;
+}
+.leaderboard-list li::marker {
+    font-weight: 700;
+}
+.leaderboard-list li:first-child { font-weight: 700; color: var(--color-gold); }
+.leaderboard-list li:nth-child(2) { font-weight: 500; color: var(--color-silver); }
+.leaderboard-list li:nth-child(3) { font-weight: 500; color: #CD7F32; } /* Bronze */
+/* --- <<< پایان استایل تابلوی امتیازات >>> --- */
+
 
 .card-container {
     display: grid;
@@ -313,7 +403,6 @@ body {
     background-color: #d4a01c;
 }
 
-/* --- <<< شروع تغییر: استایل دکمه‌های غیرفعال و انتخاب شده >>> --- */
 .card.disabled {
     opacity: 0.6;
     pointer-events: none; /* جلوگیری از کلیک مجدد */
@@ -335,7 +424,6 @@ body {
 .card-btn.selected:disabled {
     opacity: 1; /* دکمه انتخاب شده نباید محو شود */
 }
-/* --- <<< پایان تغییر >>> --- */
 
 
 /* --- حذف کامل فوتر و دکمه‌های عملیاتی --- */

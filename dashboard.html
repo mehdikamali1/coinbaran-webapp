@@ -47,7 +47,42 @@
                 </div>
                 <small id="progress-text" class="progress-text loading">...</small>
             </section>
+            
+            <section id="leaderboard-section" class="gamification-section hidden">
+                <h3><i class="fas fa-trophy"></i> تابلوی امتیازات</h3>
+                
+                <div class="user-rank-container">
+                    <div class="rank-box trade-rank">
+                        <span class="rank-label">رتبه شما در معاملات</span>
+                        <span id="user-trade-rank" class="rank-value loading">...</span>
+                        <span id="user-trade-value" class="rank-subtext loading">...</span>
+                    </div>
+                    <div class="rank-box prediction-rank">
+                        <span class="rank-label">رتبه شما در پیش‌بینی</span>
+                        <span id="user-prediction-rank" class="rank-value loading">...</span>
+                        <span id="user-prediction-value" class="rank-subtext loading">...</span>
+                    </div>
+                </div>
 
+                <div class="leaderboard-container">
+                    <div class="leaderboard-column">
+                        <h4>🥇 برترین معامله‌گران</h4>
+                        <ol id="top-traders-list" class="leaderboard-list">
+                            <li class="loading">...</li>
+                            <li class="loading">...</li>
+                            <li class="loading">...</li>
+                        </ol>
+                    </div>
+                    <div class="leaderboard-column">
+                        <h4>🎯 برترین پیش‌بینی‌کنندگان</h4>
+                        <ol id="top-predictors-list" class="leaderboard-list">
+                            <li class="loading">...</li>
+                            <li class="loading">...</li>
+                            <li class="loading">...</li>
+                        </ol>
+                    </div>
+                </div>
+            </section>
             <section id="predictions-section" class="gamification-section hidden">
                 <h3><i class="fas fa-futbol"></i> بازی‌های پیش‌بینی فعال</h3>
                 <div id="predictions-container" class="card-container">
@@ -60,9 +95,10 @@
                     </div>
             </section>
             
-            </main>
+        </main>
         
     </div>
+
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="script.js"></script>
 </body>

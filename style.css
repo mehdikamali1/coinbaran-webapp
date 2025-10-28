@@ -1,4 +1,4 @@
-﻿/* webapp/style.css (نسخه 3.2 - استایل تابلوی امتیازات) */
+﻿/* webapp/style.css (نسخه 3.3 - استایل تالار افتخارات) */
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800&display=swap');
 
 :root {
@@ -19,6 +19,7 @@
     --color-gold: #FFD700;   /* طلایی برای سطح */
     --color-silver: #C0C0C0; /* نقره‌ای */
     --color-platinum: #E5E4E2; /* پلاتینیوم */
+    --color-bronze: #CD7F32; /* برنز */
 
     --border-radius-lg: 16px; /* گردی بیشتر برای کارت‌ها */
     --border-radius-md: 10px; /* گردی متوسط */
@@ -240,10 +241,17 @@ body {
 .gamification-section#campaigns-section h3 i {
     color: var(--color-xp);
 }
-/* --- <<< شروع استایل تابلوی امتیازات >>> --- */
 .gamification-section#leaderboard-section h3 i {
     color: var(--color-gold);
 }
+/* --- <<< شروع استایل تالار افتخارات >>> --- */
+.gamification-section#achievements-section h3 i {
+    color: var(--color-bronze);
+}
+/* --- <<< پایان استایل تالار افتخارات >>> --- */
+
+
+/* --- استایل تابلوی امتیازات --- */
 .user-rank-container {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -327,16 +335,32 @@ body {
 }
 .leaderboard-list li:first-child { font-weight: 700; color: var(--color-gold); }
 .leaderboard-list li:nth-child(2) { font-weight: 500; color: var(--color-silver); }
-.leaderboard-list li:nth-child(3) { font-weight: 500; color: #CD7F32; } /* Bronze */
-/* --- <<< پایان استایل تابلوی امتیازات >>> --- */
+.leaderboard-list li:nth-child(3) { font-weight: 500; color: var(--color-bronze); }
 
 
+/* --- استایل کارت‌های عمومی گیمیفیکیشن --- */
 .card-container {
     display: grid;
     grid-template-columns: 1fr;
     gap: 12px;
     margin-bottom: 24px; /* فاصله از پایین صفحه */
 }
+
+/* --- <<< شروع استایل اسکرول افقی مدال‌ها >>> --- */
+.card-container.horizontal-scroll {
+    grid-template-columns: none; /* غیرفعال کردن گرید عمودی */
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 10px; /* فضایی برای اسکرول‌بار */
+    /* مخفی کردن اسکرول‌بار در مرورگرها */
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+.card-container.horizontal-scroll::-webkit-scrollbar {
+    display: none; /* Chrome, Safari */
+}
+/* --- <<< پایان استایل اسکرول افقی مدال‌ها >>> --- */
+
 
 .card {
     background-color: var(--secondary-bg-color);
@@ -424,6 +448,60 @@ body {
 .card-btn.selected:disabled {
     opacity: 1; /* دکمه انتخاب شده نباید محو شود */
 }
+
+/* --- <<< شروع استایل کارت‌های مدال >>> --- */
+.achievement-card {
+    flex: 0 0 130px; /* عرض ثابت برای هر مدال */
+    height: 150px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 8px;
+    padding: 12px;
+    background-color: var(--secondary-bg-color);
+    border-radius: var(--border-radius-md);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--secondary-bg-color);
+}
+.achievement-card .ach-icon {
+    font-size: 2.5rem;
+    line-height: 1;
+}
+.achievement-card .ach-name {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-color);
+}
+.achievement-card .ach-xp {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--color-xp);
+}
+/* حالت قفل شده (خاکستری) */
+.achievement-card.locked {
+    background-color: var(--bg-color);
+    opacity: 0.6;
+}
+.achievement-card.locked .ach-icon {
+    filter: grayscale(100%);
+    opacity: 0.5;
+}
+.achievement-card.locked .ach-name {
+    color: var(--hint-color);
+}
+.achievement-card.locked .ach-xp {
+    color: var(--hint-color);
+}
+/* استایل لودینگ مدال */
+.achievement-card.loading {
+    min-width: 130px;
+    background: linear-gradient(100deg, var(--secondary-bg-color) 40%, #344152 50%, var(--secondary-bg-color) 60%) var(--secondary-bg-color);
+    background-size: 200% 100%;
+    animation: 1.5s loading-shimmer infinite linear;
+}
+/* --- <<< پایان استایل کارت‌های مدال >>> --- */
 
 
 /* --- حذف کامل فوتر و دکمه‌های عملیاتی --- */

@@ -1,7 +1,7 @@
 ﻿(function () {
     const tg = window.Telegram.WebApp;
     
-    const API_BASE_URL = "https://brings-wheel-origin-ddr.trycloudflare.com"; // <-- آدرس تونل شما
+    const API_BASE_URL = "https://eos-nuclear-diana-conducting.trycloudflare.com"; // <-- آدرس تونل شما
 
     const loader = document.getElementById('loader');
     const appContainer = document.getElementById('app-container');

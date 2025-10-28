@@ -1,7 +1,7 @@
 ﻿(function () {
     const tg = window.Telegram.WebApp;
     
-    const API_BASE_URL = "https://eos-nuclear-diana-conducting.trycloudflare.com"; // <-- آدرس تونل شما
+    const API_BASE_URL = "https://starsmerchant-curious-calculations-wagner.trycloudflare.com"; // <-- آدرس تونل شما
 
     const loader = document.getElementById('loader');
     const appContainer = document.getElementById('app-container');
@@ -63,9 +63,10 @@
 
             const gamificationData = await gamificationDataResponse.json();
             if (gamificationData.status === "success") {
-                // --- <<< شروع تغییر: ارسال داده‌های لیدربورد به تابع >>> ---
                 updateGamification(gamificationData); 
-                updateLeaderboards(gamificationData.leaderboards, userData); // <-- تابع جدید فراخوانی می‌شود
+                updateLeaderboards(gamificationData.leaderboards, userData);
+                // --- <<< شروع تغییر: فراخوانی تابع جدید دستاوردها >>> ---
+                updateAchievements(gamificationData.achievements);
                 // --- <<< پایان تغییر >>> ---
             } else {
                 throw new Error(gamificationData.message || "خطا در دریافت اطلاعات گیمیفیکیشن.");
@@ -194,7 +195,6 @@
         addCardListeners();
     }
     
-    // --- <<< شروع تابع جدید: پر کردن تابلوی امتیازات >>> ---
     function updateLeaderboards(leaderboardData, userData) {
         const leaderboardSection = document.getElementById('leaderboard-section');
         
@@ -241,6 +241,39 @@
         
         // نمایش کل بخش تابلوی امتیازات
         leaderboardSection.classList.remove('hidden');
+    }
+
+    // --- <<< شروع تابع جدید: پر کردن تالار افتخارات >>> ---
+    function updateAchievements(achievementsData) {
+        const achievementsContainer = document.getElementById('achievements-container');
+        const achievementsSection = document.getElementById('achievements-section');
+        
+        achievementsContainer.innerHTML = ''; // پاک کردن لودرهای پیش‌فرض
+
+        if (achievementsData && achievementsData.length > 0) {
+            achievementsData.forEach(ach => {
+                const card = document.createElement('div');
+                card.className = 'achievement-card';
+                // اگر کاربر مدال را کسب نکرده، کلاس 'locked' اضافه می‌شود
+                if (!ach.is_earned) {
+                    card.classList.add('locked');
+                }
+                
+                card.innerHTML = `
+                    <span class="ach-icon">${ach.icon}</span>
+                    <span class="ach-name">${ach.name}</span>
+                    <span class="ach-xp">+${ach.xp_reward} XP</span>
+                `;
+                
+                // افزودن Tooltip (عنوان) برای نمایش توضیحات
+                card.title = ach.description; 
+                
+                achievementsContainer.appendChild(card);
+            });
+            achievementsSection.classList.remove('hidden'); // نمایش بخش
+        } else {
+            achievementsSection.classList.add('hidden'); // اگر هیچ دستاوردی تعریف نشده باشد
+        }
     }
     // --- <<< پایان تابع جدید >>> ---
 

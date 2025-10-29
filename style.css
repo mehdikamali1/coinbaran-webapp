@@ -1,4 +1,4 @@
-﻿/* webapp/style.css (نسخه 3.4 - استایل فروشگاه جوایز) */
+﻿/* webapp/style.css (نسخه 3.5 - استایل مودال خرید) */
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800&display=swap');
 
 :root {
@@ -207,7 +207,6 @@ body {
 .progress-bar {
     height: 100%;
     width: 0%;
-    /* گرادیان زیبا برای نوار پیشرفت */
     background: linear-gradient(90deg, var(--color-primary) 0%, var(--button-color) 100%);
     border-radius: 20px;
     transition: width 0.8s cubic-bezier(0.25, 0.1, 0.25, 1); /* انیمیشن نرم‌تر */
@@ -235,23 +234,11 @@ body {
     align-items: center;
     gap: 8px;
 }
-.gamification-section h3 i {
-    color: var(--color-primary);
-}
-.gamification-section#campaigns-section h3 i {
-    color: var(--color-xp);
-}
-.gamification-section#leaderboard-section h3 i {
-    color: var(--color-gold);
-}
-.gamification-section#achievements-section h3 i {
-    color: var(--color-bronze);
-}
-/* --- <<< شروع استایل فروشگاه >>> --- */
-.gamification-section#store-section h3 i {
-    color: var(--color-success);
-}
-/* --- <<< پایان استایل فروشگاه >>> --- */
+.gamification-section h3 i { color: var(--color-primary); }
+.gamification-section#campaigns-section h3 i { color: var(--color-xp); }
+.gamification-section#leaderboard-section h3 i { color: var(--color-gold); }
+.gamification-section#achievements-section h3 i { color: var(--color-bronze); }
+.gamification-section#store-section h3 i { color: var(--color-success); }
 
 
 /* --- استایل تابلوی امتیازات --- */
@@ -289,12 +276,8 @@ body {
     color: var(--hint-color);
     direction: ltr;
 }
-.rank-box.trade-rank .rank-value {
-    color: var(--color-success);
-}
-.rank-box.prediction-rank .rank-value {
-    color: var(--color-primary);
-}
+.rank-box.trade-rank .rank-value { color: var(--color-success); }
+.rank-box.prediction-rank .rank-value { color: var(--color-primary); }
 .rank-value.loading { min-width: 50px; min-height: 1.2em; margin-bottom: 4px;}
 .rank-subtext.loading { min-width: 80px; min-height: 1em; }
 
@@ -318,7 +301,7 @@ body {
 }
 .leaderboard-list {
     margin: 0;
-    padding-right: 20px; /* برای جا دادن شماره ردیف */
+    padding-right: 20px; 
     font-size: 0.9rem;
 }
 .leaderboard-list li {
@@ -333,9 +316,7 @@ body {
     width: 80%;
     margin-bottom: 10px;
 }
-.leaderboard-list li::marker {
-    font-weight: 700;
-}
+.leaderboard-list li::marker { font-weight: 700; }
 .leaderboard-list li:first-child { font-weight: 700; color: var(--color-gold); }
 .leaderboard-list li:nth-child(2) { font-weight: 500; color: var(--color-silver); }
 .leaderboard-list li:nth-child(3) { font-weight: 500; color: var(--color-bronze); }
@@ -346,21 +327,17 @@ body {
     display: grid;
     grid-template-columns: 1fr;
     gap: 12px;
-    margin-bottom: 24px; /* فاصله از پایین صفحه */
+    margin-bottom: 24px; 
 }
-
 .card-container.horizontal-scroll {
-    grid-template-columns: none; /* غیرفعال کردن گرید عمودی */
+    grid-template-columns: none; 
     display: flex;
     overflow-x: auto;
-    padding-bottom: 10px; /* فضایی برای اسکرول‌بار */
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+    padding-bottom: 10px; 
+    -ms-overflow-style: none;  
+    scrollbar-width: none;  
 }
-.card-container.horizontal-scroll::-webkit-scrollbar {
-    display: none; /* Chrome, Safari */
-}
-
+.card-container.horizontal-scroll::-webkit-scrollbar { display: none; }
 
 .card {
     background-color: var(--secondary-bg-color);
@@ -409,49 +386,36 @@ body {
     cursor: pointer;
     transition: all 0.2s ease;
 }
-.card-btn:hover {
-    border-color: var(--button-color);
-}
+.card-btn:hover { border-color: var(--button-color); }
 .card-btn.prediction-btn:active {
     background-color: var(--button-color);
     color: var(--button-text-color);
 }
 .card-btn.campaign-btn {
-    grid-column: 1 / -1; /* دکمه کمپین تمام عرض باشد */
+    grid-column: 1 / -1;
     background-color: var(--color-xp);
     border-color: var(--color-xp);
-    color: #111; /* رنگ متن تیره برای خوانایی روی زرد */
+    color: #111; 
     font-weight: 700;
 }
-.card-btn.campaign-btn:active {
-    background-color: #d4a01c;
-}
-
-.card.disabled {
-    opacity: 0.6;
-    pointer-events: none; /* جلوگیری از کلیک مجدد */
-}
-
+.card-btn.campaign-btn:active { background-color: #d4a01c; }
+.card.disabled { opacity: 0.6; pointer-events: none; }
 .card-btn.prediction-btn.selected {
-    background-color: var(--color-success); /* سبز برای انتخاب شده */
+    background-color: var(--color-success); 
     color: var(--button-text-color);
     border-color: var(--color-success);
     font-weight: 700;
 }
-
 .card-btn:disabled {
     cursor: not-allowed;
     background-color: var(--bg-color);
     opacity: 0.5;
 }
-
-.card-btn.selected:disabled {
-    opacity: 1; /* دکمه انتخاب شده نباید محو شود */
-}
+.card-btn.selected:disabled { opacity: 1; }
 
 /* --- استایل کارت‌های مدال --- */
 .achievement-card {
-    flex: 0 0 130px; /* عرض ثابت برای هر مدال */
+    flex: 0 0 130px; 
     height: 150px;
     display: flex;
     flex-direction: column;
@@ -465,36 +429,16 @@ body {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     border: 1px solid var(--secondary-bg-color);
 }
-.achievement-card .ach-icon {
-    font-size: 2.5rem;
-    line-height: 1;
-}
-.achievement-card .ach-name {
-    font-size: 0.9rem;
-    font-weight: 700;
-    color: var(--text-color);
-}
-.achievement-card .ach-xp {
-    font-size: 0.8rem;
-    font-weight: 500;
-    color: var(--color-xp);
-}
-/* حالت قفل شده (خاکستری) */
+.achievement-card .ach-icon { font-size: 2.5rem; line-height: 1; }
+.achievement-card .ach-name { font-size: 0.9rem; font-weight: 700; color: var(--text-color); }
+.achievement-card .ach-xp { font-size: 0.8rem; font-weight: 500; color: var(--color-xp); }
 .achievement-card.locked {
     background-color: var(--bg-color);
     opacity: 0.6;
 }
-.achievement-card.locked .ach-icon {
-    filter: grayscale(100%);
-    opacity: 0.5;
-}
-.achievement-card.locked .ach-name {
-    color: var(--hint-color);
-}
-.achievement-card.locked .ach-xp {
-    color: var(--hint-color);
-}
-/* استایل لودینگ مدال */
+.achievement-card.locked .ach-icon { filter: grayscale(100%); opacity: 0.5; }
+.achievement-card.locked .ach-name { color: var(--hint-color); }
+.achievement-card.locked .ach-xp { color: var(--hint-color); }
 .achievement-card.loading {
     min-width: 130px;
     background: linear-gradient(100deg, var(--secondary-bg-color) 40%, #344152 50%, var(--secondary-bg-color) 60%) var(--secondary-bg-color);
@@ -502,7 +446,7 @@ body {
     animation: 1.5s loading-shimmer infinite linear;
 }
 
-/* --- <<< شروع استایل کارت‌های فروشگاه >>> --- */
+/* --- استایل کارت‌های فروشگاه --- */
 .card.store-card {
     display: flex;
     flex-direction: row;
@@ -515,14 +459,8 @@ body {
     flex-direction: column;
     gap: 4px;
 }
-.store-item-title {
-    font-size: 1.1rem;
-    font-weight: 700;
-}
-.store-item-desc {
-    font-size: 0.9rem;
-    color: var(--hint-color);
-}
+.store-item-title { font-size: 1.1rem; font-weight: 700; }
+.store-item-desc { font-size: 0.9rem; color: var(--hint-color); }
 .store-item-btn {
     background-color: var(--color-success);
     color: var(--button-text-color);
@@ -534,21 +472,183 @@ body {
     font-size: 0.9rem;
     cursor: pointer;
     transition: background-color 0.2s ease;
-    white-space: nowrap; /* جلوگیری از شکستن متن دکمه */
+    white-space: nowrap; 
 }
-.store-item-btn:hover {
-    background-color: #218838;
-}
+.store-item-btn:hover { background-color: #218838; }
 .store-item-btn:disabled {
     background-color: var(--hint-color);
     cursor: not-allowed;
     opacity: 0.7;
 }
-.store-item-btn .xp-icon {
-    color: var(--color-xp);
-    margin-right: 4px;
+.store-item-btn .xp-icon { color: var(--color-xp); margin-right: 4px; }
+
+/* --- <<< شروع استایل مودال خرید >>> --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: flex-end; /* چسبیده به پایین */
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
 }
-/* --- <<< پایان استایل کارت‌های فروشگاه >>> --- */
+.modal-overlay:not(.hidden) {
+    opacity: 1;
+    pointer-events: all;
+}
+.modal-content {
+    background-color: var(--bg-color);
+    width: 100%;
+    max-width: 500px;
+    border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+    padding: 16px;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+.modal-overlay:not(.hidden) .modal-content {
+    transform: translateY(0);
+}
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--secondary-bg-color);
+}
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+.modal-close-btn {
+    background: none;
+    border: none;
+    color: var(--hint-color);
+    font-size: 1.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    line-height: 1;
+}
+.modal-body {
+    padding-top: 16px;
+}
+.modal-step {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.modal-step:not(.active) {
+    display: none;
+}
+
+.modal-input, .modal-btn-primary, .modal-btn-secondary {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--secondary-bg-color);
+    background-color: var(--secondary-bg-color);
+    color: var(--text-color);
+    font-family: 'Vazirmatn', sans-serif;
+    font-size: 1rem;
+    box-sizing: border-box; /* برای حفظ پدینگ */
+    -webkit-appearance: none; /* حذف ظاهرهای پیش‌فرض iOS */
+}
+.modal-input:focus {
+    outline: none;
+    border-color: var(--button-color);
+    box-shadow: 0 0 0 2px var(--button-color, #2ea6ff33);
+}
+.input-balance-info {
+    font-size: 0.85rem;
+    color: var(--hint-color);
+    text-align: left;
+    margin-top: -8px;
+}
+.modal-btn-primary {
+    background-color: var(--button-color);
+    color: var(--button-text-color);
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+.modal-btn-primary:disabled {
+    background-color: var(--hint-color);
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+.modal-btn-primary.success-btn {
+    background-color: var(--color-success);
+}
+.modal-btn-primary.success-btn:hover {
+    background-color: #218838;
+}
+.modal-btn-secondary {
+    background-color: var(--secondary-bg-color);
+    color: var(--text-color);
+    font-weight: 500;
+    cursor: pointer;
+}
+.modal-btn-primary i, .modal-btn-secondary i {
+    margin-right: 8px;
+}
+
+.spinner-inline {
+    width: 20px;
+    height: 20px;
+    border: 3px solid var(--secondary-bg-color);
+    border-top: 3px solid var(--button-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 10px auto 0 auto;
+}
+
+/* فاکتور آنی */
+.invoice-summary {
+    background-color: var(--secondary-bg-color);
+    border-radius: var(--border-radius-md);
+    padding: 16px;
+    margin-bottom: 12px;
+}
+.invoice-line {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.95rem;
+    padding: 8px 0;
+}
+.invoice-line .label {
+    color: var(--hint-color);
+}
+.invoice-line .value {
+    font-weight: 500;
+    direction: ltr;
+}
+.invoice-line.promo .value {
+    color: var(--color-success);
+    font-weight: 700;
+}
+.invoice-line.total {
+    border-top: 1px solid var(--bg-color);
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-top: 8px;
+    padding-top: 12px;
+}
+.invoice-line.total .value {
+    font-weight: 800;
+}
+.invoice-line.error .value {
+    color: var(--color-danger);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+/* --- <<< پایان استایل مودال خرید >>> --- */
 
 /* --- حذف کامل فوتر و دکمه‌های عملیاتی --- */
 .action-buttons {

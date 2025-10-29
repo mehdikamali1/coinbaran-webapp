@@ -1,7 +1,7 @@
 ﻿(function () {
     const tg = window.Telegram.WebApp;
     
-    const API_BASE_URL = "https://arise-literally-computational-footwear.trycloudflare.com"; // <-- آدرس تونل شما
+    const API_BASE_URL = "https://zip-quoted-carl-seeking.trycloudflare.com"; // <-- آدرس تونل شما
 
     // --- <<< شروع تغییر: تعریف هزینه‌های فروشگاه در JS >>> ---
     // این مقادیر باید با config.py هماهنگ باشند
@@ -299,7 +299,7 @@
         storeContainer.innerHTML = ''; // پاک کردن لودرها
 
         const currentXP = userData.numeric_xp_balance;
-        const currentLevel = userData.kyc_status_code === 'approved' ? userData.level_name.split(' ')[0].toLowerCase() : 'bronze';
+        const currentLevel = userData.level_name.split(' ')[0].toLowerCase();
 
         let itemsAdded = 0;
 
@@ -407,6 +407,44 @@
     }
     // --- <<< پایان توابع جدید >>> ---
 
+
+    async function submitPrediction(matchId, outcome, cardElement) {
+        tg.MainButton.showProgress();
+        
+        try {
+            const response = await fetch(`${API_BASE_URL}/webapp/submit_prediction`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    initData: tg.initData,
+                    match_id: parseInt(matchId.replace('match_', '')), 
+                    outcome: outcome
+                })
+            });
+
+            const result = await response.json();
+            tg.MainButton.hideProgress();
+
+            if (result.status === "success") {
+                tg.showAlert(`✅ ${result.message}`);
+                cardElement.classList.add('disabled');
+                cardElement.querySelectorAll('.prediction-btn').forEach(btn => {
+                    if (btn.dataset.optionKey === outcome) {
+                        btn.classList.add('selected');
+                    }
+                    btn.disabled = true;
+                });
+            } else {
+                tg.showAlert(`⚠️ ${result.message}`);
+                cardElement.classList.add('disabled'); 
+            }
+
+        } catch (error) {
+            tg.MainButton.hideProgress();
+            tg.showAlert("❌ خطایی در ارتباط با سرور رخ داد. لطفاً دوباره تلاش کنید.");
+            console.error("Failed to submit prediction:", error);
+        }
+    }
 
     function addCardListeners() {
         // 1. Listener برای دکمه‌های پیش‌بینی

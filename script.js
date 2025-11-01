@@ -2,7 +2,7 @@
 (function () {
     const tg = window.Telegram.WebApp;
     
-    const API_BASE_URL = "https://coastal-railroad-eagle-railroad.trycloudflare.com"; // <-- آدرس تونل شما
+    const API_BASE_URL = "https://camp-loud-zealand-airport.trycloudflare.com"; // <-- آدرس تونل شما
 
     // --- <<< شروع تغییر: حذف مقادیر هاردکد شده >>> ---
     // این مقادیر اکنون از سرور (که از config.py می‌خواند) دریافت خواهند شد

@@ -1,7 +1,7 @@
 ﻿(function () {
     const tg = window.Telegram.WebApp;
     
-    const API_BASE_URL = "https://suspension-been-administered-vsnet.trycloudflare.com"; // <-- آدرس تونل شما
+    const API_BASE_URL = "https://birmingham-far-ave-surf.trycloudflare.com"; // <-- آدرس تونل شما
 
     const loader = document.getElementById('loader');
     const appContainer = document.getElementById('app-container');
@@ -128,22 +128,42 @@
     function updateGamification(data) {
         const predictionsContainer = document.getElementById('predictions-container');
         const campaignsContainer = document.getElementById('campaigns-container');
+        const leaderboardContainer = document.getElementById('leaderboard-container');
+        
         const predictionsSection = document.getElementById('predictions-section');
         const campaignsSection = document.getElementById('campaigns-section');
+        const leaderboardSection = document.getElementById('leaderboard-section');
 
         predictionsContainer.innerHTML = '';
         campaignsContainer.innerHTML = '';
+        leaderboardContainer.innerHTML = ''; // <-- پاک کردن محتوای قبلی
 
-        // 1. ساخت کارت‌های پیش‌بینی
+        // 1. ساخت لیدربرد
+        if (data.leaderboard && data.leaderboard.length > 0) {
+            data.leaderboard.forEach(user => {
+                const rankElement = document.createElement('div');
+                rankElement.className = 'leaderboard-row';
+                rankElement.innerHTML = `
+                    <span class="leaderboard-rank">${user.rank_icon}</span>
+                    <span class="leaderboard-name">${user.name}</span>
+                    <span class="leaderboard-points">${user.points}</span>
+                `;
+                leaderboardContainer.appendChild(rankElement);
+            });
+            leaderboardSection.classList.remove('hidden');
+        } else {
+            leaderboardSection.classList.add('hidden');
+        }
+
+        // 2. ساخت کارت‌های پیش‌بینی
         if (data.predictions && data.predictions.length > 0) {
             data.predictions.forEach(match => {
                 const card = document.createElement('div');
                 card.className = 'card prediction-card';
-                card.dataset.matchId = match.id; // شناسه بازی را روی خود کارت ذخیره می‌کنیم
+                card.dataset.matchId = match.id; 
 
                 let optionsHtml = '';
                 match.options.forEach(opt => {
-                    // دکمه‌ها اکنون کلاس و دیتا-اتریبیوت دارند
                     optionsHtml += `<button class="card-btn prediction-btn" data-option-key="${opt.key}">${opt.text}</button>`;
                 });
 
@@ -164,12 +184,11 @@
             predictionsSection.classList.add('hidden');
         }
 
-        // 2. ساخت کارت‌های کمپین
+        // 3. ساخت کارت‌های کمپین
         if (data.campaigns && data.campaigns.length > 0) {
             data.campaigns.forEach(campaign => {
                 const card = document.createElement('div');
                 card.className = 'card campaign-card';
-                // دیتا-اتریبیوت برای اینکه بدانیم کدام دکمه ربات را صدا بزنیم
                 card.dataset.productTarget = campaign.product_target; 
                 
                 card.innerHTML = `
@@ -185,18 +204,18 @@
                 `;
                 campaignsContainer.appendChild(card);
             });
-            campaignsSection.classList.add('hidden');
+            campaignsSection.classList.add('hidden'); // <-- کمپین‌ها فعلاً مخفی می‌مانند
         } else {
             campaignsSection.classList.add('hidden');
         }
 
-        // 3. افزودن Event Listener ها پس از ساخت کارت‌ها
+        // 4. افزودن Event Listener ها پس از ساخت کارت‌ها
         addCardListeners();
     }
+    // --- <<< پایان بازنویسی >>> ---
     
-    // --- تابع جدید برای ارسال پیش‌بینی ---
     async function submitPrediction(matchId, outcome, cardElement) {
-        tg.MainButton.showProgress(); // نمایش لودینگ روی دکمه اصلی تلگرام
+        tg.MainButton.showProgress();
         
         try {
             const response = await fetch(`${API_BASE_URL}/webapp/submit_prediction`, {
@@ -204,7 +223,7 @@
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
                     initData: tg.initData,
-                    match_id: parseInt(matchId.replace('match_', '')), // 'match_123' -> 123
+                    match_id: parseInt(matchId.replace('match_', '')),
                     outcome: outcome
                 })
             });
@@ -213,11 +232,8 @@
             tg.MainButton.hideProgress();
 
             if (result.status === "success") {
-                // موفقیت‌آمیز
                 tg.showAlert(`✅ ${result.message}`);
-                // غیرفعال کردن کارت
                 cardElement.classList.add('disabled');
-                // علامت‌گذاری دکمه انتخابی
                 cardElement.querySelectorAll('.prediction-btn').forEach(btn => {
                     if (btn.dataset.optionKey === outcome) {
                         btn.classList.add('selected');
@@ -225,7 +241,6 @@
                     btn.disabled = true;
                 });
             } else {
-                // خطا (مثلاً: قبلاً ثبت کرده)
                 tg.showAlert(`⚠️ ${result.message}`);
                 cardElement.classList.add('disabled'); // کارت را غیرفعال می‌کنیم
             }
@@ -237,7 +252,6 @@
         }
     }
 
-    // --- تابع جدید برای افزودن Listener ها ---
     function addCardListeners() {
         // 1. Listener برای دکمه‌های پیش‌بینی
         document.querySelectorAll('.prediction-btn').forEach(button => {
@@ -247,7 +261,6 @@
                 const matchId = card.dataset.matchId;
                 const outcome = btn.dataset.optionKey;
                 
-                // نمایش پاپ‌آپ تایید تلگرامی
                 tg.showConfirm(`آیا از ثبت پیش‌بینی «${btn.textContent}» مطمئن هستید؟`, (confirmed) => {
                     if (confirmed) {
                         submitPrediction(matchId, outcome, card);
@@ -260,23 +273,22 @@
         document.querySelectorAll('.campaign-btn').forEach(button => {
             button.addEventListener('click', (e) => {
                 const card = e.currentTarget.closest('.campaign-card');
-                const target = card.dataset.productTarget; // 'usdt_buy' or 'utopia_voucher'
+                const target = card.dataset.productTarget;
                 
                 let action = '';
                 if (target === 'usdt_buy') {
-                    action = 'action_trade'; // فعلا به منوی خرید و فروش می‌فرستیم
+                    action = 'action_trade';
                 } else if (target === 'utopia_voucher') {
-                    action = 'action_trade'; // فعلا به منوی خرید و فروش می‌فرستیم
+                    action = 'action_trade';
                 }
 
                 if (action) {
-                    tg.sendData(action); // ارسال دستور به ربات
+                    tg.sendData(action);
                     tg.close();
                 }
             });
         });
     }
-    // --- <<< پایان بازنویسی‌ها >>> ---
 
     // --- Entry Point ---
     document.addEventListener("DOMContentLoaded", () => {

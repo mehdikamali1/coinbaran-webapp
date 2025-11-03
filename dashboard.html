@@ -8,47 +8,6 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <div id="trade-modal" class="modal-overlay hidden">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="modal-title">خرید تتر (USDT)</h2>
-                <button id="modal-close-btn" class="modal-close-btn">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div id="step-1-amount" class="modal-step active">
-                    <label for="usdt-amount-input">مقدار تتر (USDT) برای خرید:</label>
-                    <input type="number" id="usdt-amount-input" class="modal-input" placeholder="مثلاً: 50" inputmode="decimal">
-                    <div class="input-balance-info">
-                        <span>موجودی: <span id="modal-user-balance">...</span> تومان</span>
-                    </div>
-                    <button id="btn-calculate-fee" class="modal-btn-primary">
-                        <i class="fas fa-calculator"></i> محاسبه فاکتور
-                    </button>
-                    <div id="calc-loader" class="spinner-inline hidden"></div>
-                </div>
-
-                <div id="step-2-invoice" class="modal-step hidden">
-                    <div id="invoice-summary" class="invoice-summary">
-                        </div>
-                    
-                    <label for="network-select">شبکه انتقال:</label>
-                    <select id="network-select" class="modal-input">
-                        <option value="TRC20">TRON (TRC20)</option>
-                        <option value="BEP20">BNB Smart Chain (BEP20)</option>
-                        <option value="ERC20">Ethereum (ERC20)</option>
-                    </select>
-
-                    <label for="address-input">آدرس کیف پول مقصد:</label>
-                    <input type="text" id="address-input" class="modal-input" placeholder="آدرس USDT خود را وارد کنید">
-
-                    <button id="btn-submit-buy-order" class="modal-btn-primary success-btn" disabled>
-                        <i class="fas fa-check"></i> تایید نهایی و خرید
-                    </button>
-                    <button id="btn-back-to-amount" class="modal-btn-secondary">بازگشت</button>
-                </div>
-            </div>
-        </div>
-    </div>
     <div id="loader">
         <div class="spinner"></div>
         <p>در حال بارگذاری اطلاعات...</p>
@@ -88,60 +47,12 @@
                 </div>
                 <small id="progress-text" class="progress-text loading">...</small>
             </section>
-            
+
             <section id="leaderboard-section" class="gamification-section hidden">
-                <h3><i class="fas fa-trophy"></i> تابلوی امتیازات</h3>
-                
-                <div class="user-rank-container">
-                    <div class="rank-box trade-rank">
-                        <span class="rank-label">رتبه شما در معاملات</span>
-                        <span id="user-trade-rank" class="rank-value loading">...</span>
-                        <span id="user-trade-value" class="rank-subtext loading">...</span>
+                <h3><i class="fas fa-trophy"></i> نفرات برتر پیش‌بینی</h3>
+                <div id="leaderboard-container" class="leaderboard-container">
                     </div>
-                    <div class="rank-box prediction-rank">
-                        <span class="rank-label">رتبه شما در پیش‌بینی</span>
-                        <span id="user-prediction-rank" class="rank-value loading">...</span>
-                        <span id="user-prediction-value" class="rank-subtext loading">...</span>
-                    </div>
-                </div>
-
-                <div class="leaderboard-container">
-                    <div class="leaderboard-column">
-                        <h4>🥇 برترین معامله‌گران</h4>
-                        <ol id="top-traders-list" class="leaderboard-list">
-                            <li class="loading">...</li>
-                            <li class="loading">...</li>
-                            <li class="loading">...</li>
-                        </ol>
-                    </div>
-                    <div class="leaderboard-column">
-                        <h4>🎯 برترین پیش‌بینی‌کنندگان</h4>
-                        <ol id="top-predictors-list" class="leaderboard-list">
-                            <li class="loading">...</li>
-                            <li class="loading">...</li>
-                            <li class="loading">...</li>
-                        </ol>
-                    </div>
-                </div>
             </section>
-
-            <section id="achievements-section" class="gamification-section hidden">
-                <h3><i class="fas fa-medal"></i> تالار افتخارات</h3>
-                <div id="achievements-container" class="card-container horizontal-scroll">
-                    <div class="achievement-card loading"></div>
-                    <div class="achievement-card loading"></div>
-                    <div class="achievement-card loading"></div>
-                </div>
-            </section>
-
-            <section id="store-section" class="gamification-section hidden">
-                <h3><i class="fas fa-store"></i> فروشگاه جوایز</h3>
-                <div id="store-container" class="card-container">
-                    <div class="card store-card loading" style="height: 120px;"></div>
-                    <div class="card store-card loading" style="height: 120px;"></div>
-                </div>
-            </section>
-
             <section id="predictions-section" class="gamification-section hidden">
                 <h3><i class="fas fa-futbol"></i> بازی‌های پیش‌بینی فعال</h3>
                 <div id="predictions-container" class="card-container">
@@ -157,7 +68,6 @@
         </main>
         
     </div>
-
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="script.js"></script>
 </body>

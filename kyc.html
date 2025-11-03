@@ -1,0 +1,112 @@
+﻿<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>احراز هویت کوین باران</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            padding: 16px;
+        }
+        .form-container {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            background-color: var(--secondary-bg-color);
+            border-radius: var(--border-radius-lg);
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        .form-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .form-header h1 {
+            color: var(--text-color);
+            margin: 0 0 5px 0;
+            font-size: 1.4rem;
+        }
+        .form-header p {
+            color: var(--hint-color);
+            font-size: 0.9rem;
+            margin: 0;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: var(--hint-color);
+            font-size: 0.9rem;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--bg-color);
+            background-color: var(--bg-color);
+            border-radius: var(--border-radius-sm);
+            color: var(--text-color);
+            font-family: 'Vazirmatn', sans-serif;
+            font-size: 1rem;
+            box-sizing: border-box; /* برای اینکه پدینگ عرض را خراب نکند */
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--button-color);
+        }
+        
+        /* دکمه اصلی در این صفحه مخفی است */
+        #telegram-main-button {
+            display: none;
+        }
+
+    </style>
+</head>
+<body>
+    
+    <div id="loader" class="hidden"> <div class="spinner"></div>
+        <p>در حال ارسال اطلاعات...</p>
+    </div>
+
+    <div id="kyc-form-container" class="form-container">
+        <div class="form-header">
+            <h1>📝 فرم احراز هویت</h1>
+            <p>مرحله ۱: ورود اطلاعات هویتی</p>
+        </div>
+
+        <form id="kyc-form">
+            <div class="form-group">
+                <label for="full_name">نام و نام خانوادگی (مطابق کارت ملی)</label>
+                <input type="text" id="full_name" name="full_name" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="national_id">کد ملی (۱۰ رقمی)</label>
+                <input type="tel" id="national_id" name="national_id" inputmode="numeric" pattern="[0-9]{10}" maxlength="10" required>
+            </div>
+
+            <div class="form-group">
+                <label for="birth_date">تاریخ تولد (مثال: ۱۳۷۰/۰۵/۱۴)</label>
+                <input type="text" id="birth_date" name="birth_date" placeholder="1370/05/14" inputmode="numeric" required>
+            </div>
+
+            <div class="form-group">
+                <label for="phone_number">شماره موبایل (مثال: 09123456789)</label>
+                <input type="tel" id="phone_number" name="phone_number" inputmode="tel" pattern="09[0-9]{9}" maxlength="11" required>
+            </div>
+
+            <div class="form-group">
+                <label for="card_number">شماره کارت بانکی (۱۶ رقمی، به نام خودتان)</label>
+                <input type="tel" id="card_number" name="card_number" inputmode="numeric" pattern="[0-9]{16}" maxlength="16" required>
+            </div>
+
+            </form>
+    </div>
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="kyc.js?v=1.1"></script>
+</body>
+</html>

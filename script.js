@@ -1,7 +1,7 @@
 ﻿(function () {
     const tg = window.Telegram.WebApp;
     
-    const API_BASE_URL = "https://fraser-event-encoding-moving.trycloudflare.com"; // <-- آدرس تونل شما
+    const API_BASE_URL = "https://airport-soldier-adapted-view.trycloudflare.com"; // <-- آدرس تونل شما
 
     const loader = document.getElementById('loader');
     const appContainer = document.getElementById('app-container');

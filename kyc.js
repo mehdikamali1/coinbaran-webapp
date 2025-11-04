@@ -30,7 +30,14 @@
             }
         }
         
-        // اعتبارسنجی‌های اولیه برای جلوگیری از خطای سرور
+        // --- <<< شروع تغییر: اضافه کردن اعتبارسنجی فرمت تاریخ >>> ---
+        // Regex for YYYY/MM/DD format (e.g., 1370/05/14)
+        const birthDateRegex = /^\d{4}\/\d{1,2}\/\d{1,2}$/;
+        if (!birthDateRegex.test(inputs.birth_date.value.trim())) {
+            return false;
+        }
+        // --- <<< پایان تغییر >>> ---
+
         if (inputs.national_id.value.length !== 10 || !/^\d+$/.test(inputs.national_id.value)) {
             return false;
         }
@@ -64,7 +71,7 @@
      */
     async function submitKycData() {
         if (!validateForm()) {
-            tg.showAlert("لطفاً تمام فیلدها را به درستی پر کنید.");
+            tg.showAlert("لطفاً تمام فیلدها را به درستی پر کنید (مخصوصاً فرمت تاریخ تولد YYYY/MM/DD).");
             return;
         }
 

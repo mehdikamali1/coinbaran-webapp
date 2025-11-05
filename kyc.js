@@ -2,9 +2,9 @@
     const tg = window.Telegram.WebApp;
     
     // ------------------------------------------------------------------------
-    // ⚠️ مهم: این آدرس باید با آدرس سرور FastAPI شما در sms_webhook_server.py یکی باشد
+    // ⚠️ قدم شما: این آدرس را با آدرس جدید Cloudflare خودتان جایگزین کنید
     // ------------------------------------------------------------------------
-    const API_BASE_URL = "https://emperor-sharing-opportunity-poison.trycloudflare.com"; 
+    const API_BASE_URL = " https://mia-practical-compaq-newfoundland.trycloudflare.com"; // <-- ❗️❗️❗️ اینجا را آپدیت کن
 
     // --- عناصر DOM ---
     const formContainer = document.getElementById('kyc-form-container');
@@ -30,13 +30,11 @@
             }
         }
         
-        // --- <<< شروع تغییر: اضافه کردن اعتبارسنجی فرمت تاریخ >>> ---
         // Regex for YYYY/MM/DD format (e.g., 1370/05/14)
         const birthDateRegex = /^\d{4}\/\d{1,2}\/\d{1,2}$/;
         if (!birthDateRegex.test(inputs.birth_date.value.trim())) {
             return false;
         }
-        // --- <<< پایان تغییر >>> ---
 
         if (inputs.national_id.value.length !== 10 || !/^\d+$/.test(inputs.national_id.value)) {
             return false;

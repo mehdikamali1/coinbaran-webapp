@@ -1,7 +1,10 @@
 ﻿(function () {
     const tg = window.Telegram.WebApp;
     
-    const API_BASE_URL = "https://airport-soldier-adapted-view.trycloudflare.com"; // <-- آدرس تونل شما
+    // ------------------------------------------------------------------------
+    // ⚠️ قدم شما: این آدرس را با آدرس جدید Cloudflare خودتان جایگزین کنید
+    // ------------------------------------------------------------------------
+    const API_BASE_URL = "https://mia-practical-compaq-newfoundland.trycloudflare.com"; // <-- ❗️❗️❗️ اینجا را آپدیت کن
 
     const loader = document.getElementById('loader');
     const appContainer = document.getElementById('app-container');
@@ -45,7 +48,7 @@
             
             const userData = await userDataResponse.json();
             if (userData.status === "success") {
-                updateDashboard(userData); // اطلاعات داشبورد را بلافاصله نمایش بده
+                updateDashboard(userData); 
             } else {
                 throw new Error(userData.message || "خطا در دریافت اطلاعات کاربر.");
             }
@@ -63,7 +66,7 @@
 
             const gamificationData = await gamificationDataResponse.json();
             if (gamificationData.status === "success") {
-                updateGamification(gamificationData); // کارت‌های گیمیفیکیشن را اضافه کن
+                updateGamification(gamificationData); 
             } else {
                 throw new Error(gamificationData.message || "خطا در دریافت اطلاعات گیمیفیکیشن.");
             }
@@ -72,10 +75,9 @@
             hideLoader();
 
         } catch (error) {
-            // مدیریت خطای نهایی
             console.error("Error fetching data:", error);
             if (error.message.includes("Failed to fetch")) {
-                 document.getElementById('loader').innerHTML = `<p style="color: red;">خطا در بارگذاری (Load failed):<br>اتصال به سرور API برقرار نشد. لطفاً مطمئن شوید تونل Cloudflare فعال است.</p>`;
+                 document.getElementById('loader').innerHTML = `<p style="color: red;">خطا در بارگذاری (Load failed):<br>اتصال به سرور API برقرار نشد. آدرس API_BASE_URL را چک کنید.</p>`;
             } else {
                  document.getElementById('loader').innerHTML = `<p style="color: red;">خطا در بارگذاری اطلاعات: ${error.message}</p>`;
             }
@@ -94,7 +96,7 @@
         kycIconEl.classList.remove('fa-spinner', 'fa-spin');
 
         document.getElementById('kyc-text').textContent = data.kyc_status_text;
-        kycStatusEl.className = 'kyc-status'; // Reset classes
+        kycStatusEl.className = 'kyc-status'; 
         kycStatusEl.classList.add(data.kyc_status_code || 'not_submitted');
         
         const iconMap = {
@@ -118,13 +120,11 @@
         document.getElementById('progress-text').textContent = data.level_progress_bar;
         document.getElementById('progress-text').classList.remove('loading');
 
-        // Animate progress bar
         const progressBar = document.getElementById('progress-bar');
         const percentage = parseFloat(data.level_progress_bar.match(/(\d+(\.\d+)?)%/)?.[1] || 0);
         progressBar.style.width = `${percentage}%`;
     }
     
-    // --- <<< شروع بازنویسی کامل تابع گیمیفیکیشن >>> ---
     function updateGamification(data) {
         const predictionsContainer = document.getElementById('predictions-container');
         const campaignsContainer = document.getElementById('campaigns-container');
@@ -136,7 +136,7 @@
 
         predictionsContainer.innerHTML = '';
         campaignsContainer.innerHTML = '';
-        leaderboardContainer.innerHTML = ''; // <-- پاک کردن محتوای قبلی
+        leaderboardContainer.innerHTML = ''; 
 
         // 1. ساخت لیدربرد
         if (data.leaderboard && data.leaderboard.length > 0) {
@@ -204,15 +204,14 @@
                 `;
                 campaignsContainer.appendChild(card);
             });
-            campaignsSection.classList.add('hidden'); // <-- کمپین‌ها فعلاً مخفی می‌مانند
+            campaignsSection.classList.add('hidden');
         } else {
             campaignsSection.classList.add('hidden');
         }
 
-        // 4. افزودن Event Listener ها پس از ساخت کارت‌ها
+        // 4. افزودن Event Listener ها
         addCardListeners();
     }
-    // --- <<< پایان بازنویسی >>> ---
     
     async function submitPrediction(matchId, outcome, cardElement) {
         tg.MainButton.showProgress();
@@ -242,7 +241,7 @@
                 });
             } else {
                 tg.showAlert(`⚠️ ${result.message}`);
-                cardElement.classList.add('disabled'); // کارت را غیرفعال می‌کنیم
+                cardElement.classList.add('disabled');
             }
 
         } catch (error) {
@@ -253,7 +252,6 @@
     }
 
     function addCardListeners() {
-        // 1. Listener برای دکمه‌های پیش‌بینی
         document.querySelectorAll('.prediction-btn').forEach(button => {
             button.addEventListener('click', (e) => {
                 const btn = e.currentTarget;
@@ -269,7 +267,6 @@
             });
         });
 
-        // 2. Listener برای دکمه‌های کمپین
         document.querySelectorAll('.campaign-btn').forEach(button => {
             button.addEventListener('click', (e) => {
                 const card = e.currentTarget.closest('.campaign-card');
@@ -290,12 +287,10 @@
         });
     }
 
-    // --- Entry Point ---
     document.addEventListener("DOMContentLoaded", () => {
         initTelegram();
         showLoader();
         fetchUserData();
-        // spoofUserData(); // برای تست در مرورگر
     });
 
 })();

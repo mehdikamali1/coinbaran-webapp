@@ -4,7 +4,7 @@
     // ------------------------------------------------------------------------
     // ⚠️ قدم شما: این آدرس را با آدرس جدید Cloudflare خودتان جایگزین کنید
     // ------------------------------------------------------------------------
-    const API_BASE_URL = " https://mia-practical-compaq-newfoundland.trycloudflare.com"; // <-- ❗️❗️❗️ اینجا را آپدیت کن
+    const API_BASE_URL = "https://consulting-around-hash-fit.trycloudflare.com"; // <-- ❗️❗️❗️ اینجا را آپدیت کن
 
     // --- عناصر DOM ---
     const formContainer = document.getElementById('kyc-form-container');

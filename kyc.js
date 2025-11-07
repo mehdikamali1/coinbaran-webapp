@@ -2,9 +2,9 @@
     const tg = window.Telegram.WebApp;
     
     // ------------------------------------------------------------------------
-    // ⚠️ مهم: این آدرس باید با آدرس سرور FastAPI شما یکی باشد
+    // ⚠️ آدرس Cloudflare شما باید در اینجا صحیح باشد
     // ------------------------------------------------------------------------
-    const API_BASE_URL = "https://scale-too-latter-smtp.trycloudflare.com"; // <-- ❗️❗️❗️ آدرس تونل شما
+    const API_BASE_URL = "https://gazette-thereby-publishers-daniel.trycloudflare.com"; // <-- ❗️❗️❗️ مطمئن شوید این آدرس درست است
 
     // --- عناصر DOM ---
     const formContainer = document.getElementById('kyc-form-container');
@@ -36,9 +36,14 @@
             }
         }
         
-        // 2. بررسی فرمت‌های خاص
-        const birthDateRegex = /^\d{4}\/\d{1,2}\/\d{1,2}$/;
-        if (!birthDateRegex.test(inputs.birth_date.value.trim())) return false;
+        // --- <<< شروع تغییر: اعتبارسنجی تاریخ انعطاف‌پذیر >>> ---
+        // Regex for YYYY/MM/DD OR YYYY-MM-DD
+        const birthDateRegex = /^\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}$/;
+        if (!birthDateRegex.test(inputs.birth_date.value.trim())) {
+            return false;
+        }
+        // --- <<< پایان تغییر >>> ---
+
         if (inputs.national_id.value.length !== 10 || !/^\d+$/.test(inputs.national_id.value)) return false;
         if (inputs.card_number.value.length !== 16 || !/^\d+$/.test(inputs.card_number.value)) return false;
         if (inputs.phone_number.value.length !== 11 || !inputs.phone_number.value.startsWith('09')) return false;
@@ -74,7 +79,7 @@
      */
     async function submitKycData() {
         if (!validateForm()) {
-            tg.showAlert("لطفاً تمام فیلدهای متنی و تصویری را به درستی کامل کنید.");
+            tg.showAlert("لطفاً تمام فیلدها را به درستی پر کنید (مخصوصاً فرمت تاریخ تولد YYYY/MM/DD).");
             return;
         }
 
@@ -82,7 +87,6 @@
         loader.classList.remove('hidden');
         tg.MainButton.showProgress();
 
-        // از FormData برای ارسال فایل‌ها استفاده می‌کنیم
         const formData = new FormData();
         formData.append("initData", tg.initData);
         
@@ -100,10 +104,8 @@
         formData.append("selfie_file", inputs.selfie_file.files[0]);
 
         try {
-            // اندپوینت جدید برای آپلود کامل
             const response = await fetch(`${API_BASE_URL}/webapp/submit_full_kyc`, {
                 method: 'POST',
-                // هدر Content-Type را تنظیم *نمی‌کنیم*. مرورگر خودش این کار را برای FormData انجام می‌دهد
                 body: formData 
             });
 
@@ -140,16 +142,12 @@
             
             input.addEventListener('change', () => {
                 if (input.files.length > 0) {
-                    // فایل انتخاب شده است
                     wrapper.classList.add('file-selected');
-                    // نمایش نام فایل (اختیاری، اما زیباست)
                     textElement.textContent = input.files[0].name; 
                 } else {
-                    // انتخاب فایل لغو شده است
                     wrapper.classList.remove('file-selected');
                     textElement.textContent = "برای آپلود کلیک کنید";
                 }
-                // پس از هر تغییر فایل، دکمه اصلی را بررسی کن
                 updateMainButtonState(); 
             });
         });
@@ -179,12 +177,11 @@
             }
         });
         
-        // افزودن لیسنر به فیلدهای فایل
         addFileListeners();
-        
         updateMainButtonState();
     }
 
+    // --- Entry Point ---
     document.addEventListener("DOMContentLoaded", init);
 
 })();

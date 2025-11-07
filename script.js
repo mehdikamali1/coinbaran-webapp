@@ -4,7 +4,7 @@
     // ------------------------------------------------------------------------
     // ⚠️ قدم شما: این آدرس را با آدرس جدید Cloudflare خودتان جایگزین کنید
     // ------------------------------------------------------------------------
-    const API_BASE_URL = "https://hitachi-best-bread-declared.trycloudflare.com"; // <-- ❗️❗️❗️ اینجا را آپدیت کن
+    const API_BASE_URL = "https://benefits-printer-steam-towers.trycloudflare.com"; // <-- ❗️❗️❗️ اینجا را آپدیت کن
 
     const loader = document.getElementById('loader');
     const appContainer = document.getElementById('app-container');

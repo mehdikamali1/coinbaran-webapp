@@ -2,48 +2,53 @@
     const tg = window.Telegram.WebApp;
     
     // ------------------------------------------------------------------------
-    // ⚠️ قدم شما: این آدرس را با آدرس جدید Cloudflare خودتان جایگزین کنید
+    // ⚠️ مهم: این آدرس باید با آدرس سرور FastAPI شما یکی باشد
     // ------------------------------------------------------------------------
-    const API_BASE_URL = "https://hitachi-best-bread-declared.trycloudflare.com"; // <-- ❗️❗️❗️ اینجا را آپدیت کن
+    const API_BASE_URL = "https://benefits-printer-steam-towers.trycloudflare.com"; // <-- ❗️❗️❗️ آدرس تونل شما
 
     // --- عناصر DOM ---
     const formContainer = document.getElementById('kyc-form-container');
     const loader = document.getElementById('loader');
     const form = document.getElementById('kyc-form');
     
-    // --- لیست تمام فیلدهای ورودی ---
+    // --- لیست تمام فیلدهای ورودی (متنی و فایل) ---
     const inputs = {
         full_name: document.getElementById('full_name'),
         national_id: document.getElementById('national_id'),
         birth_date: document.getElementById('birth_date'),
         phone_number: document.getElementById('phone_number'),
-        card_number: document.getElementById('card_number')
+        card_number: document.getElementById('card_number'),
+        id_front_file: document.getElementById('id_front_file'),
+        id_back_file: document.getElementById('id_back_file'),
+        bank_card_file: document.getElementById('bank_card_file'),
+        selfie_file: document.getElementById('selfie_file')
     };
 
     /**
-     * بررسی می‌کند که آیا تمام فیلدهای فرم پر شده‌اند یا خیر.
+     * بررسی می‌کند که آیا تمام فیلدهای فرم (متنی و فایل) پر شده‌اند یا خیر.
      */
     function validateForm() {
-        for (const key in inputs) {
+        // 1. بررسی فیلدهای متنی
+        const textInputs = ['full_name', 'national_id', 'birth_date', 'phone_number', 'card_number'];
+        for (const key of textInputs) {
             if (!inputs[key].value || inputs[key].value.trim() === '') {
-                return false; // اگر حتی یکی خالی بود، فرم نامعتبر است
+                return false;
             }
         }
         
-        // Regex for YYYY/MM/DD format (e.g., 1370/05/14)
+        // 2. بررسی فرمت‌های خاص
         const birthDateRegex = /^\d{4}\/\d{1,2}\/\d{1,2}$/;
-        if (!birthDateRegex.test(inputs.birth_date.value.trim())) {
-            return false;
-        }
+        if (!birthDateRegex.test(inputs.birth_date.value.trim())) return false;
+        if (inputs.national_id.value.length !== 10 || !/^\d+$/.test(inputs.national_id.value)) return false;
+        if (inputs.card_number.value.length !== 16 || !/^\d+$/.test(inputs.card_number.value)) return false;
+        if (inputs.phone_number.value.length !== 11 || !inputs.phone_number.value.startsWith('09')) return false;
 
-        if (inputs.national_id.value.length !== 10 || !/^\d+$/.test(inputs.national_id.value)) {
-            return false;
-        }
-        if (inputs.card_number.value.length !== 16 || !/^\d+$/.test(inputs.card_number.value)) {
-            return false;
-        }
-        if (inputs.phone_number.value.length !== 11 || !inputs.phone_number.value.startsWith('09')) {
-            return false;
+        // 3. بررسی انتخاب شدن تمام فایل‌ها
+        const fileInputs = ['id_front_file', 'id_back_file', 'bank_card_file', 'selfie_file'];
+        for (const key of fileInputs) {
+            if (inputs[key].files.length === 0) {
+                return false;
+            }
         }
         
         return true; // همه فیلدها معتبر هستند
@@ -54,7 +59,7 @@
      */
     function updateMainButtonState() {
         if (validateForm()) {
-            tg.MainButton.setText("✅ ارسال اطلاعات متنی");
+            tg.MainButton.setText("✅ تایید و ارسال نهایی مدارک");
             tg.MainButton.enable();
             tg.MainButton.show();
         } else {
@@ -65,46 +70,51 @@
     }
 
     /**
-     * اطلاعات فرم را به سرور (FastAPI) ارسال می‌کند.
+     * اطلاعات فرم و فایل‌ها را به سرور (FastAPI) ارسال می‌کند.
      */
     async function submitKycData() {
         if (!validateForm()) {
-            tg.showAlert("لطفاً تمام فیلدها را به درستی پر کنید (مخصوصاً فرمت تاریخ تولد YYYY/MM/DD).");
+            tg.showAlert("لطفاً تمام فیلدهای متنی و تصویری را به درستی کامل کنید.");
             return;
         }
 
-        // نمایش لودر و مخفی کردن فرم
         formContainer.classList.add('hidden');
         loader.classList.remove('hidden');
-        tg.MainButton.showProgress(); // نمایش لودینگ روی دکمه
+        tg.MainButton.showProgress();
 
-        const formData = {
-            initData: tg.initData,
-            full_name: inputs.full_name.value.trim(),
-            national_id: inputs.national_id.value.trim(),
-            birth_date: inputs.birth_date.value.trim(),
-            phone_number: inputs.phone_number.value.trim(),
-            card_number: inputs.card_number.value.trim().replace(/\s/g, '') // حذف هرگونه فاصله
-        };
+        // از FormData برای ارسال فایل‌ها استفاده می‌کنیم
+        const formData = new FormData();
+        formData.append("initData", tg.initData);
+        
+        // افزودن داده‌های متنی
+        formData.append("full_name", inputs.full_name.value.trim());
+        formData.append("national_id", inputs.national_id.value.trim());
+        formData.append("birth_date", inputs.birth_date.value.trim());
+        formData.append("phone_number", inputs.phone_number.value.trim());
+        formData.append("card_number", inputs.card_number.value.trim().replace(/\s/g, ''));
+        
+        // افزودن فایل‌ها
+        formData.append("id_front_file", inputs.id_front_file.files[0]);
+        formData.append("id_back_file", inputs.id_back_file.files[0]);
+        formData.append("bank_card_file", inputs.bank_card_file.files[0]);
+        formData.append("selfie_file", inputs.selfie_file.files[0]);
 
         try {
-            const response = await fetch(`${API_BASE_URL}/webapp/submit_kyc_text`, {
+            // اندپوینت جدید برای آپلود کامل
+            const response = await fetch(`${API_BASE_URL}/webapp/submit_full_kyc`, {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(formData)
+                // هدر Content-Type را تنظیم *نمی‌کنیم*. مرورگر خودش این کار را برای FormData انجام می‌دهد
+                body: formData 
             });
 
             const result = await response.json();
 
             if (response.ok && result.status === "success") {
-                // موفقیت‌آمیز
-                tg.showAlert("✅ اطلاعات متنی شما با موفقیت ثبت شد. لطفاً برای ارسال مدارک به ربات بازگردید.");
-                tg.close(); // بستن وب‌اپ
+                tg.showAlert("✅ احراز هویت شما با موفقیت برای بررسی ارسال شد. لطفاً منتظر تایید ادمین بمانید.");
+                tg.close();
             } else {
-                // خطا از سمت سرور (مثلاً کد ملی تکراری)
                 const errorMessage = result.message || (result.detail || "خطای ناشناخته از سرور.");
                 tg.showAlert(`⚠️ خطا: ${errorMessage}`);
-                // نمایش مجدد فرم
                 loader.classList.add('hidden');
                 formContainer.classList.remove('hidden');
                 tg.MainButton.hideProgress();
@@ -113,11 +123,36 @@
         } catch (error) {
             console.error("Failed to submit KYC data:", error);
             tg.showAlert("❌ خطایی در ارتباط با سرور رخ داد. لطفاً دوباره تلاش کنید.");
-            // نمایش مجدد فرم
             loader.classList.add('hidden');
             formContainer.classList.remove('hidden');
             tg.MainButton.hideProgress();
         }
+    }
+
+    /**
+     * به فیلدهای آپلود فایل، بازخورد بصری اضافه می‌کند.
+     */
+    function addFileListeners() {
+        const fileWrappers = document.querySelectorAll('.file-upload-wrapper');
+        fileWrappers.forEach(wrapper => {
+            const input = wrapper.querySelector('input[type="file"]');
+            const textElement = wrapper.querySelector('.file-upload-text');
+            
+            input.addEventListener('change', () => {
+                if (input.files.length > 0) {
+                    // فایل انتخاب شده است
+                    wrapper.classList.add('file-selected');
+                    // نمایش نام فایل (اختیاری، اما زیباست)
+                    textElement.textContent = input.files[0].name; 
+                } else {
+                    // انتخاب فایل لغو شده است
+                    wrapper.classList.remove('file-selected');
+                    textElement.textContent = "برای آپلود کلیک کنید";
+                }
+                // پس از هر تغییر فایل، دکمه اصلی را بررسی کن
+                updateMainButtonState(); 
+            });
+        });
     }
 
     /**
@@ -129,26 +164,27 @@
         tg.setHeaderColor('secondary_bg_color');
         tg.setBackgroundColor('bg_color');
 
-        // 1. نمایش دکمه اصلی
         tg.MainButton.setParams({
             is_active: false,
             is_visible: true,
             text: "لطفاً تمام فیلدها را کامل کنید"
         });
 
-        // 2. افزودن event listener به دکمه اصلی
         tg.MainButton.onClick(submitKycData);
 
-        // 3. افزودن event listener به تمام فیلدهای ورودی
+        // افزودن لیسنر به فیلدهای متنی
         Object.values(inputs).forEach(input => {
-            input.addEventListener('input', updateMainButtonState);
+            if (input.type === 'text' || input.type === 'tel') {
+                input.addEventListener('input', updateMainButtonState);
+            }
         });
-
-        // 4. بررسی اولیه وضعیت فرم (برای زمانی که کاربر بازمی‌گردد)
+        
+        // افزودن لیسنر به فیلدهای فایل
+        addFileListeners();
+        
         updateMainButtonState();
     }
 
-    // --- Entry Point ---
     document.addEventListener("DOMContentLoaded", init);
 
 })();

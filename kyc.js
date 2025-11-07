@@ -4,7 +4,7 @@
     // ------------------------------------------------------------------------
     // ⚠️ مهم: این آدرس باید با آدرس سرور FastAPI شما یکی باشد
     // ------------------------------------------------------------------------
-    const API_BASE_URL = "https://benefits-printer-steam-towers.trycloudflare.com"; // <-- ❗️❗️❗️ آدرس تونل شما
+    const API_BASE_URL = "https://scale-too-latter-smtp.trycloudflare.com"; // <-- ❗️❗️❗️ آدرس تونل شما
 
     // --- عناصر DOM ---
     const formContainer = document.getElementById('kyc-form-container');

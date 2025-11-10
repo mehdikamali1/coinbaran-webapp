@@ -4,7 +4,7 @@
     // ------------------------------------------------------------------------
     // ⚠️ آدرس Cloudflare شما باید در اینجا صحیح باشد
     // ------------------------------------------------------------------------
-    const API_BASE_URL = "https://dealers-viewed-avon-universal.trycloudflare.com"; // <-- ❗️❗️❗️ مطمئن شوید این آدرس درست است
+    const API_BASE_URL = "https://overcome-bugs-commentary-broader.trycloudflare.com"; // <-- ❗️❗️❗️ مطمئن شوید این آدرس درست است
 
     // --- عناصر DOM ---
     const formContainer = document.getElementById('kyc-form-container');

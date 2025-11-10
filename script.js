@@ -4,7 +4,7 @@
     // ------------------------------------------------------------------------
     // ⚠️ قدم شما: این آدرس را با آدرس جدید Cloudflare خودتان جایگزین کنید
     // ------------------------------------------------------------------------
-    const API_BASE_URL = "https://innovation-laboratory-courses-euro.trycloudflare.com"; // <-- ❗️❗️❗️ اینجا را آپدیت کن
+    const API_BASE_URL = "https://surface-formula-familiar-wants.trycloudflare.com"; // <-- ❗️❗️❗️ اینجا را آپدیت کن
 
     const loader = document.getElementById('loader');
     const appContainer = document.getElementById('app-container');

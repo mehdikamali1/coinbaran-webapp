@@ -5,7 +5,7 @@
     // ⚠️ آدرس Cloudflare شما باید در اینجا صحیح باشد
     // ------------------------------------------------------------------------
     // ما از wss:// (ورژن امن WebSocket) برای هاست ابری استفاده می‌کنیم
-    const API_HOST = "https://surface-formula-familiar-wants.trycloudflare.com"; // <-- ❗️❗️❗️ مطمئن شوید این آدرس درست است
+    const API_HOST = "https://dealers-viewed-avon-universal.trycloudflare.com"; // <-- ❗️❗️❗️ مطمئن شوید این آدرس درست است
     const WS_BASE_URL = `wss://${API_HOST}`;
     const API_BASE_URL = `https://${API_HOST}`; // برای ارسال رای
     // ------------------------------------------------------------------------

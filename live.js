@@ -4,7 +4,7 @@
     // ------------------------------------------------------------------------
     // ⚠️ آدرس تونل شما در اینجا قرار گرفت
     // ------------------------------------------------------------------------
-    const API_HOST = "merchant-meaning-various-universe.trycloudflare.com"; // <-- ❗️ آدرس جدید شما
+    const API_HOST = "https://represent-subsection-operated-sampling.trycloudflare.com"; // <-- ❗️ آدرس جدید شما
     const WS_BASE_URL = `wss://${API_HOST}`;
     const API_BASE_URL = `https://${API_HOST}`; // برای ارسال رای
     // ------------------------------------------------------------------------

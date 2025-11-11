@@ -1,10 +1,10 @@
 ﻿(function () {
     const tg = window.Telegram.WebApp;
-
+    
     // ------------------------------------------------------------------------
-    // ⚠️ آدرس تونل شما در اینجا قرار گرفت
+    // ⚠️ قدم شما: مطمئن شوید این آدرس، آدرس فعال فعلی کلودفلر شماست
     // ------------------------------------------------------------------------
-    const API_HOST = "https://represent-subsection-operated-sampling.trycloudflare.com"; // <-- ❗️ آدرس جدید شما
+    const API_HOST = "https://lamp-bacon-thumb-says.trycloudflare.com"; // <-- ❗️❗️❗️ این آدرس باید فعال باشد
     const WS_BASE_URL = `wss://${API_HOST}`;
     const API_BASE_URL = `https://${API_HOST}`; // برای ارسال رای
     // ------------------------------------------------------------------------
@@ -254,7 +254,7 @@
         };
 
         websocket.onclose = (event) => {
-            console.warning(`WebSocket closed. Code: ${event.code}, Reason: ${event.reason}`);
+            console.warn(`WebSocket closed. Code: ${event.code}, Reason: ${event.reason}`);
             updateConnectionStatus(false, "❌ اتصال قطع شد. در حال تلاش مجدد...");
             tg.HapticFeedback.notificationOccurred('error');
             // تلاش مجدد برای اتصال پس از 3 ثانیه

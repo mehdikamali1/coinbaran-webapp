@@ -2,9 +2,9 @@
     const tg = window.Telegram.WebApp;
     
     // ------------------------------------------------------------------------
-    // ⚠️ قدم شما: این آدرس را با آدرس جدید Cloudflare خودتان جایگزین کنید
+    // ⚠️ آدرس تونل شما در اینجا قرار گرفت
     // ------------------------------------------------------------------------
-    const API_BASE_URL = "https://represent-subsection-operated-sampling.trycloudflare.com"; // <-- ❗️❗️❗️ اینجا را آپدیت کن
+    const API_BASE_URL = "https://lamp-bacon-thumb-says.trycloudflare.com"; // <-- ❗️❗️❗️ آدرس جدید شما
 
     const loader = document.getElementById('loader');
     const appContainer = document.getElementById('app-container');

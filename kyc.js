@@ -4,7 +4,7 @@
     // ------------------------------------------------------------------------
     // ⚠️ آدرس Cloudflare شما باید در اینجا صحیح باشد
     // ------------------------------------------------------------------------
-    const API_BASE_URL = "https://lamp-bacon-thumb-says.trycloudflare.com"; // <-- ❗️❗️❗️ مطمئن شوید این آدرس درست است
+    const API_BASE_URL = "https://blowing-merely-shed-school.trycloudflare.com"; // <-- ❗️❗️❗️ مطمئن شوید این آدرس درست است
 
     // --- عناصر DOM ---
     const formContainer = document.getElementById('kyc-form-container');

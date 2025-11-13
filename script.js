@@ -4,7 +4,7 @@
     // ------------------------------------------------------------------------
     // ⚠️ آدرس تونل شما در اینجا قرار گرفت
     // ------------------------------------------------------------------------
-    const API_BASE_URL = "https://lamp-bacon-thumb-says.trycloudflare.com"; // <-- ❗️❗️❗️ آدرس جدید شما
+    const API_BASE_URL = "https://blowing-merely-shed-school.trycloudflare.com"; // <-- ❗️❗️❗️ آدرس جدید شما
 
     const loader = document.getElementById('loader');
     const appContainer = document.getElementById('app-container');

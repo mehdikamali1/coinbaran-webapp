@@ -2,22 +2,27 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>داشبورد کوین باران</title>
-    <link rel="stylesheet" href="style.css?v=1.1">
+    <!-- آیکون‌ها زودتر لود شوند -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=5.0.1"> <!-- نسخه CSS به‌روز شد -->
 </head>
 <body>
+    <!-- لودر اولیه -->
     <div id="loader">
         <div class="spinner"></div>
         <p>در حال بارگذاری اطلاعات...</p>
     </div>
 
+    <!-- محتوای اصلی اپلیکیشن -->
     <div id="app-container" class="hidden">
+        
+        <!-- هدر: اطلاعات کاربر و وضعیت KYC -->
         <header class="header">
             <div class="user-info">
                 <span id="user-icon" class="user-icon">💎</span>
-                <h1 id="welcome-name">سلام، کاربر عزیز</h1>
+                <h1 id="welcome-name" class="loading">...</h1>
             </div>
             <div id="kyc-status" class="kyc-status loading">
                 <span id="kyc-text">...</span>
@@ -26,50 +31,61 @@
         </header>
 
         <main>
+            <!-- کارت اصلی موجودی -->
             <section class="balance-card">
                 <div class="balance-row">
-                    <span class="balance-label">موجودی تومانی</span>
+                    <!-- تغییر: آیکون کیف پول اضافه شد -->
+                    <span class="balance-label"><i class="fas fa-wallet"></i> موجودی تومانی</span>
                     <h2 id="toman-balance" class="balance-amount loading">...</h2>
                 </div>
                 <div class="balance-row xp">
-                    <span class="balance-label">امتیاز شما (XP)</span>
+                    <!-- تغییر: آیکون ستاره اضافه شد -->
+                    <span class="balance-label"><i class="fas fa-star"></i> امتیاز شما (XP)</span>
                     <h2 id="xp-balance" class="balance-amount loading">...</h2>
                 </div>
             </section>
 
+            <!-- کارت سطح کاربری و نوار پیشرفت -->
             <section class="level-card">
                 <div class="level-header">
                     <span id="level-name" class="loading">...</span>
                     <span>(سطح کاربری)</span>
                 </div>
                 <div class="progress-bar-container">
-                    <div id="progress-bar" class="progress-bar"></div>
+                    <div id="progress-bar" class="progress-bar" style="width: 0%;"></div>
                 </div>
                 <small id="progress-text" class="progress-text loading">...</small>
             </section>
 
+            <!-- بخش لیدربرد (جدید) -->
             <section id="leaderboard-section" class="gamification-section hidden">
                 <h3><i class="fas fa-trophy"></i> نفرات برتر پیش‌بینی</h3>
                 <div id="leaderboard-container" class="leaderboard-container">
-                    </div>
+                    <!-- ردیف‌ها توسط جاوااسکریپت اضافه می‌شوند -->
+                </div>
             </section>
 
+            <!-- بخش پیش‌بینی‌ها -->
             <section id="predictions-section" class="gamification-section hidden">
                 <h3><i class="fas fa-futbol"></i> بازی‌های پیش‌بینی فعال</h3>
                 <div id="predictions-container" class="card-container">
-                    </div>
+                    <!-- کارت‌ها توسط جاوااسکریپت اضافه می‌شوند -->
+                </div>
             </section>
 
+            <!-- بخش کمپین‌ها -->
             <section id="campaigns-section" class="gamification-section hidden">
                 <h3><i class="fas fa-percent"></i> تخفیف‌های ویژه فعال</h3>
                 <div id="campaigns-container" class="card-container">
-                    </div>
+                    <!-- کارت‌ها توسط جاوااسکریپت اضافه می‌شوند -->
+                </div>
             </section>
             
         </main>
         
-    </div>
+    </div> <!-- /#app-container -->
+
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="script.js?v=1.1"></script>
-    </body>
+    <script src="script.js?v=1.2"></script> <!-- نسخه JS هم آپدیت شد -->
+</body>
 </html>

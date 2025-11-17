@@ -1,103 +1,124 @@
-﻿(function () {
+﻿/* webapp/script.js (نسخه 2.1 - اتصال به سرور ادغام شده FastAPI) */
+(function () {
+    'use strict';
+
+    // --- 1. تنظیمات و دسترسی به عناصر ---
     const tg = window.Telegram.WebApp;
     
-    // ------------------------------------------------------------------------
-    // ⚠️ آدرس تونل شما در اینجا قرار گرفت
-    // ------------------------------------------------------------------------
-    const API_BASE_URL = "https://blowing-merely-shed-school.trycloudflare.com"; // <-- ❗️❗️❗️ آدرس جدید شما
+    // ❗️❗️❗️ https://pairs-lasting-lighter-launched.trycloudflare.com ❗️❗️❗️
+    // این آدرس باید به سرور FastAPI شما (sms_webhook_server.py) که روی پورت 8000 اجرا می‌شود، اشاره کند.
+    // (این همان آدرسی است که در فایل v4.0 شما بود)
+    const API_BASE_URL = "https://blowing-merely-shed-school.trycloudflare.com";
 
     const loader = document.getElementById('loader');
     const appContainer = document.getElementById('app-container');
 
-    function showLoader() {
-        loader.classList.remove('hidden');
-        appContainer.classList.add('hidden');
-    }
+    // دسترسی به تمام عناصر قابل آپدیت
+    const elements = {
+        welcomeName: document.getElementById('welcome-name'),
+        kycStatus: document.getElementById('kyc-status'),
+        kycIcon: document.getElementById('kyc-icon'),
+        kycText: document.getElementById('kyc-text'),
+        tomanBalance: document.getElementById('toman-balance'),
+        xpBalance: document.getElementById('xp-balance'),
+        levelName: document.getElementById('level-name'),
+        progressBar: document.getElementById('progress-bar'),
+        progressText: document.getElementById('progress-text'),
+        leaderboardSection: document.getElementById('leaderboard-section'),
+        leaderboardContainer: document.getElementById('leaderboard-container'),
+        predictionsSection: document.getElementById('predictions-section'),
+        predictionsContainer: document.getElementById('predictions-container'),
+        campaignsSection: document.getElementById('campaigns-section'),
+        campaignsContainer: document.getElementById('campaigns-container')
+    };
+    
+    // --- 2. توابع اصلی ---
 
-    function hideLoader() {
-        loader.classList.add('hidden');
-        appContainer.classList.remove('hidden');
-    }
-
-    function initTelegram() {
+    /**
+     * برنامه را راه‌اندازی کرده و اطلاعات اولیه را واکشی می‌کند.
+     */
+    async function init() {
         tg.ready();
         tg.expand();
         tg.setHeaderColor('secondary_bg_color');
         tg.setBackgroundColor('bg_color');
+        
+        showLoader();
+        await fetchAllData();
     }
 
-    async function fetchUserData() {
+    /**
+     * هر دو اندپوینت اطلاعات کاربر و گیمیفیکیشن را به صورت همزمان واکشی می‌کند.
+     */
+    async function fetchAllData() {
         if (!tg.initData) {
-            console.error("Telegram initData not available.");
-            document.getElementById('loader').innerHTML = '<p style="color: red;">خطا: لطفاً این صفحه را فقط از داخل ربات تلگرام باز کنید.</p>';
+            handleError("خطا: لطفاً این صفحه را فقط از داخل ربات تلگرام باز کنید.");
             return;
         }
 
         try {
-            // --- مرحله 1: دریافت اطلاعات اصلی کاربر ---
-            const userDataResponse = await fetch(`${API_BASE_URL}/webapp/get_user_data`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ initData: tg.initData })
-            });
+            // هر دو درخواست را همزمان ارسال کن
+            const [userResponse, gamificationResponse] = await Promise.all([
+                fetch(`${API_BASE_URL}/webapp/get_user_data`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ initData: tg.initData })
+                }),
+                fetch(`${API_BASE_URL}/webapp/get_gamification_data`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ initData: tg.initData })
+                })
+            ]);
 
-            if (!userDataResponse.ok) {
-                if (userDataResponse.status === 401) throw new Error("خطای اعتبارسنجی (401).");
-                throw new Error(`خطای سرور کاربر (${userDataResponse.status})`);
+            // بررسی پاسخ اول (اطلاعات کاربر)
+            if (!userResponse.ok) {
+                if (userResponse.status === 401) throw new Error("خطای اعتبارسنجی (401).");
+                throw new Error(`خطای سرور کاربر (${userResponse.status})`);
             }
-            
-            const userData = await userDataResponse.json();
-            if (userData.status === "success") {
-                updateDashboard(userData); 
-            } else {
+            const userData = await userResponse.json();
+            if (userData.status !== "success") {
                 throw new Error(userData.message || "خطا در دریافت اطلاعات کاربر.");
             }
 
-            // --- مرحله 2: دریافت اطلاعات گیمیفیکیشن ---
-            const gamificationDataResponse = await fetch(`${API_BASE_URL}/webapp/get_gamification_data`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ initData: tg.initData })
-            });
-
-            if (!gamificationDataResponse.ok) {
-                 throw new Error(`خطای سرور گیمیفیکیشن (${gamificationDataResponse.status})`);
+            // بررسی پاسخ دوم (گیمیفیکیشن)
+            if (!gamificationResponse.ok) {
+                throw new Error(`خطای سرور گیمیفیکیشن (${gamificationResponse.status})`);
             }
-
-            const gamificationData = await gamificationDataResponse.json();
-            if (gamificationData.status === "success") {
-                updateGamification(gamificationData); 
-            } else {
+            const gamificationData = await gamificationResponse.json();
+            if (gamificationData.status !== "success") {
                 throw new Error(gamificationData.message || "خطا در دریافت اطلاعات گیمیفیکیشن.");
             }
 
-            // --- مرحله 3: نمایش کامل برنامه ---
+            // اگر هر دو موفق بودند، رابط کاربری را آپدیت کن
+            updateDashboard(userData);
+            updateGamification(gamificationData);
+            
             hideLoader();
 
         } catch (error) {
             console.error("Error fetching data:", error);
+            let errorMsg = `خطا در بارگذاری اطلاعات: ${error.message}`;
             if (error.message.includes("Failed to fetch")) {
-                 document.getElementById('loader').innerHTML = `<p style="color: red;">خطا در بارگذاری (Load failed):<br>اتصال به سرور API برقرار نشد. آدرس API_BASE_URL را چک کنید.</p>`;
-            } else {
-                 document.getElementById('loader').innerHTML = `<p style="color: red;">خطا در بارگذاری اطلاعات: ${error.message}</p>`;
+                errorMsg = `<p style="color: red;">خطا در بارگذاری (Load failed):<br>اتصال به سرور API برقرار نشد. (آدرس: ${API_BASE_URL})</p>`;
             }
+            handleError(errorMsg);
         }
     }
 
+    /**
+     * بخش‌های اصلی داشبورد (موجودی، سطح، KYC) را به‌روزرسانی می‌کند.
+     */
     function updateDashboard(data) {
-        // Header
-        document.getElementById('welcome-name').textContent = `سلام، ${data.first_name}`;
-        document.getElementById('welcome-name').classList.remove('loading');
+        // هدر
+        elements.welcomeName.textContent = `سلام، ${data.first_name}`;
+        elements.welcomeName.classList.remove('loading');
         
-        const kycStatusEl = document.getElementById('kyc-status');
-        const kycIconEl = document.getElementById('kyc-icon');
-        
-        kycStatusEl.classList.remove('loading');
-        kycIconEl.classList.remove('fa-spinner', 'fa-spin');
-
-        document.getElementById('kyc-text').textContent = data.kyc_status_text;
-        kycStatusEl.className = 'kyc-status'; 
-        kycStatusEl.classList.add(data.kyc_status_code || 'not_submitted');
+        elements.kycStatus.classList.remove('loading');
+        elements.kycIcon.classList.remove('fa-spinner', 'fa-spin');
+        elements.kycText.textContent = data.kyc_status_text;
+        elements.kycStatus.className = 'kyc-status'; // ریست کردن کلاس‌ها
+        elements.kycStatus.classList.add(data.kyc_status_code || 'not_submitted');
         
         const iconMap = {
             'approved': 'fa-check-circle',
@@ -105,66 +126,67 @@
             'rejected': 'fa-times-circle',
             'not_submitted': 'fa-file-alt'
         };
-        kycIconEl.classList.add('fas', iconMap[data.kyc_status_code || 'not_submitted']);
+        elements.kycIcon.classList.add('fas', iconMap[data.kyc_status_code || 'not_submitted']);
 
-        // Balance Card
-        document.getElementById('toman-balance').textContent = `${data.toman_balance} تومان`;
-        document.getElementById('xp-balance').textContent = `${data.xp_balance} XP`;
-        document.getElementById('toman-balance').classList.remove('loading');
-        document.getElementById('xp-balance').classList.remove('loading');
+        // کارت موجودی (با فرمت فارسی)
+        elements.tomanBalance.textContent = `${data.toman_balance.toLocaleString('fa-IR')} تومان`;
+        elements.xpBalance.textContent = `${data.xp_balance.toLocaleString('fa-IR')} XP`;
+        elements.tomanBalance.classList.remove('loading');
+        elements.xpBalance.classList.remove('loading');
 
-        // Level Card
-        document.getElementById('level-name').textContent = data.level_name;
-        document.getElementById('level-name').classList.remove('loading');
+        // کارت سطح
+        elements.levelName.textContent = data.level_name;
+        elements.levelName.classList.remove('loading');
         
-        document.getElementById('progress-text').textContent = data.level_progress_bar;
-        document.getElementById('progress-text').classList.remove('loading');
+        elements.progressText.textContent = data.level_progress_bar;
+        elements.progressText.classList.remove('loading');
 
-        const progressBar = document.getElementById('progress-bar');
+        // استخراج درصد از متن
         const percentage = parseFloat(data.level_progress_bar.match(/(\d+(\.\d+)?)%/)?.[1] || 0);
-        progressBar.style.width = `${percentage}%`;
+        elements.progressBar.style.width = `${percentage}%`;
     }
-    
+
+    /**
+     * بخش‌های گیمیفیکیشن (لیدربرد، پیش‌بینی‌ها، کمپین‌ها) را می‌سازد.
+     */
     function updateGamification(data) {
-        const predictionsContainer = document.getElementById('predictions-container');
-        const campaignsContainer = document.getElementById('campaigns-container');
-        const leaderboardContainer = document.getElementById('leaderboard-container');
-        
-        const predictionsSection = document.getElementById('predictions-section');
-        const campaignsSection = document.getElementById('campaigns-section');
-        const leaderboardSection = document.getElementById('leaderboard-section');
-
-        predictionsContainer.innerHTML = '';
-        campaignsContainer.innerHTML = '';
-        leaderboardContainer.innerHTML = ''; 
-
         // 1. ساخت لیدربرد
+        elements.leaderboardContainer.innerHTML = '';
         if (data.leaderboard && data.leaderboard.length > 0) {
-            data.leaderboard.forEach(user => {
+            data.leaderboard.forEach((user, index) => {
                 const rankElement = document.createElement('div');
                 rankElement.className = 'leaderboard-row';
                 rankElement.innerHTML = `
-                    <span class="leaderboard-rank">${user.rank_icon}</span>
+                    <span class="leaderboard-rank">${index + 1}</span> 
                     <span class="leaderboard-name">${user.name}</span>
-                    <span class="leaderboard-points">${user.points}</span>
+                    <span class="leaderboard-points">${user.points.toLocaleString('fa-IR')}</span>
                 `;
-                leaderboardContainer.appendChild(rankElement);
+                elements.leaderboardContainer.appendChild(rankElement);
             });
-            leaderboardSection.classList.remove('hidden');
+            elements.leaderboardSection.classList.remove('hidden');
         } else {
-            leaderboardSection.classList.add('hidden');
+            elements.leaderboardSection.classList.add('hidden');
         }
 
         // 2. ساخت کارت‌های پیش‌بینی
+        elements.predictionsContainer.innerHTML = '';
         if (data.predictions && data.predictions.length > 0) {
             data.predictions.forEach(match => {
                 const card = document.createElement('div');
                 card.className = 'card prediction-card';
-                card.dataset.matchId = match.id; 
+                card.dataset.matchId = match.id;
+                // اگر کاربر قبلاً پیش‌بینی کرده
+                if (match.user_prediction) {
+                    card.classList.add('disabled');
+                }
 
                 let optionsHtml = '';
                 match.options.forEach(opt => {
-                    optionsHtml += `<button class="card-btn prediction-btn" data-option-key="${opt.key}">${opt.text}</button>`;
+                    const isSelected = match.user_prediction === opt.key;
+                    optionsHtml += `<button class="card-btn prediction-btn ${isSelected ? 'selected' : ''}" 
+                                            data-option-key="${opt.key}" ${match.user_prediction ? 'disabled' : ''}>
+                                        ${opt.text}
+                                    </button>`;
                 });
 
                 card.innerHTML = `
@@ -177,19 +199,20 @@
                         ${optionsHtml}
                     </div>
                 `;
-                predictionsContainer.appendChild(card);
+                elements.predictionsContainer.appendChild(card);
             });
-            predictionsSection.classList.remove('hidden');
+            elements.predictionsSection.classList.remove('hidden');
         } else {
-            predictionsSection.classList.add('hidden');
+            elements.predictionsSection.classList.add('hidden');
         }
 
         // 3. ساخت کارت‌های کمپین
+        elements.campaignsContainer.innerHTML = '';
         if (data.campaigns && data.campaigns.length > 0) {
             data.campaigns.forEach(campaign => {
                 const card = document.createElement('div');
                 card.className = 'card campaign-card';
-                card.dataset.productTarget = campaign.product_target; 
+                card.dataset.productTarget = campaign.product_target;
                 
                 card.innerHTML = `
                     <div class="card-header">
@@ -202,66 +225,33 @@
                         </button>
                     </div>
                 `;
-                campaignsContainer.appendChild(card);
+                elements.campaignsContainer.appendChild(card);
             });
-            campaignsSection.classList.add('hidden');
+            elements.campaignsSection.classList.remove('hidden');
         } else {
-            campaignsSection.classList.add('hidden');
+            elements.campaignsSection.classList.add('hidden');
         }
 
         // 4. افزودن Event Listener ها
         addCardListeners();
     }
-    
-    async function submitPrediction(matchId, outcome, cardElement) {
-        tg.MainButton.showProgress();
-        
-        try {
-            const response = await fetch(`${API_BASE_URL}/webapp/submit_prediction`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    initData: tg.initData,
-                    match_id: parseInt(matchId.replace('match_', '')),
-                    outcome: outcome
-                })
-            });
 
-            const result = await response.json();
-            tg.MainButton.hideProgress();
-
-            if (result.status === "success") {
-                tg.showAlert(`✅ ${result.message}`);
-                cardElement.classList.add('disabled');
-                cardElement.querySelectorAll('.prediction-btn').forEach(btn => {
-                    if (btn.dataset.optionKey === outcome) {
-                        btn.classList.add('selected');
-                    }
-                    btn.disabled = true;
-                });
-            } else {
-                tg.showAlert(`⚠️ ${result.message}`);
-                cardElement.classList.add('disabled');
-            }
-
-        } catch (error) {
-            tg.MainButton.hideProgress();
-            tg.showAlert("❌ خطایی در ارتباط با سرور رخ داد. لطفاً دوباره تلاش کنید.");
-            console.error("Failed to submit prediction:", error);
-        }
-    }
-
+    /**
+     * Event Listener ها را به دکمه‌های کارت‌های داینامیک اضافه می‌کند.
+     */
     function addCardListeners() {
-        document.querySelectorAll('.prediction-btn').forEach(button => {
+        document.querySelectorAll('.prediction-btn:not(:disabled)').forEach(button => {
             button.addEventListener('click', (e) => {
                 const btn = e.currentTarget;
                 const card = btn.closest('.prediction-card');
+                if (card.classList.contains('disabled')) return; // اگر کارت قبلاً غیرفعال شده بود
+
                 const matchId = card.dataset.matchId;
                 const outcome = btn.dataset.optionKey;
                 
                 tg.showConfirm(`آیا از ثبت پیش‌بینی «${btn.textContent}» مطمئن هستید؟`, (confirmed) => {
                     if (confirmed) {
-                        submitPrediction(matchId, outcome, card);
+                        submitPrediction(matchId, outcome, card, btn);
                     }
                 });
             });
@@ -272,12 +262,8 @@
                 const card = e.currentTarget.closest('.campaign-card');
                 const target = card.dataset.productTarget;
                 
-                let action = '';
-                if (target === 'usdt_buy') {
-                    action = 'action_trade';
-                } else if (target === 'utopia_voucher') {
-                    action = 'action_trade';
-                }
+                // این اکشن‌ها باید با web_app_data_handler در ربات مطابقت داشته باشند
+                let action = 'action_trade'; // هر دو کمپین به منوی ترید می‌روند
 
                 if (action) {
                     tg.sendData(action);
@@ -287,10 +273,70 @@
         });
     }
 
-    document.addEventListener("DOMContentLoaded", () => {
-        initTelegram();
-        showLoader();
-        fetchUserData();
-    });
+    /**
+     * پیش‌بینی کاربر را به سرور ارسال می‌کند.
+     */
+    async function submitPrediction(matchId, outcome, cardElement, buttonElement) {
+        tg.MainButton.showProgress();
+        
+        try {
+            const response = await fetch(`${API_BASE_URL}/webapp/submit_prediction`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    initData: tg.initData,
+                    match_id: parseInt(matchId),
+                    outcome: outcome
+                })
+            });
+
+            const result = await response.json();
+            tg.MainButton.hideProgress();
+
+            if (result.status === "success") {
+                tg.showAlert(`✅ ${result.message}`);
+                cardElement.classList.add('disabled');
+                // غیرفعال کردن همه دکمه‌های این کارت و هایلایت کردن دکمه انتخابی
+                cardElement.querySelectorAll('.prediction-btn').forEach(btn => {
+                    if (btn === buttonElement) {
+                        btn.classList.add('selected');
+                    }
+                    btn.disabled = true;
+                });
+            } else {
+                tg.showAlert(`⚠️ ${result.message}`);
+                // اگر قبلاً ثبت شده، آن را غیرفعال کن
+                if (result.code === "already_predicted" || result.code === "match_closed") {
+                     cardElement.classList.add('disabled');
+                     cardElement.querySelectorAll('.prediction-btn').forEach(btn => btn.disabled = true);
+                }
+            }
+
+        } catch (error) {
+            tg.MainButton.hideProgress();
+            tg.showAlert("❌ خطایی در ارتباط با سرور رخ داد. لطفاً دوباره تلاش کنید.");
+            console.error("Failed to submit prediction:", error);
+        }
+    }
+
+    // --- 3. توابع کمکی ---
+    function showLoader() {
+        loader.classList.remove('hidden');
+        appContainer.classList.add('hidden');
+    }
+
+    function hideLoader() {
+        loader.classList.remove('hidden');
+        appContainer.classList.remove('hidden');
+    }
+
+    function handleError(errorMessage) {
+        loader.innerHTML = `<p style="color: var(--danger); padding: 20px; text-align: center;">${errorMessage}</p>`;
+        loader.classList.remove('hidden');
+        appContainer.classList.add('hidden');
+    }
+
+    // --- 4. راه‌اندازی برنامه ---
+    document.addEventListener("DOMContentLoaded", init);
 
 })();

@@ -1,14 +1,13 @@
-﻿/* webapp/script.js (نسخه 2.1 - اتصال به سرور ادغام شده FastAPI) */
+﻿/* webapp/script.js (نسخه 2.3 - اصلاح نهایی API_BASE_URL) */
 (function () {
     'use strict';
 
     // --- 1. تنظیمات و دسترسی به عناصر ---
     const tg = window.Telegram.WebApp;
     
-    // ❗️❗️❗️ https://pairs-lasting-lighter-launched.trycloudflare.com ❗️❗️❗️
-    // این آدرس باید به سرور FastAPI شما (sms_webhook_server.py) که روی پورت 8000 اجرا می‌شود، اشاره کند.
-    // (این همان آدرسی است که در فایل v4.0 شما بود)
-    const API_BASE_URL = "https://blowing-merely-shed-school.trycloudflare.com";
+    // ❗️❗️❗️ آدرس صحیح تونل شما ❗️❗️❗️
+    // (این آدرس از لاگ Cloudflare شما گرفته شد)
+    const API_BASE_URL = "https://pairs-lasting-lighter-launched.trycloudflare.com";
 
     const loader = document.getElementById('loader');
     const appContainer = document.getElementById('app-container');

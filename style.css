@@ -1,9 +1,8 @@
-﻿/* webapp/style.css (نسخه 5.2 - رفع مشکل اسکرول بازی) */
+﻿/* webapp/style.css (نسخه 5.3 - اصلاح نهایی و کامل) */
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800&display=swap');
 /* Font Awesome در HTML لود می‌شود */
 
 :root {
-    /* متغیرهای رنگی (همان قبلی‌ها) */
     --tg-theme-bg-color: #18222d;
     --tg-theme-text-color: #ffffff;
     --tg-theme-hint-color: #b1b8c0;
@@ -38,263 +37,36 @@
     --radius-sm: 8px;
 }
 
+/* --- کلاس‌های حیاتی (که دفعه قبل جا افتادند) --- */
+.hidden { display: none !important; }
+
 /* --- تنظیمات پایه --- */
 body {
     font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background-color: var(--app-bg-color);
     color: var(--text-primary);
     margin: 0;
-    padding: 0; /* پدینگ بادی را حذف کردیم تا هدر کامل بچسبد */
+    padding: 0; 
     overscroll-behavior-y: none;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     display: flex;
     flex-direction: column;
-    height: 100vh; /* ارتفاع ثابت */
-    overflow: hidden; /* اسکرول اصلی بادی بسته */
+    height: 100vh; 
+    overflow: hidden; 
 }
 
-/* --- استایل‌های مخصوص صفحه بازی (Game) --- */
-.game-body {
-    background-color: #0F0F1A;
-}
-
-.game-header {
-    flex-shrink: 0; /* هدر کوچک نشود */
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px;
-    background-color: #1C1C2E;
-    border-bottom: 1px solid var(--border-color);
-    z-index: 10;
-}
-
-.back-btn {
-    background: none;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #fff;
-    padding: 5px 10px;
-    border-radius: 8px;
-    cursor: pointer;
-}
-
-.live-badge {
-    background-color: rgba(255, 0, 0, 0.2);
-    color: #FF4D4D;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 0.8rem;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-.blink { animation: blinker 1.5s linear infinite; }
-@keyframes blinker { 50% { opacity: 0; } }
-
-/* کانتینر اصلی بازی که اسکرول می‌شود */
-#game-container {
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    flex: 1; /* فضای باقی‌مانده را پر کند */
-    overflow-y: auto; /* اجازه اسکرول عمودی */
-    overflow-x: hidden;
-    width: 100%;
-    box-sizing: border-box;
-    padding-bottom: 40px; /* فضای خالی پایین برای راحتی اسکرول */
-}
-
-.price-display {
-    text-align: center;
-    margin-bottom: 10px;
-    flex-shrink: 0;
-}
-.price-label { color: var(--text-muted); font-size: 0.9rem; }
-#btc-price { font-size: 2.2rem; margin: 5px 0; font-family: monospace; }
-
-/* تایمر دایره‌ای */
-.timer-circle {
-    position: relative;
-    width: 70px; /* کمی کوچک‌تر */
-    height: 70px;
-    margin: 10px 0;
-    flex-shrink: 0;
-}
-.circular-chart {
-    display: block;
-    margin: 0 auto;
-    max-width: 100%;
-    max-height: 100%;
-}
-.circle-bg {
-    fill: none;
-    stroke: #2C3A4B;
-    stroke-width: 2.5;
-}
-.circle {
-    fill: none;
-    stroke-width: 2.5;
-    stroke-linecap: round;
-    transition: stroke-dasharray 1s linear, stroke 0.3s;
-}
-.timer-text {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 1.1rem;
-    font-weight: bold;
-    color: #fff;
-}
-
-.chart-container {
-    width: 100%;
-    height: 220px; /* ارتفاع ثابت برای نمودار */
-    background: rgba(255, 255, 255, 0.02);
-    border-radius: 12px;
-    margin: 15px 0;
-    padding: 10px;
-    flex-shrink: 0; /* جلوگیری از جمع شدن */
-}
-
-.round-status {
-    font-size: 0.9rem;
-    color: var(--text-muted);
-    margin-bottom: 10px;
-    min-height: 1.5em;
-    text-align: center;
-    flex-shrink: 0;
-}
-
-/* استایل تاریخچه (History) */
-.history-container {
-    width: 100%;
-    margin: 10px 0 20px 0;
-    padding: 12px;
-    background-color: rgba(28, 28, 46, 0.5);
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
-    flex-shrink: 0;
-}
-
-.history-title {
-    font-size: 0.8rem;
-    color: #8A8AA0;
-    margin-bottom: 10px;
-    text-align: right;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-.history-title::before { content: '📊'; font-size: 0.9rem; }
-
-.history-bubbles {
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-    overflow-x: auto;
-    padding-bottom: 5px;
-    scrollbar-width: none;
-}
-.history-bubbles::-webkit-scrollbar { display: none; }
-
-.history-bubble {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1rem;
-    font-weight: 800;
-    color: #fff;
-    flex-shrink: 0;
-    box-shadow: 0 3px 6px rgba(0,0,0,0.3);
-    transition: transform 0.2s;
-}
-.history-bubble.up { background: linear-gradient(135deg, #00E096 0%, #00B377 100%); border: 1px solid rgba(0, 224, 150, 0.5); }
-.history-bubble.down { background: linear-gradient(135deg, #FF4D4D 0%, #CC0000 100%); border: 1px solid rgba(255, 77, 77, 0.5); }
-.history-bubble.draw { background-color: #6c757d; border: 1px solid #adb5bd; }
-
-/* بخش کنترل شرط بندی */
-.bet-controls {
-    width: 100%;
-    background-color: #1C1C2E;
-    padding: 20px;
-    border-radius: 20px; /* گوشه‌ها کامل گرد */
-    border: 1px solid var(--border-color);
-    margin-top: 10px;
-    flex-shrink: 0;
-}
-
-.amount-selector {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-    color: #fff;
-}
-.amount-selector input {
-    background: #2C3A4B;
-    border: 1px solid var(--border-color);
-    color: #fff;
-    padding: 8px;
-    border-radius: 8px;
-    width: 100px;
-    text-align: center;
-    font-size: 1.2rem;
-    font-weight: bold;
-}
-
-.action-buttons-game {
-    display: flex;
-    gap: 15px;
-}
-.game-btn {
-    flex: 1;
-    padding: 15px;
-    border: none;
-    border-radius: 12px;
-    font-size: 1rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: transform 0.1s;
-    color: #fff;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-}
-.game-btn:active { transform: scale(0.95); }
-.btn-up { background-color: #00E096; box-shadow: 0 4px 15px rgba(0, 224, 150, 0.3); }
-.btn-down { background-color: #FF4D4D; box-shadow: 0 4px 15px rgba(255, 77, 77, 0.3); }
-.game-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
-.game-btn.selected { border: 3px solid #fff; transform: scale(1.02); }
-
-/* --- استایل‌های عمومی وب‌اپ (داشبورد) --- */
-#app-container {
-    /* برای صفحه اصلی داشبورد هم اسکرول اضافه می‌کنیم */
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    flex: 1;
-    overflow-y: auto; /* مهم برای داشبورد */
-    padding: 16px; /* اضافه کردن پدینگ اینجا */
-}
-/* لودر */
+/* --- لودر (بازگردانده شد) --- */
 #loader {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     flex: 1;
-    min-height: 80vh;
+    min-height: 100vh; /* تمام صفحه */
     color: var(--text-muted);
+    background-color: var(--app-bg-color);
+    z-index: 9999;
 }
 .spinner {
     border: 4px solid var(--card-bg-color);
@@ -309,7 +81,41 @@ body {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
-/* هدر و نام کاربر */
+.loading {
+    color: transparent !important;
+    background: linear-gradient(100deg, var(--card-bg-color) 40%, #2C3A4B 50%, var(--card-bg-color) 60%) var(--card-bg-color);
+    background-size: 200% 100%;
+    animation: 1.5s loading-shimmer infinite linear;
+    border-radius: 6px;
+    display: inline-block;
+    min-height: 1.2em;
+    vertical-align: middle;
+}
+@keyframes loading-shimmer {
+    0% { background-position: 100% 0; }
+    100% { background-position: -100% 0; }
+}
+
+/* --- کانتینر اصلی با قابلیت اسکرول --- */
+#app-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    flex: 1;
+    overflow-y: auto; /* اسکرول فعال شد */
+    padding: 16px; /* فاصله از لبه‌ها */
+    -webkit-overflow-scrolling: touch; /* نرمی اسکرول در iOS */
+}
+
+/* --- هدر --- */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0; /* جلوگیری از جمع شدن هدر */
+}
 .user-info {
     display: flex;
     align-items: center;
@@ -342,7 +148,7 @@ body {
 .kyc-status.rejected { color: var(--danger); }
 .kyc-status.not_submitted { color: var(--text-muted); }
 
-/* کارت موجودی */
+/* --- کارت موجودی --- */
 .balance-card {
     background: var(--gradient-primary);
     border-radius: var(--radius-lg);
@@ -381,7 +187,7 @@ body {
 }
 .balance-label i { font-size: 0.9rem; }
 
-/* کارت سطح */
+/* --- کارت سطح --- */
 .level-card {
     background-color: var(--card-bg-color);
     border-radius: var(--radius-lg);
@@ -429,7 +235,7 @@ body {
     margin-top: 8px;
 }
 
-/* گیمیفیکیشن و لیدربرد */
+/* --- گیمیفیکیشن و لیدربرد --- */
 .gamification-section {
     margin-top: 8px;
     flex-shrink: 0;
@@ -574,4 +380,195 @@ body {
 .leaderboard-row:nth-child(1) .leaderboard-name, 
 .leaderboard-row:nth-child(1) .leaderboard-points { font-weight: 800; color: var(--gold); }
 
+/* --- استایل‌های مخصوص صفحه بازی (Game) --- */
+.game-body {
+    background-color: #0F0F1A;
+}
+.game-header {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background-color: #1C1C2E;
+    border-bottom: 1px solid var(--border-color);
+    z-index: 10;
+}
+.back-btn {
+    background: none;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+.live-badge {
+    background-color: rgba(255, 0, 0, 0.2);
+    color: #FF4D4D;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.blink { animation: blinker 1.5s linear infinite; }
+@keyframes blinker { 50% { opacity: 0; } }
+
+/* کانتینر اصلی بازی که اسکرول می‌شود */
+#game-container {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1; 
+    overflow-y: auto; 
+    overflow-x: hidden;
+    width: 100%;
+    box-sizing: border-box;
+    padding-bottom: 40px;
+}
+.price-display {
+    text-align: center;
+    margin-bottom: 10px;
+    flex-shrink: 0;
+}
+.price-label { color: var(--text-muted); font-size: 0.9rem; }
+#btc-price { font-size: 2.2rem; margin: 5px 0; font-family: monospace; }
+
+.timer-circle {
+    position: relative;
+    width: 70px;
+    height: 70px;
+    margin: 10px 0;
+    flex-shrink: 0;
+}
+.circular-chart {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+    max-height: 100%;
+}
+.circle-bg {
+    fill: none;
+    stroke: #2C3A4B;
+    stroke-width: 2.5;
+}
+.circle {
+    fill: none;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    transition: stroke-dasharray 1s linear, stroke 0.3s;
+}
+.timer-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #fff;
+}
+
+.chart-container {
+    width: 100%;
+    height: 220px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 12px;
+    margin: 15px 0;
+    padding: 10px;
+    flex-shrink: 0;
+}
+
+.round-status {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    min-height: 1.5em;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+/* استایل تاریخچه (History) */
+.history-container {
+    width: 100%;
+    margin: 10px 0 20px 0;
+    padding: 12px;
+    background-color: rgba(28, 28, 46, 0.5);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+    flex-shrink: 0;
+}
+.history-title {
+    font-size: 0.8rem;
+    color: #8A8AA0;
+    margin-bottom: 10px;
+    text-align: right;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.history-title::before { content: '📊'; font-size: 0.9rem; }
+.history-bubbles {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 5px;
+    scrollbar-width: none;
+}
+.history-bubbles::-webkit-scrollbar { display: none; }
+.history-bubble {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    font-weight: 800;
+    color: #fff;
+    flex-shrink: 0;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+    transition: transform 0.2s;
+}
+.history-bubble.up { background: linear-gradient(135deg, #00E096 0%, #00B377 100%); border: 1px solid rgba(0, 224, 150, 0.5); }
+.history-bubble.down { background: linear-gradient(135deg, #FF4D4D 0%, #CC0000 100%); border: 1px solid rgba(255, 77, 77, 0.5); }
+.history-bubble.draw { background-color: #6c757d; border: 1px solid #adb5bd; }
+
+/* بخش کنترل شرط بندی */
+.bet-controls {
+    width: 100%;
+    background-color: #1C1C2E;
+    padding: 20px;
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    margin-top: 10px;
+    flex-shrink: 0;
+}
+.amount-selector {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    color: #fff;
+}
+.amount-selector input {
+    background: #2C3A4B;
+    border: 1px solid var(--border-color);
+    color: #fff;
+    padding: 8px;
+    border-radius: 8px;
+    width: 100px;
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+.action-buttons-game {
+    display: flex;
+    gap: 15px;
+}
 .action-buttons { display: none; }

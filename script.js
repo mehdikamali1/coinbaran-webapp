@@ -7,7 +7,7 @@
     
     // ❗️❗️❗️ آدرس صحیح تونل شما ❗️❗️❗️
     // (این آدرس از لاگ Cloudflare شما گرفته شد)
-    const API_BASE_URL = "https://composer-goal-chance-broadcasting.trycloudflare.com";
+    const API_BASE_URL = "https://peter-protection-instructors-representations.trycloudflare.com";
 
     const loader = document.getElementById('loader');
     const appContainer = document.getElementById('app-container');

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>بازی کندل بیت‌کوین</title>
+    <title>چالش کندل بیت‌کوین</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css?v=5.1">
     <!-- کتابخانه نمودار -->
@@ -17,7 +17,7 @@
             <i class="fas fa-arrow-right"></i> خروج
         </button>
         <div class="live-badge">
-            <span class="blink">●</span> LIVE
+            <span class="blink">●</span> MARKET LIVE
         </div>
     </div>
 
@@ -25,7 +25,7 @@
         
         <!-- بخش قیمت و تایمر -->
         <div class="price-display">
-            <div class="price-label">قیمت لحظه‌ای بیت‌کوین</div>
+            <div class="price-label">قیمت لحظه‌ای بیت‌کوین (BTC/USDT)</div>
             <h1 id="btc-price" class="loading">...</h1>
         </div>
 
@@ -43,21 +43,21 @@
         </div>
 
         <!-- وضعیت بازی -->
-        <div id="round-status" class="round-status">در انتظار شروع راند بعدی...</div>
+        <div id="round-status" class="round-status">در انتظار شروع سشن معاملاتی...</div>
 
-        <!-- کنترل‌های شرط‌بندی -->
+        <!-- کنترل‌های ثبت پوزیشن -->
         <div class="bet-controls">
             <div class="amount-selector">
-                <span>مبلغ شرط (UUSD):</span>
+                <span>مبلغ ورود (UUSD):</span>
                 <input type="number" id="bet-amount" value="1" min="1" max="100">
             </div>
             
             <div class="action-buttons-game">
                 <button id="btn-up" class="game-btn btn-up" onclick="placeBet('UP')">
-                    <i class="fas fa-arrow-trend-up"></i> صعود (UP)
+                    <i class="fas fa-arrow-trend-up"></i> پوزیشن خرید (LONG)
                 </button>
                 <button id="btn-down" class="game-btn btn-down" onclick="placeBet('DOWN')">
-                    <i class="fas fa-arrow-trend-down"></i> نزول (DOWN)
+                    <i class="fas fa-arrow-trend-down"></i> پوزیشن فروش (SHORT)
                 </button>
             </div>
         </div>
@@ -66,6 +66,6 @@
 
     <!-- اسکریپت‌های تلگرام و بازی -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="game.js?v=1.0"></script>
+    <script src="game.js?v=2.0"></script> <!-- ورژن آپدیت شد -->
 </body>
 </html>

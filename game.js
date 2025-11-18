@@ -3,8 +3,8 @@
 
     const tg = window.Telegram.WebApp;
     
-    // ❗️❗️❗️ آدرس تونل خود را اینجا قرار دهید ❗️❗️❗️
-    const API_BASE_URL = "https://restore-male-christmas-dates.trycloudflare.com";
+    // ❗️❗️❗️ آدرس تونل فعال خود را اینجا قرار دهید ❗️❗️❗️
+    const API_BASE_URL = "https://portions-hygiene-metallic-catalogue.trycloudflare.com";
 
     // عناصر صفحه
     const elPrice = document.getElementById('btc-price');
@@ -14,28 +14,37 @@
     const btnUp = document.getElementById('btn-up');
     const btnDown = document.getElementById('btn-down');
     const inpAmount = document.getElementById('bet-amount');
+    
+    // کانتینر جدید برای تاریخچه
+    // (توجه: ما باید این المنت را در HTML هم اضافه کنیم، فعلاً در JS منطقش را می‌نویسیم)
+    let historyContainer = document.getElementById('history-container');
 
-    let chart; // متغیر نمودار
-    let priceHistory = []; // تاریخچه قیمت برای نمودار
-    const MAX_DATA_POINTS = 30; // تعداد نقاط نمودار
+    let chart; 
+    let priceHistory = []; 
+    const MAX_DATA_POINTS = 30; 
 
     // راه‌اندازی اولیه
     function init() {
         tg.ready();
         tg.expand();
-        tg.setHeaderColor('#0F0F1A'); // رنگ هدر مشکی برای بازی
+        tg.setHeaderColor('#0F0F1A'); 
         
+        // اگر کانتینر تاریخچه در HTML نبود، آن را دینامیک می‌سازیم (برای اطمینان)
+        if (!historyContainer) {
+            const gameContainer = document.getElementById('game-container');
+            historyContainer = document.createElement('div');
+            historyContainer.id = 'history-container';
+            historyContainer.className = 'history-container';
+            // اضافه کردن قبل از کنترل‌های شرط‌بندی
+            gameContainer.insertBefore(historyContainer, document.querySelector('.bet-controls'));
+        }
+
         initChart();
-        
-        // شروع حلقه دریافت اطلاعات (Polling) هر 1 ثانیه
         setInterval(fetchGameState, 1000);
     }
 
-    // ساخت نمودار با Chart.js
     function initChart() {
         const ctx = document.getElementById('btcChart').getContext('2d');
-        
-        // گرادیان زیر نمودار
         const gradient = ctx.createLinearGradient(0, 0, 0, 400);
         gradient.addColorStop(0, 'rgba(54, 123, 255, 0.5)');
         gradient.addColorStop(1, 'rgba(54, 123, 255, 0.0)');
@@ -52,7 +61,7 @@
                     borderWidth: 2,
                     pointRadius: 0,
                     fill: true,
-                    tension: 0.4 // نرمی نمودار
+                    tension: 0.4 
                 }]
             },
             options: {
@@ -68,12 +77,11 @@
                         ticks: { color: '#888', callback: function(value) { return value.toFixed(0); } }
                     }
                 },
-                animation: { duration: 0 } // غیرفعال کردن انیمیشن برای آپدیت سریع
+                animation: { duration: 0 } 
             }
         });
     }
 
-    // دریافت وضعیت بازی از سرور
     async function fetchGameState() {
         try {
             const response = await fetch(`${API_BASE_URL}/webapp/game/state`, {
@@ -93,20 +101,17 @@
         }
     }
 
-    // بروزرسانی رابط کاربری
     function updateUI(data) {
         // 1. قیمت
         const price = data.current_price;
         elPrice.textContent = `$${price.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
         elPrice.classList.remove('loading');
         
-        // تغییر رنگ قیمت بر اساس تغییر (ساده)
         if (priceHistory.length > 0) {
             const lastPrice = priceHistory[priceHistory.length - 1];
             elPrice.style.color = price >= lastPrice ? '#00E096' : '#FF4D4D';
         }
 
-        // آپدیت نمودار
         updateChartData(price);
 
         // 2. اطلاعات راند
@@ -114,41 +119,74 @@
             const timeLeft = data.round.time_left;
             elTimerText.textContent = timeLeft;
             
-            // محاسبه دایره پیشرفت (60 ثانیه کل)
             const percentage = (timeLeft / 60) * 100;
             elTimerPath.style.strokeDasharray = `${percentage}, 100`;
             
-            // تغییر رنگ تایمر در 10 ثانیه آخر
             if (timeLeft <= 10) {
                 elTimerPath.style.stroke = '#FF4D4D';
-                elStatus.textContent = "⏳ شرط‌بندی بسته شد! منتظر نتیجه...";
+                elStatus.textContent = "⏳ ثبت پوزیشن بسته شد! منتظر کلوز کندل...";
                 elStatus.style.color = '#FFC107';
                 disableBetting(true);
             } else {
                 elTimerPath.style.stroke = '#00E096';
-                elStatus.textContent = "🟢 شرط‌بندی باز است";
+                elStatus.textContent = "🟢 سشن معاملاتی باز است";
                 elStatus.style.color = '#00E096';
                 
-                // اگر کاربر قبلا شرط نبسته، دکمه‌ها فعال باشند
                 if (!data.user_bet) {
                     disableBetting(false);
                 }
             }
         } else {
-            elStatus.textContent = "در انتظار شروع راند جدید...";
+            elStatus.textContent = "در انتظار شروع سشن معاملاتی جدید...";
             elTimerText.textContent = "--";
         }
 
-        // 3. وضعیت شرط کاربر
+        // 3. وضعیت پوزیشن کاربر
         if (data.user_bet) {
-            const type = data.user_bet.prediction; // UP or DOWN
+            const type = data.user_bet.prediction; 
             disableBetting(true);
-            elStatus.textContent = `شما روی ${type === 'UP' ? 'صعود 📈' : 'نزول 📉'} شرط بستید.`;
+            const typeText = type === 'UP' ? 'خرید (LONG) 📈' : 'فروش (SHORT) 📉';
+            elStatus.textContent = `پوزیشن باز شما: ${typeText}`;
             
-            // هایلایت کردن دکمه انتخاب شده
             if (type === 'UP') btnUp.classList.add('selected');
             if (type === 'DOWN') btnDown.classList.add('selected');
         }
+
+        // 4. بروزرسانی تاریخچه (بخش جدید)
+        if (data.history) {
+            updateHistoryDisplay(data.history);
+        }
+    }
+
+    function updateHistoryDisplay(historyData) {
+        historyContainer.innerHTML = ''; // پاک کردن قبلی‌ها
+        
+        // عنوان کوچک
+        const title = document.createElement('div');
+        title.className = 'history-title';
+        title.textContent = 'روند بازار (۱۰ کندل آخر):';
+        historyContainer.appendChild(title);
+
+        const bubblesDiv = document.createElement('div');
+        bubblesDiv.className = 'history-bubbles';
+
+        historyData.forEach(round => {
+            const bubble = document.createElement('div');
+            bubble.className = 'history-bubble';
+            
+            if (round.result === 'UP') {
+                bubble.classList.add('up');
+                bubble.textContent = '↑';
+            } else if (round.result === 'DOWN') {
+                bubble.classList.add('down');
+                bubble.textContent = '↓';
+            } else {
+                bubble.classList.add('draw');
+                bubble.textContent = '-';
+            }
+            bubblesDiv.appendChild(bubble);
+        });
+        historyContainer.appendChild(bubblesDiv);
     }
 
     function updateChartData(price) {
@@ -159,7 +197,6 @@
         
         chart.data.datasets[0].data = priceHistory;
         
-        // مقیاس‌دهی پویا به محور Y برای نمایش بهتر تغییرات
         const minPrice = Math.min(...priceHistory) * 0.9995;
         const maxPrice = Math.max(...priceHistory) * 1.0005;
         chart.options.scales.y.min = minPrice;
@@ -168,7 +205,6 @@
         chart.update();
     }
 
-    // فعال/غیرفعال کردن دکمه‌ها
     function disableBetting(disabled) {
         btnUp.disabled = disabled;
         btnDown.disabled = disabled;
@@ -179,17 +215,15 @@
         }
     }
 
-    // تابع ارسال شرط (که به window متصل می‌شود تا در HTML صدا زده شود)
     window.placeBet = async function(prediction) {
         const amount = parseInt(inpAmount.value);
         if (!amount || amount < 1) {
-            tg.showAlert("لطفاً مبلغ معتبری وارد کنید.");
+            tg.showAlert("لطفاً مبلغ ورود معتبری وارد کنید.");
             return;
         }
 
         tg.HapticFeedback.impactOccurred('medium');
         
-        // حالت انتظار
         disableBetting(true);
         const btn = prediction === 'UP' ? btnUp : btnDown;
         btn.classList.add('loading-btn');
@@ -208,21 +242,20 @@
             const result = await response.json();
             
             if (result.status === "success") {
-                tg.showAlert(`✅ شرط شما با موفقیت روی ${prediction} ثبت شد!`);
-                // UI در آپدیت بعدی خودکار درست می‌شود
+                const typeText = prediction === 'UP' ? 'خرید (LONG)' : 'فروش (SHORT)';
+                tg.showAlert(`✅ پوزیشن ${typeText} با موفقیت باز شد!`);
             } else {
                 tg.showAlert(`❌ خطا: ${result.message}`);
-                disableBetting(false); // بازگشت به حالت قبل
+                disableBetting(false);
             }
         } catch (e) {
-            tg.showAlert("خطا در ارتباط با سرور.");
+            tg.showAlert("خطا در ارتباط با سرور معاملات.");
             disableBetting(false);
         } finally {
             btn.classList.remove('loading-btn');
         }
     };
 
-    // شروع
     document.addEventListener("DOMContentLoaded", init);
 
 })();

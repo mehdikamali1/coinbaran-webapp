@@ -601,3 +601,90 @@ body {
     border: 3px solid #fff;
     transform: scale(1.05);
 }
+/* --- استایل‌های بخش تاریخچه بازی (History) --- */
+.history-container {
+    width: 100%;
+    margin: 10px 0 20px 0;
+    padding: 12px;
+    background-color: rgba(28, 28, 46, 0.5); /* همرنگ کارت‌ها اما شفاف‌تر */
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.history-title {
+    font-size: 0.8rem;
+    color: #8A8AA0; /* رنگ متنی ملایم */
+    margin-bottom: 10px;
+    text-align: right;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.history-title::before {
+    content: '📊';
+    font-size: 0.9rem;
+}
+
+.history-bubbles {
+    display: flex;
+    justify-content: flex-end; /* چیدمان از راست به چپ (فارسی) */
+    gap: 8px;
+    overflow-x: auto; /* اگر تعداد زیاد شد اسکرول شود */
+    padding-bottom: 5px;
+    scrollbar-width: none; /* مخفی کردن اسکرول‌بار در فایرفاکس */
+}
+.history-bubbles::-webkit-scrollbar {
+    display: none; /* مخفی کردن اسکرول‌بار در کروم/سافاری */
+}
+
+.history-bubble {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    font-weight: 800;
+    color: #fff;
+    flex-shrink: 0; /* جلوگیری از له شدن دایره‌ها */
+    box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+    transition: transform 0.2s;
+    cursor: default;
+}
+
+.history-bubble:hover {
+    transform: scale(1.1);
+}
+
+/* استایل برای حالت صعود (UP) */
+.history-bubble.up {
+    background: linear-gradient(135deg, #00E096 0%, #00B377 100%);
+    border: 1px solid rgba(0, 224, 150, 0.5);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+/* استایل برای حالت نزول (DOWN) */
+.history-bubble.down {
+    background: linear-gradient(135deg, #FF4D4D 0%, #CC0000 100%);
+    border: 1px solid rgba(255, 77, 77, 0.5);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+/* استایل برای حالت مساوی (DRAW) */
+.history-bubble.draw {
+    background-color: #6c757d;
+    border: 1px solid #adb5bd;
+}
+
+/* انیمیشن برای حباب جدید */
+@keyframes popIn {
+    0% { transform: scale(0); opacity: 0; }
+    80% { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(1); }
+}
+.history-bubble:last-child {
+    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}

@@ -1,0 +1,71 @@
+﻿<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>بازی کندل بیت‌کوین</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=5.1">
+    <!-- کتابخانه نمودار -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="game-body">
+    
+    <!-- نوار بالای بازی -->
+    <div class="game-header">
+        <button onclick="window.location.href='dashboard.html'" class="back-btn">
+            <i class="fas fa-arrow-right"></i> خروج
+        </button>
+        <div class="live-badge">
+            <span class="blink">●</span> LIVE
+        </div>
+    </div>
+
+    <div id="game-container">
+        
+        <!-- بخش قیمت و تایمر -->
+        <div class="price-display">
+            <div class="price-label">قیمت لحظه‌ای بیت‌کوین</div>
+            <h1 id="btc-price" class="loading">...</h1>
+        </div>
+
+        <div class="timer-circle">
+            <svg viewBox="0 0 36 36" class="circular-chart">
+                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <path id="timer-path" class="circle" stroke-dasharray="100, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+            </svg>
+            <div id="timer-text" class="timer-text">60</div>
+        </div>
+
+        <!-- نمودار -->
+        <div class="chart-container">
+            <canvas id="btcChart"></canvas>
+        </div>
+
+        <!-- وضعیت بازی -->
+        <div id="round-status" class="round-status">در انتظار شروع راند بعدی...</div>
+
+        <!-- کنترل‌های شرط‌بندی -->
+        <div class="bet-controls">
+            <div class="amount-selector">
+                <span>مبلغ شرط (UUSD):</span>
+                <input type="number" id="bet-amount" value="1" min="1" max="100">
+            </div>
+            
+            <div class="action-buttons-game">
+                <button id="btn-up" class="game-btn btn-up" onclick="placeBet('UP')">
+                    <i class="fas fa-arrow-trend-up"></i> صعود (UP)
+                </button>
+                <button id="btn-down" class="game-btn btn-down" onclick="placeBet('DOWN')">
+                    <i class="fas fa-arrow-trend-down"></i> نزول (DOWN)
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- اسکریپت‌های تلگرام و بازی -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="game.js?v=1.0"></script>
+</body>
+</html>

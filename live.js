@@ -4,7 +4,7 @@
     // ------------------------------------------------------------------------
     // ⚠️ قدم شما: مطمئن شوید این آدرس، آدرس فعال فعلی کلودفلر شماست
     // ------------------------------------------------------------------------
-    const API_HOST = "https://peter-protection-instructors-representations.trycloudflare.com"; // <-- ❗️❗️❗️ این آدرس باید فعال باشد
+    const API_HOST = "https://restore-male-christmas-dates.trycloudflare.com"; // <-- ❗️❗️❗️ این آدرس باید فعال باشد
     const WS_BASE_URL = `wss://${API_HOST}`;
     const API_BASE_URL = `https://${API_HOST}`; // برای ارسال رای
     // ------------------------------------------------------------------------

@@ -5,7 +5,7 @@
     const tg = window.Telegram.WebApp;
     
     // ❗️ آدرس تونل (بر اساس لاگ شما)
-    const API_BASE_URL = "https://before-surface-thehun-monkey.trycloudflare.com";
+    const API_BASE_URL = " https://balance-computing-recommend-adds.trycloudflare.com";
 
     const loader = document.getElementById('loader');
     const appContainer = document.getElementById('app-container');

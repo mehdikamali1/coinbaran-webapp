@@ -1,11 +1,11 @@
-﻿/* webapp/game.js (نسخه 4.0 - تولید صدا با AudioContext - بدون نیاز به فایل) */
+﻿/* webapp/game.js (نسخه 4.1 - هماهنگ با تنظیمات داینامیک ادمین) */
 (function () {
     'use strict';
 
     const tg = window.Telegram.WebApp;
     
     // ❗️ آدرس تونل فعال خود را اینجا قرار دهید
-    const API_BASE_URL = " https://balance-computing-recommend-adds.trycloudflare.com";
+    const API_BASE_URL = "https://creating-camp-educational-advised.trycloudflare.com";
 
     // عناصر صفحه
     const elPrice = document.getElementById('btc-price');
@@ -19,12 +19,15 @@
     // کانتینر تاریخچه
     let historyContainer = document.getElementById('history-container');
 
-    // --- سیستم صوتی دیجیتال (بدون نیاز به فایل) ---
+    // متغیرهای تنظیمات (مقادیر پیش‌فرض)
+    let currentMinBet = 1.0;
+    let currentRoundDuration = 60; 
+
+    // --- سیستم صوتی دیجیتال ---
     const SoundFX = {
         ctx: new (window.AudioContext || window.webkitAudioContext)(),
         
         init: function() {
-            // فعال‌سازی AudioContext با اولین تعامل کاربر (برای موبایل)
             if (this.ctx.state === 'suspended') {
                 this.ctx.resume();
             }
@@ -39,7 +42,6 @@
             gain.connect(this.ctx.destination);
             osc.start(this.ctx.currentTime + startTime);
             
-            // Fade out برای جلوگیری از صدای تق
             gain.gain.setValueAtTime(0.1, this.ctx.currentTime + startTime);
             gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + startTime + duration);
             osc.stop(this.ctx.currentTime + startTime + duration);
@@ -57,7 +59,6 @@
 
         win: function() {
             this.init();
-            // ملودی پیروزی (آرپژ)
             this.playTone(523.25, 'sine', 0.1, 0);    // C5
             this.playTone(659.25, 'sine', 0.1, 0.1);  // E5
             this.playTone(783.99, 'sine', 0.1, 0.2);  // G5
@@ -66,7 +67,6 @@
 
         lose: function() {
             this.init();
-            // صدای باخت (فرکانس پایین و دیسونانس)
             this.playTone(150, 'sawtooth', 0.3, 0);
             this.playTone(140, 'sawtooth', 0.3, 0.2);
         }
@@ -93,6 +93,8 @@
         }
 
         initChart();
+        // فراخوانی اولیه برای دریافت تنظیمات
+        fetchGameState();
         setInterval(fetchGameState, 1000);
     }
 
@@ -168,6 +170,11 @@
     }
 
     function updateUI(data) {
+        // 1. دریافت تنظیمات از سرور (در صورت وجود)
+        if (data.settings) {
+            if (data.settings.min_bet) currentMinBet = parseFloat(data.settings.min_bet);
+        }
+        
         const price = data.current_price;
         elPrice.textContent = `$${price.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
         elPrice.classList.remove('loading');
@@ -181,19 +188,24 @@
         if (data.round) {
             currentRoundId = data.round.id;
             const timeLeft = data.round.time_left;
+            
+            // دریافت زمان کل راند از سرور یا استفاده از پیش‌فرض
+            // اگر سرور duration نفرستاد، از مقدار قبلی یا ۶۰ استفاده می‌شود
+            const totalDuration = data.round.duration || currentRoundDuration;
+            currentRoundDuration = totalDuration; // آپدیت متغیر سراسری برای استفاده‌های بعدی
+
             elTimerText.textContent = timeLeft;
             
-            const percentage = (timeLeft / 60) * 100;
+            // محاسبه درصد پیشرفت بر اساس زمان کل راند (داینامیک)
+            const percentage = (timeLeft / totalDuration) * 100;
             elTimerPath.style.strokeDasharray = `${percentage}, 100`;
             
-            // افکت صوتی تیک‌تاک (فقط اگر قبلاً پخش نشده در ثانیه جاری)
+            // افکت صوتی تیک‌تاک
             if (timeLeft <= 5 && timeLeft > 0) {
-                 // یک چک ساده برای جلوگیری از تکرار در یک ثانیه
                  if (!window[`tick_played_${timeLeft}`]) {
-                     SoundFX.tick();
-                     window[`tick_played_${timeLeft}`] = true;
-                     // پاک کردن فلگ ثانیه قبلی
-                     delete window[`tick_played_${timeLeft + 1}`];
+                      SoundFX.tick();
+                      window[`tick_played_${timeLeft}`] = true;
+                      delete window[`tick_played_${timeLeft + 1}`];
                  }
             }
 
@@ -274,14 +286,14 @@
             localStorage.removeItem(`bet_${latestRound.round_id}`);
             
             if (userBet === latestRound.result) {
-                SoundFX.win(); // صدای برد
+                SoundFX.win(); 
                 triggerConfetti();
                 tg.showAlert("🎉 تبریک! پوزیشن شما با سود بسته شد.");
                 tg.HapticFeedback.notificationOccurred('success');
             } else if (latestRound.result === 'DRAW') {
                 tg.showAlert("⚪️ بازار خنثی بود. مبلغ برگشت داده شد.");
             } else {
-                SoundFX.lose(); // صدای باخت
+                SoundFX.lose(); 
                 tg.showAlert("❌ متاسفانه پیش‌بینی اشتباه بود.");
                 tg.HapticFeedback.notificationOccurred('error');
             }
@@ -312,14 +324,16 @@
     }
 
     window.placeBet = async function(prediction) {
-        const amount = parseInt(inpAmount.value);
-        if (!amount || amount < 1) {
-            tg.showAlert("لطفاً مبلغ ورود معتبری وارد کنید.");
+        const amount = parseFloat(inpAmount.value);
+        
+        // اعتبارسنجی بر اساس حداقل مبلغ دریافتی از سرور
+        if (!amount || amount < currentMinBet) {
+            tg.showAlert(`حداقل مبلغ ورود ${currentMinBet} UUSD است.`);
             return;
         }
 
         tg.HapticFeedback.impactOccurred('medium');
-        SoundFX.click(); // صدای کلیک
+        SoundFX.click(); 
         
         disableBetting(true);
         const btn = prediction === 'UP' ? btnUp : btnDown;

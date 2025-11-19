@@ -5,11 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>چالش کندل بیت‌کوین</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=5.1">
+    <link rel="stylesheet" href="style.css?v=5.3">
     <!-- کتابخانه نمودار -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- کتابخانه انیمیشن کاغذ رنگی (Confetti) -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
 <body class="game-body">
+
+    <!-- فایل‌های صوتی (Preload) -->
+    <audio id="audio-click" src="sounds/click.mp3" preload="auto"></audio>
+    <audio id="audio-tick" src="sounds/tick.mp3" preload="auto"></audio>
+    <audio id="audio-win" src="sounds/win.mp3" preload="auto"></audio>
+    <audio id="audio-lose" src="sounds/lose.mp3" preload="auto"></audio>
     
     <!-- نوار بالای بازی -->
     <div class="game-header">
@@ -45,6 +53,9 @@
         <!-- وضعیت بازی -->
         <div id="round-status" class="round-status">در انتظار شروع سشن معاملاتی...</div>
 
+        <!-- کانتینر تاریخچه (بصورت داینامیک پر می‌شود) -->
+        <div id="history-container" class="history-container"></div>
+
         <!-- کنترل‌های ثبت پوزیشن -->
         <div class="bet-controls">
             <div class="amount-selector">
@@ -64,8 +75,7 @@
 
     </div>
 
-    <!-- اسکریپت‌های تلگرام و بازی -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="game.js?v=2.0"></script> <!-- ورژن آپدیت شد -->
+    <script src="game.js?v=3.0"></script> <!-- ورژن جدید JS -->
 </body>
 </html>

@@ -5,7 +5,7 @@
     const tg = window.Telegram.WebApp;
     
     // ❗️ آدرس تونل (بر اساس لاگ شما)
-    const API_BASE_URL = "https://phone-max-approve-coast.trycloudflare.com";
+    const API_BASE_URL = "loans-products-effects-ministers.trycloudflare.com";
 
     const loader = document.getElementById('loader');
     const appContainer = document.getElementById('app-container');

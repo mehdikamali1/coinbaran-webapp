@@ -3,60 +3,52 @@
 
     const tg = window.Telegram.WebApp;
 
-    // --------------------------------------------------------------
-    // 👇👇👇 آدرس تانل را اینجا چک کن (بدون https://) 👇👇👇
-    const DOMAIN = "army-occupations-mistakes-chen.trycloudflare.com";
-    // --------------------------------------------------------------
-
-    const API_BASE_URL = `https://${DOMAIN}`;
-    const WS_BASE_URL = `wss://${DOMAIN}`;
+    // --------------------------------------------------------------------
+    // 🚨 آدرس مستقیم (دقیقاً همان آدرسی که داشبورد با آن کار می‌کند)
+    // --------------------------------------------------------------------
+    const BASE_DOMAIN = "loans-products-effects-ministers.trycloudflare.com";
+    
+    const API_BASE_URL = "https://" + BASE_DOMAIN;
+    const WS_BASE_URL = "wss://" + BASE_DOMAIN;
+    // --------------------------------------------------------------------
 
     // عناصر صفحه
     const elPrice = document.getElementById('btc-price');
     const elStatus = document.getElementById('round-status');
-    const historyContainer = document.getElementById('history-container'); // اضافه شده برای اطمینان
-
-    // متغیرهای وضعیت
+    
     let ws = null;
     let reconnectInterval = null;
-    let currentRoundDuration = 60;
     let currentMinBet = 1.0;
-    let chart = null;
+    let chart;
     let priceHistory = [];
     const MAX_DATA_POINTS = 30;
 
-    // --- شروع برنامه ---
     function init() {
-        try {
-            tg.ready();
-            tg.expand();
-            
-            // 🚨 تست اتصال: این پیام باید روی صفحه بیاید
-            // tg.showAlert("Game JS Loaded: " + API_BASE_URL); 
-
-            // اگر کانتینر هیستوری نبود، بساز
-            if (!document.getElementById('history-container') && document.getElementById('game-container')) {
-                 const hc = document.createElement('div');
-                 hc.id = 'history-container';
-                 hc.className = 'history-container';
-                 const container = document.getElementById('game-container');
-                 const controls = document.querySelector('.bet-controls');
-                 if(container && controls) container.insertBefore(hc, controls);
-            }
-
-            initChart();
-            fetchGameStateHTTP(); // درخواست اولیه
-            connectWebSocket();   // اتصال سوکت
-
-        } catch (err) {
-            alert("CRITICAL ERROR in init: " + err.message);
+        tg.ready();
+        tg.expand();
+        
+        // اطمینان از وجود کانتینر تاریخچه
+        if (!document.getElementById('history-container') && document.getElementById('game-container')) {
+             const hc = document.createElement('div');
+             hc.id = 'history-container';
+             hc.className = 'history-container';
+             const container = document.getElementById('game-container');
+             const controls = document.querySelector('.bet-controls');
+             if(container && controls) container.insertBefore(hc, controls);
         }
+
+        initChart();
+        
+        // 1. درخواست وضعیت اولیه (HTTP)
+        fetchGameStateHTTP();
+        
+        // 2. اتصال سوکت (WebSocket)
+        connectWebSocket();
     }
 
-    // 1. درخواست HTTP (مهم‌ترین بخش برای شروع)
     async function fetchGameStateHTTP() {
-        elStatus.textContent = "در حال دریافت وضعیت...";
         try {
+            // تست درخواست ساده
             const response = await fetch(`${API_BASE_URL}/webapp/game/state`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -64,34 +56,36 @@
             });
 
             if (!response.ok) {
-                throw new Error(`Server Error: ${response.status}`);
+                throw new Error(`HTTP Error: ${response.status}`);
             }
 
             const data = await response.json();
             if (data.status === "success") {
                 updateUI(data);
             } else {
-                elStatus.textContent = "خطای دیتا: " + JSON.stringify(data);
+                elStatus.textContent = "خطای سرور: " + data.message;
             }
         } catch (e) {
             console.error(e);
-            // 🚨 نمایش ارور روی صفحه گوشی
-            elStatus.textContent = "❌ خطای اتصال: " + e.message;
+            // اگر اینجا ارور داد، یعنی آدرس API_BASE_URL غلط است یا تانل قطع شده
+            elStatus.textContent = "❌ عدم دسترسی به سرور";
             elStatus.style.color = "red";
-            // alert("HTTP Error: " + e.message + "\nURL: " + API_BASE_URL);
+            tg.showAlert("خطای اتصال: " + e.message + "\nآدرس: " + API_BASE_URL);
         }
     }
 
-    // 2. اتصال سوکت
     function connectWebSocket() {
         if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
 
+        // ساخت آدرس سوکت
         const encodedInitData = btoa(tg.initData || "");
-        ws = new WebSocket(`${WS_BASE_URL}/ws/0/${encodedInitData}`);
+        const socketUrl = `${WS_BASE_URL}/ws/0/${encodedInitData}`;
+        
+        console.log("Connecting to WS:", socketUrl);
+        ws = new WebSocket(socketUrl);
 
         ws.onopen = () => {
             console.log("✅ WS Connected");
-            // elStatus.textContent = "🟢 سوکت متصل شد";
             if (reconnectInterval) { clearInterval(reconnectInterval); reconnectInterval = null; }
         };
 
@@ -103,16 +97,15 @@
         };
 
         ws.onclose = () => {
-            // elStatus.textContent = "⚠️ قطع سوکت...";
+            console.log("WS Closed");
             if (!reconnectInterval) reconnectInterval = setInterval(connectWebSocket, 3000);
         };
         
-        ws.onerror = (e) => {
-            console.error("WS Error", e);
+        ws.onerror = (err) => {
+            console.error("WS Error:", err);
         };
     }
 
-    // 3. آپدیت محیط کاربری
     function updateUI(data) {
         // قیمت
         if (data.current_price) {
@@ -135,41 +128,40 @@
             const total = data.round.duration || 60;
             const percent = (timeLeft / total) * 100;
             
-            const timerText = document.getElementById('timer-text');
-            const timerPath = document.getElementById('timer-path');
-            
-            if(timerText) timerText.textContent = timeLeft;
-            if(timerPath) timerPath.style.strokeDasharray = `${percent}, 100`;
+            const elTimerText = document.getElementById('timer-text');
+            const elTimerPath = document.getElementById('timer-path');
+
+            if(elTimerText) elTimerText.textContent = timeLeft;
+            if(elTimerPath) elTimerPath.style.strokeDasharray = `${percent}, 100`;
 
             if (timeLeft <= 10) {
-                 if(timerPath) timerPath.style.stroke = '#FF4D4D';
+                 if(elTimerPath) elTimerPath.style.stroke = '#FF4D4D';
                  elStatus.textContent = "⏳ بسته شد";
                  elStatus.style.color = '#FFC107';
                  disableBetting(true);
             } else {
-                 if(timerPath) timerPath.style.stroke = '#00E096';
-                 if (!localStorage.getItem(`bet_${data.round.id}`)) {
+                 if(elTimerPath) elTimerPath.style.stroke = '#00E096';
+                 // اگر کاربر شرط ندارد، باز باشد
+                 const myBet = localStorage.getItem(`bet_${data.round.id}`);
+                 if (!myBet) {
                     elStatus.textContent = "🟢 باز";
                     elStatus.style.color = '#00E096';
                     disableBetting(false);
                  }
             }
         }
-
+        
         // هیستوری
         if (data.history) updateHistoryDisplay(data.history);
     }
 
-    // --- توابع چارت و کمکی ---
     function initChart() {
         const canvas = document.getElementById('btcChart');
         if(!canvas) return;
         const ctx = canvas.getContext('2d');
-        // اگر Chart.js لود نشده باشد ارور ندهد
-        if (typeof Chart === 'undefined') {
-            elStatus.textContent = "⚠️ Chart.js لود نشد";
-            return;
-        }
+        
+        if(typeof Chart === 'undefined') return;
+
         chart = new Chart(ctx, {
             type: 'line',
             data: {
@@ -205,7 +197,7 @@
             chart.update();
         }
     }
-
+    
     function updateHistoryDisplay(h) {
         const c = document.getElementById('history-container');
         if(!c) return;
@@ -232,7 +224,6 @@
         if(inp) inp.disabled = d;
     }
 
-    // دکمه شرط
     window.placeBet = async function(p) {
         const inp = document.getElementById('bet-amount');
         const a = parseFloat(inp.value);

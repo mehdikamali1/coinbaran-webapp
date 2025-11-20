@@ -4,7 +4,7 @@
     // ------------------------------------------------------------------------
     // ⚠️ آدرس Cloudflare شما باید در اینجا صحیح باشد
     // ------------------------------------------------------------------------
-    const API_BASE_URL = "loans-products-effects-ministers.trycloudflare.com"; // <-- ❗️❗️❗️ مطمئن شوید این آدرس درست است
+    const API_BASE_URL = "https://loans-products-effects-ministers.trycloudflare.com"; // <-- ❗️❗️❗️ مطمئن شوید این آدرس درست است
 
     // --- عناصر DOM ---
     const formContainer = document.getElementById('kyc-form-container');

@@ -3,12 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>چالش کندل</title>
+    <title>چالش بیت‌کوین</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=6.0">
+    <link rel="stylesheet" href="style.css?v=7.0">
     
     <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        /* ✨ استایل اختصاصی برای روشن کردن قیمت و زیبایی نمودار */
+        .price-display {
+            text-align: center;
+            margin-top: 15px;
+        }
+        .price-label {
+            font-size: 12px;
+            color: #a0aec0; /* خاکستری روشن */
+            margin-bottom: 5px;
+        }
+        #btc-price {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 32px;
+            font-weight: bold;
+            color: #ffffff !important; /* 🚨 اجبار به رنگ سفید */
+            text-shadow: 0 0 15px rgba(54, 123, 255, 0.6); /* درخشش آبی */
+            margin: 0;
+            direction: ltr;
+        }
+        /* کانتینر نمودار با حاشیه نئونی ملایم */
+        .chart-wrapper {
+            margin: 20px 10px;
+            background: rgba(16, 20, 30, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            height: 260px;
+            position: relative;
+        }
+        #chart-loader {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            color: #666; font-size: 12px;
+        }
+    </style>
 </head>
 <body class="game-body">
 
@@ -21,11 +58,11 @@
 
     <div id="game-container">
         <div class="price-display">
-            <div class="price-label">قیمت لحظه‌ای (BTC/USDT)</div>
-            <h1 id="btc-price" class="loading">...</h1>
+            <div class="price-label">قیمت لحظه‌ای بیت‌کوین</div>
+            <h1 id="btc-price">Connecting...</h1>
         </div>
 
-        <div class="timer-circle">
+        <div class="timer-circle" style="margin: 15px auto;">
             <svg viewBox="0 0 36 36" class="circular-chart">
                 <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                 <path id="timer-path" class="circle" stroke-dasharray="100, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
@@ -33,11 +70,12 @@
             <div id="timer-text" class="timer-text">--</div>
         </div>
 
-        <div class="chart-container" style="margin: 20px 0; background: rgba(0,0,0,0.2); border-radius: 15px;">
-            <div id="btcChart" style="width: 100%; height: 280px;"></div>
+        <div class="chart-wrapper">
+            <div id="chart-loader">در حال ترسیم نمودار...</div>
+            <div id="btcChart" style="width: 100%; height: 100%;"></div>
         </div>
 
-        <div id="round-status" class="round-status" style="min-height: 30px;">در حال اتصال...</div>
+        <div id="round-status" class="round-status">اتصال به سرور...</div>
         <div id="history-container" class="history-container"></div>
 
         <div class="bet-controls">
@@ -53,6 +91,6 @@
     </div>
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="game.js?v=FINAL_FIX_99"></script> 
+    <script src="game.js?v=SHIK_CHART_100"></script> 
 </body>
 </html>

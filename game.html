@@ -6,14 +6,13 @@
     <title>چالش کندل بیت‌کوین</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css?v=5.3">
-    <!-- کتابخانه نمودار -->
-    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
-    <!-- کتابخانه انیمیشن کاغذ رنگی (Confetti) -->
+    
+    <script src="https://cdn.jsdelivr.net/npm/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
 <body class="game-body">
 
-    <!-- نوار بالای بازی -->
     <div class="game-header">
         <button onclick="window.location.href='dashboard.html'" class="back-btn">
             <i class="fas fa-arrow-right"></i> خروج
@@ -25,7 +24,6 @@
 
     <div id="game-container">
         
-        <!-- بخش قیمت و تایمر -->
         <div class="price-display">
             <div class="price-label">قیمت لحظه‌ای بیت‌کوین (BTC/USDT)</div>
             <h1 id="btc-price" class="loading">...</h1>
@@ -39,18 +37,14 @@
             <div id="timer-text" class="timer-text">60</div>
         </div>
 
-        <!-- نمودار -->
         <div class="chart-container">
-            <canvas id="btcChart"></canvas>
+            <div id="btcChart" style="width: 100%; height: 250px;"></div>
         </div>
 
-        <!-- وضعیت بازی -->
         <div id="round-status" class="round-status">در انتظار شروع سشن معاملاتی...</div>
 
-        <!-- کانتینر تاریخچه (بصورت داینامیک پر می‌شود) -->
         <div id="history-container" class="history-container"></div>
 
-        <!-- کنترل‌های ثبت پوزیشن -->
         <div class="bet-controls">
             <div class="amount-selector">
                 <span>مبلغ ورود (UUSD):</span>
@@ -70,6 +64,6 @@
     </div>
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="game.js?v=999.0"></script> <!-- ورژن جدید JS -->
+    <script src="game.js?v=TRADINGVIEW_1.0"></script> 
 </body>
 </html>

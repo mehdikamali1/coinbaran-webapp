@@ -5,7 +5,7 @@
     const tg = window.Telegram.WebApp;
     
     // 🚨 اصلاح مهم: آدرس را بدون https:// بنویسید
-    const DOMAIN = "https://army-occupations-mistakes-chen.trycloudflare.com"; 
+    const DOMAIN = "phone-max-approve-coast.trycloudflare.com"; 
     
     const API_BASE_URL = `https://${DOMAIN}`;
     const WS_BASE_URL = `wss://${DOMAIN}`;

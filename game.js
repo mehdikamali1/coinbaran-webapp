@@ -4,8 +4,8 @@
     const tg = window.Telegram.WebApp;
 
     // --------------------------------------------------------------------
-    // ✅ آدرس تانل
-    const BASE_DOMAIN = "/played-amount-governments-lane.trycloudflare.com";
+    // ✅ آدرس تانل (بدون https)
+    const BASE_DOMAIN = "played-amount-governments-lane.trycloudflare.com";
     
     const API_BASE_URL = "https://" + BASE_DOMAIN;
     const WS_BASE_URL = "wss://" + BASE_DOMAIN;
@@ -17,12 +17,12 @@
     let ws = null;
     let reconnectInterval = null;
     
-    // متغیرهای TradingView
+    // متغیرهای نمودار
     let tvChart = null;
     let areaSeries = null;
     let lastTime = 0;
 
-    // سیستم صوتی (ساده شده برای جلوگیری از ارور)
+    // --- سیستم صوتی ---
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
     let audioCtx = new AudioCtx();
     
@@ -48,20 +48,14 @@
         tg.ready();
         tg.expand();
         
-        // فعال‌سازی صدا
         document.body.addEventListener('click', () => {
             if (audioCtx.state === 'suspended') audioCtx.resume();
         }, { once: true });
 
         setupHistoryContainer();
         
-        // تلاش برای ساخت نمودار (داخل try-catch تا اگر نشد بازی متوقف نشود)
-        try {
-            initTradingViewChart();
-        } catch (e) {
-            console.error("Chart Init Error:", e);
-            elStatus.textContent = "خطای بارگذاری نمودار (اما بازی فعال است)";
-        }
+        // ساخت نمودار
+        initTradingViewChart();
         
         fetchGameStateHTTP();
         connectWebSocket();
@@ -77,46 +71,73 @@
         }
     }
 
+    // --------------------------------------------------------------------------
+    // 📊 تنظیمات دقیق نمودار TradingView
+    // --------------------------------------------------------------------------
     function initTradingViewChart() {
         const chartContainer = document.getElementById('btcChart');
         if (!chartContainer) return;
-        
-        // چک کردن اینکه کتابخانه لود شده یا نه
-        if (!window.LightweightCharts) {
-            console.error("TradingView Library NOT loaded!");
-            chartContainer.innerHTML = '<p style="color:red;text-align:center;padding-top:50px;">نمودار لود نشد</p>';
-            return;
-        }
 
         chartContainer.innerHTML = '';
 
+        // ایجاد نمودار
         tvChart = LightweightCharts.createChart(chartContainer, {
-            layout: { background: { type: 'solid', color: 'transparent' }, textColor: '#A0AEC0' },
-            grid: { vertLines: { color: 'rgba(43, 59, 82, 0.4)' }, horzLines: { color: 'rgba(43, 59, 82, 0.4)' } },
-            rightPriceScale: { borderColor: 'rgba(43, 59, 82, 0.8)', scaleMargins: { top: 0.1, bottom: 0.1 } },
-            timeScale: { borderColor: 'rgba(43, 59, 82, 0.8)', timeVisible: true, secondsVisible: true },
-            crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+            width: chartContainer.clientWidth,
+            height: 250, // ارتفاع ثابت برای اطمینان از نمایش
+            layout: {
+                background: { type: 'solid', color: 'transparent' },
+                textColor: '#A0AEC0',
+            },
+            grid: {
+                vertLines: { color: 'rgba(43, 59, 82, 0.2)' },
+                horzLines: { color: 'rgba(43, 59, 82, 0.2)' },
+            },
+            timeScale: {
+                borderColor: 'rgba(43, 59, 82, 0.8)',
+                timeVisible: true,
+                secondsVisible: true,
+            },
+            rightPriceScale: {
+                borderColor: 'rgba(43, 59, 82, 0.8)',
+            },
         });
 
+        // اضافه کردن سری داده (Area Chart - مناسب برای دیتای تک قیمتی)
         areaSeries = tvChart.addAreaSeries({
-            topColor: 'rgba(54, 123, 255, 0.4)', bottomColor: 'rgba(54, 123, 255, 0.0)',
-            lineColor: '#367BFF', lineWidth: 2,
+            topColor: 'rgba(54, 123, 255, 0.5)',
+            bottomColor: 'rgba(54, 123, 255, 0.0)',
+            lineColor: '#367BFF',
+            lineWidth: 2,
         });
 
+        // ریسایز خودکار
         new ResizeObserver(entries => {
             if (entries.length === 0 || !entries[0].target) return;
             const newRect = entries[0].contentRect;
-            tvChart.applyOptions({ height: newRect.height, width: newRect.width });
+            tvChart.applyOptions({ width: newRect.width, height: newRect.height });
         }).observe(chartContainer);
     }
 
     function updateChartData(price) {
         if (!areaSeries) return;
+
         let time = Math.floor(Date.now() / 1000);
-        if (time <= lastTime) time = lastTime + 1;
+        // اصلاح زمان برای جلوگیری از ارور TradingView (تکرار زمان)
+        if (time <= lastTime) {
+            time = lastTime + 1;
+        }
         lastTime = time;
+
+        // آپدیت دیتا
         areaSeries.update({ time: time, value: price });
+        
+        // 🚨 نکته کلیدی: فیت کردن نمودار برای اینکه خط دیده شود
+        // (اگر داده‌ها کم باشند، نمودار ممکن است خالی دیده شود مگر اینکه فیت شود)
+        // tvChart.timeScale().fitContent(); 
+        // یا اسکرول خودکار به آخرین نقطه:
+        tvChart.timeScale().scrollToRealTime();
     }
+    // --------------------------------------------------------------------------
 
     async function fetchGameStateHTTP() {
         try {
@@ -139,11 +160,17 @@
     }
 
     function updateUI(data) {
+        // 1. آپدیت قیمت و نمودار
         if (data.current_price) {
-            elPrice.textContent = `$${data.current_price.toLocaleString()}`;
-            elPrice.classList.remove('loading');
-            updateChartData(data.current_price);
+            const price = data.current_price;
+            if(elPrice) {
+                elPrice.textContent = `$${price.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+                elPrice.classList.remove('loading');
+            }
+            updateChartData(price);
         }
+
+        if (data.settings) currentMinBet = parseFloat(data.settings.min_bet || 1.0);
 
         if (data.round) {
             const timeLeft = data.round.time_left;

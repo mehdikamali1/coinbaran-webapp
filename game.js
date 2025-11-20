@@ -5,7 +5,7 @@
 
     // --------------------------------------------------------------------
     // ✅ آدرس تانل شما (به این دست نزن اگر درست است)
-    const BASE_DOMAIN = "loans-products-effects-ministers.trycloudflare.com";
+    const BASE_DOMAIN = "played-amount-governments-lane.trycloudflare.com";
     
     const API_BASE_URL = "https://" + BASE_DOMAIN;
     const WS_BASE_URL = "wss://" + BASE_DOMAIN;

@@ -6,7 +6,7 @@
     
     // ❗️ آدرس تونل خود را بدون https:// اینجا بگذارید (برای سوکت wss:// نیاز است)
     // مثال: "balance-computing-recommend-adds.trycloudflare.com"
-    const DOMAIN = "https://complimentary-filing-mood-events.trycloudflare.com"; 
+    const DOMAIN = "https://league-terms-individually-lunch.trycloudflare.com"; 
     const API_BASE_URL = `https://${DOMAIN}`;
     const WS_BASE_URL = `wss://${DOMAIN}`;
 

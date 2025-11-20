@@ -5,7 +5,7 @@
     const tg = window.Telegram.WebApp;
     
     // ❗️ آدرس تونل (بر اساس لاگ شما)
-    const API_BASE_URL = "https://complimentary-filing-mood-events.trycloudflare.com";
+    const API_BASE_URL = "https://league-terms-individually-lunch.trycloudflare.com";
 
     const loader = document.getElementById('loader');
     const appContainer = document.getElementById('app-container');

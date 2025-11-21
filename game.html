@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>چالش بیت‌کوین (Debug Mode)</title>
+    <title>CoinBaran Challenge</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -11,67 +11,76 @@
     <style>
         body { background-color: #1a202c; color: white; font-family: sans-serif; margin: 0; padding: 0; overflow-x: hidden; }
         .game-header { display: flex; justify-content: space-between; padding: 15px; background: #2d3748; align-items: center; }
+        .back-btn { background: none; border: none; color: #a0aec0; font-size: 16px; cursor: pointer; }
         .live-badge { background: #e53e3e; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
         .blink { animation: blinker 1.5s linear infinite; }
         @keyframes blinker { 50% { opacity: 0; } }
         .chart-wrapper { margin: 10px; background: rgba(0,0,0,0.3); border: 1px solid #4a5568; border-radius: 10px; height: 280px; position: relative; }
         #btcChart { width: 100%; height: 100%; }
         .price-display { text-align: center; margin: 10px 0; }
-        #btc-price { font-size: 28px; font-weight: bold; direction: ltr; color: #63b3ed; }
+        .price-label { font-size: 12px; color: #a0aec0; }
+        #btc-price { font-size: 32px; font-weight: bold; direction: ltr; color: #63b3ed; margin: 5px 0; text-shadow: 0 0 10px rgba(99, 179, 237, 0.5); }
         
-        /* استایل دکمه‌ها */
         .bet-controls { display: flex; flex-direction: column; gap: 10px; padding: 15px; }
         .action-buttons-game { display: flex; gap: 10px; }
-        .game-btn { flex: 1; padding: 15px; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; color: white; cursor: pointer; }
-        .btn-up { background: #48bb78; }
-        .btn-down { background: #f56565; }
-        .btn-up:disabled, .btn-down:disabled { opacity: 0.5; cursor: not-allowed; }
-        .amount-input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #4a5568; background: #2d3748; color: white; text-align: center; font-size: 18px; }
+        .game-btn { flex: 1; padding: 15px; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; color: white; cursor: pointer; transition: 0.2s; }
+        .btn-up { background: #48bb78; box-shadow: 0 4px 0 #2f855a; }
+        .btn-down { background: #f56565; box-shadow: 0 4px 0 #c53030; }
+        .btn-up:active, .btn-down:active { transform: translateY(4px); box-shadow: none; }
+        .btn-up:disabled, .btn-down:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; transform: none; }
+        .amount-input { width: 100%; padding: 15px; border-radius: 8px; border: 1px solid #4a5568; background: #2d3748; color: white; text-align: center; font-size: 20px; box-sizing: border-box; }
 
-        /* --- کنسول دیباگ --- */
         #debug-console {
-            position: fixed; bottom: 0; left: 0; right: 0; height: 150px;
+            position: fixed; bottom: 0; left: 0; right: 0; height: 120px;
             background: rgba(0,0,0,0.9); color: #00ff00; font-family: monospace;
-            font-size: 10px; padding: 10px; overflow-y: auto; z-index: 9999;
+            font-size: 11px; padding: 10px; overflow-y: auto; z-index: 9999;
             border-top: 2px solid #48bb78; direction: ltr; text-align: left;
         }
         .log-err { color: #ff4d4d; }
-        .log-warn { color: #ffff00; }
-        #round-status { text-align: center; margin: 5px; font-weight: bold; }
-        .timer-text { text-align: center; font-size: 24px; font-weight: bold; margin: 5px; }
+        
+        .round-info { display: flex; justify-content: space-around; padding: 10px; background: rgba(255,255,255,0.05); margin: 10px; border-radius: 8px; }
+        #timer-display { font-size: 24px; font-weight: bold; color: #ecc94b; }
+        #round-status { font-weight: bold; color: #a0aec0; }
     </style>
 </head>
 <body>
-
-    <div id="debug-console">Running Diagnostics...<br></div>
+    <div id="debug-console">Initializing...<br></div>
 
     <div class="game-header">
-        <button onclick="window.location.reload()" style="padding:5px 10px;border-radius:5px;border:none;background:#4a5568;color:white;">Reload</button>
-        <div class="live-badge"><span class="blink">●</span> LIVE</div>
+        <button onclick="window.location.href='dashboard.html'" class="back-btn">Exit</button>
+        <div class="live-badge"><span class="blink">●</span> MARKET LIVE</div>
     </div>
 
     <div class="price-display">
-        <div style="font-size:12px;color:#a0aec0;">BTC/USDT</div>
-        <div id="btc-price">Connecting...</div>
+        <div class="price-label">BITCOIN PRICE (USD)</div>
+        <div id="btc-price">Loading...</div>
     </div>
 
-    <div id="timer-display" class="timer-text">--</div>
-    <div id="round-status">Waiting for socket...</div>
+    <div class="round-info">
+        <div>
+            <div style="font-size:10px;color:#a0aec0;">TIME LEFT</div>
+            <div id="timer-display">--</div>
+        </div>
+        <div>
+            <div style="font-size:10px;color:#a0aec0;">STATUS</div>
+            <div id="round-status">Connecting...</div>
+        </div>
+    </div>
 
     <div class="chart-wrapper">
         <div id="btcChart"></div>
     </div>
 
     <div class="bet-controls">
+        <div style="text-align:center;font-size:12px;color:#a0aec0;margin-bottom:5px;">BET AMOUNT (UUSD)</div>
         <input type="number" id="bet-amount" class="amount-input" value="1">
         <div class="action-buttons-game">
-            <button id="btn-up" class="game-btn btn-up" onclick="placeBet('UP')">↑ UP</button>
-            <button id="btn-down" class="game-btn btn-down" onclick="placeBet('DOWN')">↓ DOWN</button>
+            <button id="btn-up" class="game-btn btn-up" onclick="placeBet('UP')">↑ LONG (UP)</button>
+            <button id="btn-down" class="game-btn btn-down" onclick="placeBet('DOWN')">↓ SHORT (DOWN)</button>
         </div>
     </div>
 
     <script>
-        // --- سیستم لاگ گیری روی صفحه ---
         const debugBox = document.getElementById('debug-console');
         function logToScreen(msg, type='info') {
             const div = document.createElement('div');
@@ -79,14 +88,8 @@
             if(type==='error') div.className = 'log-err';
             debugBox.appendChild(div);
             debugBox.scrollTop = debugBox.scrollHeight;
-            console.log(msg);
         }
-        window.onerror = function(msg, url, line) {
-            logToScreen(`ERROR: ${msg} (Line: ${line})`, 'error');
-        };
 
-        // --- تنظیمات اصلی ---
-        // ⚠️ نکته: این آدرس باید دقیقاً همان آدرس تانل شما باشد
         const BASE_DOMAIN = "played-amount-governments-lane.trycloudflare.com"; 
         const API_BASE_URL = "https://" + BASE_DOMAIN;
         const WS_BASE_URL = "wss://" + BASE_DOMAIN;
@@ -97,17 +100,8 @@
         let series = null;
         let reconnectInterval = null;
 
-        // --- شروع برنامه ---
         document.addEventListener("DOMContentLoaded", () => {
-            logToScreen("DOM Loaded. Initializing...");
-            try {
-                tg.ready();
-                tg.expand();
-                logToScreen("Telegram WebApp Ready.");
-            } catch (e) {
-                logToScreen("Telegram API Error: " + e.message, 'error');
-            }
-
+            try { tg.ready(); tg.expand(); } catch(e){}
             initChart();
             fetchGameStateHTTP();
             connectWebSocket();
@@ -116,9 +110,7 @@
         function initChart() {
             try {
                 const container = document.getElementById('btcChart');
-                if (!window.LightweightCharts) {
-                    throw new Error("Chart Library not loaded!");
-                }
+                if (!window.LightweightCharts) throw new Error("Lib missing");
                 
                 chart = LightweightCharts.createChart(container, {
                     layout: { background: { type: 'solid', color: 'transparent' }, textColor: '#A0AEC0' },
@@ -131,33 +123,23 @@
                     borderVisible: false, wickUpColor: '#00E096', wickDownColor: '#FF4D4D'
                 });
                 
-                // تنظیم ریسایز
                 new ResizeObserver(entries => {
-                    if (entries.length === 0 || entries[0].target !== container) { return; }
+                    if (entries.length === 0) return;
                     const newRect = entries[0].contentRect;
                     chart.applyOptions({ height: newRect.height, width: newRect.width });
                 }).observe(container);
-
-                logToScreen("Chart Initialized Successfully.");
             } catch (e) {
-                logToScreen("Chart Init Failed: " + e.message, 'error');
+                logToScreen("Chart Error: " + e.message, 'error');
             }
         }
 
         async function fetchGameStateHTTP() {
-            logToScreen("Fetching HTTP State...");
             try {
                 const r = await fetch(`${API_BASE_URL}/webapp/game/state`, {
-                    method: 'POST', 
-                    headers: {'Content-Type': 'application/json'}, 
+                    method: 'POST', headers: {'Content-Type': 'application/json'}, 
                     body: JSON.stringify({ initData: tg.initData })
                 });
-                logToScreen(`HTTP Status: ${r.status}`);
-                if(r.status !== 200) throw new Error("HTTP Error " + r.status);
-
                 const d = await r.json();
-                logToScreen("Data Received. Points: " + (d.chart_history ? d.chart_history.length : 0));
-                
                 if (d.status === "success") {
                     if (d.chart_history && series) {
                         const uniqueData = [...new Map(d.chart_history.map(item => [item['time'], item])).values()]
@@ -166,51 +148,36 @@
                     }
                     updateUI(d);
                 }
-            } catch (e) {
-                logToScreen("HTTP Fetch Error: " + e.message, 'error');
-            }
+            } catch (e) { logToScreen("HTTP Error: " + e.message, 'error'); }
         }
 
         function connectWebSocket() {
             if (ws && ws.readyState === 1) return;
             
-            // ساخت آدرس امن
-            const safeInitData = encodeURIComponent(tg.initData || "");
-            const url = `${WS_BASE_URL}/ws/0?init_data=${safeInitData}`;
-            
-            logToScreen(`Connecting WS...`);
+            // ✅ آدرس کوتاه: بدون دیتای اضافی
+            const url = `${WS_BASE_URL}/ws/0`;
+            logToScreen(`Connecting to ${url}...`);
             
             try {
                 ws = new WebSocket(url);
                 
                 ws.onopen = () => {
-                    logToScreen("✅ WS Connected!", 'info');
-                    document.getElementById('round-status').textContent = "Online";
+                    logToScreen("✅ Connected!", 'info');
+                    document.getElementById('round-status').textContent = "Active";
                     document.getElementById('round-status').style.color = "#00E096";
                     if(reconnectInterval) clearInterval(reconnectInterval);
                 };
 
-                ws.onmessage = (e) => {
-                    try {
-                        const data = JSON.parse(e.data);
-                        updateUI(data);
-                    } catch(err) {}
-                };
+                ws.onmessage = (e) => { try { updateUI(JSON.parse(e.data)); } catch(err){} };
 
                 ws.onclose = (e) => {
-                    logToScreen(`❌ WS Closed: ${e.code}`, 'error');
-                    document.getElementById('round-status').textContent = "Disconnected";
+                    logToScreen(`Disconnected (Code: ${e.code})`, 'error');
+                    document.getElementById('round-status').textContent = "Offline";
                     document.getElementById('round-status').style.color = "red";
                     if(!reconnectInterval) reconnectInterval = setInterval(connectWebSocket, 3000);
                 };
-                
-                ws.onerror = (e) => {
-                    logToScreen("WS Error Event Triggered", 'error');
-                };
 
-            } catch (e) {
-                logToScreen("WS Setup Error: " + e.message, 'error');
-            }
+            } catch (e) { logToScreen("WS Setup Error: " + e.message, 'error'); }
         }
 
         function updateUI(data) {
@@ -226,13 +193,17 @@
                 const btnDown = document.getElementById('btn-down');
                 
                 if (data.round.time_left <= 10) {
-                    btnUp.disabled = true;
-                    btnDown.disabled = true;
-                    document.getElementById('round-status').textContent = "Betting Closed";
+                    if(btnUp.disabled === false) {
+                        btnUp.disabled = true; btnDown.disabled = true;
+                        document.getElementById('round-status').textContent = "Closed";
+                    }
                 } else {
-                    if(!localStorage.getItem(`bet_${data.round.id}`)) {
-                        btnUp.disabled = false;
-                        btnDown.disabled = false;
+                    const myBet = localStorage.getItem(`bet_${data.round.id}`);
+                    if (myBet) {
+                         document.getElementById('round-status').textContent = `You: ${myBet}`;
+                         btnUp.disabled = true; btnDown.disabled = true;
+                    } else {
+                        btnUp.disabled = false; btnDown.disabled = false;
                         document.getElementById('round-status').textContent = "Open";
                     }
                 }
@@ -240,26 +211,23 @@
         }
 
         window.placeBet = async function(p) {
-            logToScreen(`Placing bet: ${p}`);
             const amt = document.getElementById('bet-amount').value;
+            logToScreen(`Betting ${p}...`);
             try {
                 const r = await fetch(`${API_BASE_URL}/webapp/game/bet`, {
                     method: 'POST', headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ initData: tg.initData, amount: parseFloat(amt), prediction: p })
                 });
                 const res = await r.json();
-                logToScreen(`Bet Res: ${res.status} - ${res.message}`);
                 if(res.status === 'success') {
-                    tg.showAlert("Success!");
+                    tg.showAlert("Bet Placed!");
                     fetchGameStateHTTP().then(d => {
                         if(d.round) localStorage.setItem(`bet_${d.round.id}`, p);
                     });
                 } else {
                     tg.showAlert(res.message);
                 }
-            } catch(e) {
-                logToScreen("Bet Error: " + e.message, 'error');
-            }
+            } catch(e) { logToScreen("Bet Failed", 'error'); }
         };
     </script>
 </body>

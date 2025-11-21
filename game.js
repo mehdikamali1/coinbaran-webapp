@@ -4,8 +4,8 @@
     const tg = window.Telegram.WebApp;
 
     // --------------------------------------------------------------------
-    // ✅ آدرس تانل (بدون https)
-    const BASE_DOMAIN = "played-amount-governments-lane.trycloudflare.com";
+    // آدرس تانل
+    const BASE_DOMAIN = "program-rhythm-oil-aka.trycloudflare.com";
     const API_BASE_URL = "https://" + BASE_DOMAIN;
     const WS_BASE_URL = "wss://" + BASE_DOMAIN;
     // --------------------------------------------------------------------
@@ -17,34 +17,33 @@
     let reconnectInterval = null;
     let chart = null;
     let series = null;
-    let lastTime = 0;
-
+    
     function init() {
         tg.ready();
         tg.expand();
         
-        // تاخیر کوچک برای اطمینان از لود شدن فایل لوکال
-        setTimeout(() => {
-            initChart();
-        }, 100);
+        // ساخت اولیه نمودار (خالی)
+        initChart();
 
+        // دریافت دیتای اولیه (شامل تاریخچه نمودار)
         fetchGameStateHTTP();
+        
+        // اتصال به سوکت
         connectWebSocket();
     }
 
     function initChart() {
         const container = document.getElementById('btcChart');
         
-        if (typeof LightweightCharts === 'undefined') {
-            container.innerHTML = "<p style='color:red;text-align:center;padding-top:100px'>فایل نمودار لود نشد</p>";
+        if (!window.LightweightCharts) {
+            container.innerHTML = "<p style='color:red;text-align:center;padding-top:100px'>کتابخانه نمودار لود نشد. اتصال اینترنت را بررسی کنید.</p>";
             return;
         }
 
         container.innerHTML = '';
 
-        // تنظیمات ظاهری نمودار
         chart = LightweightCharts.createChart(container, {
-            width: container.clientWidth || 300, // اگر سایز نگرفت، پیشفرض 300
+            width: container.clientWidth || 300,
             height: 260,
             layout: {
                 background: { type: 'solid', color: 'transparent' },
@@ -56,42 +55,29 @@
             },
             rightPriceScale: {
                 borderVisible: false,
-                scaleMargins: { top: 0.2, bottom: 0.2 },
+                scaleMargins: { top: 0.1, bottom: 0.1 },
             },
             timeScale: {
                 timeVisible: true,
-                secondsVisible: true,
+                secondsVisible: false,
                 borderVisible: false,
             },
-            crosshair: {
-                vertLine: { labelBackgroundColor: '#367BFF' },
-                horzLine: { labelBackgroundColor: '#367BFF' },
-            }
         });
 
-        series = chart.addAreaSeries({
-            topColor: 'rgba(54, 123, 255, 0.5)',
-            bottomColor: 'rgba(54, 123, 255, 0.0)',
-            lineColor: '#367BFF',
-            lineWidth: 2,
+        // استفاده از Candlestick (کندل شمعی)
+        series = chart.addCandlestickSeries({
+            upColor: '#00E096', 
+            downColor: '#FF4D4D', 
+            borderVisible: false, 
+            wickUpColor: '#00E096', 
+            wickDownColor: '#FF4D4D' 
         });
 
-        // ریسایز ساده
         window.addEventListener('resize', () => {
             if (chart && container) {
                 chart.resize(container.clientWidth, 260);
             }
         });
-    }
-
-    function updateChart(price) {
-        if (!series) return;
-        
-        let now = Math.floor(Date.now() / 1000);
-        if (now <= lastTime) now = lastTime + 1;
-        lastTime = now;
-
-        series.update({ time: now, value: price });
     }
 
     // --- اتصالات شبکه ---
@@ -101,8 +87,21 @@
                 method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ initData: tg.initData })
             });
             const d = await r.json();
-            if (d.status === "success") updateUI(d);
-        } catch (e) { elStatus.textContent = "⚠️ در حال تلاش..."; }
+            if (d.status === "success") {
+                // اگر سرور تاریخچه نمودار را فرستاد، نمودار را پر کن
+                if (d.chart_history && series) {
+                    // مرتب‌سازی بر اساس زمان (احتیاطی)
+                    const sortedData = d.chart_history.sort((a, b) => a.time - b.time);
+                    // حذف تکراری‌ها با استفاده از Map (اگر دیتای کثیف بیاید)
+                    const uniqueData = [...new Map(sortedData.map(item => [item['time'], item])).values()];
+                    series.setData(uniqueData);
+                }
+                updateUI(d);
+            }
+        } catch (e) { 
+            console.error(e);
+            elStatus.textContent = "⚠️ خطا در دریافت اطلاعات..."; 
+        }
     }
 
     function connectWebSocket() {
@@ -116,7 +115,11 @@
     function updateUI(data) {
         if (data.current_price) {
             elPrice.textContent = `$${data.current_price.toLocaleString()}`;
-            updateChart(data.current_price);
+        }
+
+        // آپدیت زنده نمودار (کندل جاری)
+        if (data.candle && series) {
+            series.update(data.candle);
         }
 
         if (data.round) {

@@ -5,7 +5,7 @@
 
     // --------------------------------------------------------------------
     // آدرس تانل
-    const BASE_DOMAIN = "program-rhythm-oil-aka.trycloudflare.com";
+    const BASE_DOMAIN = "/program-rhythm-oil-aka.trycloudflare.com";
     const API_BASE_URL = "https://" + BASE_DOMAIN;
     const WS_BASE_URL = "wss://" + BASE_DOMAIN;
     // --------------------------------------------------------------------
@@ -22,13 +22,8 @@
         tg.ready();
         tg.expand();
         
-        // ساخت اولیه نمودار (خالی)
         initChart();
-
-        // دریافت دیتای اولیه (شامل تاریخچه نمودار)
         fetchGameStateHTTP();
-        
-        // اتصال به سوکت
         connectWebSocket();
     }
 
@@ -36,7 +31,7 @@
         const container = document.getElementById('btcChart');
         
         if (!window.LightweightCharts) {
-            container.innerHTML = "<p style='color:red;text-align:center;padding-top:100px'>کتابخانه نمودار لود نشد. اتصال اینترنت را بررسی کنید.</p>";
+            container.innerHTML = "<p style='color:red;text-align:center;padding-top:100px'>کتابخانه نمودار لود نشد.</p>";
             return;
         }
 
@@ -64,7 +59,6 @@
             },
         });
 
-        // استفاده از Candlestick (کندل شمعی)
         series = chart.addCandlestickSeries({
             upColor: '#00E096', 
             downColor: '#FF4D4D', 
@@ -74,13 +68,10 @@
         });
 
         window.addEventListener('resize', () => {
-            if (chart && container) {
-                chart.resize(container.clientWidth, 260);
-            }
+            if (chart && container) chart.resize(container.clientWidth, 260);
         });
     }
 
-    // --- اتصالات شبکه ---
     async function fetchGameStateHTTP() {
         try {
             const r = await fetch(`${API_BASE_URL}/webapp/game/state`, {
@@ -88,28 +79,41 @@
             });
             const d = await r.json();
             if (d.status === "success") {
-                // اگر سرور تاریخچه نمودار را فرستاد، نمودار را پر کن
-                if (d.chart_history && series) {
-                    // مرتب‌سازی بر اساس زمان (احتیاطی)
-                    const sortedData = d.chart_history.sort((a, b) => a.time - b.time);
-                    // حذف تکراری‌ها با استفاده از Map (اگر دیتای کثیف بیاید)
-                    const uniqueData = [...new Map(sortedData.map(item => [item['time'], item])).values()];
+                // پر کردن نمودار با دیتای اولیه
+                if (d.chart_history && d.chart_history.length > 0 && series) {
+                    // حذف دیتای تکراری و مرتب‌سازی
+                    const uniqueData = [...new Map(d.chart_history.map(item => [item['time'], item])).values()]
+                                       .sort((a, b) => a.time - b.time);
                     series.setData(uniqueData);
                 }
                 updateUI(d);
             }
         } catch (e) { 
             console.error(e);
-            elStatus.textContent = "⚠️ خطا در دریافت اطلاعات..."; 
         }
     }
 
     function connectWebSocket() {
         if (ws && ws.readyState === 1) return;
-        ws = new WebSocket(`${WS_BASE_URL}/ws/0/${btoa(tg.initData || "")}`);
-        ws.onopen = () => { if(reconnectInterval) clearInterval(reconnectInterval); };
+
+        // ✅ تغییر مهم: ارسال initData به عنوان پارامتر، نه در آدرس
+        // استفاده از encodeURIComponent برای جلوگیری از خرابی آدرس با کاراکترهای خاص
+        const safeInitData = encodeURIComponent(tg.initData || "");
+        ws = new WebSocket(`${WS_BASE_URL}/ws/0?init_data=${safeInitData}`);
+
+        ws.onopen = () => { 
+            elStatus.textContent = "🟢 آنلاین";
+            elStatus.style.color = "#00E096";
+            if(reconnectInterval) clearInterval(reconnectInterval); 
+        };
+        
         ws.onmessage = (e) => { try { updateUI(JSON.parse(e.data)); } catch(err){} };
-        ws.onclose = () => { if(!reconnectInterval) reconnectInterval = setInterval(connectWebSocket, 2000); };
+        
+        ws.onclose = () => { 
+            elStatus.textContent = "🔴 قطع شد";
+            elStatus.style.color = "#FF4D4D";
+            if(!reconnectInterval) reconnectInterval = setInterval(connectWebSocket, 3000); 
+        };
     }
 
     function updateUI(data) {
@@ -117,7 +121,7 @@
             elPrice.textContent = `$${data.current_price.toLocaleString()}`;
         }
 
-        // آپدیت زنده نمودار (کندل جاری)
+        // آپدیت لحظه‌ای نمودار
         if (data.candle && series) {
             series.update(data.candle);
         }
@@ -131,9 +135,11 @@
 
             if (time_left <= 10) {
                  document.getElementById('timer-path').style.stroke = '#FF4D4D';
-                 elStatus.textContent = "⏳ بسته شد";
-                 elStatus.style.color = '#FFC107';
                  disableBetting(true);
+                 if (!localStorage.getItem(`bet_${id}`)) {
+                     elStatus.textContent = "⏳ بسته شد";
+                     elStatus.style.color = '#FFC107';
+                 }
             } else {
                  document.getElementById('timer-path').style.stroke = '#00E096';
                  const myBet = localStorage.getItem(`bet_${id}`);
@@ -165,47 +171,52 @@
             html += '</div>';
             container.innerHTML = html;
         }
-
-        if (history.length > 0) {
-            const last = history[0];
-            if (last.round_id !== lastProcessedId) {
-                lastProcessedId = last.round_id;
-                const bet = localStorage.getItem(`bet_${last.round_id}`);
-                if (bet) {
-                    localStorage.removeItem(`bet_${last.round_id}`);
-                    if (bet === last.result) tg.showAlert(`🎉 برد!`);
-                    else if (last.result === 'DRAW') tg.showAlert("مساوی.");
-                    else tg.showAlert(`❌ باخت.`);
-                }
-            }
-        }
     }
 
     function disableBetting(d) {
-        document.getElementById('btn-up').disabled = d;
-        document.getElementById('btn-down').disabled = d;
-        document.getElementById('bet-amount').disabled = d;
+        const btnUp = document.getElementById('btn-up');
+        const btnDown = document.getElementById('btn-down');
+        
+        // جلوگیری از پرپر زدن دکمه‌ها اگر وضعیت تغییر نکرده
+        if (btnUp.disabled !== d) btnUp.disabled = d;
+        if (btnDown.disabled !== d) btnDown.disabled = d;
     }
 
+    // جلوگیری از کلیک رگباری
+    let isBetting = false;
+
     window.placeBet = async function(p) {
+        if (isBetting) return;
+        isBetting = true;
+        
         const amt = document.getElementById('bet-amount').value;
         disableBetting(true);
+        
         try {
             const r = await fetch(`${API_BASE_URL}/webapp/game/bet`, {
                 method: 'POST', headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ initData: tg.initData, amount: parseFloat(amt), prediction: p })
             });
             const res = await r.json();
+            
             if(res.status === 'success') {
                 tg.showAlert("✅ ثبت شد");
+                // ذخیره موقت تا وقتی سوکت آپدیت کند
                 fetchGameStateHTTP().then(d => {
-                    if(d.round) localStorage.setItem(`bet_${d.round.id}`, p);
+                    if(d.round) {
+                        localStorage.setItem(`bet_${d.round.id}`, p);
+                        elStatus.textContent = `پوزیشن شما: ${p==='UP'?'خرید':'فروش'}`;
+                    }
                 });
             } else {
                 tg.showAlert(res.message);
-                disableBetting(false);
+                disableBetting(false); // باز کردن مجدد در صورت خطا
             }
-        } catch(e) { disableBetting(false); }
+        } catch(e) { 
+            disableBetting(false); 
+        } finally {
+            isBetting = false;
+        }
     };
 
     document.addEventListener("DOMContentLoaded", init);

@@ -5,7 +5,7 @@
     const tg = window.Telegram.WebApp;
     
     // ❗️ آدرس تونل فعال خود را اینجا قرار دهید
-    const API_BASE_URL = "https://thinkpad-wars-deferred-tim.trycloudflare.com";
+    const API_BASE_URL = window.location.origin;
 
     // عناصر صفحه
     const elPrice = document.getElementById('btc-price');

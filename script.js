@@ -5,7 +5,7 @@
     const tg = window.Telegram.WebApp;
     
     // ❗️ آدرس تونل (بر اساس لاگ شما)
-    const API_BASE_URL = "https://thinkpad-wars-deferred-tim.trycloudflare.com";
+    const API_BASE_URL = window.location.origin;
 
     const loader = document.getElementById('loader');
     const appContainer = document.getElementById('app-container');

@@ -4,7 +4,7 @@
     // ------------------------------------------------------------------------
     // ⚠️ آدرس Cloudflare شما باید در اینجا صحیح باشد
     // ------------------------------------------------------------------------
-    const API_BASE_URL = "https://program-rhythm-oil-aka.trycloudflare.com"; // <-- ❗️❗️❗️ مطمئن شوید این آدرس درست است
+    const API_BASE_URL = "https://thinkpad-wars-deferred-tim.trycloudflare.com"; // <-- ❗️❗️❗️ مطمئن شوید این آدرس درست است
 
     // --- عناصر DOM ---
     const formContainer = document.getElementById('kyc-form-container');

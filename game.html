@@ -3,212 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>CoinBaran Challenge</title>
+    <title>چالش کندل بیت‌کوین</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
-    <style>
-        body { background-color: #1a202c; color: white; font-family: sans-serif; margin: 0; padding: 0; overflow-x: hidden; padding-bottom: 30px; }
-        .game-header { display: flex; justify-content: space-between; padding: 15px; background: #2d3748; align-items: center; }
-        .live-badge { background: #e53e3e; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
-        .blink { animation: blinker 1.5s linear infinite; }
-        @keyframes blinker { 50% { opacity: 0; } }
-        
-        .chart-wrapper { margin: 10px; background: rgba(0,0,0,0.3); border: 1px solid #4a5568; border-radius: 10px; height: 280px; position: relative; }
-        #btcChart { width: 100%; height: 100%; }
-        
-        .price-display { text-align: center; margin: 10px 0; }
-        #btc-price { font-size: 32px; font-weight: bold; direction: ltr; color: #63b3ed; margin: 5px 0; }
-        
-        .round-info { display: flex; justify-content: space-around; padding: 10px; background: rgba(255,255,255,0.05); margin: 10px; border-radius: 8px; }
-        #timer-display { font-size: 24px; font-weight: bold; color: #ecc94b; }
-        #round-status { font-weight: bold; color: #a0aec0; }
-
-        .bet-controls { display: flex; flex-direction: column; gap: 10px; padding: 15px; }
-        .action-buttons-game { display: flex; gap: 10px; }
-        .game-btn { flex: 1; padding: 15px; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; color: white; cursor: pointer; }
-        .btn-up { background: #48bb78; }
-        .btn-down { background: #f56565; }
-        .amount-input { width: 100%; padding: 15px; border-radius: 8px; border: 1px solid #4a5568; background: #2d3748; color: white; text-align: center; font-size: 20px; box-sizing: border-box; }
-        
-        /* نوار وضعیت پایین صفحه */
-        #status-bar { 
-            position: fixed; bottom: 0; left: 0; right: 0; 
-            background: #333; color: #fff; 
-            font-size: 11px; padding: 5px; text-align: center; 
-            border-top: 1px solid #555; font-family: monospace; direction: ltr;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css?v=5.3">
+    <!-- کتابخانه نمودار -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- کتابخانه انیمیشن کاغذ رنگی (Confetti) -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
-<body>
+<body class="game-body">
 
+    <!-- نوار بالای بازی -->
     <div class="game-header">
-        <button onclick="window.location.reload()" class="back-btn" style="background:none;border:none;color:#ccc;">Reload</button>
-        <div class="live-badge"><span class="blink">●</span> LIVE</div>
-    </div>
-
-    <div class="price-display">
-        <div style="font-size:12px;color:#a0aec0;">BTC PRICE</div>
-        <div id="btc-price">Loading...</div>
-    </div>
-
-    <div class="round-info">
-        <div>
-            <div style="font-size:10px;color:#a0aec0;">TIME</div>
-            <div id="timer-display">--</div>
-        </div>
-        <div>
-            <div style="font-size:10px;color:#a0aec0;">STATUS</div>
-            <div id="round-status">Syncing...</div>
+        <button onclick="window.location.href='dashboard.html'" class="back-btn">
+            <i class="fas fa-arrow-right"></i> خروج
+        </button>
+        <div class="live-badge">
+            <span class="blink">●</span> MARKET LIVE
         </div>
     </div>
 
-    <div class="chart-wrapper">
-        <div id="btcChart"></div>
-    </div>
-
-    <div class="bet-controls">
-        <input type="number" id="bet-amount" class="amount-input" value="1">
-        <div class="action-buttons-game">
-            <button id="btn-up" class="game-btn btn-up" onclick="placeBet('UP')">↑ UP</button>
-            <button id="btn-down" class="game-btn btn-down" onclick="placeBet('DOWN')">↓ DOWN</button>
-        </div>
-    </div>
-
-    <div id="status-bar">Initializing...</div>
-
-    <script>
-        // ⚠️ چک کنید این آدرس دقیقا آدرس تانل فعلی شما باشد
-        const BASE_DOMAIN = "played-amount-governments-lane.trycloudflare.com"; 
-        const API_BASE_URL = "https://" + BASE_DOMAIN;
+    <div id="game-container">
         
-        const tg = window.Telegram.WebApp;
-        let chart = null;
-        let series = null;
-        let pollingInterval = null;
+        <!-- بخش قیمت و تایمر -->
+        <div class="price-display">
+            <div class="price-label">قیمت لحظه‌ای بیت‌کوین (BTC/USDT)</div>
+            <h1 id="btc-price" class="loading">...</h1>
+        </div>
 
-        // تابع نمایش وضعیت در نوار پایین
-        function setStatus(msg, color='white') {
-            const bar = document.getElementById('status-bar');
-            bar.textContent = msg;
-            bar.style.color = color;
-            if(color === 'red') bar.style.backgroundColor = '#4a1a1a';
-            else if(color === '#00ff00') bar.style.backgroundColor = '#1a4a1a';
-            else bar.style.backgroundColor = '#333';
-        }
+        <div class="timer-circle">
+            <svg viewBox="0 0 36 36" class="circular-chart">
+                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <path id="timer-path" class="circle" stroke-dasharray="100, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+            </svg>
+            <div id="timer-text" class="timer-text">60</div>
+        </div>
 
-        document.addEventListener("DOMContentLoaded", () => {
-            try { tg.ready(); tg.expand(); } catch(e){}
-            initChart();
+        <!-- نمودار -->
+        <div class="chart-container">
+            <canvas id="btcChart"></canvas>
+        </div>
+
+        <!-- وضعیت بازی -->
+        <div id="round-status" class="round-status">در انتظار شروع سشن معاملاتی...</div>
+
+        <!-- کانتینر تاریخچه (بصورت داینامیک پر می‌شود) -->
+        <div id="history-container" class="history-container"></div>
+
+        <!-- کنترل‌های ثبت پوزیشن -->
+        <div class="bet-controls">
+            <div class="amount-selector">
+                <span>مبلغ ورود (UUSD):</span>
+                <input type="number" id="bet-amount" value="1" min="1" max="100">
+            </div>
             
-            // شروع دریافت اطلاعات
-            setStatus("Connecting to server...", "yellow");
-            fetchData(true);
-            pollingInterval = setInterval(() => fetchData(false), 1000);
-        });
+            <div class="action-buttons-game">
+                <button id="btn-up" class="game-btn btn-up" onclick="placeBet('UP')">
+                    <i class="fas fa-arrow-trend-up"></i> پوزیشن خرید (LONG)
+                </button>
+                <button id="btn-down" class="game-btn btn-down" onclick="placeBet('DOWN')">
+                    <i class="fas fa-arrow-trend-down"></i> پوزیشن فروش (SHORT)
+                </button>
+            </div>
+        </div>
 
-        function initChart() {
-            const container = document.getElementById('btcChart');
-            chart = LightweightCharts.createChart(container, {
-                layout: { background: { type: 'solid', color: 'transparent' }, textColor: '#A0AEC0' },
-                grid: { vertLines: { visible: false }, horzLines: { color: 'rgba(255,255,255,0.1)' } },
-                timeScale: { timeVisible: true, secondsVisible: true, borderVisible: false },
-                rightPriceScale: { borderVisible: false }
-            });
-            series = chart.addCandlestickSeries({
-                upColor: '#00E096', downColor: '#FF4D4D',
-                borderVisible: false, wickUpColor: '#00E096', wickDownColor: '#FF4D4D'
-            });
-            new ResizeObserver(entries => {
-                if (entries.length === 0) return;
-                const newRect = entries[0].contentRect;
-                chart.applyOptions({ height: newRect.height, width: newRect.width });
-            }).observe(container);
-        }
+    </div>
 
-        async function fetchData(isFirstLoad) {
-            try {
-                // لاگ کردن آدرس برای اطمینان
-                if(isFirstLoad) console.log("Fetching from:", `${API_BASE_URL}/webapp/game/state`);
-
-                const r = await fetch(`${API_BASE_URL}/webapp/game/state`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'}, 
-                    body: JSON.stringify({ initData: tg.initData })
-                });
-
-                if (!r.ok) {
-                    throw new Error(`HTTP Error: ${r.status} ${r.statusText}`);
-                }
-
-                const d = await r.json();
-                setStatus(`Connected (Price: ${d.current_price})`, "#00ff00");
-
-                if (d.status === "success") {
-                    // آپدیت نمودار
-                    if (d.chart_history && d.chart_history.length > 0) {
-                        const sorted = d.chart_history.sort((a, b) => a.time - b.time);
-                        if (isFirstLoad || !series) {
-                            const uniqueData = [...new Map(sorted.map(item => [item['time'], item])).values()];
-                            series.setData(uniqueData);
-                        } else {
-                            series.update(sorted[sorted.length - 1]);
-                        }
-                    }
-                    updateUI(d);
-                }
-            } catch (e) {
-                console.error(e);
-                setStatus(`Sync Error: ${e.message}`, "red");
-            }
-        }
-
-        function updateUI(data) {
-            if (data.current_price) {
-                document.getElementById('btc-price').textContent = `$${data.current_price.toLocaleString()}`;
-            }
-            if (data.round) {
-                document.getElementById('timer-display').textContent = data.round.time_left + "s";
-                const status = document.getElementById('round-status');
-                if (data.round.time_left <= 10) {
-                    status.textContent = "Closed"; status.style.color = "#FFC107";
-                } else {
-                    status.textContent = "Open"; status.style.color = "#00E096";
-                }
-            }
-        }
-
-        window.placeBet = async function(p) {
-            const amt = document.getElementById('bet-amount').value;
-            setStatus(`Sending bet...`, "yellow");
-            
-            try {
-                const r = await fetch(`${API_BASE_URL}/webapp/game/bet`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ initData: tg.initData, amount: parseFloat(amt), prediction: p })
-                });
-                
-                const res = await r.json();
-                
-                if(r.status === 401) {
-                     tg.showAlert("Unauthorized! Please open from Telegram.");
-                     setStatus("Error 401: Unauthorized", "red");
-                     return;
-                }
-
-                if(res.status === 'success') {
-                    tg.showAlert("✅ Bet Placed!");
-                    setStatus("Bet Success!", "#00ff00");
-                    fetchData(false);
-                } else {
-                    tg.showAlert("❌ " + res.message);
-                    setStatus("Bet Failed: " + res.message, "red");
-                }
-            } catch(e) { 
-                tg.showAlert("Connection Failed");
-                setStatus(`Net Error: ${e.message}`, "red");
-            }
-        };
-    </script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="game.js?v=4.0"></script> <!-- ورژن جدید JS -->
 </body>
 </html>

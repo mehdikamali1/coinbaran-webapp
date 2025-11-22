@@ -4,21 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>داشبورد کوین باران</title>
-    <!-- آیکون‌ها زودتر لود شوند -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=5.1"> <!-- نسخه CSS آپدیت شد -->
+    <link rel="stylesheet" href="style.css?v=9.0"> 
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <style>
+        #debug-console {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 150px;
+            background: rgba(0,0,0,0.9); color: #00ff00; font-family: monospace;
+            font-size: 10px; overflow-y: scroll; z-index: 10000; padding: 10px;
+            text-align: left; direction: ltr; border-top: 2px solid red;
+            display: none; /* پیش‌فرض مخفی است، اگر خطا باشد روشن می‌کنیم */
+        }
+    </style>
 </head>
 <body>
-    <!-- لودر اولیه -->
+
+    <div id="debug-console">Wait for logs...<br></div>
+
     <div id="loader">
         <div class="spinner"></div>
-        <p>در حال بارگذاری اطلاعات...</p>
+        <p>در حال اتصال به سرور...</p>
+        <small id="loader-status" style="color: gray; margin-top: 10px;">Init...</small>
     </div>
 
-    <!-- محتوای اصلی اپلیکیشن -->
     <div id="app-container" class="hidden">
-        
-        <!-- هدر: اطلاعات کاربر و وضعیت KYC -->
         <header class="header">
             <div class="user-info">
                 <span id="user-icon" class="user-icon">💎</span>
@@ -26,89 +36,155 @@
             </div>
             <div id="kyc-status" class="kyc-status loading">
                 <span id="kyc-text">...</span>
-                <i id="kyc-icon" class="fas fa-spinner fa-spin"></i>
             </div>
         </header>
 
         <main>
-            <!-- کارت اصلی موجودی -->
             <section class="balance-card">
                 <div class="balance-row">
-                    <!-- آیکون کیف پول -->
                     <span class="balance-label"><i class="fas fa-wallet"></i> موجودی تومانی</span>
                     <h2 id="toman-balance" class="balance-amount loading">...</h2>
                 </div>
                 <div class="balance-row xp">
-                    <!-- آیکون ستاره -->
-                    <span class="balance-label"><i class="fas fa-star"></i> امتیاز شما (XP)</span>
+                    <span class="balance-label"><i class="fas fa-star"></i> امتیاز (XP)</span>
                     <h2 id="xp-balance" class="balance-amount loading">...</h2>
                 </div>
             </section>
 
-            <!-- کارت سطح کاربری و نوار پیشرفت -->
-            <section class="level-card">
-                <div class="level-header">
-                    <span id="level-name" class="loading">...</span>
-                    <span>(سطح کاربری)</span>
-                </div>
-                <div class="progress-bar-container">
-                    <div id="progress-bar" class="progress-bar" style="width: 0%;"></div>
-                </div>
-                <small id="progress-text" class="progress-text loading">...</small>
-            </section>
-
-            <!-- ✨✨✨ بخش جدید: دکمه ورود به بازی ✨✨✨ -->
             <section class="gamification-section">
-                <h3><i class="fas fa-gamepad"></i> بازی‌های ویژه</h3>
+                <h3><i class="fas fa-gamepad"></i> بازی‌ها</h3>
                 <div class="card-container">
-                    <!-- با کلیک روی این کارت، کاربر به صفحه game.html می‌رود -->
-                    <div class="card" onclick="window.location.href='game.html'" style="cursor: pointer; border: 1px solid var(--gold); box-shadow: 0 0 10px rgba(255, 215, 0, 0.1);">
-                        <div class="card-header" style="border-bottom: none; padding-bottom: 0;">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <span class="card-title" style="color: var(--gold); font-size: 1.2rem;">بازی کندل بیت‌کوین 🚀</span>
-                                <span class="live-badge" style="background: rgba(255,215,0,0.2); color: var(--gold); font-size: 0.7rem; padding: 2px 6px; border-radius: 4px;">NEW</span>
-                            </div>
+                    <div class="card" onclick="window.location.href='game'" style="cursor: pointer; border: 1px solid gold;">
+                        <div class="card-header">
+                            <span class="card-title" style="color: gold;">بازی کندل بیت‌کوین 🚀</span>
                         </div>
-                        <p class="card-subtitle" style="margin-top: 8px;">پیش‌بینی کن، ۱ دقیقه صبر کن، سود دلاری ببر!</p>
-                        <div style="margin-top: 12px; text-align: left;">
-                            <span style="color: var(--primary-blue); font-size: 0.9rem; font-weight: bold;">
-                                ورود به بازی <i class="fas fa-chevron-left" style="font-size: 0.8rem;"></i>
-                            </span>
-                        </div>
+                        <p class="card-subtitle">ورود به بازی</p>
                     </div>
                 </div>
             </section>
-            <!-- ✨✨✨ پایان بخش جدید ✨✨✨ -->
-
-            <!-- بخش لیدربرد -->
-            <section id="leaderboard-section" class="gamification-section hidden">
-                <h3><i class="fas fa-trophy"></i> نفرات برتر پیش‌بینی</h3>
-                <div id="leaderboard-container" class="leaderboard-container">
-                    <!-- ردیف‌ها توسط جاوااسکریپت اضافه می‌شوند -->
-                </div>
-            </section>
-
-            <!-- بخش پیش‌بینی‌ها -->
-            <section id="predictions-section" class="gamification-section hidden">
-                <h3><i class="fas fa-futbol"></i> بازی‌های پیش‌بینی فعال</h3>
-                <div id="predictions-container" class="card-container">
-                    <!-- کارت‌ها توسط جاوااسکریپت اضافه می‌شوند -->
-                </div>
-            </section>
-
-            <!-- بخش کمپین‌ها -->
-            <section id="campaigns-section" class="gamification-section hidden">
-                <h3><i class="fas fa-percent"></i> تخفیف‌های ویژه فعال</h3>
-                <div id="campaigns-container" class="card-container">
-                    <!-- کارت‌ها توسط جاوااسکریپت اضافه می‌شوند -->
-                </div>
-            </section>
-            
         </main>
-        
-    </div> <!-- /#app-container -->
+    </div>
 
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="script.js?v=2.4"></script> <!-- نسخه JS آپدیت شد -->
+    <script>
+        // --- ابزار دیباگ روی صفحه (چون گوشی کنسول ندارد) ---
+        const debugConsole = document.getElementById('debug-console');
+        const loaderStatus = document.getElementById('loader-status');
+        
+        function log(msg) {
+            console.log(msg);
+            debugConsole.innerHTML += `> ${msg}<br>`;
+            debugConsole.scrollTop = debugConsole.scrollHeight;
+            loaderStatus.innerText = msg;
+        }
+        
+        function errorLog(msg) {
+            console.error(msg);
+            debugConsole.style.display = 'block'; // اگر ارور بود، باکس سیاه را نشان بده
+            debugConsole.innerHTML += `<span style="color:red">ERROR: ${msg}</span><br>`;
+            loaderStatus.innerHTML = `<span style="color:red">${msg}</span>`;
+        }
+
+        // --- شروع برنامه ---
+        log("JS Started. Telegram SDK loading...");
+        
+        const tg = window.Telegram.WebApp;
+        const API_BASE_URL = window.location.origin;
+        const loader = document.getElementById('loader');
+        const appContainer = document.getElementById('app-container');
+
+        // عناصر DOM
+        const els = {
+            welcomeName: document.getElementById('welcome-name'),
+            tomanBalance: document.getElementById('toman-balance'),
+            xpBalance: document.getElementById('xp-balance'),
+            kycText: document.getElementById('kyc-text'),
+            kycStatus: document.getElementById('kyc-status')
+        };
+
+        window.onload = async function() {
+            log("Window Loaded.");
+            
+            // 1. آماده‌سازی تلگرام
+            try {
+                tg.ready();
+                tg.expand();
+                log("Telegram Ready.");
+            } catch(e) { log("Telegram Init Failed (Browser Mode?)"); }
+
+            // 2. ساخت دیتای فیک اگر تلگرام نبود
+            if (!tg.initData) {
+                log("⚠️ No Telegram Data. Using Guest Mode.");
+                tg.initData = "query_id=TEST&user=%7B%22id%22%3A111111111%2C%22first_name%22%3A%22Guest%22%7D&auth_date=1700000000&hash=fake";
+            }
+
+            // 3. تایمر اضطراری (نجات غریق)
+            setTimeout(() => {
+                if (appContainer.classList.contains('hidden')) {
+                    errorLog("Timeout! Forcing Dashboard Open.");
+                    hideLoader();
+                    updateUI({
+                        first_name: "حالت آفلاین",
+                        toman_balance: "---",
+                        xp_balance: "---",
+                        kyc_status_text: "عدم اتصال",
+                        kyc_status_code: "pending"
+                    });
+                }
+            }, 5000); // 5 ثانیه وقت می‌دهد
+
+            // 4. درخواست به سرور
+            await fetchData();
+        };
+
+        async function fetchData() {
+            log(`Fetching data from: ${API_BASE_URL}`);
+            
+            try {
+                const res = await fetch(`${API_BASE_URL}/webapp/get_user_data`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ initData: tg.initData })
+                });
+
+                log(`Server Response: ${res.status}`);
+
+                if (!res.ok) throw new Error(`HTTP Error ${res.status}`);
+                
+                const data = await res.json();
+                log("Data Parsed Successfully.");
+                updateUI(data);
+
+            } catch (e) {
+                errorLog(e.message);
+                // اینجا صفحه را باز نمی‌کنیم تا تایمر اضطراری کارش را بکند
+            }
+        }
+
+        function updateUI(data) {
+            log("Updating UI...");
+            els.welcomeName.textContent = `سلام، ${data.first_name}`;
+            els.welcomeName.classList.remove('loading');
+
+            els.tomanBalance.textContent = `${data.toman_balance} تومان`;
+            els.tomanBalance.classList.remove('loading');
+
+            els.xpBalance.textContent = `${data.xp_balance} XP`;
+            els.xpBalance.classList.remove('loading');
+
+            els.kycText.textContent = data.kyc_status_text;
+            els.kycStatus.classList.remove('loading');
+            els.kycStatus.classList.add(data.kyc_status_code);
+
+            hideLoader();
+            log("UI Updated & Loader Hidden.");
+        }
+
+        function hideLoader() {
+            loader.style.display = 'none';
+            appContainer.classList.remove('hidden');
+            // مخفی کردن دیباگر اگر اروری نبود
+            if(debugConsole.style.display !== 'block') debugConsole.style.display = 'none';
+        }
+    </script>
 </body>
 </html>

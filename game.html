@@ -5,26 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>بازی کندل</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=9.0">
+    <link rel="stylesheet" href="style.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-
-    <style>
-        /* استایل اختصاصی دیباگر */
-        #debug-console {
-            position: fixed; bottom: 0; left: 0; width: 100%; height: 120px;
-            background: rgba(0,0,0,0.85); color: #00ff00; font-family: monospace;
-            font-size: 11px; overflow-y: scroll; z-index: 10000; padding: 10px;
-            text-align: left; direction: ltr; border-top: 2px solid #FFD700;
-            display: none; /* فقط وقتی خطا باشد نمایش می‌دهیم */
-        }
-    </style>
 </head>
 <body class="game-body">
-
-    <div id="debug-console">Game Init...<br></div>
-
     <div class="game-header">
         <button onclick="window.location.href='/'" class="back-btn">
             <i class="fas fa-arrow-right"></i> خروج
@@ -66,184 +52,9 @@
                 </button>
             </div>
         </div>
-        
         <div id="history-container"></div>
     </div>
 
-    <script>
-        // --- ابزارهای دیباگ ---
-        const debugConsole = document.getElementById('debug-console');
-        function log(msg) {
-            console.log(msg);
-            // خطوط زیاد را پاک کن که صفحه سنگین نشود
-            if(debugConsole.innerHTML.length > 2000) debugConsole.innerHTML = "";
-            debugConsole.innerHTML += `> ${msg}<br>`;
-            debugConsole.scrollTop = debugConsole.scrollHeight;
-        }
-        function errorLog(msg) {
-            console.error(msg);
-            debugConsole.style.display = 'block'; // نمایش باکس سیاه
-            debugConsole.innerHTML += `<span style="color:red">ERR: ${msg}</span><br>`;
-        }
-
-        // --- متغیرهای بازی ---
-        const tg = window.Telegram.WebApp;
-        const API_BASE_URL = window.location.origin;
-        let chart;
-        let priceHistory = [];
-        const MAX_POINTS = 30;
-
-        // --- شروع ---
-        window.onload = function() {
-            log("Game Loaded.");
-            
-            // 1. هندل کردن تلگرام/مرورگر
-            if (!tg.initData) {
-                log("⚠️ Browser Mode Detected. Using Guest Login.");
-                tg.initData = "query_id=TEST&user=%7B%22id%22%3A111111111%2C%22first_name%22%3A%22Gamer%22%7D&auth_date=1700000000&hash=fake";
-            } else {
-                tg.ready();
-                tg.expand();
-            }
-
-            // 2. ساخت نمودار
-            initChart();
-
-            // 3. شروع حلقه دریافت اطلاعات
-            log("Starting Game Loop...");
-            setInterval(fetchState, 1000); // هر 1 ثانیه آپدیت کن
-        };
-
-        function initChart() {
-            const ctx = document.getElementById('btcChart').getContext('2d');
-            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-            gradient.addColorStop(0, 'rgba(54, 123, 255, 0.5)');
-            gradient.addColorStop(1, 'rgba(54, 123, 255, 0.0)');
-
-            chart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: Array(MAX_POINTS).fill(''),
-                    datasets: [{
-                        data: Array(MAX_POINTS).fill(null),
-                        borderColor: '#367BFF',
-                        backgroundColor: gradient,
-                        borderWidth: 2,
-                        pointRadius: 0,
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: { x: { display: false }, y: { display: true, position: 'right', grid: { color: '#333' } } },
-                    animation: { duration: 0 }
-                }
-            });
-        }
-
-        async function fetchState() {
-            try {
-                const res = await fetch(`${API_BASE_URL}/webapp/game/state`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ initData: tg.initData })
-                });
-
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                const data = await res.json();
-                
-                updateUI(data);
-            } catch (e) {
-                // ارورهای تکراری را لاگ نکن که شلوغ شود، فقط وضعیت را آپدیت کن
-                document.getElementById('round-status').textContent = "⚠️ قطع اتصال...";
-                document.getElementById('round-status').style.color = "red";
-                // errorLog(e.message); 
-            }
-        }
-
-        function updateUI(data) {
-            // آپدیت قیمت
-            const elPrice = document.getElementById('btc-price');
-            elPrice.textContent = `$${data.current_price.toLocaleString()}`;
-            elPrice.classList.remove('loading');
-
-            // آپدیت نمودار
-            priceHistory.push(data.current_price);
-            if (priceHistory.length > MAX_POINTS) priceHistory.shift();
-            if (chart) {
-                chart.data.datasets[0].data = priceHistory;
-                const min = Math.min(...priceHistory) * 0.999;
-                const max = Math.max(...priceHistory) * 1.001;
-                chart.options.scales.y.min = min;
-                chart.options.scales.y.max = max;
-                chart.update();
-            }
-
-            // آپدیت وضعیت راند
-            const elStatus = document.getElementById('round-status');
-            const elTimer = document.getElementById('timer-text');
-            const elPath = document.getElementById('timer-path');
-
-            if (data.round) {
-                elTimer.textContent = data.round.time_left;
-                const pct = (data.round.time_left / 60) * 100;
-                elPath.style.strokeDasharray = `${pct}, 100`;
-
-                if (data.round.time_left <= 10) {
-                    elStatus.textContent = "⏳ بسته شد! منتظر نتیجه...";
-                    elStatus.style.color = "orange";
-                    elPath.style.stroke = "orange";
-                    toggleButtons(true);
-                } else {
-                    elStatus.textContent = "🟢 شرط بندی باز است";
-                    elStatus.style.color = "#00E096";
-                    elPath.style.stroke = "#00E096";
-                    if(!data.user_bet) toggleButtons(false);
-                }
-            }
-            
-            // اگر کاربر قبلا شرط بسته
-            if(data.user_bet) {
-                elStatus.textContent = `پوزیشن باز: ${data.user_bet.prediction}`;
-                toggleButtons(true);
-            }
-        }
-
-        window.placeBet = async function(pred) {
-            const amount = document.getElementById('bet-amount').value;
-            log(`Betting ${pred} with ${amount}...`);
-            
-            try {
-                const res = await fetch(`${API_BASE_URL}/webapp/game/bet`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ 
-                        initData: tg.initData, 
-                        amount: parseFloat(amount), 
-                        prediction: pred 
-                    })
-                });
-                
-                const result = await res.json();
-                log(`Bet Result: ${JSON.stringify(result)}`);
-                
-                if (result.status === "success") {
-                    alert("✅ شرط ثبت شد!");
-                } else {
-                    alert(`❌ خطا: ${result.message}`);
-                }
-            } catch (e) {
-                errorLog(e.message);
-                alert("خطا در ارتباط با سرور");
-            }
-        }
-
-        function toggleButtons(disable) {
-            document.getElementById('btn-up').disabled = disable;
-            document.getElementById('btn-down').disabled = disable;
-        }
-    </script>
+    <script src="game.js"></script>
 </body>
 </html>

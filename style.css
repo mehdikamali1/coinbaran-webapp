@@ -1,4 +1,4 @@
-﻿/* webapp/style.css (v11.0 - Fixed Colors & Visibility) */
+﻿/* webapp/style.css (v13.0 - Fixed Colors) */
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800&display=swap');
 
 :root {
@@ -23,8 +23,10 @@ body {
 
 /* --- Utility Classes --- */
 .hidden { display: none !important; }
-.text-up { color: var(--success) !important; text-shadow: 0 0 10px rgba(0, 224, 150, 0.3); }
-.text-down { color: var(--danger) !important; text-shadow: 0 0 10px rgba(255, 77, 77, 0.3); }
+/* اجبار رنگ‌ها برای حل مشکل سیاه شدن */
+.text-up { color: var(--success) !important; text-shadow: 0 0 10px rgba(0, 224, 150, 0.3); transition: color 0.3s; }
+.text-down { color: var(--danger) !important; text-shadow: 0 0 10px rgba(255, 77, 77, 0.3); transition: color 0.3s; }
+.text-white { color: #FFFFFF !important; }
 
 /* --- Header --- */
 .game-header {
@@ -42,13 +44,12 @@ body {
     padding-bottom: 40px;
 }
 
-/* --- Price Display (Fixed Black Color) --- */
+/* --- Price Display --- */
 .price-display { text-align: center; margin-bottom: 15px; }
 .price-label { color: var(--text-gray); font-size: 0.9rem; margin-bottom: 5px; }
 #btc-price { 
     font-size: 2.5rem; margin: 0; font-family: monospace; font-weight: 800; 
-    color: var(--text-white); /* پیش‌فرض سفید */
-    transition: color 0.3s ease;
+    color: #FFFFFF; /* رنگ پیش‌فرض سفید */
 }
 
 /* --- Timer --- */
@@ -68,12 +69,13 @@ body {
 }
 
 /* --- Controls --- */
-.round-status { margin-bottom: 15px; font-size: 0.95rem; color: var(--text-gray); min-height: 20px; }
+.round-status { margin-bottom: 15px; font-size: 0.95rem; color: var(--text-gray); min-height: 20px; text-align: center; }
 
 .bet-controls {
     width: 100%; background: var(--card-bg); padding: 20px; border-radius: 20px; border: 1px solid var(--border);
 }
 .amount-selector { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.amount-selector span { color: #fff; }
 .amount-selector input {
     background: #2C3A4B; border: 1px solid var(--border); color: white; padding: 10px;
     border-radius: 10px; width: 100px; text-align: center; font-size: 1.2rem; font-weight: bold;
@@ -91,7 +93,15 @@ body {
 .game-btn.selected { border: 2px solid white; transform: scale(1.05); }
 
 /* --- History --- */
-#history-container { width: 100%; margin-top: 20px; display: flex; justify-content: flex-end; gap: 6px; height: 30px; }
-.history-bubble { width: 12px; height: 12px; border-radius: 50%; background: #555; }
-.history-bubble.up { background: var(--success); box-shadow: 0 0 5px var(--success); }
-.history-bubble.down { background: var(--danger); box-shadow: 0 0 5px var(--danger); }
+#history-container { 
+    width: 100%; margin-top: 20px; display: flex; justify-content: center; gap: 8px; height: 40px; 
+    flex-wrap: wrap;
+}
+.history-bubble { 
+    width: 25px; height: 25px; border-radius: 50%; 
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: bold; color: #000;
+}
+.history-bubble.up { background: var(--success); color: #000; }
+.history-bubble.down { background: var(--danger); color: #fff; }
+.history-bubble.draw { background: #888; color: #fff; }

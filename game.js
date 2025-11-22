@@ -1,66 +1,93 @@
-﻿/* webapp/game.js (v11.0 - Final Polish & Sound Fix) */
+﻿/* webapp/game.js (v13.0 - Full Logic Fix) */
 (function () {
     'use strict';
     const tg = window.Telegram.WebApp;
     const API_BASE_URL = window.location.origin;
     
-    // --- سیستم صوتی پیشرفته ---
+    // --- Sound System (Mobile Compatible) ---
     const AudioContext = window.AudioContext || window.webkitAudioContext;
-    let audioCtx = new AudioContext();
-    
-    // آنلاک کردن صدا با اولین لمس کاربر (حیاتی برای موبایل)
-    document.body.addEventListener('touchstart', function() {
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-    }, { once: true });
-    document.body.addEventListener('click', function() {
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-    }, { once: true });
+    let audioCtx = null;
+
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new AudioContext();
+            // پخش یک صدای صامت برای باز کردن قفل صدا در iOS/Android
+            const buffer = audioCtx.createBuffer(1, 1, 22050);
+            const source = audioCtx.createBufferSource();
+            source.buffer = buffer;
+            source.connect(audioCtx.destination);
+            source.start(0);
+        } else if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+    }
+
+    // فعال‌سازی صدا با اولین لمس کاربر
+    document.addEventListener('click', initAudio, { once: true });
+    document.addEventListener('touchstart', initAudio, { once: true });
 
     const SoundFX = {
-        play: function(type, freq, dur, vol = 0.1) {
+        playTone: (freq, type, duration) => {
             if (!audioCtx) return;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.type = type;
-            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+            osc.frequency.value = freq;
             osc.connect(gain);
             gain.connect(audioCtx.destination);
             osc.start();
-            osc.stop(audioCtx.currentTime + dur);
+            gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+            osc.stop(audioCtx.currentTime + duration);
         },
-        click: () => SoundFX.play('sine', 800, 0.1),
-        tick: () => SoundFX.play('triangle', 1200, 0.05),
+        tick: () => SoundFX.playTone(1000, 'triangle', 0.05),
         win: () => {
-            // ملودی برد
-            setTimeout(() => SoundFX.play('sine', 523.25, 0.2), 0);
-            setTimeout(() => SoundFX.play('sine', 659.25, 0.2), 150);
-            setTimeout(() => SoundFX.play('sine', 783.99, 0.4), 300);
+            if(!audioCtx) return;
+            const now = audioCtx.currentTime;
+            // آرپژ پیروزی
+            [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.frequency.value = freq;
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now + i * 0.1);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.3);
+                osc.stop(now + i * 0.1 + 0.3);
+            });
         },
         lose: () => {
+            if(!audioCtx) return;
+            const now = audioCtx.currentTime;
             // صدای باخت
-            setTimeout(() => SoundFX.play('sawtooth', 150, 0.4), 0);
-            setTimeout(() => SoundFX.play('sawtooth', 100, 0.4), 300);
+            [150, 100].forEach((freq, i) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.value = freq;
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now + i * 0.4);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.4 + 0.4);
+                osc.stop(now + i * 0.4 + 0.4);
+            });
         }
     };
 
     let chart;
     let priceHistory = [];
     const MAX_POINTS = 30;
-    let lastRoundId = -1;
 
     window.onload = function() {
         tg.ready();
         tg.expand();
-        // اگر در تلگرام نبود، پیام بده
+        tg.setHeaderColor('#1C1C2E');
+
         if (!tg.initData) {
-            document.body.innerHTML = "<h2 style='color:white;text-align:center;margin-top:50px'>⚠️ لطفاً از داخل ربات باز کنید</h2>";
+            document.body.innerHTML = "<h3 style='color:white;text-align:center;margin-top:50px'>لطفاً از داخل ربات باز کنید</h3>";
             return;
         }
-        
+
         initChart();
-        // شروع حلقه بازی
         setInterval(fetchState, 1000);
     };
 
@@ -95,10 +122,7 @@
                 method: 'POST', headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ initData: tg.initData })
             });
-            if (res.ok) {
-                const data = await res.json();
-                updateUI(data);
-            }
+            if (res.ok) updateUI(await res.json());
         } catch (e) { console.error(e); }
     }
 
@@ -106,11 +130,19 @@
         const elPrice = document.getElementById('btc-price');
         const currentPrice = data.current_price;
         
-        // 1. آپدیت قیمت و رنگ
+        // 1. آپدیت قیمت و رنگ (لاجیک فیکس شده)
         elPrice.textContent = `$${currentPrice.toLocaleString()}`;
+        elPrice.classList.remove('loading');
+        
         if (priceHistory.length > 0) {
             const lastPrice = priceHistory[priceHistory.length - 1];
-            elPrice.className = currentPrice >= lastPrice ? 'text-up' : 'text-down';
+            if (currentPrice > lastPrice) {
+                elPrice.className = 'text-up';
+            } else if (currentPrice < lastPrice) {
+                elPrice.className = 'text-down';
+            } else {
+                elPrice.className = 'text-white';
+            }
         }
 
         // 2. آپدیت نمودار
@@ -125,7 +157,7 @@
             chart.update();
         }
 
-        // 3. لاجیک راند و تایمر
+        // 3. وضعیت راند
         if (data.round) {
             const elTimer = document.getElementById('timer-text');
             const elPath = document.getElementById('timer-path');
@@ -135,9 +167,8 @@
             const pct = (data.round.time_left / 60) * 100;
             elPath.style.strokeDasharray = `${pct}, 100`;
 
-            // صدای تیک تاک در 5 ثانیه آخر
+            // صدای تیک تاک (فقط اگر صدا فعال باشد)
             if (data.round.time_left <= 5 && data.round.time_left > 0) {
-                // چک کردن اینکه در این ثانیه صدا پخش شده یا نه (برای جلوگیری از رگبار صدا)
                 if (!window['tick_' + data.round.time_left]) {
                     SoundFX.tick();
                     window['tick_' + data.round.time_left] = true;
@@ -155,62 +186,75 @@
                 elPath.style.stroke = "#00E096";
                 if(!data.user_bet) toggleButtons(false);
             }
-
-            // بررسی نتیجه راند قبلی (Win/Loss Logic)
-            checkResult(data.history);
         }
 
-        // 4. نمایش وضعیت بت کاربر
+        // 4. نمایش وضعیت بت
         if(data.user_bet) {
-            document.getElementById('round-status').textContent = `پوزیشن باز: ${data.user_bet.prediction}`;
+            const elStatus = document.getElementById('round-status');
+            const typeText = data.user_bet.prediction === 'UP' ? 'خرید (LONG) 📈' : 'فروش (SHORT) 📉';
+            elStatus.textContent = `پوزیشن باز: ${typeText}`;
             toggleButtons(true);
-            // ذخیره بت در حافظه برای چک کردن نتیجه
-            if(data.round) localStorage.setItem('last_bet_round', data.round.id);
-            localStorage.setItem('last_bet_type', data.user_bet.prediction);
+            
+            // ذخیره در حافظه برای چک کردن نتیجه
+            if(data.round) {
+                localStorage.setItem('last_bet_round_id', String(data.round.id));
+                localStorage.setItem('last_bet_prediction', data.user_bet.prediction);
+            }
+        }
+
+        // 5. چک کردن تاریخچه و برد/باخت
+        if (data.history) {
+            updateHistory(data.history);
+            checkResult(data.history);
         }
     }
 
+    function updateHistory(history) {
+        const container = document.getElementById('history-container');
+        container.innerHTML = '';
+        // 10 تای آخر را نشان بده
+        history.slice(0, 10).forEach(h => {
+            const div = document.createElement('div');
+            div.className = 'history-bubble ' + (h.result === 'UP' ? 'up' : (h.result === 'DOWN' ? 'down' : 'draw'));
+            div.textContent = h.result === 'UP' ? '↑' : (h.result === 'DOWN' ? '↓' : '-');
+            container.appendChild(div);
+        });
+    }
+
     function checkResult(history) {
-        if (!history || history.length === 0) return;
-        
-        const lastBetRound = localStorage.getItem('last_bet_round');
-        const lastBetType = localStorage.getItem('last_bet_type');
-        
-        if (lastBetRound && lastBetType) {
-            // آیا راندی که بت بستیم تمام شده؟ (در هیستوری پیدایش کنیم)
-            const finishedRound = history.find(r => r.round_id == lastBetRound);
-            
-            if (finishedRound) {
-                // نتیجه مشخص شد!
-                localStorage.removeItem('last_bet_round'); // پاک کردن تا دوباره آلرت ندهد
-                
-                if (finishedRound.result === lastBetType) {
-                    SoundFX.win();
-                    tg.showAlert(`🎉 تبریک! شما برنده شدید.`);
-                    triggerConfetti();
-                } else if (finishedRound.result === 'DRAW') {
-                    tg.showAlert(`⚪️ مساوی شد. پول برگشت.`);
-                } else {
-                    SoundFX.lose();
-                    tg.showAlert(`❌ متاسفانه باختید.`);
-                }
+        const myRoundId = localStorage.getItem('last_bet_round_id');
+        const myPrediction = localStorage.getItem('last_bet_prediction');
+
+        if (!myRoundId || !myPrediction) return;
+
+        // آیا راند من در تاریخچه آمده؟ (تبدیل هر دو به String برای اطمینان)
+        const finishedRound = history.find(h => String(h.round_id) === String(myRoundId));
+
+        if (finishedRound) {
+            // نتیجه مشخص شد!
+            localStorage.removeItem('last_bet_round_id'); // پاک کردن برای جلوگیری از تکرار
+            localStorage.removeItem('last_bet_prediction');
+
+            if (finishedRound.result === myPrediction) {
+                SoundFX.win();
+                tg.showAlert(`🎉 تبریک! شما برنده شدید.\nقیمت بسته شدن: ${finishedRound.end_price}`);
+                triggerConfetti();
+                tg.HapticFeedback.notificationOccurred('success');
+            } else if (finishedRound.result === 'DRAW') {
+                tg.showAlert(`⚪️ مساوی شد. مبلغ برگشت داده شد.`);
+            } else {
+                SoundFX.lose();
+                tg.showAlert(`❌ متاسفانه باختید.\nپیش‌بینی شما: ${myPrediction}\nنتیجه: ${finishedRound.result}`);
+                tg.HapticFeedback.notificationOccurred('error');
             }
         }
-        
-        // نمایش تاریخچه (دایره‌های رنگی)
-        const histContainer = document.getElementById('history-container');
-        histContainer.innerHTML = '';
-        history.slice(0, 10).reverse().forEach(h => {
-            const div = document.createElement('div');
-            div.className = `history-bubble ${h.result.toLowerCase()}`;
-            histContainer.appendChild(div);
-        });
     }
 
     window.placeBet = async function(pred) {
         const amount = document.getElementById('bet-amount').value;
-        SoundFX.click();
-        
+        initAudio(); // اطمینان از فعال شدن صدا
+        SoundFX.tick(); // صدای کلیک
+
         try {
             const res = await fetch(`${API_BASE_URL}/webapp/game/bet`, {
                 method: 'POST', headers: {'Content-Type': 'application/json'},
@@ -218,7 +262,8 @@
             });
             const result = await res.json();
             if (result.status === "success") {
-                tg.HapticFeedback.notificationOccurred('success');
+                tg.HapticFeedback.impactOccurred('medium');
+                // اینجا آلرت نمی‌دهیم تا بازی قطع نشود، فقط دکمه‌ها قفل می‌شوند
             } else {
                 tg.showAlert(`❌ ${result.message}`);
             }
@@ -226,19 +271,15 @@
     }
 
     function toggleButtons(disable) {
-        const btnUp = document.getElementById('btn-up');
-        const btnDown = document.getElementById('btn-down');
-        btnUp.disabled = disable;
-        btnDown.disabled = disable;
-        if(disable) {
-            btnUp.classList.remove('selected');
-            btnDown.classList.remove('selected');
+        document.getElementById('btn-up').disabled = disable;
+        document.getElementById('btn-down').disabled = disable;
+        if(!disable) {
+            document.getElementById('btn-up').classList.remove('selected');
+            document.getElementById('btn-down').classList.remove('selected');
         }
     }
-    
+
     function triggerConfetti() {
-        if (typeof confetti === 'function') {
-            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-        }
+        if (typeof confetti === 'function') confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
     }
 })();

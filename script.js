@@ -1,4 +1,4 @@
-﻿/* webapp/script.js (v7.0 - Developer Mode / Browser Compatible) */
+﻿/* webapp/script.js (v8.0 - Debug Mode & Force Load) */
 (function () {
     'use strict';
 
@@ -11,123 +11,149 @@
     // عناصر صفحه
     const elements = {
         welcomeName: document.getElementById('welcome-name'),
-        kycStatus: document.getElementById('kyc-status'),
-        kycIcon: document.getElementById('kyc-icon'),
-        kycText: document.getElementById('kyc-text'),
         tomanBalance: document.getElementById('toman-balance'),
         xpBalance: document.getElementById('xp-balance'),
         levelName: document.getElementById('level-name'),
-        progressBar: document.getElementById('progress-bar'),
-        progressText: document.getElementById('progress-text'),
-        leaderboardSection: document.getElementById('leaderboard-section'),
+        kycStatus: document.getElementById('kyc-status'),
+        kycText: document.getElementById('kyc-text'),
+        kycIcon: document.getElementById('kyc-icon'),
         leaderboardContainer: document.getElementById('leaderboard-container'),
-        predictionsSection: document.getElementById('predictions-section'),
         predictionsContainer: document.getElementById('predictions-container'),
-        campaignsSection: document.getElementById('campaigns-section'),
-        campaignsContainer: document.getElementById('campaigns-container')
+        campaignsContainer: document.getElementById('campaigns-container'),
+        leaderboardSection: document.getElementById('leaderboard-section'),
+        predictionsSection: document.getElementById('predictions-section'),
+        campaignsSection: document.getElementById('campaigns-section')
     };
     
     async function init() {
-        tg.ready();
-        tg.expand();
+        try {
+            tg.ready();
+            tg.expand();
+        } catch(e) { console.log("Telegram not ready yet"); }
         
-        // --- تغییر مهم: حذف شرط سخت‌گیرانه تلگرام ---
-        // اگر داخل تلگرام نبودیم، یک دیتای الکی می‌سازیم تا رد شویم
+        // 1. تست حالت مهمان
         if (!tg.initData) {
-            console.warn("⚠️ حالت مرورگر فعال شد (بدون تلگرام)");
-            // دیتای فیک برای تست
-            tg.initData = "query_id=AAH...&user=%7B%22id%22%3A111111111%2C%22first_name%22%3A%22TestUser%22%2C%22username%22%3A%22tester%22%7D&auth_date=1710000000&hash=fake_hash_for_testing";
+            console.log("Debug: Generating Guest Data");
+            tg.initData = "query_id=TEST&user=%7B%22id%22%3A111111111%2C%22first_name%22%3A%22DebugUser%22%7D&auth_date=1700000000&hash=fake";
         }
 
         showLoader();
+        
+        // تایمر اضطراری: اگر بعد از 4 ثانیه اطلاعات نیامد، لودر را حذف کن
+        setTimeout(() => {
+            if (!appContainer.classList.contains('hidden') === false) {
+                // اگر هنوز مخفی است
+                console.warn("Force loading dashboard due to timeout");
+                hideLoader();
+                // پر کردن با دیتای ساختگی برای اینکه صفحه خالی نباشد
+                if(elements.welcomeName.textContent === "...") {
+                    updateDashboard({
+                        first_name: "کاربر (حالت آفلاین)",
+                        toman_balance: "0",
+                        xp_balance: "0",
+                        kyc_status_code: "pending",
+                        kyc_status_text: "خطای اتصال",
+                        level_name: "Guest",
+                        level_progress_bar: "0%"
+                    });
+                    alert("⚠️ اتصال به سرور کند است یا قطع شده، اما داشبورد باز شد.");
+                }
+            }
+        }, 4000);
+
         await fetchAllData();
     }
 
     async function fetchAllData() {
         try {
-            const [userResponse, gamificationResponse] = await Promise.all([
-                fetch(`${API_BASE_URL}/webapp/get_user_data`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ initData: tg.initData })
-                }),
-                fetch(`${API_BASE_URL}/webapp/get_gamification_data`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ initData: tg.initData })
-                })
-            ]);
-
-            if (!userResponse.ok) throw new Error(`User API Error: ${userResponse.status}`);
-            const userData = await userResponse.json();
+            console.log("Debug: Sending request to " + API_BASE_URL);
             
-            // اگر گیمیفیکیشن ارور داد مهم نیست، ادامه بده
-            let gamificationData = {};
-            if (gamificationResponse.ok) gamificationData = await gamificationResponse.json();
+            const response = await fetch(`${API_BASE_URL}/webapp/get_user_data`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ initData: tg.initData })
+            });
 
+            if (!response.ok) {
+                throw new Error(`Server Error: ${response.status}`);
+            }
+
+            const userData = await response.json();
+            console.log("Debug: Data received", userData);
+            
             updateDashboard(userData);
-            updateGamification(gamificationData);
+
+            // دریافت گیمیفیکیشن (بدون انتظار برای بلاک نشدن)
+            fetchGamification();
 
         } catch (error) {
             console.error("API Error:", error);
-            // حتی اگر ارور داد، صفحه را نشان بده تا کاربر سفید نبیند
-            handleError(`خطا در دریافت اطلاعات: ${error.message}`); 
+            // اینجا آلرت نمی‌دهیم چون تایمر اضطراری بالاخره صفحه را باز می‌کند
+            // فقط متن لودر را عوض می‌کنیم که بفهمیم خطا چیست
+            const loaderText = document.querySelector('#loader p');
+            if(loaderText) loaderText.innerHTML = `<span style="color:red; direction:ltr">${error.message}</span>`;
         } finally {
             hideLoader();
         }
     }
 
+    function fetchGamification() {
+        fetch(`${API_BASE_URL}/webapp/get_gamification_data`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ initData: tg.initData })
+        }).then(r => r.json()).then(data => updateGamification(data)).catch(e => console.log(e));
+    }
+
     function updateDashboard(data) {
-        elements.welcomeName.textContent = `سلام، ${data.first_name}`;
-        elements.welcomeName.classList.remove('loading');
+        if(elements.welcomeName) {
+            elements.welcomeName.textContent = `سلام، ${data.first_name}`;
+            elements.welcomeName.classList.remove('loading');
+        }
+        if(elements.tomanBalance) {
+            elements.tomanBalance.textContent = `${data.toman_balance} تومان`;
+            elements.tomanBalance.classList.remove('loading');
+        }
+        if(elements.xpBalance) {
+            elements.xpBalance.textContent = `${data.xp_balance} XP`;
+            elements.xpBalance.classList.remove('loading');
+        }
+        if(elements.levelName) {
+            elements.levelName.textContent = data.level_name;
+            elements.levelName.classList.remove('loading');
+        }
         
-        elements.kycStatus.classList.remove('loading');
-        elements.kycIcon.classList.remove('fa-spinner', 'fa-spin');
-        elements.kycText.textContent = data.kyc_status_text;
-        elements.kycStatus.className = 'kyc-status';
-        elements.kycStatus.classList.add(data.kyc_status_code || 'not_submitted');
-        
-        const iconMap = {
-            'approved': 'fa-check-circle',
-            'pending': 'fa-clock',
-            'rejected': 'fa-times-circle',
-            'not_submitted': 'fa-file-alt'
-        };
-        elements.kycIcon.classList.add('fas', iconMap[data.kyc_status_code || 'not_submitted']);
-
-        elements.tomanBalance.textContent = `${parseFloat(data.toman_balance).toLocaleString()} تومان`;
-        elements.xpBalance.textContent = `${parseFloat(data.xp_balance).toLocaleString()} XP`;
-        
-        elements.tomanBalance.classList.remove('loading');
-        elements.xpBalance.classList.remove('loading');
-
-        elements.levelName.textContent = data.level_name;
-        elements.levelName.classList.remove('loading');
+        // آپدیت KYC
+        if(elements.kycStatus) {
+            elements.kycStatus.classList.remove('loading');
+            elements.kycIcon.classList.remove('fa-spinner', 'fa-spin');
+            elements.kycText.textContent = data.kyc_status_text || 'وضعیت نامشخص';
+            elements.kycStatus.className = 'kyc-status'; // ریست کلاس‌ها
+            elements.kycStatus.classList.add(data.kyc_status_code || 'not_submitted');
+            
+            const iconMap = { 'approved': 'fa-check-circle', 'pending': 'fa-clock', 'rejected': 'fa-times-circle', 'not_submitted': 'fa-file-alt' };
+            elements.kycIcon.classList.add('fas', iconMap[data.kyc_status_code || 'not_submitted']);
+        }
     }
 
     function updateGamification(data) {
-        // (کدهای نمایش لیدربرد بدون تغییر باقی می‌مانند)
-        if(data.leaderboard) { /* ... لاجیک قبلی ... */ }
-        addCardListeners();
-    }
-
-    function addCardListeners() {
-        // (کدهای لیسنر دکمه‌ها)
+        // کد خلاصه شده برای جلوگیری از خطا
+        if(data.leaderboard && elements.leaderboardContainer) {
+            elements.leaderboardContainer.innerHTML = '';
+            data.leaderboard.forEach((u, i) => {
+                elements.leaderboardContainer.innerHTML += `<div class="leaderboard-row"><span class="leaderboard-rank">${i+1}</span><span>${u.name}</span><span>${u.points}</span></div>`;
+            });
+            elements.leaderboardSection.classList.remove('hidden');
+        }
     }
 
     function showLoader() {
-        loader.classList.remove('hidden');
-        appContainer.classList.add('hidden');
+        if(loader) loader.classList.remove('hidden');
+        if(appContainer) appContainer.classList.add('hidden');
     }
 
     function hideLoader() {
-        loader.classList.add('hidden');
-        appContainer.classList.remove('hidden');
-    }
-
-    function handleError(errorMessage) {
-        // فقط آلرت بده، صفحه را نبند
-        alert(errorMessage);
+        if(loader) loader.classList.add('hidden');
+        if(appContainer) appContainer.classList.remove('hidden');
     }
 
     document.addEventListener("DOMContentLoaded", init);

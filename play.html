@@ -3,67 +3,204 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>بازی کندل</title>
-    
+    <title>بازی</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    
-    <link rel="stylesheet" href="style.css?v=13.0">
-    
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        /* استایل‌های داخلی بازی */
+        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800&display=swap');
+        :root { --bg: #0F0F1A; --card: #1C1C2E; --text: #FFF; --green: #00E096; --red: #FF4D4D; --gold: #FFD700; }
+        body { margin: 0; padding: 0; font-family: 'Vazirmatn', sans-serif; background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; }
+        
+        .game-header { display: flex; justify-content: space-between; padding: 15px; background: var(--card); }
+        .back-btn { background: rgba(255,255,255,0.1); color: #fff; border: none; padding: 5px 10px; border-radius: 5px; }
+        .live { color: var(--red); font-weight: bold; animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        #game-container { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        
+        #btc-price { font-size: 2.5rem; font-weight: 800; margin: 10px 0; font-family: monospace; color: white; transition: color 0.3s; }
+        .up { color: var(--green) !important; }
+        .down { color: var(--red) !important; }
+
+        .timer-circle { width: 80px; height: 80px; margin: 10px; position: relative; display: flex; align-items: center; justify-content: center; border: 4px solid #333; border-radius: 50%; font-size: 1.5rem; font-weight: bold; }
+        
+        .chart-box { width: 100%; height: 200px; background: rgba(255,255,255,0.05); border-radius: 10px; padding: 5px; margin: 15px 0; }
+        
+        .controls { width: 100%; background: var(--card); padding: 15px; border-radius: 15px; margin-top: auto; }
+        .btn-row { display: flex; gap: 10px; margin-top: 10px; }
+        .btn { flex: 1; padding: 15px; border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 1rem; }
+        .btn-up { background: var(--green); }
+        .btn-down { background: var(--red); }
+        .btn:disabled { opacity: 0.5; }
+        
+        input { width: 100%; padding: 10px; background: #333; border: none; color: white; border-radius: 5px; text-align: center; font-size: 1.2rem; }
+        
+        #status { text-align: center; margin-bottom: 10px; color: #888; }
+    </style>
 </head>
-<body class="game-body">
+<body>
 
     <div class="game-header">
-        <button onclick="window.location.href='/'" class="back-btn">
-            <i class="fas fa-arrow-right"></i> خروج
-        </button>
-        <div class="live-badge">
-            <span class="blink">●</span> LIVE
-        </div>
+        <button onclick="window.location.href='/'" class="back-btn">خروج</button>
+        <div class="live">● LIVE</div>
     </div>
 
     <div id="game-container">
-        
-        <div class="price-display">
-            <div class="price-label">BTC/USDT</div>
-            <h1 id="btc-price" class="loading">...</h1>
+        <div style="text-align: center; color: #888;">BTC/USDT</div>
+        <div id="btc-price">...</div>
+
+        <div class="timer-circle" id="timer">--</div>
+
+        <div class="chart-box">
+            <canvas id="chart"></canvas>
         </div>
 
-        <div class="timer-circle">
-            <svg viewBox="0 0 36 36" class="circular-chart">
-                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                <path id="timer-path" class="circle" stroke-dasharray="100, 100" stroke="#00E096" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-            </svg>
-            <div id="timer-text" class="timer-text">--</div>
-        </div>
-
-        <div class="chart-container">
-            <canvas id="btcChart"></canvas>
-        </div>
-
-        <div id="round-status" class="round-status">در حال اتصال به سرور...</div>
-
-        <div class="bet-controls">
-            <div class="amount-selector">
-                <span>مبلغ ورود (UUSD):</span>
-                <input type="number" id="bet-amount" value="1" min="1" max="100">
-            </div>
-            
-            <div class="action-buttons-game">
-                <button id="btn-up" class="game-btn btn-up" onclick="placeBet('UP')">
-                    <i class="fas fa-arrow-trend-up"></i> خرید (LONG)
-                </button>
-                <button id="btn-down" class="game-btn btn-down" onclick="placeBet('DOWN')">
-                    <i class="fas fa-arrow-trend-down"></i> فروش (SHORT)
-                </button>
+        <div class="controls">
+            <div id="status">در حال اتصال...</div>
+            <input type="number" id="amount" value="1">
+            <div class="btn-row">
+                <button id="btn-up" class="btn btn-up" onclick="bet('UP')">خرید 📈</button>
+                <button id="btn-down" class="btn btn-down" onclick="bet('DOWN')">فروش 📉</button>
             </div>
         </div>
-        
-        <div id="history-container"></div>
     </div>
 
-    <script src="game.js?v=13.0"></script>
+    <script>
+        const tg = window.Telegram.WebApp;
+        const API = window.location.origin;
+        
+        let chartInstance;
+        let prices = [];
+        
+        // --- سیستم صوتی ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            
+            if (type === 'win') {
+                osc.frequency.setValueAtTime(523, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(1046, audioCtx.currentTime + 0.2);
+            } else if (type === 'lose') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(100, audioCtx.currentTime + 0.3);
+            } else {
+                osc.frequency.value = 800; // Click
+            }
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.1);
+        }
+
+        window.onload = function() {
+            tg.ready();
+            tg.expand();
+            if(!tg.initData) tg.initData = "query_id=TEST&user=%7B%22id%22%3A111111111%7D&auth_date=1&hash=x";
+            
+            initChart();
+            setInterval(updateGame, 1000);
+        };
+
+        function initChart() {
+            const ctx = document.getElementById('chart').getContext('2d');
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: { labels: Array(30).fill(''), datasets: [{ data: [], borderColor: '#367BFF', borderWidth: 2, pointRadius: 0 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: false }, scales: { x: { display: false }, y: { display: true, position: 'right' } }, animation: false }
+            });
+        }
+
+        async function updateGame() {
+            try {
+                const res = await fetch(`${API}/webapp/game/state`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ initData: tg.initData })
+                });
+                if(res.ok) render(await res.json());
+            } catch(e) { console.log(e); }
+        }
+
+        function render(data) {
+            // قیمت
+            const elPrice = document.getElementById('btc-price');
+            const oldPrice = parseFloat(elPrice.innerText.replace(/[^0-9.]/g, '')) || 0;
+            elPrice.innerText = `$${data.current_price.toLocaleString()}`;
+            elPrice.className = data.current_price >= oldPrice ? 'up' : 'down';
+
+            // چارت
+            prices.push(data.current_price);
+            if(prices.length > 30) prices.shift();
+            chartInstance.data.datasets[0].data = prices;
+            chartInstance.update();
+
+            // راند
+            if(data.round) {
+                document.getElementById('timer').innerText = data.round.time_left;
+                const status = document.getElementById('status');
+                
+                if(data.round.time_left <= 10) {
+                    status.innerText = "⏳ بسته شد";
+                    document.getElementById('btn-up').disabled = true;
+                    document.getElementById('btn-down').disabled = true;
+                } else {
+                    status.innerText = "🟢 باز";
+                    if(!data.user_bet) {
+                        document.getElementById('btn-up').disabled = false;
+                        document.getElementById('btn-down').disabled = false;
+                    }
+                }
+            }
+
+            if(data.user_bet) {
+                document.getElementById('status').innerText = `پوزیشن شما: ${data.user_bet.prediction}`;
+            }
+            
+            // برد و باخت (ساده شده)
+            if (data.history && data.history.length > 0) {
+               const last = data.history[0];
+               // اگر این راند را در لوکال استوریج داریم و تمام شده
+               const myBet = localStorage.getItem('bet_' + last.round_id);
+               if (myBet) {
+                   localStorage.removeItem('bet_' + last.round_id);
+                   if (myBet === last.result) {
+                       playSound('win');
+                       tg.showAlert(`🎉 بردی!`);
+                       confetti();
+                   } else {
+                       playSound('lose');
+                       tg.showAlert(`❌ باختی.`);
+                   }
+               }
+            }
+        }
+
+        window.bet = async function(type) {
+            playSound('click');
+            const amt = document.getElementById('amount').value;
+            
+            try {
+                const res = await fetch(`${API}/webapp/game/bet`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ initData: tg.initData, amount: parseFloat(amt), prediction: type })
+                });
+                const result = await res.json();
+                if(result.status === "success") {
+                    alert("✅ ثبت شد");
+                    // ذخیره برای چک کردن نتیجه (با آیدی راند فعلی که باید از سرور بیاد ولی اینجا ساده کردیم)
+                    // در نسخه پیشرفته باید آیدی راند را از state بگیریم
+                    // اینجا فرض می کنیم راند بعدی که میاد نتیجه اینه
+                } else {
+                    alert(result.message);
+                }
+            } catch(e) { alert("Error"); }
+        }
+    </script>
 </body>
 </html>

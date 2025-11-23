@@ -35,7 +35,10 @@
         .balance-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .balance-label { font-size: 0.9rem; opacity: 0.8; }
         .balance-amount { font-size: 1.5rem; font-weight: 800; margin: 0; direction: ltr; }
+        
+        /* استایل اختصاصی برای هر موجودی */
         .xp .balance-amount { color: var(--gold); }
+        .uusd .balance-amount { color: var(--green); }
 
         /* کارت بازی */
         .gamification-section h3 { font-size: 1rem; color: #888; margin-bottom: 10px; border-right: 3px solid var(--blue); padding-right: 10px; }
@@ -69,6 +72,12 @@
                     <span class="balance-label">موجودی تومانی</span>
                     <h2 id="toman-balance" class="balance-amount">...</h2>
                 </div>
+                
+                <div class="balance-row uusd">
+                    <span class="balance-label">موجودی بازی (UUSD)</span>
+                    <h2 id="uusd-balance" class="balance-amount">...</h2>
+                </div>
+
                 <div class="balance-row xp">
                     <span class="balance-label">امتیاز (XP)</span>
                     <h2 id="xp-balance" class="balance-amount">...</h2>
@@ -117,6 +126,7 @@
                     // نمایش اطلاعات
                     document.getElementById('welcome-name').innerText = `سلام، ${data.first_name}`;
                     document.getElementById('toman-balance').innerText = `${data.toman_balance}`;
+                    document.getElementById('uusd-balance').innerText = `${data.uusd_balance}`; // ADDED THIS
                     document.getElementById('xp-balance').innerText = `${data.xp_balance}`;
                     document.getElementById('kyc-text').innerText = data.kyc_status_text;
                     document.getElementById('kyc-status').classList.add(data.kyc_status_code);

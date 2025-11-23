@@ -1,4 +1,4 @@
-﻿/* webapp/style.css (v14.1 - Fix History Modal Visibility) */
+﻿/* webapp/style.css (v16.2 - Added Quick Bet Styles)
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800&display=swap');
 
 :root {
@@ -32,7 +32,7 @@ body {
     display: flex; justify-content: space-between; align-items: center;
     padding: 15px; background-color: var(--card-bg); border-bottom: 1px solid var(--border);
 }
-.back-btn { background: rgba(255,255,255,0.1); color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; }
+.back-btn { background: rgba(255,255,255,0.1); color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 1.2rem;}
 .live-badge { background: rgba(255, 77, 77, 0.2); color: var(--danger); padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
 .blink { animation: blinker 1.5s linear infinite; }
 @keyframes blinker { 50% { opacity: 0; } }
@@ -73,12 +73,30 @@ body {
 .bet-controls {
     width: 100%; background: var(--card-bg); padding: 20px; border-radius: 20px; border: 1px solid var(--border);
 }
+
+/* Chips Styling */
+.quick-amounts {
+    display: flex; gap: 10px; margin-bottom: 15px; justify-content: space-between;
+}
+.chip {
+    flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border);
+    color: var(--text-gray); padding: 10px 0; border-radius: 10px;
+    font-size: 0.9rem; font-weight: bold; cursor: pointer; transition: all 0.2s ease;
+    font-family: 'Vazirmatn', sans-serif;
+}
+.chip:active { transform: scale(0.95); }
+.chip.active {
+    background: var(--primary-blue); color: white; border-color: var(--primary-blue);
+    box-shadow: 0 4px 12px rgba(54, 123, 255, 0.3);
+}
+
 .amount-selector { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
 .amount-selector span { color: #fff; }
 .amount-selector input {
     background: #2C3A4B; border: 1px solid var(--border); color: white; padding: 10px;
     border-radius: 10px; width: 100px; text-align: center; font-size: 1.2rem; font-weight: bold;
 }
+
 .action-buttons-game { display: flex; gap: 15px; }
 .game-btn {
     flex: 1; padding: 15px; border: none; border-radius: 12px; font-weight: bold; font-size: 1rem;
@@ -91,7 +109,7 @@ body {
 .btn-down { background: var(--danger); box-shadow: 0 4px 15px rgba(255, 77, 77, 0.3); }
 .game-btn.selected { border: 2px solid white; transform: scale(1.05); }
 
-/* --- History --- */
+/* --- History Bubbles --- */
 #history-container { 
     width: 100%; margin-top: 20px; display: flex; justify-content: center; gap: 8px; height: 40px; 
     flex-wrap: wrap;
@@ -105,51 +123,25 @@ body {
 .history-bubble.down { background: var(--danger); color: #fff; }
 .history-bubble.draw { background: #888; color: #fff; }
 
-/* --- FIX: Improved History Modal Styles --- */
+/* --- Modal Styles --- */
 .history-trigger {
-    margin-top: 15px;
-    color: var(--text-gray);
-    text-decoration: underline;
-    cursor: pointer;
-    font-size: 0.9rem;
-    padding: 10px;
-    text-align: center;
-    display: block; /* اطمینان از دیده شدن */
+    margin-top: 15px; color: var(--text-gray); text-decoration: underline;
+    cursor: pointer; font-size: 0.9rem; padding: 10px; text-align: center; display: block; 
 }
 
 .modal {
-    position: fixed;
-    inset: 0; /* تمام صفحه */
-    background: rgba(0,0,0,0.85); 
-    z-index: 9999; /* بالاترین لایه */
-    display: flex; 
-    align-items: flex-end;
-    opacity: 0; 
-    visibility: hidden; /* مخفی کردن کامل */
-    transition: opacity 0.3s;
+    position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; 
+    display: flex; align-items: flex-end; opacity: 0; visibility: hidden; transition: opacity 0.3s;
 }
-
-/* وقتی کلاس active اضافه شد، هم opacity بده هم visibility */
-.modal.active { 
-    opacity: 1; 
-    visibility: visible; 
-}
+.modal.active { opacity: 1; visibility: visible; }
 
 .modal-content {
-    width: 100%; 
-    background: var(--card-bg);
-    border-radius: 20px 20px 0 0; 
-    padding: 20px;
-    max-height: 80vh; 
-    overflow-y: auto;
-    border-top: 1px solid var(--primary-blue); /* بوردر آبی برای دیده شدن بهتر */
-    transform: translateY(100%);
-    transition: transform 0.3s ease-out;
+    width: 100%; background: var(--card-bg); border-radius: 20px 20px 0 0; 
+    padding: 20px; max-height: 80vh; overflow-y: auto;
+    border-top: 1px solid var(--primary-blue);
+    transform: translateY(100%); transition: transform 0.3s ease-out;
 }
-
-.modal.active .modal-content {
-    transform: translateY(0);
-}
+.modal.active .modal-content { transform: translateY(0); }
 
 .modal-header { display: flex; justify-content: space-between; margin-bottom: 15px; align-items: center; }
 .modal-header h3 { margin: 0; color: var(--text-white); }
@@ -157,8 +149,7 @@ body {
 
 .history-item {
     display: flex; justify-content: space-between; align-items: center;
-    padding: 15px 0; 
-    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 .h-left { display: flex; flex-direction: column; gap: 4px; text-align: right; }
 .h-right { text-align: left; font-weight: bold; }
@@ -169,3 +160,100 @@ body {
 .badge.WON { background: rgba(0, 224, 150, 0.2); color: var(--success); border: 1px solid var(--success); }
 .badge.LOST { background: rgba(255, 77, 77, 0.2); color: var(--danger); border: 1px solid var(--danger); }
 .badge.PENDING { background: rgba(255, 215, 0, 0.2); color: var(--gold); border: 1px solid var(--gold); }
+
+/* =========================================
+   PHASE 2 & 3: ANIMATIONS & LUXURY UI
+   ========================================= */
+
+/* 1. Price Flash Effect */
+@keyframes flashGreen {
+    0% { background-color: rgba(0, 224, 150, 0.3); transform: scale(1.02); }
+    100% { background-color: transparent; transform: scale(1); }
+}
+@keyframes flashRed {
+    0% { background-color: rgba(255, 77, 77, 0.3); transform: scale(1.02); }
+    100% { background-color: transparent; transform: scale(1); }
+}
+.price-display { border-radius: 12px; padding: 10px; transition: background-color 0.2s; }
+.flash-up { animation: flashGreen 0.5s ease-out; }
+.flash-down { animation: flashRed 0.5s ease-out; }
+
+/* 2. Flying Chip Animation */
+.flying-chip {
+    position: fixed; z-index: 9999; width: 30px; height: 30px;
+    background: radial-gradient(circle, #FFD700 0%, #FFA500 100%);
+    border: 2px solid #FFF; border-radius: 50%;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.8); pointer-events: none;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; color: black; font-weight: bold;
+}
+
+/* 3. Button Ripple */
+.game-btn { position: relative; overflow: hidden; }
+.game-btn::after {
+    content: ""; background: rgba(255, 255, 255, 0.3); display: block; position: absolute;
+    border-radius: 50%; padding-top: 240%; padding-left: 240%; margin-top: -120%; margin-left: -120%;
+    opacity: 0; transition: all 0.8s;
+}
+.game-btn:active::after { padding: 0; margin: 0; opacity: 1; transition: 0s; }
+
+/* 4. Trophy Button */
+.trophy-btn {
+    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+    border: none; border-radius: 8px; width: 36px; height: 36px;
+    font-size: 1.2rem; cursor: pointer; box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+    transition: transform 0.2s; display: flex; align-items: center; justify-content: center;
+}
+.trophy-btn:active { transform: scale(0.9); }
+
+/* 5. Glassmorphism Modal */
+.glass-panel {
+    background: rgba(28, 28, 46, 0.95) !important;
+    backdrop-filter: blur(15px);
+    border-top: 1px solid rgba(255, 215, 0, 0.3) !important;
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
+}
+
+/* 6. Stats Card (Luxury Widget) */
+.stats-card {
+    display: flex; justify-content: space-around;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px; padding: 15px; margin-bottom: 20px;
+}
+.stat-item { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.stat-label { font-size: 0.8rem; color: #8A8AA0; }
+.stat-value { font-size: 1.1rem; font-weight: 800; font-family: monospace; }
+.text-gold { color: #FFD700 !important; text-shadow: 0 0 10px rgba(255, 215, 0, 0.3); }
+
+/* 7. Leaderboard List */
+.leaderboard-title {
+    font-size: 0.9rem; color: var(--primary-blue); margin-bottom: 10px; font-weight: bold;
+    display: flex; align-items: center; gap: 8px;
+}
+.leaderboard-title::after { content: ""; flex: 1; height: 1px; background: rgba(255,255,255,0.1); }
+
+.leader-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 15px; margin-bottom: 8px;
+    background: rgba(255, 255, 255, 0.02); border-radius: 12px;
+    border: 1px solid transparent; transition: transform 0.2s;
+}
+
+.rank-badge {
+    width: 24px; height: 24px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold; font-size: 0.8rem; color: #fff; background: #333; margin-left: 10px;
+}
+
+.rank-1 { border: 1px solid rgba(255, 215, 0, 0.5); background: linear-gradient(90deg, rgba(255, 215, 0, 0.1), transparent); }
+.rank-1 .rank-badge { background: #FFD700; color: #000; box-shadow: 0 0 10px #FFD700; }
+
+.rank-2 { border: 1px solid rgba(192, 192, 192, 0.4); }
+.rank-2 .rank-badge { background: #C0C0C0; color: #000; box-shadow: 0 0 8px #C0C0C0; }
+
+.rank-3 { border: 1px solid rgba(205, 127, 50, 0.4); }
+.rank-3 .rank-badge { background: #CD7F32; color: #000; }
+
+.leader-name { font-weight: 500; color: #fff; }
+.leader-profit { font-family: monospace; color: var(--success); font-weight: bold; direction: ltr; }

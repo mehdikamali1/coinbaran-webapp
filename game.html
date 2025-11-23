@@ -14,7 +14,10 @@
 <body>
 
     <div class="game-header">
-        <button onclick="window.location.href='/'" class="back-btn">بازگشت</button>
+        <div style="display:flex; gap:10px; align-items:center">
+            <button onclick="window.location.href='/'" class="back-btn">🏠</button>
+            <button onclick="window.openLeaderboard()" class="trophy-btn">🏆</button>
+        </div>
         <div class="live-badge blink">● LIVE</div>
     </div>
 
@@ -41,6 +44,13 @@
         <div class="bet-controls">
             <div id="round-status" class="round-status">در حال اتصال...</div>
             
+            <div class="quick-amounts">
+                <button onclick="window.setAmount(1)" class="chip active">$1</button>
+                <button onclick="window.setAmount(5)" class="chip">$5</button>
+                <button onclick="window.setAmount(10)" class="chip">$10</button>
+                <button onclick="window.setAmount(25)" class="chip">$25</button>
+            </div>
+
             <div class="amount-selector">
                 <span>مبلغ (UUSD):</span>
                 <input type="number" id="bet-amount" value="1" min="1">
@@ -68,6 +78,35 @@
                 <button onclick="window.closeHistory()" class="close-btn">✕</button>
             </div>
             <div id="history-list" class="history-list">
+                <div class="loading-spinner"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="leaderboard-modal" class="modal hidden">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h3>🏆 تالار برترین‌ها</h3>
+                <button onclick="window.closeLeaderboard()" class="close-btn">✕</button>
+            </div>
+            
+            <div class="stats-card">
+                <div class="stat-item">
+                    <span class="stat-label">بازی‌ها</span>
+                    <span class="stat-value" id="my-total-games">--</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">بردها</span>
+                    <span class="stat-value text-up" id="my-total-wins">--</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">نرخ برد</span>
+                    <span class="stat-value text-gold" id="my-win-rate">--%</span>
+                </div>
+            </div>
+
+            <div class="leaderboard-title">نفرات برتر (۲۴ ساعت)</div>
+            <div id="leaderboard-list" class="leaderboard-list">
                 <div class="loading-spinner"></div>
             </div>
         </div>

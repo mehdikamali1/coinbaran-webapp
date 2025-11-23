@@ -5,36 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>بازی کندل</title>
     
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    
-    <link rel="stylesheet" href="style.css?v=13.0">
-    
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <link rel="stylesheet" href="style.css"> 
 </head>
-<body class="game-body">
+<body>
 
     <div class="game-header">
-        <button onclick="window.location.href='/'" class="back-btn">
-            <i class="fas fa-arrow-right"></i> خروج
-        </button>
-        <div class="live-badge">
-            <span class="blink">●</span> LIVE
-        </div>
+        <button onclick="window.location.href='/'" class="back-btn">بازگشت</button>
+        <div class="live-badge blink">● LIVE</div>
     </div>
 
     <div id="game-container">
-        
         <div class="price-display">
             <div class="price-label">BTC/USDT</div>
-            <h1 id="btc-price" class="loading">...</h1>
+            <div id="btc-price" class="text-white">...</div>
         </div>
 
         <div class="timer-circle">
-            <svg viewBox="0 0 36 36" class="circular-chart">
+            <svg class="circular-chart" viewBox="0 0 36 36">
                 <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                <path id="timer-path" class="circle" stroke-dasharray="100, 100" stroke="#00E096" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <path id="timer-path" class="circle" stroke-dasharray="100, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" style="stroke: #00E096;" />
             </svg>
             <div id="timer-text" class="timer-text">--</div>
         </div>
@@ -43,27 +36,43 @@
             <canvas id="btcChart"></canvas>
         </div>
 
-        <div id="round-status" class="round-status">در حال اتصال به سرور...</div>
+        <div id="history-container"></div>
 
         <div class="bet-controls">
+            <div id="round-status" class="round-status">در حال اتصال...</div>
+            
             <div class="amount-selector">
-                <span>مبلغ ورود (UUSD):</span>
-                <input type="number" id="bet-amount" value="1" min="1" max="100">
+                <span>مبلغ (UUSD):</span>
+                <input type="number" id="bet-amount" value="1" min="1">
+            </div>
+
+            <div class="action-buttons-game">
+                <button id="btn-up" class="game-btn btn-up" onclick="window.placeBet('UP')">
+                    خرید 📈
+                </button>
+                <button id="btn-down" class="game-btn btn-down" onclick="window.placeBet('DOWN')">
+                    فروش 📉
+                </button>
             </div>
             
-            <div class="action-buttons-game">
-                <button id="btn-up" class="game-btn btn-up" onclick="placeBet('UP')">
-                    <i class="fas fa-arrow-trend-up"></i> خرید (LONG)
-                </button>
-                <button id="btn-down" class="game-btn btn-down" onclick="placeBet('DOWN')">
-                    <i class="fas fa-arrow-trend-down"></i> فروش (SHORT)
-                </button>
+            <div class="history-trigger" onclick="window.openHistory()">
+                📜 تاریخچه شرط‌های من
             </div>
         </div>
-        
-        <div id="history-container"></div>
     </div>
 
-    <script src="game.js?v=13.0"></script>
+    <div id="history-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>تاریخچه بازی‌ها</h3>
+                <button onclick="window.closeHistory()" class="close-btn">✕</button>
+            </div>
+            <div id="history-list" class="history-list">
+                <div class="loading-spinner"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
 </body>
 </html>

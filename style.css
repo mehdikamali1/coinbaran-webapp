@@ -1,4 +1,4 @@
-﻿/* webapp/style.css (v13.0 - Fixed Colors) */
+﻿/* webapp/style.css (v14.1 - Fix History Modal Visibility) */
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800&display=swap');
 
 :root {
@@ -23,7 +23,6 @@ body {
 
 /* --- Utility Classes --- */
 .hidden { display: none !important; }
-/* اجبار رنگ‌ها برای حل مشکل سیاه شدن */
 .text-up { color: var(--success) !important; text-shadow: 0 0 10px rgba(0, 224, 150, 0.3); transition: color 0.3s; }
 .text-down { color: var(--danger) !important; text-shadow: 0 0 10px rgba(255, 77, 77, 0.3); transition: color 0.3s; }
 .text-white { color: #FFFFFF !important; }
@@ -49,7 +48,7 @@ body {
 .price-label { color: var(--text-gray); font-size: 0.9rem; margin-bottom: 5px; }
 #btc-price { 
     font-size: 2.5rem; margin: 0; font-family: monospace; font-weight: 800; 
-    color: #FFFFFF; /* رنگ پیش‌فرض سفید */
+    color: #FFFFFF; 
 }
 
 /* --- Timer --- */
@@ -105,3 +104,68 @@ body {
 .history-bubble.up { background: var(--success); color: #000; }
 .history-bubble.down { background: var(--danger); color: #fff; }
 .history-bubble.draw { background: #888; color: #fff; }
+
+/* --- FIX: Improved History Modal Styles --- */
+.history-trigger {
+    margin-top: 15px;
+    color: var(--text-gray);
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 10px;
+    text-align: center;
+    display: block; /* اطمینان از دیده شدن */
+}
+
+.modal {
+    position: fixed;
+    inset: 0; /* تمام صفحه */
+    background: rgba(0,0,0,0.85); 
+    z-index: 9999; /* بالاترین لایه */
+    display: flex; 
+    align-items: flex-end;
+    opacity: 0; 
+    visibility: hidden; /* مخفی کردن کامل */
+    transition: opacity 0.3s;
+}
+
+/* وقتی کلاس active اضافه شد، هم opacity بده هم visibility */
+.modal.active { 
+    opacity: 1; 
+    visibility: visible; 
+}
+
+.modal-content {
+    width: 100%; 
+    background: var(--card-bg);
+    border-radius: 20px 20px 0 0; 
+    padding: 20px;
+    max-height: 80vh; 
+    overflow-y: auto;
+    border-top: 1px solid var(--primary-blue); /* بوردر آبی برای دیده شدن بهتر */
+    transform: translateY(100%);
+    transition: transform 0.3s ease-out;
+}
+
+.modal.active .modal-content {
+    transform: translateY(0);
+}
+
+.modal-header { display: flex; justify-content: space-between; margin-bottom: 15px; align-items: center; }
+.modal-header h3 { margin: 0; color: var(--text-white); }
+.close-btn { background: none; border: none; color: white; font-size: 1.8rem; cursor: pointer; padding: 5px; }
+
+.history-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 15px 0; 
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.h-left { display: flex; flex-direction: column; gap: 4px; text-align: right; }
+.h-right { text-align: left; font-weight: bold; }
+.h-time { font-size: 0.8rem; color: var(--text-gray); }
+.h-round { font-size: 0.8rem; color: var(--primary-blue); font-family: monospace; }
+
+.badge { padding: 4px 8px; border-radius: 6px; font-size: 0.85rem; font-weight: bold; display: inline-block; text-align: center;}
+.badge.WON { background: rgba(0, 224, 150, 0.2); color: var(--success); border: 1px solid var(--success); }
+.badge.LOST { background: rgba(255, 77, 77, 0.2); color: var(--danger); border: 1px solid var(--danger); }
+.badge.PENDING { background: rgba(255, 215, 0, 0.2); color: var(--gold); border: 1px solid var(--gold); }

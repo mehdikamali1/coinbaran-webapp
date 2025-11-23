@@ -1,17 +1,16 @@
-﻿/* webapp/game.js (v13.0 - Full Logic Fix) */
+﻿/* webapp/game.js (v15.0 - Fixed Button Clicks) */
 (function () {
     'use strict';
     const tg = window.Telegram.WebApp;
     const API_BASE_URL = window.location.origin;
     
-    // --- Sound System (Mobile Compatible) ---
+    // --- Sound System ---
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     let audioCtx = null;
 
     function initAudio() {
         if (!audioCtx) {
             audioCtx = new AudioContext();
-            // پخش یک صدای صامت برای باز کردن قفل صدا در iOS/Android
             const buffer = audioCtx.createBuffer(1, 1, 22050);
             const source = audioCtx.createBufferSource();
             source.buffer = buffer;
@@ -22,7 +21,6 @@
         }
     }
 
-    // فعال‌سازی صدا با اولین لمس کاربر
     document.addEventListener('click', initAudio, { once: true });
     document.addEventListener('touchstart', initAudio, { once: true });
 
@@ -43,7 +41,6 @@
         win: () => {
             if(!audioCtx) return;
             const now = audioCtx.currentTime;
-            // آرپژ پیروزی
             [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
@@ -58,7 +55,6 @@
         lose: () => {
             if(!audioCtx) return;
             const now = audioCtx.currentTime;
-            // صدای باخت
             [150, 100].forEach((freq, i) => {
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
@@ -92,7 +88,10 @@
     };
 
     function initChart() {
-        const ctx = document.getElementById('btcChart').getContext('2d');
+        const canvas = document.getElementById('btcChart');
+        if (!canvas) return; // Safety check
+        
+        const ctx = canvas.getContext('2d');
         const gradient = ctx.createLinearGradient(0, 0, 0, 400);
         gradient.addColorStop(0, 'rgba(54, 123, 255, 0.5)');
         gradient.addColorStop(1, 'rgba(54, 123, 255, 0.0)');
@@ -130,22 +129,16 @@
         const elPrice = document.getElementById('btc-price');
         const currentPrice = data.current_price;
         
-        // 1. آپدیت قیمت و رنگ (لاجیک فیکس شده)
         elPrice.textContent = `$${currentPrice.toLocaleString()}`;
         elPrice.classList.remove('loading');
         
         if (priceHistory.length > 0) {
             const lastPrice = priceHistory[priceHistory.length - 1];
-            if (currentPrice > lastPrice) {
-                elPrice.className = 'text-up';
-            } else if (currentPrice < lastPrice) {
-                elPrice.className = 'text-down';
-            } else {
-                elPrice.className = 'text-white';
-            }
+            if (currentPrice > lastPrice) elPrice.className = 'text-up';
+            else if (currentPrice < lastPrice) elPrice.className = 'text-down';
+            else elPrice.className = 'text-white';
         }
 
-        // 2. آپدیت نمودار
         priceHistory.push(currentPrice);
         if (priceHistory.length > MAX_POINTS) priceHistory.shift();
         if (chart) {
@@ -157,7 +150,6 @@
             chart.update();
         }
 
-        // 3. وضعیت راند
         if (data.round) {
             const elTimer = document.getElementById('timer-text');
             const elPath = document.getElementById('timer-path');
@@ -167,7 +159,6 @@
             const pct = (data.round.time_left / 60) * 100;
             elPath.style.strokeDasharray = `${pct}, 100`;
 
-            // صدای تیک تاک (فقط اگر صدا فعال باشد)
             if (data.round.time_left <= 5 && data.round.time_left > 0) {
                 if (!window['tick_' + data.round.time_left]) {
                     SoundFX.tick();
@@ -188,31 +179,27 @@
             }
         }
 
-        // 4. نمایش وضعیت بت
         if(data.user_bet) {
             const elStatus = document.getElementById('round-status');
             const typeText = data.user_bet.prediction === 'UP' ? 'خرید (LONG) 📈' : 'فروش (SHORT) 📉';
             elStatus.textContent = `پوزیشن باز: ${typeText}`;
             toggleButtons(true);
             
-            // ذخیره در حافظه برای چک کردن نتیجه
             if(data.round) {
                 localStorage.setItem('last_bet_round_id', String(data.round.id));
                 localStorage.setItem('last_bet_prediction', data.user_bet.prediction);
             }
         }
 
-        // 5. چک کردن تاریخچه و برد/باخت
         if (data.history) {
-            updateHistory(data.history);
+            updateHistoryBubbles(data.history);
             checkResult(data.history);
         }
     }
 
-    function updateHistory(history) {
+    function updateHistoryBubbles(history) {
         const container = document.getElementById('history-container');
         container.innerHTML = '';
-        // 10 تای آخر را نشان بده
         history.slice(0, 10).forEach(h => {
             const div = document.createElement('div');
             div.className = 'history-bubble ' + (h.result === 'UP' ? 'up' : (h.result === 'DOWN' ? 'down' : 'draw'));
@@ -227,12 +214,10 @@
 
         if (!myRoundId || !myPrediction) return;
 
-        // آیا راند من در تاریخچه آمده؟ (تبدیل هر دو به String برای اطمینان)
         const finishedRound = history.find(h => String(h.round_id) === String(myRoundId));
 
         if (finishedRound) {
-            // نتیجه مشخص شد!
-            localStorage.removeItem('last_bet_round_id'); // پاک کردن برای جلوگیری از تکرار
+            localStorage.removeItem('last_bet_round_id'); 
             localStorage.removeItem('last_bet_prediction');
 
             if (finishedRound.result === myPrediction) {
@@ -250,10 +235,12 @@
         }
     }
 
+    // --- EXPOSED TO WINDOW (Must be accessible by HTML) ---
+    
     window.placeBet = async function(pred) {
         const amount = document.getElementById('bet-amount').value;
-        initAudio(); // اطمینان از فعال شدن صدا
-        SoundFX.tick(); // صدای کلیک
+        initAudio();
+        SoundFX.tick();
 
         try {
             const res = await fetch(`${API_BASE_URL}/webapp/game/bet`, {
@@ -263,14 +250,14 @@
             const result = await res.json();
             if (result.status === "success") {
                 tg.HapticFeedback.impactOccurred('medium');
-                // اینجا آلرت نمی‌دهیم تا بازی قطع نشود، فقط دکمه‌ها قفل می‌شوند
+                // Optional: Show brief toast
             } else {
                 tg.showAlert(`❌ ${result.message}`);
             }
         } catch (e) { tg.showAlert("خطای اتصال"); }
     }
 
-    function toggleButtons(disable) {
+    window.toggleButtons = function(disable) {
         document.getElementById('btn-up').disabled = disable;
         document.getElementById('btn-down').disabled = disable;
         if(!disable) {
@@ -281,5 +268,77 @@
 
     function triggerConfetti() {
         if (typeof confetti === 'function') confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+    }
+
+    // --- FIXED HISTORY FUNCTIONS (EXPOSED) ---
+    window.openHistory = async function() {
+        console.log("Opening history..."); // Debug log
+        const modal = document.getElementById('history-modal');
+        const list = document.getElementById('history-list');
+        
+        if (modal) modal.classList.add('active');
+        if (list) list.innerHTML = '<div style="text-align:center;padding:20px;color:#888">⏳ در حال دریافت...</div>';
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/webapp/game/user-history`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ initData: tg.initData })
+            });
+            
+            if (!res.ok) throw new Error("Network error");
+            
+            const data = await res.json();
+            console.log("History data received:", data); // Debug log
+            
+            if(data.status === 'success') {
+                renderHistory(data.history);
+            } else {
+                list.innerHTML = '<div style="text-align:center;color:red">خطا در دریافت</div>';
+            }
+        } catch(e) {
+            console.error(e);
+            if (list) list.innerHTML = '<div style="text-align:center;color:red">خطای شبکه</div>';
+        }
+    }
+
+    window.closeHistory = function() {
+        const modal = document.getElementById('history-modal');
+        if (modal) modal.classList.remove('active');
+    }
+
+    function renderHistory(items) {
+        const list = document.getElementById('history-list');
+        if (!list) return;
+        
+        list.innerHTML = '';
+        
+        if(!items || items.length === 0) {
+            list.innerHTML = '<div style="text-align:center;padding:20px;color:#888">هنوز شرطی نبسته‌اید!</div>';
+            return;
+        }
+
+        items.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'history-item';
+            
+            const isWin = item.status === 'WON';
+            const statusText = item.status === 'WON' ? 'برد' : (item.status === 'LOST' ? 'باخت' : (item.status === 'REFUND' ? 'برگشت' : 'در جریان'));
+            const directionIcon = item.prediction === 'UP' ? '📈' : '📉';
+            const amountDisplay = isWin ? '+' + parseFloat(item.payout).toLocaleString() : parseFloat(item.amount).toLocaleString();
+            
+            div.innerHTML = `
+                <div class="h-left">
+                    <div style="direction:ltr"><span class="h-round">#${item.round_id}</span> ${directionIcon}</div>
+                    <span class="h-time">${item.time}</span>
+                </div>
+                <div class="h-right">
+                    <div class="badge ${item.status}">${statusText}</div>
+                    <div style="margin-top:4px; font-size:0.9rem; direction:ltr">
+                        ${amountDisplay} $
+                    </div>
+                </div>
+            `;
+            list.appendChild(div);
+        });
     }
 })();

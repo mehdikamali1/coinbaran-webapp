@@ -3,24 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>داشبورد کوین باران</title>
+    <title>داشبورد</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css"> 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <style>
+        /* --- استایل‌های داخلی (تضمین لود شدن) --- */
+        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800&display=swap');
+        :root { --bg: #0F0F1A; --card: #1C1C2E; --text: #FFF; --blue: #367BFF; --gold: #FFD700; --green: #00E096; }
+        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; padding: 0; font-family: 'Vazirmatn', sans-serif; background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; }
+        
+        .hidden { display: none !important; }
+        
+        /* لودر */
+        #loader { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 999; }
+        .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* کانتینر */
+        #app-container { padding: 20px; flex: 1; overflow-y: auto; }
+        
+        /* هدر */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .user-info h1 { font-size: 1.2rem; margin: 0; }
+        .kyc-status { font-size: 0.8rem; padding: 5px 10px; background: rgba(255,255,255,0.1); border-radius: 15px; }
+        .kyc-status.approved { color: var(--green); border: 1px solid var(--green); }
+        
+        /* کارت موجودی */
+        .balance-card { background: linear-gradient(135deg, #5A4BFF 0%, var(--blue) 100%); padding: 20px; border-radius: 16px; box-shadow: 0 10px 30px rgba(54,123,255,0.3); margin-bottom: 20px; }
+        .balance-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .balance-label { font-size: 0.9rem; opacity: 0.8; }
+        .balance-amount { font-size: 1.5rem; font-weight: 800; margin: 0; direction: ltr; }
+        .xp .balance-amount { color: var(--gold); }
+
+        /* کارت بازی */
+        .gamification-section h3 { font-size: 1rem; color: #888; margin-bottom: 10px; border-right: 3px solid var(--blue); padding-right: 10px; }
+        .card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); transition: transform 0.2s; cursor: pointer; }
+        .card:active { transform: scale(0.98); }
+        .card-title { font-weight: bold; color: var(--gold); font-size: 1.1rem; }
+        .card-subtitle { font-size: 0.9rem; color: #888; margin-top: 5px; }
+    </style>
 </head>
 <body>
+
     <div id="loader">
         <div class="spinner"></div>
-        <p>در حال اتصال...</p>
+        <p id="loader-msg">در حال اتصال...</p>
     </div>
 
     <div id="app-container" class="hidden">
         <header class="header">
             <div class="user-info">
-                <span id="user-icon" class="user-icon">💎</span>
-                <h1 id="welcome-name" class="loading">...</h1>
+                <span class="user-icon">💎</span>
+                <span id="welcome-name">...</span>
             </div>
-            <div id="kyc-status" class="kyc-status loading">
+            <div id="kyc-status" class="kyc-status">
                 <span id="kyc-text">...</span>
             </div>
         </header>
@@ -28,29 +66,70 @@
         <main>
             <section class="balance-card">
                 <div class="balance-row">
-                    <span class="balance-label"><i class="fas fa-wallet"></i> موجودی تومانی</span>
-                    <h2 id="toman-balance" class="balance-amount loading">...</h2>
+                    <span class="balance-label">موجودی تومانی</span>
+                    <h2 id="toman-balance" class="balance-amount">...</h2>
                 </div>
                 <div class="balance-row xp">
-                    <span class="balance-label"><i class="fas fa-star"></i> امتیاز (XP)</span>
-                    <h2 id="xp-balance" class="balance-amount loading">...</h2>
+                    <span class="balance-label">امتیاز (XP)</span>
+                    <h2 id="xp-balance" class="balance-amount">...</h2>
                 </div>
             </section>
 
             <section class="gamification-section">
-                <h3><i class="fas fa-gamepad"></i> بازی‌ها</h3>
-                <div class="card-container">
-                    <div class="card" onclick="window.location.href='game'" style="cursor: pointer; border: 1px solid gold;">
-                        <div class="card-header">
-                            <span class="card-title" style="color: gold;">بازی کندل بیت‌کوین 🚀</span>
-                        </div>
-                        <p class="card-subtitle">ورود به بازی</p>
-                    </div>
+                <h3>بازی‌های ویژه</h3>
+                <div class="card" onclick="window.location.href='game'"> <div class="card-title">🚀 بازی کندل بیت‌کوین</div>
+                    <p class="card-subtitle">پیش‌بینی کن و سود ببر!</p>
                 </div>
             </section>
         </main>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        // --- اسکریپت داخلی (تضمین اجرا) ---
+        (function () {
+            const tg = window.Telegram.WebApp;
+            const API_BASE_URL = window.location.origin;
+            const loader = document.getElementById('loader');
+            
+            window.onload = async function() {
+                tg.ready();
+                tg.expand();
+                
+                // حالت تست (اگر خارج از تلگرام بود)
+                if (!tg.initData) {
+                    console.warn("Guest Mode");
+                    tg.initData = "query_id=TEST&user=%7B%22id%22%3A111111111%2C%22first_name%22%3A%22Guest%22%7D&auth_date=1700000000&hash=fake";
+                }
+
+                await fetchData();
+            };
+
+            async function fetchData() {
+                try {
+                    const res = await fetch(`${API_BASE_URL}/webapp/get_user_data`, {
+                        method: 'POST', headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ initData: tg.initData })
+                    });
+
+                    if (!res.ok) throw new Error("خطای سرور");
+                    const data = await res.json();
+                    
+                    // نمایش اطلاعات
+                    document.getElementById('welcome-name').innerText = `سلام، ${data.first_name}`;
+                    document.getElementById('toman-balance').innerText = `${data.toman_balance}`;
+                    document.getElementById('xp-balance').innerText = `${data.xp_balance}`;
+                    document.getElementById('kyc-text').innerText = data.kyc_status_text;
+                    document.getElementById('kyc-status').classList.add(data.kyc_status_code);
+
+                    loader.style.display = 'none';
+                    document.getElementById('app-container').classList.remove('hidden');
+
+                } catch (e) {
+                    document.getElementById('loader-msg').innerText = "خطا در دریافت اطلاعات";
+                    document.getElementById('loader-msg').style.color = "red";
+                }
+            }
+        })();
+    </script>
 </body>
 </html>

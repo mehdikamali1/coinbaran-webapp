@@ -1,0 +1,257 @@
+﻿#webapp/wallet.html
+
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>کیف پول</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800;900&display=swap');
+        
+        :root { 
+            --bg: #050505; --card: #121212; --text: #EAEAEA; --muted: #888;
+            --blue: #3B82F6; --green: #10B981; --red: #EF4444; --gold: #D4AF37;
+            --border: rgba(255,255,255,0.08);
+        }
+        
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; outline: none; }
+        
+        body { 
+            margin: 0; padding: 0; font-family: 'Vazirmatn', sans-serif; 
+            background: var(--bg); color: var(--text); height: 100vh; 
+            display: flex; flex-direction: column;
+        }
+
+        /* Header */
+        .wallet-header {
+            padding: 20px; background: rgba(18, 18, 18, 0.95);
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .back-btn {
+            background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+            color: var(--text); padding: 10px 14px; border-radius: 12px; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .back-btn:active { background: rgba(255,255,255,0.1); }
+        .page-title { margin: 0; font-size: 1.1rem; font-weight: 800; }
+        
+        .content { flex: 1; overflow-y: auto; padding: 20px; }
+
+        /* Balance Section */
+        .total-balance-section {
+            text-align: center; margin-bottom: 30px; padding: 20px 0;
+        }
+        .tb-label { color: var(--muted); font-size: 0.9rem; margin-bottom: 5px; }
+        .tb-amount { font-size: 2.5rem; font-weight: 900; color: #fff; font-family: monospace; letter-spacing: -1px; }
+        .tb-usd { color: var(--green); font-family: monospace; font-size: 1.1rem; margin-top: 5px; font-weight: 600; }
+
+        /* Action Buttons */
+        .actions-grid { display: flex; gap: 15px; margin-bottom: 30px; }
+        .action-btn {
+            flex: 1; padding: 16px; border-radius: 16px; border: none;
+            font-weight: 800; font-size: 1rem; cursor: pointer; display: flex; 
+            align-items: center; justify-content: center; gap: 10px;
+            transition: transform 0.1s;
+            color: white;
+        }
+        .action-btn:active { transform: scale(0.96); }
+        
+        .btn-deposit { 
+            background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%); 
+            box-shadow: 0 4px 15px rgba(59,130,246,0.4);
+        }
+        .btn-withdraw { 
+            background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+        }
+
+        /* History List */
+        .history-title { 
+            font-size: 0.95rem; font-weight: 700; color: var(--muted); 
+            margin-bottom: 15px; display: flex; align-items: center; gap: 10px;
+        }
+        .history-title::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+        
+        .tx-list { display: flex; flex-direction: column; gap: 10px; padding-bottom: 40px; }
+        
+        .tx-item {
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--card); padding: 15px; border-radius: 16px;
+            border: 1px solid transparent; transition: background 0.2s;
+        }
+        .tx-left { display: flex; align-items: center; gap: 12px; }
+        .tx-icon {
+            width: 42px; height: 42px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+        }
+        .tx-info { display: flex; flex-direction: column; gap: 3px; }
+        .tx-name { font-size: 0.9rem; font-weight: 700; color: #fff; }
+        .tx-date { font-size: 0.75rem; color: #666; font-family: monospace; }
+        .tx-amount { font-weight: 700; font-family: monospace; direction: ltr; font-size: 1rem; }
+        
+        .c-green { color: var(--green); } .c-red { color: var(--red); } .c-gold { color: var(--gold); }
+
+        /* --- MODAL (Deposit) --- */
+        .modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999;
+            display: flex; align-items: flex-end; opacity: 0; visibility: hidden; transition: all 0.3s;
+            backdrop-filter: blur(5px);
+        }
+        .modal.active { opacity: 1; visibility: visible; }
+        .modal-content {
+            width: 100%; background: #181818; border-radius: 24px 24px 0 0; padding: 25px;
+            border-top: 1px solid #333; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .modal.active .modal-content { transform: translateY(0); }
+        
+        .modal-header { display: flex; justify-content: space-between; margin-bottom: 20px; align-items: center; }
+        .modal-header h3 { margin: 0; color: white; }
+        .close-modal { background: none; border: none; color: #888; font-size: 1.5rem; cursor: pointer; }
+
+        .inp-group { margin-bottom: 20px; }
+        .inp-label { display: block; color: var(--muted); font-size: 0.9rem; margin-bottom: 8px; }
+        .inp-field {
+            width: 100%; background: #000; border: 1px solid #333; color: white;
+            padding: 15px; border-radius: 12px; font-size: 1.2rem; font-weight: bold;
+            font-family: monospace; text-align: center;
+        }
+        .btn-confirm {
+            width: 100%; background: var(--green); color: black; padding: 16px;
+            border: none; border-radius: 14px; font-weight: 800; font-size: 1.1rem; cursor: pointer;
+        }
+        .btn-confirm:active { transform: scale(0.98); }
+
+    </style>
+</head>
+<body>
+
+    <div class="wallet-header">
+        <button class="back-btn" onclick="window.location.href='/'">
+            <i class="fas fa-arrow-right"></i>
+        </button>
+        <h1 class="page-title">کیف پول من</h1>
+        <div style="width:40px"></div>
+    </div>
+
+    <div class="content">
+        <div class="total-balance-section">
+            <div class="tb-label">موجودی قابل برداشت</div>
+            <div class="tb-amount" id="balance-toman">...</div>
+            <div class="tb-usd" id="balance-uusd">...</div>
+        </div>
+
+        <div class="actions-grid">
+            <button class="action-btn btn-deposit" onclick="openDepositModal()">
+                <i class="fas fa-arrow-down"></i> واریز
+            </button>
+            <button class="action-btn btn-withdraw">
+                <i class="fas fa-arrow-up"></i> برداشت
+            </button>
+        </div>
+
+        <div class="history-title">تراکنش‌های اخیر</div>
+        <div id="tx-list" class="tx-list">
+            <div style="text-align:center;color:#666;padding:20px">در حال دریافت...</div>
+        </div>
+    </div>
+
+    <div id="deposit-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>واریز تومان</h3>
+                <button class="close-modal" onclick="closeDepositModal()">✕</button>
+            </div>
+            
+            <div class="inp-group">
+                <label class="inp-label">مبلغ به تومان:</label>
+                <input type="number" id="deposit-amount" class="inp-field" placeholder="مثلا 100000">
+            </div>
+
+            <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:10px; margin-bottom:20px; font-size:0.85rem; color:#aaa; line-height:1.6">
+                ℹ️ با زدن دکمه تایید، به درگاه پرداخت یا صفحه کارت‌به‌کارت هدایت خواهید شد.
+            </div>
+
+            <button class="btn-confirm" onclick="submitDeposit()">تایید و پرداخت</button>
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        const API_BASE_URL = window.location.origin;
+
+        // Modal Functions
+        function openDepositModal() {
+            document.getElementById('deposit-modal').classList.add('active');
+        }
+        function closeDepositModal() {
+            document.getElementById('deposit-modal').classList.remove('active');
+        }
+        function submitDeposit() {
+            const amount = document.getElementById('deposit-amount').value;
+            if(!amount || amount < 50000) {
+                tg.showAlert("حداقل مبلغ واریز ۵۰,۰۰۰ تومان است.");
+                return;
+            }
+            // اینجا در مرحله بعد به API وصل می‌شود
+            tg.showAlert(`درخواست واریز ${parseInt(amount).toLocaleString()} تومان ثبت شد (آزمایشی).`);
+            closeDepositModal();
+        }
+
+        window.onload = function() {
+            tg.ready(); tg.expand(); tg.setHeaderColor('#121212');
+            if (!tg.initData) tg.initData = "query_id=TEST&user=%7B%22id%22%3A111111111%7D&auth_date=1700000000&hash=fake";
+            fetchWalletData();
+        };
+
+        async function fetchWalletData() {
+            try {
+                const res = await fetch(`${API_BASE_URL}/webapp/get_wallet_data`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ initData: tg.initData })
+                });
+
+                if (!res.ok) throw new Error("Server Error");
+                const data = await res.json();
+
+                if (data.status === 'success') {
+                    document.getElementById('balance-toman').innerText = parseInt(data.balances.toman.replace(/,/g, '')).toLocaleString();
+                    document.getElementById('balance-uusd').innerText = `$ ${data.balances.uusd}`;
+                    renderTx(data.transactions);
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function renderTx(txs) {
+            const list = document.getElementById('tx-list');
+            list.innerHTML = '';
+            if (txs.length === 0) { list.innerHTML = '<div style="text-align:center;padding:20px;color:#444">تراکنشی یافت نشد</div>'; return; }
+
+            txs.forEach(tx => {
+                const div = document.createElement('div');
+                div.className = 'tx-item';
+                let color = 'c-gray';
+                if(tx.color === 'success') color = 'c-green';
+                if(tx.color === 'danger') color = 'c-red';
+                if(tx.color === 'warning') color = 'c-gold';
+
+                div.innerHTML = `
+                    <div class="tx-left">
+                        <div class="tx-icon">${tx.icon}</div>
+                        <div class="tx-info">
+                            <span class="tx-name">${tx.title}</span>
+                            <span class="tx-date">${tx.date}</span>
+                        </div>
+                    </div>
+                    <div class="tx-amount ${color}">${tx.display_amount}</div>
+                `;
+                list.appendChild(div);
+            });
+        }
+    </script>
+</body>
+</html>

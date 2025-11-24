@@ -3,113 +3,204 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>داشبورد</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <title>کوین باران</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
     <style>
-        /* --- استایل‌های داخلی (تضمین لود شدن) --- */
-        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800&display=swap');
-        :root { --bg: #0F0F1A; --card: #1C1C2E; --text: #FFF; --blue: #367BFF; --gold: #FFD700; --green: #00E096; }
-        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; padding: 0; font-family: 'Vazirmatn', sans-serif; background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; }
+        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800;900&display=swap');
         
+        :root { 
+            --bg: #050505; 
+            --card-bg: #121212; 
+            --text-main: #EAEAEA; 
+            --text-muted: #888;
+            --accent-blue: #3B82F6; 
+            --accent-gold: #D4AF37; 
+            --accent-green: #10B981; 
+            --border: rgba(255,255,255,0.08);
+            --glow: 0 0 20px rgba(59, 130, 246, 0.15);
+        }
+        
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+        
+        body { 
+            margin: 0; padding: 0; font-family: 'Vazirmatn', sans-serif; 
+            background: radial-gradient(circle at top center, #1a1a1a 0%, #050505 80%); 
+            color: var(--text-main); height: 100vh; overflow: hidden;
+            display: flex; flex-direction: column;
+        }
+
         .hidden { display: none !important; }
-        
-        /* لودر */
-        #loader { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 999; }
-        .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        /* کانتینر */
-        #app-container { padding: 20px; flex: 1; overflow-y: auto; }
-        
-        /* هدر */
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .user-info h1 { font-size: 1.2rem; margin: 0; }
-        .kyc-status { font-size: 0.8rem; padding: 5px 10px; background: rgba(255,255,255,0.1); border-radius: 15px; }
-        .kyc-status.approved { color: var(--green); border: 1px solid var(--green); }
-        
-        /* کارت موجودی */
-        .balance-card { background: linear-gradient(135deg, #5A4BFF 0%, var(--blue) 100%); padding: 20px; border-radius: 16px; box-shadow: 0 10px 30px rgba(54,123,255,0.3); margin-bottom: 20px; }
-        .balance-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .balance-label { font-size: 0.9rem; opacity: 0.8; }
-        .balance-amount { font-size: 1.5rem; font-weight: 800; margin: 0; direction: ltr; }
-        
-        /* استایل اختصاصی برای هر موجودی */
-        .xp .balance-amount { color: var(--gold); }
-        .uusd .balance-amount { color: var(--green); }
+        /* Loader */
+        #loader { 
+            position: fixed; inset: 0; background: #000; z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .logo-loader { font-size: 3rem; margin-bottom: 20px; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 0.5; transform: scale(0.95); } 50% { opacity: 1; transform: scale(1.05); } 100% { opacity: 0.5; transform: scale(0.95); } }
 
-        /* کارت بازی */
-        .gamification-section h3 { font-size: 1rem; color: #888; margin-bottom: 10px; border-right: 3px solid var(--blue); padding-right: 10px; }
-        .card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); transition: transform 0.2s; cursor: pointer; }
-        .card:active { transform: scale(0.98); }
-        .card-title { font-weight: bold; color: var(--gold); font-size: 1.1rem; }
-        .card-subtitle { font-size: 0.9rem; color: #888; margin-top: 5px; }
+        /* Header */
+        header { 
+            padding: 20px; display: flex; justify-content: space-between; align-items: center;
+            background: rgba(255,255,255,0.02); backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+        }
+        .user-profile { display: flex; align-items: center; gap: 12px; }
+        .avatar { 
+            width: 48px; height: 48px; border-radius: 14px; 
+            background: linear-gradient(135deg, #333 0%, #111 100%);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; border: 1px solid var(--border);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        .user-text h2 { margin: 0; font-size: 1rem; font-weight: 800; }
+        .kyc-badge { 
+            font-size: 0.7rem; color: var(--accent-gold); 
+            background: rgba(212, 175, 55, 0.1); padding: 3px 8px; border-radius: 6px; 
+            border: 1px solid rgba(212, 175, 55, 0.2); display: inline-block; margin-top: 4px;
+        }
+
+        /* Main Content */
+        main { flex: 1; overflow-y: auto; padding: 25px; }
+
+        /* Premium Balance Card */
+        .balance-card {
+            background: linear-gradient(135deg, #1E1E2E 0%, #000000 100%);
+            border-radius: 24px; padding: 25px; position: relative; overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+            margin-bottom: 30px;
+        }
+        /* Shine Effect */
+        .balance-card::after {
+            content: ""; position: absolute; top: -50%; right: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .card-row { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; position: relative; z-index: 2; }
+        .card-label { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+        .main-balance { font-size: 2rem; font-weight: 900; color: #fff; font-family: monospace; letter-spacing: -1px; }
+        .currency { font-size: 1rem; color: var(--text-muted); font-weight: 400; }
+
+        .sub-balances { display: flex; gap: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; }
+        .sub-item { flex: 1; }
+        .sub-val { font-size: 1.1rem; font-weight: 700; font-family: monospace; display: block; }
+        .color-usd { color: var(--accent-green); text-shadow: 0 0 10px rgba(16, 185, 129, 0.3); }
+        .color-xp { color: var(--accent-gold); text-shadow: 0 0 10px rgba(212, 175, 55, 0.3); }
+
+        /* Menu Grid */
+        .menu-title { font-size: 0.95rem; font-weight: 700; color: var(--text-muted); margin-bottom: 15px; padding-right: 10px; border-right: 3px solid var(--accent-blue); }
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+        .menu-item {
+            background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+            border-radius: 20px; padding: 20px; text-align: center;
+            transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            cursor: pointer; position: relative; overflow: hidden;
+        }
+        .menu-item:active { transform: scale(0.96); background: rgba(255,255,255,0.05); }
+        
+        /* Game Card Special Style */
+        .item-game { 
+            grid-column: span 2; 
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(5,5,5,0) 100%);
+            border-color: rgba(59, 130, 246, 0.3);
+            display: flex; align-items: center; justify-content: space-between; text-align: right;
+        }
+        .game-icon { font-size: 2.5rem; filter: drop-shadow(0 0 10px rgba(59,130,246,0.5)); }
+        
+        .item-wallet { border-bottom: 2px solid var(--accent-green); }
+        
+        .menu-icon { font-size: 1.8rem; margin-bottom: 10px; display: block; }
+        .menu-text { font-weight: 700; font-size: 1rem; color: #fff; }
+        .menu-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; display: block; }
+
     </style>
 </head>
 <body>
 
     <div id="loader">
-        <div class="spinner"></div>
-        <p id="loader-msg">در حال اتصال...</p>
+        <div class="logo-loader">💎</div>
+        <p style="color:#666; font-size:0.8rem">COIN BARAN</p>
     </div>
 
     <div id="app-container" class="hidden">
-        <header class="header">
-            <div class="user-info">
-                <span class="user-icon">💎</span>
-                <span id="welcome-name">...</span>
+        <header>
+            <div class="user-profile">
+                <div class="avatar">👤</div>
+                <div class="user-text">
+                    <h2 id="welcome-name">...</h2>
+                    <span id="kyc-text" class="kyc-badge">...</span>
+                </div>
             </div>
-            <div id="kyc-status" class="kyc-status">
-                <span id="kyc-text">...</span>
+            <div style="color: var(--accent-gold); font-size: 1.2rem;">
+                <i class="fas fa-bell"></i>
             </div>
         </header>
 
         <main>
-            <section class="balance-card">
-                <div class="balance-row">
-                    <span class="balance-label">موجودی تومانی</span>
-                    <h2 id="toman-balance" class="balance-amount">...</h2>
-                </div>
-                
-                <div class="balance-row uusd">
-                    <span class="balance-label">موجودی بازی (UUSD)</span>
-                    <h2 id="uusd-balance" class="balance-amount">...</h2>
+            <div class="balance-card">
+                <div class="card-row">
+                    <div>
+                        <div class="card-label">موجودی تومانی</div>
+                        <div class="main-balance" id="toman-balance">... <span class="currency">T</span></div>
+                    </div>
+                    <div style="font-size:2rem; opacity:0.2; color:white"><i class="fas fa-wallet"></i></div>
                 </div>
 
-                <div class="balance-row xp">
-                    <span class="balance-label">امتیاز (XP)</span>
-                    <h2 id="xp-balance" class="balance-amount">...</h2>
+                <div class="sub-balances">
+                    <div class="sub-item">
+                        <span class="card-label">دلاری (UUSD)</span>
+                        <span class="sub-val color-usd" id="uusd-balance">...</span>
+                    </div>
+                    <div class="sub-item" style="text-align:left">
+                        <span class="card-label">امتیاز</span>
+                        <span class="sub-val color-xp" id="xp-balance">...</span>
+                    </div>
                 </div>
-            </section>
+            </div>
 
-            <section class="gamification-section">
-                <h3>بازی‌های ویژه</h3>
-                <div class="card" onclick="window.location.href='game'"> <div class="card-title">🚀 بازی کندل بیت‌کوین</div>
-                    <p class="card-subtitle">پیش‌بینی کن و سود ببر!</p>
+            <div class="menu-title">دسترسی سریع</div>
+            <div class="menu-grid">
+                <div class="menu-item item-game" onclick="window.location.href='game'">
+                    <div>
+                        <div class="menu-text">بازی کندل 🚀</div>
+                        <span class="menu-sub">پیش‌بینی کن و دلار ببر!</span>
+                    </div>
+                    <div class="game-icon">📈</div>
                 </div>
-            </section>
+
+                <div class="menu-item item-wallet" onclick="window.location.href='wallet'">
+                    <i class="fas fa-credit-card menu-icon" style="color: var(--accent-green)"></i>
+                    <span class="menu-text">کیف پول</span>
+                    <span class="menu-sub">واریز / برداشت</span>
+                </div>
+
+                <div class="menu-item" style="opacity:0.5">
+                    <i class="fas fa-users menu-icon" style="color: #888"></i>
+                    <span class="menu-text">زیرمجموعه</span>
+                    <span class="menu-sub">به زودی...</span>
+                </div>
+            </div>
         </main>
     </div>
 
     <script>
-        // --- اسکریپت داخلی (تضمین اجرا) ---
         (function () {
             const tg = window.Telegram.WebApp;
             const API_BASE_URL = window.location.origin;
             const loader = document.getElementById('loader');
             
             window.onload = async function() {
-                tg.ready();
-                tg.expand();
+                tg.ready(); tg.expand(); tg.setHeaderColor('#050505');
                 
-                // حالت تست (اگر خارج از تلگرام بود)
+                // شبیه سازی برای تست در مرورگر
                 if (!tg.initData) {
-                    console.warn("Guest Mode");
                     tg.initData = "query_id=TEST&user=%7B%22id%22%3A111111111%2C%22first_name%22%3A%22Guest%22%7D&auth_date=1700000000&hash=fake";
                 }
-
                 await fetchData();
             };
 
@@ -120,23 +211,25 @@
                         body: JSON.stringify({ initData: tg.initData })
                     });
 
-                    if (!res.ok) throw new Error("خطای سرور");
+                    if (!res.ok) throw new Error("Server Error");
                     const data = await res.json();
                     
-                    // نمایش اطلاعات
-                    document.getElementById('welcome-name').innerText = `سلام، ${data.first_name}`;
-                    document.getElementById('toman-balance').innerText = `${data.toman_balance}`;
-                    document.getElementById('uusd-balance').innerText = `${data.uusd_balance}`; // ADDED THIS
-                    document.getElementById('xp-balance').innerText = `${data.xp_balance}`;
+                    document.getElementById('welcome-name').innerText = data.first_name;
+                    document.getElementById('toman-balance').innerText = parseInt(data.toman_balance.replace(/,/g, '')).toLocaleString();
+                    document.getElementById('uusd-balance').innerText = `$ ${data.uusd_balance}`;
+                    document.getElementById('xp-balance').innerText = data.xp_balance;
                     document.getElementById('kyc-text').innerText = data.kyc_status_text;
-                    document.getElementById('kyc-status').classList.add(data.kyc_status_code);
 
-                    loader.style.display = 'none';
-                    document.getElementById('app-container').classList.remove('hidden');
+                    setTimeout(() => {
+                        loader.style.opacity = '0';
+                        setTimeout(() => {
+                            loader.style.display = 'none';
+                            document.getElementById('app-container').classList.remove('hidden');
+                        }, 500);
+                    }, 800);
 
                 } catch (e) {
-                    document.getElementById('loader-msg').innerText = "خطا در دریافت اطلاعات";
-                    document.getElementById('loader-msg').style.color = "red";
+                    loader.innerHTML = '<p style="color:red">خطا در اتصال</p>';
                 }
             }
         })();

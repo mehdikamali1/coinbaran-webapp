@@ -1,5 +1,4 @@
-﻿#webapp/wallet.html
-
+﻿#webapp/wallet.html (نسخه v21.1 - اتصال دکمه واریز)
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
@@ -124,7 +123,7 @@
             width: 100%; background: var(--green); color: black; padding: 16px;
             border: none; border-radius: 14px; font-weight: 800; font-size: 1.1rem; cursor: pointer;
         }
-        .btn-confirm:active { transform: scale(0.98); }
+        .btn-confirm:disabled { background: #333; color: #888; cursor: not-allowed; }
 
     </style>
 </head>
@@ -172,11 +171,7 @@
                 <input type="number" id="deposit-amount" class="inp-field" placeholder="مثلا 100000">
             </div>
 
-            <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:10px; margin-bottom:20px; font-size:0.85rem; color:#aaa; line-height:1.6">
-                ℹ️ با زدن دکمه تایید، به درگاه پرداخت یا صفحه کارت‌به‌کارت هدایت خواهید شد.
-            </div>
-
-            <button class="btn-confirm" onclick="submitDeposit()">تایید و پرداخت</button>
+            <button id="btn-submit-dep" class="btn-confirm" onclick="submitDeposit()">تایید درخواست</button>
         </div>
     </div>
 
@@ -184,22 +179,44 @@
         const tg = window.Telegram.WebApp;
         const API_BASE_URL = window.location.origin;
 
-        // Modal Functions
-        function openDepositModal() {
-            document.getElementById('deposit-modal').classList.add('active');
-        }
-        function closeDepositModal() {
-            document.getElementById('deposit-modal').classList.remove('active');
-        }
-        function submitDeposit() {
-            const amount = document.getElementById('deposit-amount').value;
+        function openDepositModal() { document.getElementById('deposit-modal').classList.add('active'); }
+        function closeDepositModal() { document.getElementById('deposit-modal').classList.remove('active'); }
+
+        async function submitDeposit() {
+            const amountInput = document.getElementById('deposit-amount');
+            const btn = document.getElementById('btn-submit-dep');
+            const amount = parseInt(amountInput.value);
+
             if(!amount || amount < 50000) {
                 tg.showAlert("حداقل مبلغ واریز ۵۰,۰۰۰ تومان است.");
                 return;
             }
-            // اینجا در مرحله بعد به API وصل می‌شود
-            tg.showAlert(`درخواست واریز ${parseInt(amount).toLocaleString()} تومان ثبت شد (آزمایشی).`);
-            closeDepositModal();
+
+            btn.disabled = true;
+            btn.innerText = "در حال ثبت...";
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/webapp/submit_deposit`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ initData: tg.initData, amount: amount })
+                });
+                
+                const result = await res.json();
+                
+                if (result.status === 'success') {
+                    tg.showAlert("✅ " + result.message);
+                    closeDepositModal();
+                    amountInput.value = "";
+                    fetchWalletData(); // Refresh list to show pending deposit
+                } else {
+                    tg.showAlert("❌ " + result.message);
+                }
+            } catch (e) {
+                tg.showAlert("خطای ارتباط با سرور");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "تایید درخواست";
+            }
         }
 
         window.onload = function() {

@@ -1,4 +1,4 @@
-﻿#webapp/wallet.html (نسخه v21.1 - اتصال دکمه واریز)
+﻿#webapp/wallet.html (نسخه v23.1)
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
@@ -119,6 +119,17 @@
             padding: 15px; border-radius: 12px; font-size: 1.2rem; font-weight: bold;
             font-family: monospace; text-align: center;
         }
+
+        /* File Upload Style */
+        .file-upload-box {
+            border: 2px dashed #444; border-radius: 12px; padding: 20px;
+            text-align: center; margin-bottom: 20px; cursor: pointer; position: relative;
+        }
+        .file-upload-box:active { background: rgba(255,255,255,0.05); }
+        .file-input { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+        .upload-text { color: var(--muted); font-size: 0.9rem; pointer-events: none; }
+        .upload-icon { font-size: 2rem; color: var(--blue); margin-bottom: 10px; display: block; }
+
         .btn-confirm {
             width: 100%; background: var(--green); color: black; padding: 16px;
             border: none; border-radius: 14px; font-weight: 800; font-size: 1.1rem; cursor: pointer;
@@ -171,7 +182,16 @@
                 <input type="number" id="deposit-amount" class="inp-field" placeholder="مثلا 100000">
             </div>
 
-            <button id="btn-submit-dep" class="btn-confirm" onclick="submitDeposit()">تایید درخواست</button>
+            <div class="inp-group">
+                <label class="inp-label">تصویر فیش واریزی:</label>
+                <div class="file-upload-box" onclick="document.getElementById('receipt-file').click()">
+                    <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                    <span id="file-label" class="upload-text">برای انتخاب تصویر کلیک کنید</span>
+                    <input type="file" id="receipt-file" class="file-input" accept="image/*" onchange="updateFileLabel(this)">
+                </div>
+            </div>
+
+            <button id="btn-submit-dep" class="btn-confirm" onclick="submitDeposit()">تایید و ارسال فیش</button>
         </div>
     </div>
 
@@ -181,9 +201,21 @@
 
         function openDepositModal() { document.getElementById('deposit-modal').classList.add('active'); }
         function closeDepositModal() { document.getElementById('deposit-modal').classList.remove('active'); }
+        
+        function updateFileLabel(input) {
+            const label = document.getElementById('file-label');
+            if (input.files && input.files.length > 0) {
+                label.innerText = "✅ تصویر انتخاب شد: " + input.files[0].name;
+                label.style.color = "#10B981";
+            } else {
+                label.innerText = "برای انتخاب تصویر کلیک کنید";
+                label.style.color = "#888";
+            }
+        }
 
         async function submitDeposit() {
             const amountInput = document.getElementById('deposit-amount');
+            const fileInput = document.getElementById('receipt-file');
             const btn = document.getElementById('btn-submit-dep');
             const amount = parseInt(amountInput.value);
 
@@ -191,36 +223,58 @@
                 tg.showAlert("حداقل مبلغ واریز ۵۰,۰۰۰ تومان است.");
                 return;
             }
+            if(fileInput.files.length === 0) {
+                tg.showAlert("لطفاً تصویر فیش واریزی را انتخاب کنید.");
+                return;
+            }
 
             btn.disabled = true;
-            btn.innerText = "در حال ثبت...";
+            btn.innerText = "در حال آپلود...";
+
+            const formData = new FormData();
+            formData.append('initData', tg.initData);
+            formData.append('amount', amount);
+            formData.append('receipt', fileInput.files[0]);
 
             try {
                 const res = await fetch(`${API_BASE_URL}/webapp/submit_deposit`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ initData: tg.initData, amount: amount })
+                    method: 'POST',
+                    body: formData 
                 });
                 
-                const result = await res.json();
-                
-                if (result.status === 'success') {
+                // --- بخش اصلی اصلاح شده برای رفع خطای undefined ---
+                let result;
+                try {
+                    result = await res.json();
+                } catch (err) {
+                    // اگر سرور HTML خطا فرستاد (مثل ارور 502 یا 413)
+                    throw new Error("خطای غیرمنتظره سرور (فرمت پاسخ نامعتبر)");
+                }
+
+                if (res.ok && result.status === 'success') {
                     tg.showAlert("✅ " + result.message);
                     closeDepositModal();
                     amountInput.value = "";
-                    fetchWalletData(); // Refresh list to show pending deposit
+                    fileInput.value = "";
+                    document.getElementById('file-label').innerText = "برای انتخاب تصویر کلیک کنید";
+                    fetchWalletData(); 
                 } else {
-                    tg.showAlert("❌ " + result.message);
+                    // اگر سرور ارور استاندارد داد (مثل 422)
+                    const errorMessage = result.message || (result.detail ? JSON.stringify(result.detail) : "خطای نامشخص");
+                    tg.showAlert(`❌ خطا: ${errorMessage}`);
                 }
             } catch (e) {
-                tg.showAlert("خطای ارتباط با سرور");
+                console.error(e);
+                tg.showAlert("خطای ارتباط: " + e.message);
             } finally {
                 btn.disabled = false;
-                btn.innerText = "تایید درخواست";
+                btn.innerText = "تایید و ارسال فیش";
             }
         }
 
         window.onload = function() {
             tg.ready(); tg.expand(); tg.setHeaderColor('#121212');
+            // داده‌های تست برای مرورگر (فقط برای نمایش، نه تراکنش)
             if (!tg.initData) tg.initData = "query_id=TEST&user=%7B%22id%22%3A111111111%7D&auth_date=1700000000&hash=fake";
             fetchWalletData();
         };

@@ -1,4 +1,4 @@
-﻿/* webapp/game.js (v18.0 - With Luxury Leaderboard) */
+﻿/* webapp/game.js (v19.0 - Anti-Cheat & 15s Lockout) */
 
 // متغیرهای سراسری
 const tg = window.Telegram.WebApp;
@@ -6,6 +6,8 @@ const API_BASE_URL = window.location.origin;
 let chart;
 let priceHistory = [];
 const MAX_POINTS = 30;
+// --- SECURITY: Lockout Threshold ---
+const LOCKOUT_TIME = 15; 
 
 // --- سیستم صوتی ---
 const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -104,7 +106,7 @@ function animateFlyingChip(startElementId, targetElementId) {
     }, 900);
 }
 
-// --- توابع عمومی (Window) ---
+// --- توابع عمومی ---
 
 window.setAmount = function(val) {
     const input = document.getElementById('bet-amount');
@@ -165,7 +167,7 @@ window.closeHistory = function() {
     }
 };
 
-// --- توابع لیدربورد (فاز ۳) ---
+// --- توابع لیدربورد ---
 
 window.openLeaderboard = async function() {
     const modal = document.getElementById('leaderboard-modal');
@@ -205,7 +207,6 @@ window.closeLeaderboard = function() {
 };
 
 function renderLeaderboard(data) {
-    // 1. آمار شخصی
     const stats = data.my_stats;
     if (stats) {
         document.getElementById('my-total-games').textContent = stats.total_games;
@@ -213,7 +214,6 @@ function renderLeaderboard(data) {
         document.getElementById('my-win-rate').textContent = stats.win_rate;
     }
 
-    // 2. لیست نفرات برتر
     const list = document.getElementById('leaderboard-list');
     list.innerHTML = '';
 
@@ -263,7 +263,7 @@ window.placeBet = async function(pred) {
     } catch (e) { tg.showAlert("خطای اتصال"); }
 };
 
-// --- توابع داخلی UI ---
+// --- توابع UI ---
 
 function renderHistory(items) {
     const list = document.getElementById('history-list');
@@ -401,7 +401,8 @@ function updateUI(data) {
         if(elPath) {
             const pct = (data.round.time_left / 60) * 100;
             elPath.style.strokeDasharray = `${pct}, 100`;
-            if (data.round.time_left <= 10) elPath.style.stroke = "#FFD700";
+            // --- UI SYNC: 15s Warning ---
+            if (data.round.time_left <= LOCKOUT_TIME) elPath.style.stroke = "#FFD700";
             else elPath.style.stroke = "#00E096";
         }
 
@@ -412,7 +413,8 @@ function updateUI(data) {
             }
         }
 
-        if (data.round.time_left <= 10) {
+        // --- SECURITY UI: Disable Buttons at 15s ---
+        if (data.round.time_left <= LOCKOUT_TIME) {
             if(elStatus) {
                 elStatus.textContent = "⏳ بسته شد! منتظر نتیجه...";
                 elStatus.style.color = "#FFD700";
@@ -482,7 +484,7 @@ function checkResult(history) {
 window.onload = function() {
     tg.ready();
     tg.expand();
-    tg.setHeaderColor('#1C1C2E');
+    tg.setHeaderColor('#050505'); // Sync with new Dark Mode
     if (!tg.initData) {
         document.body.innerHTML = "<h3 style='color:white;text-align:center;margin-top:50px'>لطفاً از داخل ربات باز کنید</h3>";
         return;

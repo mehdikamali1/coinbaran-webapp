@@ -1,4 +1,5 @@
-﻿#webapp/wallet.html (نسخه v23.1)
+﻿#webapp/wallet.html (نسخه v28.0 - نمایش جزئیات ووچر)
+
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
@@ -81,7 +82,10 @@
             display: flex; align-items: center; justify-content: space-between;
             background: var(--card); padding: 15px; border-radius: 16px;
             border: 1px solid transparent; transition: background 0.2s;
+            cursor: pointer; /* Clickable */
         }
+        .tx-item:active { background: #252525; }
+        
         .tx-left { display: flex; align-items: center; gap: 12px; }
         .tx-icon {
             width: 42px; height: 42px; border-radius: 12px;
@@ -120,7 +124,6 @@
             font-family: monospace; text-align: center;
         }
 
-        /* File Upload Style */
         .file-upload-box {
             border: 2px dashed #444; border-radius: 12px; padding: 20px;
             text-align: center; margin-bottom: 20px; cursor: pointer; position: relative;
@@ -135,6 +138,18 @@
             border: none; border-radius: 14px; font-weight: 800; font-size: 1.1rem; cursor: pointer;
         }
         .btn-confirm:disabled { background: #333; color: #888; cursor: not-allowed; }
+
+        /* --- DETAIL MODAL (For Vouchers) --- */
+        .detail-row { margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px; }
+        .detail-label { font-size: 0.85rem; color: var(--muted); display: block; margin-bottom: 5px; }
+        .detail-val { font-size: 1rem; color: white; font-weight: bold; }
+        
+        .voucher-box {
+            background: black; padding: 15px; border-radius: 10px; border: 1px dashed var(--gold);
+            margin-top: 20px; text-align: center;
+        }
+        .voucher-text { font-family: monospace; font-size: 1.1rem; color: var(--gold); word-break: break-all; }
+        .copy-link { color: var(--blue); font-size: 0.9rem; cursor: pointer; margin-top: 10px; display: inline-block; }
 
     </style>
 </head>
@@ -164,7 +179,7 @@
             </button>
         </div>
 
-        <div class="history-title">تراکنش‌های اخیر</div>
+        <div class="history-title">تراکنش‌های اخیر (برای جزئیات کلیک کنید)</div>
         <div id="tx-list" class="tx-list">
             <div style="text-align:center;color:#666;padding:20px">در حال دریافت...</div>
         </div>
@@ -176,12 +191,10 @@
                 <h3>واریز تومان</h3>
                 <button class="close-modal" onclick="closeDepositModal()">✕</button>
             </div>
-            
             <div class="inp-group">
                 <label class="inp-label">مبلغ به تومان:</label>
                 <input type="number" id="deposit-amount" class="inp-field" placeholder="مثلا 100000">
             </div>
-
             <div class="inp-group">
                 <label class="inp-label">تصویر فیش واریزی:</label>
                 <div class="file-upload-box" onclick="document.getElementById('receipt-file').click()">
@@ -190,8 +203,17 @@
                     <input type="file" id="receipt-file" class="file-input" accept="image/*" onchange="updateFileLabel(this)">
                 </div>
             </div>
-
             <button id="btn-submit-dep" class="btn-confirm" onclick="submitDeposit()">تایید و ارسال فیش</button>
+        </div>
+    </div>
+
+    <div id="detail-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>جزئیات تراکنش</h3>
+                <button class="close-modal" onclick="document.getElementById('detail-modal').classList.remove('active')">✕</button>
+            </div>
+            <div id="detail-content"></div>
         </div>
     </div>
 
@@ -219,17 +241,10 @@
             const btn = document.getElementById('btn-submit-dep');
             const amount = parseInt(amountInput.value);
 
-            if(!amount || amount < 50000) {
-                tg.showAlert("حداقل مبلغ واریز ۵۰,۰۰۰ تومان است.");
-                return;
-            }
-            if(fileInput.files.length === 0) {
-                tg.showAlert("لطفاً تصویر فیش واریزی را انتخاب کنید.");
-                return;
-            }
+            if(!amount || amount < 50000) { tg.showAlert("حداقل مبلغ واریز ۵۰,۰۰۰ تومان است."); return; }
+            if(fileInput.files.length === 0) { tg.showAlert("لطفاً تصویر فیش واریزی را انتخاب کنید."); return; }
 
-            btn.disabled = true;
-            btn.innerText = "در حال آپلود...";
+            btn.disabled = true; btn.innerText = "در حال آپلود...";
 
             const formData = new FormData();
             formData.append('initData', tg.initData);
@@ -237,47 +252,31 @@
             formData.append('receipt', fileInput.files[0]);
 
             try {
-                const res = await fetch(`${API_BASE_URL}/webapp/submit_deposit`, {
-                    method: 'POST',
-                    body: formData 
-                });
-                
-                // --- بخش اصلی اصلاح شده برای رفع خطای undefined ---
+                const res = await fetch(`${API_BASE_URL}/webapp/submit_deposit`, { method: 'POST', body: formData });
                 let result;
-                try {
-                    result = await res.json();
-                } catch (err) {
-                    // اگر سرور HTML خطا فرستاد (مثل ارور 502 یا 413)
-                    throw new Error("خطای غیرمنتظره سرور (فرمت پاسخ نامعتبر)");
-                }
+                try { result = await res.json(); } catch { throw new Error("خطای سرور"); }
 
                 if (res.ok && result.status === 'success') {
                     tg.showAlert("✅ " + result.message);
                     closeDepositModal();
-                    amountInput.value = "";
-                    fileInput.value = "";
+                    amountInput.value = ""; fileInput.value = "";
                     document.getElementById('file-label').innerText = "برای انتخاب تصویر کلیک کنید";
                     fetchWalletData(); 
                 } else {
-                    // اگر سرور ارور استاندارد داد (مثل 422)
-                    const errorMessage = result.message || (result.detail ? JSON.stringify(result.detail) : "خطای نامشخص");
+                    const errorMessage = result.message || "خطای نامشخص";
                     tg.showAlert(`❌ خطا: ${errorMessage}`);
                 }
-            } catch (e) {
-                console.error(e);
-                tg.showAlert("خطای ارتباط: " + e.message);
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "تایید و ارسال فیش";
-            }
+            } catch (e) { tg.showAlert("خطای ارتباط: " + e.message); } 
+            finally { btn.disabled = false; btn.innerText = "تایید و ارسال فیش"; }
         }
 
         window.onload = function() {
             tg.ready(); tg.expand(); tg.setHeaderColor('#121212');
-            // داده‌های تست برای مرورگر (فقط برای نمایش، نه تراکنش)
             if (!tg.initData) tg.initData = "query_id=TEST&user=%7B%22id%22%3A111111111%7D&auth_date=1700000000&hash=fake";
             fetchWalletData();
         };
+
+        let transactionsData = [];
 
         async function fetchWalletData() {
             try {
@@ -285,13 +284,11 @@
                     method: 'POST', headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ initData: tg.initData })
                 });
-
-                if (!res.ok) throw new Error("Server Error");
                 const data = await res.json();
-
                 if (data.status === 'success') {
                     document.getElementById('balance-toman').innerText = parseInt(data.balances.toman.replace(/,/g, '')).toLocaleString();
                     document.getElementById('balance-uusd').innerText = `$ ${data.balances.uusd}`;
+                    transactionsData = data.transactions;
                     renderTx(data.transactions);
                 }
             } catch (e) { console.error(e); }
@@ -302,9 +299,11 @@
             list.innerHTML = '';
             if (txs.length === 0) { list.innerHTML = '<div style="text-align:center;padding:20px;color:#444">تراکنشی یافت نشد</div>'; return; }
 
-            txs.forEach(tx => {
+            txs.forEach((tx, index) => {
                 const div = document.createElement('div');
                 div.className = 'tx-item';
+                div.onclick = () => showDetail(index); // Click to show detail
+                
                 let color = 'c-gray';
                 if(tx.color === 'success') color = 'c-green';
                 if(tx.color === 'danger') color = 'c-red';
@@ -322,6 +321,46 @@
                 `;
                 list.appendChild(div);
             });
+        }
+
+        function showDetail(index) {
+            const tx = transactionsData[index];
+            const container = document.getElementById('detail-content');
+            
+            let html = `
+                <div class="detail-row">
+                    <span class="detail-label">نوع تراکنش</span>
+                    <span class="detail-val">${tx.title}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">مبلغ</span>
+                    <span class="detail-val" style="direction:ltr">${tx.display_amount}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">تاریخ</span>
+                    <span class="detail-val">${tx.date}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">وضعیت</span>
+                    <span class="detail-val">${tx.status}</span>
+                </div>
+            `;
+
+            // اگر ووچر کد دارد (خرید یوتوپیا)
+            if (tx.type === 'UTOPIA_BUY' && tx.detail) {
+                html += `
+                    <div class="voucher-box">
+                        <div class="detail-label">کد ووچر خریداری شده:</div>
+                        <div class="voucher-text" id="vcode-${index}">${tx.detail}</div>
+                        <div class="copy-link" onclick="navigator.clipboard.writeText('${tx.detail}'); alert('کد کپی شد!')">
+                            <i class="fas fa-copy"></i> کپی کردن کد
+                        </div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+            document.getElementById('detail-modal').classList.add('active');
         }
     </script>
 </body>

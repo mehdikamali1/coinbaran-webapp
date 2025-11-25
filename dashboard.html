@@ -18,8 +18,8 @@
             --accent-blue: #3B82F6; 
             --accent-gold: #D4AF37; 
             --accent-green: #10B981; 
+            --utopia-pink: #FF007A; /* رنگ اختصاصی یوتوپیا */
             --border: rgba(255,255,255,0.08);
-            --glow: 0 0 20px rgba(59, 130, 246, 0.15);
         }
         
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
@@ -114,6 +114,9 @@
         
         .item-wallet { border-bottom: 2px solid var(--accent-green); }
         
+        /* Utopia Card Style */
+        .item-utopia { border-bottom: 2px solid var(--utopia-pink); }
+        
         .menu-icon { font-size: 1.8rem; margin-bottom: 10px; display: block; }
         .menu-text { font-weight: 700; font-size: 1rem; color: #fff; }
         .menu-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; display: block; }
@@ -179,10 +182,10 @@
                     <span class="menu-sub">واریز / برداشت</span>
                 </div>
 
-                <div class="menu-item" style="opacity:0.5">
-                    <i class="fas fa-users menu-icon" style="color: #888"></i>
-                    <span class="menu-text">زیرمجموعه</span>
-                    <span class="menu-sub">به زودی...</span>
+                <div class="menu-item item-utopia" onclick="window.location.href='utopia'">
+                    <i class="fas fa-gem menu-icon" style="color: var(--utopia-pink)"></i>
+                    <span class="menu-text">یوتوپیا</span>
+                    <span class="menu-sub">خرید/فروش ووچر</span>
                 </div>
             </div>
         </main>
@@ -197,7 +200,6 @@
             window.onload = async function() {
                 tg.ready(); tg.expand(); tg.setHeaderColor('#050505');
                 
-                // شبیه سازی برای تست در مرورگر
                 if (!tg.initData) {
                     tg.initData = "query_id=TEST&user=%7B%22id%22%3A111111111%2C%22first_name%22%3A%22Guest%22%7D&auth_date=1700000000&hash=fake";
                 }

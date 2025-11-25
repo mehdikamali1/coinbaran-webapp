@@ -26,11 +26,22 @@
         
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
         
-        body { 
-            margin: 0; padding: 0; font-family: 'Vazirmatn', sans-serif; 
+        /* --- اصلاح اسکرول --- */
+        html, body {
+            margin: 0; padding: 0; 
+            font-family: 'Vazirmatn', sans-serif; 
             background: radial-gradient(circle at top center, #1a1a1a 0%, #050505 80%); 
-            color: var(--text-main); height: 100vh; overflow: hidden;
-            display: flex; flex-direction: column;
+            color: var(--text-main); 
+            height: 100%; /* ارتفاع کامل */
+            overflow: hidden; /* جلوگیری از اسکرول صفحه اصلی */
+        }
+
+        /* کانتینر اصلی باید تمام صفحه را پر کند */
+        #app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%; /* ارتفاع ۱۰۰٪ */
+            overflow: hidden; /* جلوگیری از اسکرول کانتینر */
         }
 
         .hidden { display: none !important; }
@@ -43,11 +54,13 @@
         .logo-loader { font-size: 3rem; margin-bottom: 20px; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { opacity: 0.5; transform: scale(0.95); } 50% { opacity: 1; transform: scale(1.05); } 100% { opacity: 0.5; transform: scale(0.95); } }
 
-        /* Header */
+        /* Header (ثابت بالا) */
         header { 
+            flex-shrink: 0; /* جلوگیری از جمع شدن هدر */
             padding: 20px; display: flex; justify-content: space-between; align-items: center;
             background: rgba(255,255,255,0.02); backdrop-filter: blur(10px);
             border-bottom: 1px solid var(--border);
+            z-index: 10;
         }
         .user-profile { display: flex; align-items: center; gap: 12px; }
         .avatar { 
@@ -64,8 +77,14 @@
             border: 1px solid rgba(212, 175, 55, 0.2); display: inline-block; margin-top: 4px;
         }
 
-        /* Main Content */
-        main { flex: 1; overflow-y: auto; padding: 25px; }
+        /* Main Content (اسکرول فقط اینجا) */
+        main { 
+            flex: 1; /* پر کردن فضای باقی‌مانده */
+            overflow-y: auto; /* فعال کردن اسکرول عمودی */
+            padding: 25px; 
+            padding-bottom: 50px; /* فضای خالی پایین برای راحتی اسکرول */
+            -webkit-overflow-scrolling: touch; /* اسکرول نرم در آیفون */
+        }
 
         /* Balance Card */
         .balance-card {
@@ -112,9 +131,13 @@
         .item-wallet { border-bottom: 2px solid var(--accent-green); }
         .item-utopia { border-bottom: 2px solid var(--utopia-pink); }
         
-        /* Updated Icon Styles */
         .menu-icon-font { font-size: 1.8rem; margin-bottom: 10px; display: block; }
-        .menu-icon-img { width: 38px; height: 38px; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto; filter: drop-shadow(0 2px 5px rgba(255,0,122,0.3)); }
+        /* تنظیم سایز تصویر لوگو */
+        .menu-icon-img { 
+            width: 40px; height: 40px; object-fit: contain;
+            margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto; 
+            filter: drop-shadow(0 0 5px rgba(255,0,122,0.5)); 
+        }
         
         .menu-text { font-weight: 700; font-size: 1rem; color: #fff; }
         .menu-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; display: block; }

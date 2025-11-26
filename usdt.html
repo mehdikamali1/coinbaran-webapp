@@ -1,5 +1,4 @@
 ﻿# webapp/usdt.html
-
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
@@ -205,6 +204,7 @@
         let rates = { buy: 0, sell: 0 }; 
         let adminWallets = { TRC20: "", BEP20: "" };
         let fees = { percent: 0, fixed: 0 };
+        let limits = { min_buy: 5, min_sell: 5 }; // Default
 
         window.onload = async function() {
             tg.ready(); tg.expand(); tg.setHeaderColor('#121212');
@@ -235,9 +235,15 @@
                     rates = data.rates;
                     adminWallets = data.wallets;
                     fees = data.fees;
+                    
+                    if(data.limits) {
+                        limits = data.limits;
+                        document.getElementById('buy-amount').placeholder = `حداقل ${limits.min_buy}`;
+                        document.getElementById('sell-amount').placeholder = `حداقل ${limits.min_sell}`;
+                    }
 
-                    document.getElementById('rate-sell').innerText = parseInt(rates.buy).toLocaleString(); // کاربر میفروشد (ما میخریم)
-                    document.getElementById('rate-buy').innerText = parseInt(rates.sell).toLocaleString(); // کاربر میخرد (ما میفروشیم)
+                    document.getElementById('rate-sell').innerText = parseInt(rates.buy).toLocaleString();
+                    document.getElementById('rate-buy').innerText = parseInt(rates.sell).toLocaleString();
                     updateSellAddress();
                 }
             } catch(e) { tg.showAlert("خطا در دریافت اطلاعات"); }
@@ -282,7 +288,7 @@
             const network = document.getElementById('buy-network').value;
             const btn = document.getElementById('btn-do-buy');
 
-            if(!amount || amount < 10) return tg.showAlert("حداقل خرید ۱۰ تتر است.");
+            if(!amount || amount < limits.min_buy) return tg.showAlert(`حداقل خرید ${limits.min_buy} تتر است.`);
             if(address.length < 20) return tg.showAlert("آدرس کیف پول نامعتبر است.");
 
             btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> در حال پردازش...';
@@ -312,7 +318,7 @@
             const network = document.getElementById('sell-network').value;
             const btn = document.getElementById('btn-do-sell');
 
-            if(!amount || amount < 10) return tg.showAlert("حداقل فروش ۱۰ تتر است.");
+            if(!amount || amount < limits.min_sell) return tg.showAlert(`حداقل فروش ${limits.min_sell} تتر است.`);
             if(txid.length < 10) return tg.showAlert("TxID نامعتبر است.");
 
             btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> استعلام بلاکچین...';

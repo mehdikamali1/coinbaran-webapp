@@ -10,107 +10,99 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800;900&display=swap');
         
-        :root { 
-            --bg: #050505; --card: #121212; --text: #EAEAEA; --muted: #888;
-            --tether: #26A17B; /* Tether Green */
-            --blue: #3B82F6; --border: rgba(255,255,255,0.08);
-            --red: #EF4444;
-        }
-        
+        :root { --bg: #050505; --card: #121212; --text: #EAEAEA; --muted: #888; --tether: #26A17B; --blue: #3B82F6; --border: rgba(255,255,255,0.08); --red: #EF4444; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; outline: none; }
-        
-        body { 
-            margin: 0; padding: 0; font-family: 'Vazirmatn', sans-serif; 
-            background: var(--bg); color: var(--text); height: 100vh; 
-            display: flex; flex-direction: column;
-        }
+        body { margin: 0; padding: 0; font-family: 'Vazirmatn', sans-serif; background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; }
 
-        /* Header */
-        .header {
-            padding: 15px 20px; background: rgba(18, 18, 18, 0.95);
-            border-bottom: 1px solid var(--border);
-            display: flex; align-items: center; justify-content: space-between;
-        }
-        .back-btn {
-            background: rgba(255,255,255,0.05); border: 1px solid var(--border);
-            color: var(--text); padding: 8px 12px; border-radius: 10px; cursor: pointer;
-        }
+        .header { padding: 15px 20px; background: rgba(18, 18, 18, 0.95); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+        .back-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 10px; cursor: pointer; }
         .page-title { margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--tether); display: flex; align-items: center; gap: 8px;}
 
-        /* Ticker Box */
-        .ticker-box {
-            display: flex; justify-content: space-between; padding: 15px 20px;
-            background: linear-gradient(90deg, rgba(38, 161, 123, 0.1) 0%, rgba(0,0,0,0) 100%);
-            border-bottom: 1px solid var(--border); margin-bottom: 20px;
-        }
+        .ticker-box { display: flex; justify-content: space-between; padding: 15px 20px; background: linear-gradient(90deg, rgba(38, 161, 123, 0.1) 0%, rgba(0,0,0,0) 100%); border-bottom: 1px solid var(--border); margin-bottom: 20px; }
         .ticker-item { display: flex; flex-direction: column; }
         .ticker-label { font-size: 0.75rem; color: var(--muted); margin-bottom: 2px; }
         .ticker-val { font-family: monospace; font-weight: 700; font-size: 1rem; }
         .c-green { color: var(--tether); } .c-red { color: var(--red); }
 
-        /* Tabs */
         .tabs { display: flex; padding: 0 20px; gap: 10px; margin-bottom: 20px; }
-        .tab-btn {
-            flex: 1; padding: 12px; border-radius: 12px; background: var(--card);
-            border: 1px solid var(--border); color: var(--muted); font-weight: 700;
-            cursor: pointer; transition: all 0.3s; text-align: center;
-        }
-        .tab-btn.active {
-            background: var(--tether); color: white; border-color: var(--tether);
-            box-shadow: 0 4px 15px rgba(38, 161, 123, 0.3);
-        }
+        .tab-btn { flex: 1; padding: 12px; border-radius: 12px; background: var(--card); border: 1px solid var(--border); color: var(--muted); font-weight: 700; cursor: pointer; transition: all 0.3s; text-align: center; }
+        .tab-btn.active { background: var(--tether); color: white; border-color: var(--tether); box-shadow: 0 4px 15px rgba(38, 161, 123, 0.3); }
 
-        /* Content */
         .content { flex: 1; padding: 0 20px; overflow-y: auto; padding-bottom: 40px; }
         .section { display: none; animation: fadeIn 0.3s; }
         .section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Inputs */
         .inp-group { margin-bottom: 20px; }
         .inp-label { display: block; color: var(--muted); margin-bottom: 8px; font-size: 0.9rem; }
-        .inp-field, .select-box {
-            width: 100%; background: #0E0E0E; border: 1px solid #333; color: white;
-            padding: 16px; border-radius: 14px; font-size: 1.1rem; font-weight: 600;
-            transition: border 0.2s; font-family: monospace; text-align: center;
-        }
+        .inp-field, .select-box { width: 100%; background: #0E0E0E; border: 1px solid #333; color: white; padding: 16px; border-radius: 14px; font-size: 1.1rem; font-weight: 600; transition: border 0.2s; font-family: monospace; text-align: center; }
         .select-box { appearance: none; cursor: pointer; }
         .inp-field:focus, .select-box:focus { border-color: var(--tether); }
 
-        /* Calculations */
-        .calc-box {
-            background: rgba(255,255,255,0.03); border-radius: 12px; padding: 15px;
-            text-align: center; margin-bottom: 25px; border: 1px dashed var(--border);
-        }
+        .calc-box { background: rgba(255,255,255,0.03); border-radius: 12px; padding: 15px; text-align: center; margin-bottom: 25px; border: 1px dashed var(--border); }
         .calc-res { font-size: 1.4rem; font-weight: 800; color: var(--tether); margin-top: 5px; display: block; }
         .calc-sub { font-size: 0.85rem; color: #666; margin-top: 5px; display: block; }
 
-        /* Wallet Display */
-        .wallet-display {
-            background: #000; padding: 15px; border-radius: 12px; border: 1px solid #333;
-            text-align: center; margin-bottom: 20px; word-break: break-all;
-            font-family: monospace; color: var(--blue); cursor: pointer; font-size: 0.9rem;
-        }
+        .wallet-display { background: #000; padding: 15px; border-radius: 12px; border: 1px solid #333; text-align: center; margin-bottom: 20px; word-break: break-all; font-family: monospace; color: var(--blue); cursor: pointer; font-size: 0.9rem; }
 
-        /* Buttons */
-        .action-btn {
-            width: 100%; padding: 18px; border-radius: 16px; border: none;
-            font-weight: 800; font-size: 1.1rem; cursor: pointer; margin-bottom: 20px;
-            color: white; transition: transform 0.1s; display: flex; justify-content: center; align-items: center; gap: 10px;
-        }
+        .action-btn { width: 100%; padding: 18px; border-radius: 16px; border: none; font-weight: 800; font-size: 1.1rem; cursor: pointer; margin-bottom: 20px; color: white; transition: transform 0.1s; display: flex; justify-content: center; align-items: center; gap: 10px; }
         .action-btn:active { transform: scale(0.98); }
         .btn-buy { background: linear-gradient(135deg, #26A17B 0%, #10B981 100%); box-shadow: 0 4px 20px rgba(38, 161, 123, 0.3); }
         .btn-sell { background: linear-gradient(135deg, #EF4444 0%, #B91C1C 100%); box-shadow: 0 4px 20px rgba(239, 68, 68, 0.3); }
         .btn-disabled { background: #333; color: #666; cursor: not-allowed; box-shadow: none; }
 
+        /* --- NEW: PROCESSING OVERLAY --- */
+        #processing-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000;
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; padding: 20px; backdrop-filter: blur(10px);
+        }
+        .loader-spin {
+            width: 60px; height: 60px; border: 5px solid #333; border-top: 5px solid var(--tether);
+            border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .success-icon { font-size: 4rem; color: var(--tether); margin-bottom: 15px; animation: popIn 0.5s; display: none; }
+        @keyframes popIn { 0% { transform: scale(0); } 80% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+        .status-text { color: white; font-size: 1.2rem; font-weight: bold; margin-bottom: 10px; }
+        .status-sub { color: #888; font-size: 0.9rem; margin-bottom: 30px; }
+        
+        .txid-result-box {
+            background: #111; border: 1px solid var(--tether); border-radius: 12px; padding: 15px;
+            width: 100%; display: none; word-break: break-all;
+        }
+        .txid-label { color: var(--muted); font-size: 0.8rem; display: block; margin-bottom: 5px; }
+        .txid-val { color: var(--blue); font-family: monospace; font-size: 0.9rem; }
+        
+        .close-overlay-btn {
+            margin-top: 30px; padding: 10px 20px; background: rgba(255,255,255,0.1); 
+            border: 1px solid #444; border-radius: 20px; color: white; cursor: pointer;
+        }
+
     </style>
 </head>
 <body>
 
+    <div id="processing-overlay">
+        <div id="loader-icon" class="loader-spin"></div>
+        <i id="success-icon" class="fas fa-check-circle success-icon"></i>
+        
+        <div id="status-title" class="status-text">در حال پردازش سفارش...</div>
+        <div id="status-desc" class="status-sub">لطفاً منتظر تایید ادمین باشید. این صفحه را نبندید.</div>
+        
+        <div id="txid-container" class="txid-result-box">
+            <span class="txid-label">هش تراکنش (TxID):</span>
+            <span id="final-txid" class="txid-val">...</span>
+            <button onclick="copyTxID()" style="display:block; margin:10px auto 0; background:none; border:1px solid var(--blue); color:var(--blue); padding:5px 15px; border-radius:15px;">کپی کردن</button>
+        </div>
+
+        <button class="close-overlay-btn" onclick="closeOverlay()">بستن پنجره</button>
+    </div>
+
     <div class="header">
-        <button class="back-btn" onclick="window.location.href='/'">
-            <i class="fas fa-arrow-right"></i> بازگشت
-        </button>
+        <button class="back-btn" onclick="window.location.href='/'"><i class="fas fa-arrow-right"></i> بازگشت</button>
         <h1 class="page-title">خرید و فروش تتر (USDT)</h1>
         <div style="width:40px"></div>
     </div>
@@ -148,13 +140,11 @@
                 <label class="inp-label">آدرس کیف پول شما (جهت دریافت):</label>
                 <input type="text" id="buy-address" class="inp-field" placeholder="T..." style="font-size:0.85rem">
             </div>
-
             <div class="calc-box">
                 <span style="color:#888;font-size:0.9rem">مبلغ قابل پرداخت</span>
                 <span id="buy-total" class="calc-res">0 تومان</span>
                 <span id="buy-fee-text" class="calc-sub">شامل کارمزد شبکه</span>
             </div>
-
             <button id="btn-do-buy" class="action-btn btn-buy" onclick="doBuy()">
                 <i class="fas fa-shopping-cart"></i> ثبت سفارش خرید
             </button>
@@ -172,12 +162,10 @@
                     <option value="BEP20">BNB Chain (BEP20)</option>
                 </select>
             </div>
-
             <div class="calc-box" style="border-color:var(--red)">
                 <span style="color:#888;font-size:0.9rem">دریافتی شما (تومان)</span>
                 <span id="sell-total" class="calc-res" style="color:var(--red)">0 تومان</span>
             </div>
-
             <div class="inp-group">
                 <label class="inp-label">⚠️ تتر را به این آدرس واریز کنید:</label>
                 <div class="wallet-display" onclick="copyAddress()">
@@ -185,12 +173,10 @@
                     <i class="fas fa-copy" style="margin-right:5px"></i>
                 </div>
             </div>
-
             <div class="inp-group">
                 <label class="inp-label">شناسه تراکنش (TxID):</label>
                 <input type="text" id="sell-txid" class="inp-field" placeholder="کد پیگیری تراکنش را وارد کنید" style="font-size:0.85rem">
             </div>
-
             <button id="btn-do-sell" class="action-btn btn-sell" onclick="doSell()">
                 <i class="fas fa-exchange-alt"></i> بررسی و فروش آنی
             </button>
@@ -204,7 +190,8 @@
         let rates = { buy: 0, sell: 0 }; 
         let adminWallets = { TRC20: "", BEP20: "" };
         let fees = { percent: 0, fixed: 0 };
-        let limits = { min_buy: 5, min_sell: 5 }; // Default
+        let limits = { min_buy: 5, min_sell: 5 }; 
+        let pollingInterval = null;
 
         window.onload = async function() {
             tg.ready(); tg.expand(); tg.setHeaderColor('#121212');
@@ -235,13 +222,11 @@
                     rates = data.rates;
                     adminWallets = data.wallets;
                     fees = data.fees;
-                    
                     if(data.limits) {
                         limits = data.limits;
                         document.getElementById('buy-amount').placeholder = `حداقل ${limits.min_buy}`;
                         document.getElementById('sell-amount').placeholder = `حداقل ${limits.min_sell}`;
                     }
-
                     document.getElementById('rate-sell').innerText = parseInt(rates.buy).toLocaleString();
                     document.getElementById('rate-buy').innerText = parseInt(rates.sell).toLocaleString();
                     updateSellAddress();
@@ -300,19 +285,92 @@
                     body: JSON.stringify({ initData: tg.initData, amount, network, address })
                 });
                 const data = await res.json();
+                
                 if(data.status === 'success') {
-                    tg.showAlert("✅ سفارش شما با موفقیت ثبت شد! ادمین به زودی بررسی می‌کند.");
-                    document.getElementById('buy-amount').value = "";
+                    // Start Polling for Status
+                    showProcessingOverlay(data.order_id);
                 } else {
                     tg.showAlert("❌ " + data.message);
+                    btn.disabled = false; btn.innerHTML = '<i class="fas fa-shopping-cart"></i> ثبت سفارش خرید';
+                    btn.classList.remove('btn-disabled');
                 }
-            } catch(e) { tg.showAlert("خطای شبکه"); }
+            } catch(e) { 
+                tg.showAlert("خطای شبکه"); 
+                btn.disabled = false; btn.innerHTML = '<i class="fas fa-shopping-cart"></i> ثبت سفارش خرید';
+                btn.classList.remove('btn-disabled');
+            }
+        }
+
+        // --- Polling Logic ---
+        function showProcessingOverlay(orderId) {
+            const overlay = document.getElementById('processing-overlay');
+            overlay.style.display = 'flex';
             
-            btn.disabled = false; btn.innerHTML = '<i class="fas fa-shopping-cart"></i> ثبت سفارش خرید';
-            btn.classList.remove('btn-disabled');
+            // Reset UI
+            document.getElementById('loader-icon').style.display = 'block';
+            document.getElementById('success-icon').style.display = 'none';
+            document.getElementById('status-title').innerText = "سفارش ثبت شد!";
+            document.getElementById('status-desc').innerText = "سیستم در حال ارسال به والکس است. لطفاً منتظر بمانید...";
+            document.getElementById('txid-container').style.display = 'none';
+
+            // Start polling every 3 seconds
+            pollingInterval = setInterval(() => checkOrderStatus(orderId), 3000);
+        }
+
+        async function checkOrderStatus(orderId) {
+            try {
+                const res = await fetch(`${API_BASE_URL}/webapp/order/status`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ initData: tg.initData, order_id: orderId })
+                });
+                const data = await res.json();
+
+                if (data.status === 'completed') {
+                    clearInterval(pollingInterval);
+                    document.getElementById('loader-icon').style.display = 'none';
+                    document.getElementById('success-icon').style.display = 'block';
+                    document.getElementById('status-title').innerText = "✅ واریز موفقیت‌آمیز بود!";
+                    document.getElementById('status-desc').innerText = "تتر به کیف پول شما انتقال یافت.";
+                    
+                    if(data.txid && data.txid !== 'N/A') {
+                        document.getElementById('final-txid').innerText = data.txid;
+                        document.getElementById('txid-container').style.display = 'block';
+                    }
+                    tg.HapticFeedback.notificationOccurred('success');
+                    
+                    // Reset Form
+                    document.getElementById('buy-amount').value = "";
+                    const btn = document.getElementById('btn-do-buy');
+                    btn.disabled = false; btn.innerHTML = '<i class="fas fa-shopping-cart"></i> ثبت سفارش خرید';
+                    btn.classList.remove('btn-disabled');
+
+                } else if (data.status === 'rejected') {
+                    clearInterval(pollingInterval);
+                    document.getElementById('loader-icon').style.display = 'none';
+                    document.getElementById('status-title').innerText = "❌ سفارش رد شد";
+                    document.getElementById('status-desc').innerText = "علت: " + data.reason;
+                    tg.HapticFeedback.notificationOccurred('error');
+                    
+                    const btn = document.getElementById('btn-do-buy');
+                    btn.disabled = false; btn.innerHTML = '<i class="fas fa-shopping-cart"></i> ثبت سفارش خرید';
+                    btn.classList.remove('btn-disabled');
+                }
+            } catch(e) { console.error("Polling error", e); }
+        }
+
+        function closeOverlay() {
+            if(pollingInterval) clearInterval(pollingInterval);
+            document.getElementById('processing-overlay').style.display = 'none';
+        }
+
+        function copyTxID() {
+            const txid = document.getElementById('final-txid').innerText;
+            navigator.clipboard.writeText(txid);
+            tg.showAlert("کپی شد!");
         }
 
         async function doSell() {
+            // (Sell logic remains same as before)
             const amount = parseFloat(document.getElementById('sell-amount').value);
             const txid = document.getElementById('sell-txid').value.trim();
             const network = document.getElementById('sell-network').value;

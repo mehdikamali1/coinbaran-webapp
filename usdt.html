@@ -1,4 +1,5 @@
-﻿# webapp/usdt.html
+﻿# webapp/usdt.html(نسخه v34.0 - انیمیشن فروش)
+
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
@@ -51,7 +52,7 @@
         .btn-sell { background: linear-gradient(135deg, #EF4444 0%, #B91C1C 100%); box-shadow: 0 4px 20px rgba(239, 68, 68, 0.3); }
         .btn-disabled { background: #333; color: #666; cursor: not-allowed; box-shadow: none; }
 
-        /* --- NEW: PROCESSING OVERLAY --- */
+        /* --- PROCESSING OVERLAY --- */
         #processing-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000;
             display: none; flex-direction: column; align-items: center; justify-content: center;
@@ -64,17 +65,18 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
         .success-icon { font-size: 4rem; color: var(--tether); margin-bottom: 15px; animation: popIn 0.5s; display: none; }
+        .error-icon { font-size: 4rem; color: var(--red); margin-bottom: 15px; animation: popIn 0.5s; display: none; }
         @keyframes popIn { 0% { transform: scale(0); } 80% { transform: scale(1.1); } 100% { transform: scale(1); } }
 
         .status-text { color: white; font-size: 1.2rem; font-weight: bold; margin-bottom: 10px; }
         .status-sub { color: #888; font-size: 0.9rem; margin-bottom: 30px; }
         
-        .txid-result-box {
+        .result-box {
             background: #111; border: 1px solid var(--tether); border-radius: 12px; padding: 15px;
-            width: 100%; display: none; word-break: break-all;
+            width: 100%; display: none; word-break: break-all; margin-top:10px;
         }
-        .txid-label { color: var(--muted); font-size: 0.8rem; display: block; margin-bottom: 5px; }
-        .txid-val { color: var(--blue); font-family: monospace; font-size: 0.9rem; }
+        .result-label { color: var(--muted); font-size: 0.8rem; display: block; margin-bottom: 5px; }
+        .result-val { color: var(--blue); font-family: monospace; font-size: 0.9rem; }
         
         .close-overlay-btn {
             margin-top: 30px; padding: 10px 20px; background: rgba(255,255,255,0.1); 
@@ -88,14 +90,20 @@
     <div id="processing-overlay">
         <div id="loader-icon" class="loader-spin"></div>
         <i id="success-icon" class="fas fa-check-circle success-icon"></i>
+        <i id="error-icon" class="fas fa-times-circle error-icon"></i>
         
-        <div id="status-title" class="status-text">در حال پردازش سفارش...</div>
-        <div id="status-desc" class="status-sub">لطفاً منتظر تایید ادمین باشید. این صفحه را نبندید.</div>
+        <div id="status-title" class="status-text">در حال پردازش...</div>
+        <div id="status-desc" class="status-sub">لطفاً صبر کنید.</div>
         
-        <div id="txid-container" class="txid-result-box">
-            <span class="txid-label">هش تراکنش (TxID):</span>
-            <span id="final-txid" class="txid-val">...</span>
-            <button onclick="copyTxID()" style="display:block; margin:10px auto 0; background:none; border:1px solid var(--blue); color:var(--blue); padding:5px 15px; border-radius:15px;">کپی کردن</button>
+        <div id="txid-container" class="result-box">
+            <span class="result-label">هش تراکنش (TxID):</span>
+            <span id="final-txid" class="result-val">...</span>
+            <button onclick="copyText('final-txid')" style="display:block; margin:10px auto 0; background:none; border:1px solid var(--blue); color:var(--blue); padding:5px 15px; border-radius:15px;">کپی کردن</button>
+        </div>
+
+        <div id="sell-result-container" class="result-box" style="border-color: var(--tether);">
+            <span class="result-label">مبلغ واریز شده به کیف پول:</span>
+            <span id="final-sell-amount" class="result-val" style="color: var(--tether); font-size: 1.2rem;">...</span>
         </div>
 
         <button class="close-overlay-btn" onclick="closeOverlay()">بستن پنجره</button>
@@ -267,6 +275,63 @@
             }
         }
 
+        // --- OVERLAY FUNCTIONS ---
+        function showOverlay(type) {
+            const overlay = document.getElementById('processing-overlay');
+            overlay.style.display = 'flex';
+            
+            // Reset UI
+            document.getElementById('loader-icon').style.display = 'block';
+            document.getElementById('success-icon').style.display = 'none';
+            document.getElementById('error-icon').style.display = 'none';
+            document.getElementById('txid-container').style.display = 'none';
+            document.getElementById('sell-result-container').style.display = 'none';
+
+            if (type === 'buy') {
+                document.getElementById('status-title').innerText = "سفارش ثبت شد!";
+                document.getElementById('status-desc').innerText = "منتظر تایید ادمین و ارسال شبکه...";
+            } else {
+                document.getElementById('status-title').innerText = "در حال استعلام...";
+                document.getElementById('status-desc').innerText = "در حال بررسی تراکنش در شبکه بلاکچین...";
+            }
+        }
+
+        function showSuccess(title, desc, type, data) {
+            document.getElementById('loader-icon').style.display = 'none';
+            document.getElementById('success-icon').style.display = 'block';
+            document.getElementById('status-title').innerText = title;
+            document.getElementById('status-desc').innerText = desc;
+            tg.HapticFeedback.notificationOccurred('success');
+
+            if (type === 'buy' && data.txid) {
+                document.getElementById('final-txid').innerText = data.txid;
+                document.getElementById('txid-container').style.display = 'block';
+            } else if (type === 'sell' && data.amount) {
+                document.getElementById('final-sell-amount').innerText = parseInt(data.amount).toLocaleString() + " تومان";
+                document.getElementById('sell-result-container').style.display = 'block';
+            }
+        }
+
+        function showError(reason) {
+            document.getElementById('loader-icon').style.display = 'none';
+            document.getElementById('error-icon').style.display = 'block';
+            document.getElementById('status-title').innerText = "خطا / رد شد";
+            document.getElementById('status-desc').innerText = reason;
+            tg.HapticFeedback.notificationOccurred('error');
+        }
+
+        function closeOverlay() {
+            if(pollingInterval) clearInterval(pollingInterval);
+            document.getElementById('processing-overlay').style.display = 'none';
+        }
+
+        function copyText(elementId) {
+            const text = document.getElementById(elementId).innerText;
+            navigator.clipboard.writeText(text);
+            tg.showAlert("کپی شد!");
+        }
+
+        // --- BUY LOGIC ---
         async function doBuy() {
             const amount = parseFloat(document.getElementById('buy-amount').value);
             const address = document.getElementById('buy-address').value.trim();
@@ -276,8 +341,8 @@
             if(!amount || amount < limits.min_buy) return tg.showAlert(`حداقل خرید ${limits.min_buy} تتر است.`);
             if(address.length < 20) return tg.showAlert("آدرس کیف پول نامعتبر است.");
 
-            btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> در حال پردازش...';
-            btn.classList.add('btn-disabled');
+            btn.disabled = true;
+            showOverlay('buy'); // Show overlay immediately
 
             try {
                 const res = await fetch(`${API_BASE_URL}/webapp/usdt/buy`, {
@@ -287,34 +352,16 @@
                 const data = await res.json();
                 
                 if(data.status === 'success') {
-                    // Start Polling for Status
-                    showProcessingOverlay(data.order_id);
+                    // Start polling
+                    pollingInterval = setInterval(() => checkOrderStatus(data.order_id), 3000);
                 } else {
-                    tg.showAlert("❌ " + data.message);
-                    btn.disabled = false; btn.innerHTML = '<i class="fas fa-shopping-cart"></i> ثبت سفارش خرید';
-                    btn.classList.remove('btn-disabled');
+                    showError(data.message);
+                    btn.disabled = false;
                 }
             } catch(e) { 
-                tg.showAlert("خطای شبکه"); 
-                btn.disabled = false; btn.innerHTML = '<i class="fas fa-shopping-cart"></i> ثبت سفارش خرید';
-                btn.classList.remove('btn-disabled');
+                showError("خطای شبکه"); 
+                btn.disabled = false;
             }
-        }
-
-        // --- Polling Logic ---
-        function showProcessingOverlay(orderId) {
-            const overlay = document.getElementById('processing-overlay');
-            overlay.style.display = 'flex';
-            
-            // Reset UI
-            document.getElementById('loader-icon').style.display = 'block';
-            document.getElementById('success-icon').style.display = 'none';
-            document.getElementById('status-title').innerText = "سفارش ثبت شد!";
-            document.getElementById('status-desc').innerText = "سیستم در حال ارسال به والکس است. لطفاً منتظر بمانید...";
-            document.getElementById('txid-container').style.display = 'none';
-
-            // Start polling every 3 seconds
-            pollingInterval = setInterval(() => checkOrderStatus(orderId), 3000);
         }
 
         async function checkOrderStatus(orderId) {
@@ -327,50 +374,20 @@
 
                 if (data.status === 'completed') {
                     clearInterval(pollingInterval);
-                    document.getElementById('loader-icon').style.display = 'none';
-                    document.getElementById('success-icon').style.display = 'block';
-                    document.getElementById('status-title').innerText = "✅ واریز موفقیت‌آمیز بود!";
-                    document.getElementById('status-desc').innerText = "تتر به کیف پول شما انتقال یافت.";
-                    
-                    if(data.txid && data.txid !== 'N/A') {
-                        document.getElementById('final-txid').innerText = data.txid;
-                        document.getElementById('txid-container').style.display = 'block';
-                    }
-                    tg.HapticFeedback.notificationOccurred('success');
-                    
-                    // Reset Form
+                    showSuccess("✅ واریز موفق!", "تتر به کیف پول شما انتقال یافت.", "buy", {txid: data.txid});
                     document.getElementById('buy-amount').value = "";
-                    const btn = document.getElementById('btn-do-buy');
-                    btn.disabled = false; btn.innerHTML = '<i class="fas fa-shopping-cart"></i> ثبت سفارش خرید';
-                    btn.classList.remove('btn-disabled');
+                    document.getElementById('btn-do-buy').disabled = false;
 
                 } else if (data.status === 'rejected') {
                     clearInterval(pollingInterval);
-                    document.getElementById('loader-icon').style.display = 'none';
-                    document.getElementById('status-title').innerText = "❌ سفارش رد شد";
-                    document.getElementById('status-desc').innerText = "علت: " + data.reason;
-                    tg.HapticFeedback.notificationOccurred('error');
-                    
-                    const btn = document.getElementById('btn-do-buy');
-                    btn.disabled = false; btn.innerHTML = '<i class="fas fa-shopping-cart"></i> ثبت سفارش خرید';
-                    btn.classList.remove('btn-disabled');
+                    showError("سفارش رد شد: " + data.reason);
+                    document.getElementById('btn-do-buy').disabled = false;
                 }
             } catch(e) { console.error("Polling error", e); }
         }
 
-        function closeOverlay() {
-            if(pollingInterval) clearInterval(pollingInterval);
-            document.getElementById('processing-overlay').style.display = 'none';
-        }
-
-        function copyTxID() {
-            const txid = document.getElementById('final-txid').innerText;
-            navigator.clipboard.writeText(txid);
-            tg.showAlert("کپی شد!");
-        }
-
+        // --- SELL LOGIC ---
         async function doSell() {
-            // (Sell logic remains same as before)
             const amount = parseFloat(document.getElementById('sell-amount').value);
             const txid = document.getElementById('sell-txid').value.trim();
             const network = document.getElementById('sell-network').value;
@@ -379,8 +396,8 @@
             if(!amount || amount < limits.min_sell) return tg.showAlert(`حداقل فروش ${limits.min_sell} تتر است.`);
             if(txid.length < 10) return tg.showAlert("TxID نامعتبر است.");
 
-            btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> استعلام بلاکچین...';
-            btn.classList.add('btn-disabled');
+            btn.disabled = true;
+            showOverlay('sell'); // Show overlay
 
             try {
                 const res = await fetch(`${API_BASE_URL}/webapp/usdt/sell`, {
@@ -389,15 +406,14 @@
                 });
                 const data = await res.json();
                 if(data.status === 'success') {
-                    tg.showAlert(`✅ فروش موفق!\nمبلغ ${parseInt(data.amount_toman).toLocaleString()} تومان به کیف پول شما واریز شد.`);
+                    showSuccess("✅ فروش موفق!", "مبلغ به کیف پول شما واریز شد.", "sell", {amount: data.amount_toman});
                     document.getElementById('sell-txid').value = "";
                 } else {
-                    tg.showAlert("❌ " + data.message);
+                    showError(data.message);
                 }
-            } catch(e) { tg.showAlert("خطای شبکه"); }
+            } catch(e) { showError("خطای شبکه"); }
 
-            btn.disabled = false; btn.innerHTML = '<i class="fas fa-exchange-alt"></i> بررسی و فروش آنی';
-            btn.classList.remove('btn-disabled');
+            btn.disabled = false;
         }
     </script>
 </body>

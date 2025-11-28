@@ -26,27 +26,23 @@
             display: flex; flex-direction: column; overflow: hidden;
         }
 
-        /* --- HEADER & CONTENT Styles (Same as before) --- */
         .header { padding: 18px 24px; background: rgba(20, 20, 20, 0.8); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; z-index: 10; }
         .back-btn { background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text-main); width: 38px; height: 38px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; }
         .back-btn:active { transform: scale(0.92); background: rgba(255,255,255,0.1); }
         .page-title { margin: 0; font-size: 1.1rem; font-weight: 800; display: flex; align-items: center; gap: 8px; }
         .content { flex: 1; padding: 20px 24px; overflow-y: auto; padding-bottom: 50px; }
 
-        /* Price Card */
         .price-card { background: linear-gradient(135deg, rgba(0, 213, 120, 0.15) 0%, rgba(20, 20, 20, 0) 100%); border: 1px solid rgba(0, 213, 120, 0.2); border-radius: 20px; padding: 20px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; }
         .price-item { display: flex; flex-direction: column; gap: 4px; }
         .p-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; }
         .p-val { font-family: monospace; font-size: 1.2rem; font-weight: 800; letter-spacing: -0.5px; }
         .buy-col { color: var(--sell-red); } .sell-col { color: var(--usdt-green); text-shadow: 0 0 10px rgba(0, 213, 120, 0.4); }
 
-        /* Tabs */
         .switch-box { background: var(--input-bg); border-radius: 16px; padding: 4px; display: flex; margin-bottom: 25px; border: 1px solid var(--border); }
         .switch-btn { flex: 1; padding: 12px; text-align: center; border-radius: 12px; font-weight: 700; font-size: 0.95rem; color: var(--text-muted); transition: all 0.3s; cursor: pointer; }
         .switch-btn.active.buy { background: var(--usdt-green); color: #000; box-shadow: var(--glow); }
         .switch-btn.active.sell { background: var(--sell-red); color: #fff; box-shadow: 0 0 15px rgba(255, 59, 48, 0.3); }
 
-        /* Forms */
         .form-section { display: none; opacity: 0; transform: translateY(10px); transition: all 0.3s ease; }
         .form-section.active { display: block; opacity: 1; transform: translateY(0); }
         .inp-group { margin-bottom: 20px; }
@@ -64,41 +60,28 @@
         .btn-red { background: var(--sell-red); box-shadow: 0 4px 20px rgba(255, 59, 48, 0.3); }
         .btn-disabled { opacity: 0.5; pointer-events: none; filter: grayscale(1); }
 
-        /* --- NEW: STATUS MODAL --- */
-        .status-modal {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.9); 
-            z-index: 999; display: flex; flex-direction: column; 
-            align-items: center; justify-content: center;
-            opacity: 0; visibility: hidden; transition: all 0.3s;
-            backdrop-filter: blur(5px);
-        }
+        /* --- MODAL STYLES --- */
+        .status-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: all 0.3s; backdrop-filter: blur(5px); }
         .status-modal.active { opacity: 1; visibility: visible; }
         
-        .loader-ring {
-            width: 60px; height: 60px; border: 4px solid rgba(255,255,255,0.1);
-            border-top: 4px solid var(--usdt-green); border-radius: 50%;
-            animation: spin 1s linear infinite; margin-bottom: 20px;
-        }
+        /* Spinner */
+        .loader-ring { width: 60px; height: 60px; border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--usdt-green); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        .status-content { text-align: center; padding: 20px; width: 85%; max-width: 350px; background: #1a1a1a; border-radius: 20px; border: 1px solid var(--border); }
-        .status-title { font-size: 1.1rem; font-weight: 800; margin-bottom: 10px; }
-        .status-desc { font-size: 0.9rem; color: #aaa; margin-bottom: 20px; line-height: 1.5; }
+        /* Success Animation */
+        .checkmark-circle { width: 80px; height: 80px; position: relative; display: none; margin-bottom: 20px; }
+        .checkmark-circle::before { content: ''; position: absolute; inset: 0; border-radius: 50%; border: 4px solid var(--usdt-green); animation: ripple 1s ease-out forwards; }
+        .checkmark-icon { font-size: 3rem; color: var(--usdt-green); position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        @keyframes ripple { 0% { transform: scale(0.8); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
+
+        .status-content { text-align: center; padding: 25px; width: 85%; max-width: 350px; background: #1a1a1a; border-radius: 24px; border: 1px solid var(--border); box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
+        .status-title { font-size: 1.2rem; font-weight: 800; margin-bottom: 10px; color: #fff; }
+        .status-desc { font-size: 0.9rem; color: #aaa; margin-bottom: 20px; line-height: 1.6; }
         
-        /* TxID Box */
-        .txid-box {
-            background: #000; border: 1px dashed var(--usdt-green);
-            padding: 15px; border-radius: 12px; margin: 15px 0;
-            display: none;
-        }
-        .txid-text {
-            font-family: monospace; font-size: 0.85rem; color: var(--usdt-green);
-            word-break: break-all; margin-bottom: 10px;
-        }
-        .copy-btn-modal {
-            background: rgba(0, 213, 120, 0.2); color: var(--usdt-green);
-            border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.8rem;
-        }
+        .txid-box { background: #000; border: 1px dashed var(--usdt-green); padding: 15px; border-radius: 12px; margin: 15px 0; display: none; text-align: center; }
+        .txid-text { font-family: monospace; font-size: 0.9rem; color: var(--usdt-green); word-break: break-all; margin-bottom: 10px; background: rgba(0, 213, 120, 0.1); padding: 8px; border-radius: 6px; }
+        .copy-btn-modal { background: var(--usdt-green); color: #000; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 700; width: 100%; transition: transform 0.1s; }
+        .copy-btn-modal:active { transform: scale(0.95); }
 
     </style>
 </head>
@@ -107,42 +90,35 @@
     <div id="status-modal" class="status-modal">
         <div class="status-content">
             <div id="modal-loader" class="loader-ring"></div>
-            <div id="modal-icon" style="font-size:3rem; margin-bottom:15px; display:none">✅</div>
             
-            <div id="modal-title" class="status-title">در حال پردازش...</div>
-            <div id="modal-desc" class="status-desc">درخواست شما ثبت شد. لطفاً تا تایید نهایی و صدور شناسه تراکنش منتظر بمانید.</div>
-            
-            <div id="txid-container" class="txid-box">
-                <div style="font-size:0.75rem; color:#666; margin-bottom:5px">شناسه تراکنش (TxID):</div>
-                <div id="final-txid" class="txid-text">...</div>
-                <button class="copy-btn-modal" onclick="copyTxID()">کپی کردن</button>
+            <div id="modal-success-icon" class="checkmark-circle">
+                <i class="fas fa-check checkmark-icon"></i>
             </div>
 
-            <button id="modal-close-btn" class="action-btn btn-green" style="margin-top:10px; display:none" onclick="closeModal()">متوجه شدم</button>
+            <div id="modal-title" class="status-title">در حال پردازش...</div>
+            <div id="modal-desc" class="status-desc">درخواست شما به ادمین ارسال شد.<br>لطفاً منتظر تایید و صدور شناسه تراکنش بمانید.</div>
+            
+            <div id="txid-container" class="txid-box">
+                <div style="font-size:0.75rem; color:#666; margin-bottom:8px">شناسه تراکنش (TxID):</div>
+                <div id="final-txid" class="txid-text">...</div>
+                <button class="copy-btn-modal" onclick="copyTxID()">کپی کردن TxID</button>
+            </div>
+
+            <button id="modal-close-btn" class="action-btn btn-green" style="margin-top:10px; display:none" onclick="closeModal()">بستن</button>
         </div>
     </div>
 
     <div class="header">
-        <div class="back-btn" onclick="window.location.href='/'">
-            <i class="fas fa-arrow-right"></i>
-        </div>
-        <h1 class="page-title">
-            <span style="color:var(--usdt-green)">Tether</span> Exchange
-        </h1>
+        <div class="back-btn" onclick="window.location.href='/'"><i class="fas fa-arrow-right"></i></div>
+        <h1 class="page-title"><span style="color:var(--usdt-green)">Tether</span> Exchange</h1>
         <div style="width:38px"></div>
     </div>
 
     <div class="content">
         <div class="price-card">
-            <div class="price-item">
-                <span class="p-label">نرخ خرید (از شما)</span>
-                <span class="p-val buy-col" id="rate-buy">...</span>
-            </div>
+            <div class="price-item"><span class="p-label">نرخ خرید (از شما)</span><span class="p-val buy-col" id="rate-buy">...</span></div>
             <div style="width:1px; height:30px; background:var(--border)"></div>
-            <div class="price-item" style="align-items:flex-end">
-                <span class="p-label">نرخ فروش (به شما)</span>
-                <span class="p-val sell-col" id="rate-sell">...</span>
-            </div>
+            <div class="price-item" style="align-items:flex-end"><span class="p-label">نرخ فروش (به شما)</span><span class="p-val sell-col" id="rate-sell">...</span></div>
         </div>
 
         <div class="switch-box">
@@ -153,72 +129,30 @@
         <div id="buy-form" class="form-section active">
             <div class="inp-group">
                 <label class="inp-label">مقدار خرید (USDT)</label>
-                <div class="input-wrapper">
-                    <input type="tel" id="buy-amount" class="inp-field" placeholder="100" oninput="calc('buy')">
-                    <span class="inp-icon">₮</span>
-                </div>
-                <div class="calc-result">
-                    <span class="calc-text">مبلغ پرداختی:</span>
-                    <span class="calc-val" id="buy-total">0 <span style="font-size:0.8rem;color:#888">تومان</span></span>
-                </div>
+                <div class="input-wrapper"><input type="tel" id="buy-amount" class="inp-field" placeholder="100" oninput="calc('buy')"><span class="inp-icon">₮</span></div>
+                <div class="calc-result"><span class="calc-text">مبلغ پرداختی:</span><span class="calc-val" id="buy-total">0 <span style="font-size:0.8rem;color:#888">تومان</span></span></div>
             </div>
-
             <div class="inp-group">
                 <label class="inp-label">شبکه انتقال</label>
-                <select id="buy-network" class="select-field">
-                    <option value="TRC20">Tron (TRC20) - کارمزد پایین</option>
-                    <option value="BEP20">BNB Smart Chain (BEP20)</option>
-                    <option value="TON">TON Network</option>
-                </select>
+                <select id="buy-network" class="select-field"><option value="TRC20">Tron (TRC20)</option><option value="BEP20">BNB Smart Chain (BEP20)</option><option value="TON">TON Network</option></select>
             </div>
-
             <div class="inp-group">
                 <label class="inp-label">آدرس کیف پول شما</label>
-                <div class="input-wrapper">
-                    <input type="text" id="buy-address" class="inp-field" placeholder="T..." style="font-size:0.85rem">
-                    <i class="fas fa-wallet inp-icon"></i>
-                </div>
+                <div class="input-wrapper"><input type="text" id="buy-address" class="inp-field" placeholder="T..." style="font-size:0.85rem"><i class="fas fa-wallet inp-icon"></i></div>
             </div>
-
-            <button id="btn-buy" class="action-btn btn-green" onclick="submitBuy()">
-                <i class="fas fa-bolt"></i> خرید آنی
-            </button>
+            <button id="btn-buy" class="action-btn btn-green" onclick="submitBuy()"><i class="fas fa-bolt"></i> خرید آنی</button>
         </div>
 
         <div id="sell-form" class="form-section">
-            <div class="inp-group">
-                <label class="inp-label">شبکه واریز</label>
-                <select id="sell-network" class="select-field" onchange="updateWalletAddress()">
-                    <option value="TRC20">Tron (TRC20)</option>
-                    <option value="BEP20">BNB Smart Chain (BEP20)</option>
-                </select>
-            </div>
+            <div class="inp-group"><label class="inp-label">شبکه واریز</label><select id="sell-network" class="select-field" onchange="updateWalletAddress()"><option value="TRC20">Tron (TRC20)</option><option value="BEP20">BNB Smart Chain (BEP20)</option></select></div>
             <div style="background: rgba(255, 255, 255, 0.03); border: 1px dashed var(--border); border-radius: 16px; padding: 16px; margin-bottom: 24px; text-align: center;">
                 <span style="font-size:0.85rem; color:#aaa">تترها را به آدرس زیر واریز کنید:</span>
                 <div id="admin-wallet-address" style="font-family: monospace; font-size: 0.85rem; color: var(--usdt-green); word-break: break-all; background: rgba(0, 213, 120, 0.1); padding: 10px; border-radius: 8px; margin: 10px 0; select-all: auto;">Loading...</div>
                 <div style="font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer;" onclick="copyAddress()"><i class="fas fa-copy"></i> کپی کردن آدرس</div>
             </div>
-            <div class="inp-group">
-                <label class="inp-label">مقدار واریزی (USDT)</label>
-                <div class="input-wrapper">
-                    <input type="tel" id="sell-amount" class="inp-field" placeholder="50" oninput="calc('sell')">
-                    <span class="inp-icon">₮</span>
-                </div>
-                <div class="calc-result">
-                    <span class="calc-text">دریافتی شما:</span>
-                    <span class="calc-val" id="sell-total" style="color:var(--usdt-green)">0 <span style="font-size:0.8rem;color:#888">تومان</span></span>
-                </div>
-            </div>
-            <div class="inp-group">
-                <label class="inp-label">هش تراکنش (TxID)</label>
-                <div class="input-wrapper">
-                    <input type="text" id="sell-txid" class="inp-field" placeholder="شناسه تراکنش..." style="font-size:0.85rem">
-                    <i class="fas fa-hashtag inp-icon"></i>
-                </div>
-            </div>
-            <button id="btn-sell" class="action-btn btn-red" onclick="submitSell()">
-                <i class="fas fa-check-circle"></i> ثبت فروش
-            </button>
+            <div class="inp-group"><label class="inp-label">مقدار واریزی (USDT)</label><div class="input-wrapper"><input type="tel" id="sell-amount" class="inp-field" placeholder="50" oninput="calc('sell')"><span class="inp-icon">₮</span></div><div class="calc-result"><span class="calc-text">دریافتی شما:</span><span class="calc-val" id="sell-total" style="color:var(--usdt-green)">0 <span style="font-size:0.8rem;color:#888">تومان</span></span></div></div>
+            <div class="inp-group"><label class="inp-label">هش تراکنش (TxID)</label><div class="input-wrapper"><input type="text" id="sell-txid" class="inp-field" placeholder="شناسه تراکنش..." style="font-size:0.85rem"><i class="fas fa-hashtag inp-icon"></i></div></div>
+            <button id="btn-sell" class="action-btn btn-red" onclick="submitSell()"><i class="fas fa-check-circle"></i> ثبت فروش</button>
         </div>
     </div>
 
@@ -299,43 +233,45 @@
             const modal = document.getElementById('status-modal');
             modal.classList.add('active');
             
-            // Start checking status every 3 seconds
+            // Start checking status every 2 seconds
             const interval = setInterval(async () => {
                 try {
                     const res = await fetch(`${API_BASE_URL}/webapp/usdt/check_status`, {
                         method: 'POST', headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ order_id: orderId }) // No initData needed for simple status check
+                        body: JSON.stringify({ order_id: orderId }) 
                     });
                     const data = await res.json();
 
                     if (data.status === 'completed') {
                         clearInterval(interval);
-                        // Update Modal to Success
+                        // Update UI to Success
                         document.getElementById('modal-loader').style.display = 'none';
-                        document.getElementById('modal-icon').style.display = 'block';
+                        document.getElementById('modal-success-icon').style.display = 'block'; // Show Animation
+                        
                         document.getElementById('modal-title').innerText = "تراکنش موفق!";
                         document.getElementById('modal-title').style.color = "#00D578";
-                        document.getElementById('modal-desc').innerText = "تتر به کیف پول شما ارسال شد.";
+                        document.getElementById('modal-desc').innerHTML = "تتر با موفقیت به کیف پول شما ارسال شد.<br>شناسه تراکنش صادر گردید.";
                         
                         document.getElementById('txid-container').style.display = 'block';
                         document.getElementById('final-txid').innerText = data.txid;
                         
                         document.getElementById('modal-close-btn').style.display = 'inline-block';
                         tg.HapticFeedback.notificationOccurred('success');
+                        
                     } else if (data.status === 'rejected') {
                         clearInterval(interval);
+                        document.getElementById('modal-loader').style.display = 'none';
                         document.getElementById('modal-title').innerText = "سفارش رد شد";
                         document.getElementById('modal-title').style.color = "#FF3B30";
                         document.getElementById('modal-desc').innerText = "سفارش شما توسط ادمین رد شد و مبلغ بازگشت داده شد.";
                         document.getElementById('modal-close-btn').style.display = 'inline-block';
-                        document.getElementById('modal-loader').style.display = 'none';
                         tg.HapticFeedback.notificationOccurred('error');
                     }
                 } catch(e) {}
-            }, 3000);
+            }, 2000);
         }
 
-        // --- SELL LOGIC (Same as before) ---
+        // --- SELL LOGIC (Standard) ---
         async function submitSell() {
             const amount = parseFloat(document.getElementById('sell-amount').value);
             const txid = document.getElementById('sell-txid').value;

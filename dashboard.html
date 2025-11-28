@@ -1,4 +1,5 @@
 ﻿# webapp/dashboard.html
+
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
@@ -20,7 +21,7 @@
             --accent-gold: #D4AF37; 
             --accent-green: #10B981; 
             --utopia-pink: #FF007A;
-            --tether-green: #26A17B;
+            --usdt-green: #00D578; /* NEW USDT COLOR */
             --border: rgba(255,255,255,0.08);
         }
         
@@ -119,17 +120,27 @@
         }
         .menu-item:active { transform: scale(0.96); background: rgba(255,255,255,0.05); }
         
+        /* Specific Item Styles */
         .item-game { 
             grid-column: span 2; 
             background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(5,5,5,0) 100%);
             border-color: rgba(59, 130, 246, 0.3);
             display: flex; align-items: center; justify-content: space-between; text-align: right;
         }
+        
+        /* NEW USDT BUTTON STYLE */
+        .item-usdt { 
+            grid-column: span 2; 
+            background: linear-gradient(135deg, rgba(0, 213, 120, 0.1) 0%, rgba(5,5,5,0) 100%);
+            border-color: rgba(0, 213, 120, 0.3);
+            display: flex; align-items: center; justify-content: space-between; text-align: right;
+        }
+
         .game-icon { font-size: 2.5rem; filter: drop-shadow(0 0 10px rgba(59,130,246,0.5)); }
+        .usdt-icon { font-size: 2.5rem; filter: drop-shadow(0 0 10px rgba(0,213,120,0.5)); color: var(--usdt-green); }
         
         .item-wallet { border-bottom: 2px solid var(--accent-green); }
         .item-utopia { border-bottom: 2px solid var(--utopia-pink); }
-        .item-usdt { border-bottom: 2px solid var(--tether-green); }
         
         .menu-icon-font { font-size: 1.8rem; margin-bottom: 10px; display: block; }
         .menu-icon-img { 
@@ -187,12 +198,21 @@
 
             <div class="menu-title">دسترسی سریع</div>
             <div class="menu-grid">
+                
                 <div class="menu-item item-game" onclick="window.location.href='game'">
                     <div>
                         <div class="menu-text">بازی کندل 🚀</div>
                         <span class="menu-sub">پیش‌بینی کن و دلار ببر!</span>
                     </div>
                     <div class="game-icon">📈</div>
+                </div>
+
+                <div class="menu-item item-usdt" onclick="window.location.href='usdt'">
+                    <div>
+                        <div class="menu-text" style="color:var(--usdt-green)">ترید تتر (USDT)</div>
+                        <span class="menu-sub">خرید و فروش اتوماتیک</span>
+                    </div>
+                    <div class="usdt-icon">₮</div>
                 </div>
 
                 <div class="menu-item item-wallet" onclick="window.location.href='wallet'">
@@ -204,13 +224,7 @@
                 <div class="menu-item item-utopia" onclick="window.location.href='utopia'">
                     <img src="images/utopia_logo.png" alt="Utopia" class="menu-icon-img">
                     <span class="menu-text">یوتوپیا</span>
-                    <span class="menu-sub">خرید/فروش ووچر</span>
-                </div>
-
-                <div class="menu-item item-usdt" onclick="window.location.href='usdt'">
-                    <i class="fas fa-dollar-sign menu-icon-font" style="color: var(--tether-green)"></i>
-                    <span class="menu-text">تتر (USDT)</span>
-                    <span class="menu-sub">خرید و فروش آنی</span>
+                    <span class="menu-sub">ووچر آنی</span>
                 </div>
             </div>
         </main>

@@ -1,4 +1,5 @@
 ﻿#webapp/wallet.html (نسخه v28.0 - نمایش جزئیات ووچر)
+
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
@@ -96,7 +97,7 @@
         .tx-date { font-size: 0.75rem; color: #666; font-family: monospace; }
         .tx-amount { font-weight: 700; font-family: monospace; direction: ltr; font-size: 1rem; }
         
-        .c-green { color: var(--green); } .c-red { color: var(--red); } .c-gold { color: var(--gold); } .c-gray { color: #888; }
+        .c-green { color: var(--green); } .c-red { color: var(--red); } .c-gold { color: var(--gold); }
 
         /* --- MODAL (Deposit) --- */
         .modal {
@@ -138,7 +139,7 @@
         }
         .btn-confirm:disabled { background: #333; color: #888; cursor: not-allowed; }
 
-        /* --- DETAIL MODAL (For Vouchers & TxID) --- */
+        /* --- DETAIL MODAL (For Vouchers) --- */
         .detail-row { margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px; }
         .detail-label { font-size: 0.85rem; color: var(--muted); display: block; margin-bottom: 5px; }
         .detail-val { font-size: 1rem; color: white; font-weight: bold; }
@@ -147,15 +148,8 @@
             background: black; padding: 15px; border-radius: 10px; border: 1px dashed var(--gold);
             margin-top: 20px; text-align: center;
         }
-        .voucher-text { font-family: monospace; font-size: 1rem; color: var(--gold); word-break: break-all; }
-        
-        .txid-box {
-            background: black; padding: 15px; border-radius: 10px; border: 1px solid #333;
-            margin-top: 20px; text-align: center;
-        }
-        .txid-text { font-family: monospace; font-size: 0.9rem; color: var(--blue); word-break: break-all; }
-
-        .copy-link { color: var(--muted); font-size: 0.8rem; cursor: pointer; margin-top: 10px; display: inline-block; border: 1px solid #444; padding: 5px 12px; border-radius: 20px; }
+        .voucher-text { font-family: monospace; font-size: 1.1rem; color: var(--gold); word-break: break-all; }
+        .copy-link { color: var(--blue); font-size: 0.9rem; cursor: pointer; margin-top: 10px; display: inline-block; }
 
     </style>
 </head>
@@ -308,7 +302,7 @@
             txs.forEach((tx, index) => {
                 const div = document.createElement('div');
                 div.className = 'tx-item';
-                div.onclick = () => showDetail(index); 
+                div.onclick = () => showDetail(index); // Click to show detail
                 
                 let color = 'c-gray';
                 if(tx.color === 'success') color = 'c-green';
@@ -352,27 +346,14 @@
                 </div>
             `;
 
-            // اگر خرید یوتوپیا است و ووچر کد دارد
-            if (tx.title.includes('خرید ووچر') && tx.detail) {
+            // اگر ووچر کد دارد (خرید یوتوپیا)
+            if (tx.type === 'UTOPIA_BUY' && tx.detail) {
                 html += `
                     <div class="voucher-box">
                         <div class="detail-label">کد ووچر خریداری شده:</div>
-                        <div class="voucher-text" id="copy-text-${index}">${tx.detail}</div>
-                        <div class="copy-link" onclick="copyText('${tx.detail}')">
+                        <div class="voucher-text" id="vcode-${index}">${tx.detail}</div>
+                        <div class="copy-link" onclick="navigator.clipboard.writeText('${tx.detail}'); alert('کد کپی شد!')">
                             <i class="fas fa-copy"></i> کپی کردن کد
-                        </div>
-                    </div>
-                `;
-            }
-            
-            // اگر تراکنش تتر (خرید یا فروش) است و TxID دارد
-            if (tx.title.includes('تتر') && tx.detail) {
-                html += `
-                    <div class="txid-box">
-                        <div class="detail-label">هش تراکنش (TxID):</div>
-                        <div class="txid-text">${tx.detail}</div>
-                        <div class="copy-link" onclick="copyText('${tx.detail}')">
-                            <i class="fas fa-copy"></i> کپی TxID
                         </div>
                     </div>
                 `;
@@ -380,11 +361,6 @@
 
             container.innerHTML = html;
             document.getElementById('detail-modal').classList.add('active');
-        }
-
-        function copyText(text) {
-            navigator.clipboard.writeText(text);
-            tg.showAlert("کپی شد!");
         }
     </script>
 </body>

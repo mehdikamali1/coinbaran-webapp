@@ -26,6 +26,7 @@
             display: flex; flex-direction: column; overflow: hidden;
         }
 
+        /* --- HEADER & CONTENT --- */
         .header { padding: 18px 24px; background: rgba(20, 20, 20, 0.8); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; z-index: 10; }
         .back-btn { background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text-main); width: 38px; height: 38px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; }
         .back-btn:active { transform: scale(0.92); background: rgba(255,255,255,0.1); }
@@ -64,11 +65,9 @@
         .status-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: all 0.3s; backdrop-filter: blur(5px); }
         .status-modal.active { opacity: 1; visibility: visible; }
         
-        /* Spinner */
         .loader-ring { width: 60px; height: 60px; border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--usdt-green); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Success Animation */
         .checkmark-circle { width: 80px; height: 80px; position: relative; display: none; margin-bottom: 20px; }
         .checkmark-circle::before { content: ''; position: absolute; inset: 0; border-radius: 50%; border: 4px solid var(--usdt-green); animation: ripple 1s ease-out forwards; }
         .checkmark-icon { font-size: 3rem; color: var(--usdt-green); position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
@@ -81,8 +80,6 @@
         .txid-box { background: #000; border: 1px dashed var(--usdt-green); padding: 15px; border-radius: 12px; margin: 15px 0; display: none; text-align: center; }
         .txid-text { font-family: monospace; font-size: 0.9rem; color: var(--usdt-green); word-break: break-all; margin-bottom: 10px; background: rgba(0, 213, 120, 0.1); padding: 8px; border-radius: 6px; }
         .copy-btn-modal { background: var(--usdt-green); color: #000; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 700; width: 100%; transition: transform 0.1s; }
-        .copy-btn-modal:active { transform: scale(0.95); }
-
     </style>
 </head>
 <body>
@@ -90,13 +87,10 @@
     <div id="status-modal" class="status-modal">
         <div class="status-content">
             <div id="modal-loader" class="loader-ring"></div>
-            
-            <div id="modal-success-icon" class="checkmark-circle">
-                <i class="fas fa-check checkmark-icon"></i>
-            </div>
+            <div id="modal-success-icon" class="checkmark-circle"><i class="fas fa-check checkmark-icon"></i></div>
 
             <div id="modal-title" class="status-title">در حال پردازش...</div>
-            <div id="modal-desc" class="status-desc">درخواست شما به ادمین ارسال شد.<br>لطفاً منتظر تایید و صدور شناسه تراکنش بمانید.</div>
+            <div id="modal-desc" class="status-desc">درخواست شما به ادمین ارسال شد.</div>
             
             <div id="txid-container" class="txid-box">
                 <div style="font-size:0.75rem; color:#666; margin-bottom:8px">شناسه تراکنش (TxID):</div>
@@ -202,58 +196,43 @@
             displayEl.innerHTML = `${parseInt(amount * price).toLocaleString()} <span style="font-size:0.8rem;color:#888">تومان</span>`;
         }
 
-        // --- BUY LOGIC WITH POLLING ---
-        async function submitBuy() {
-            const amount = parseFloat(document.getElementById('buy-amount').value);
-            const address = document.getElementById('buy-address').value;
-            if(!amount || amount < 2) { tg.showAlert("حداقل خرید ۲ تتر است."); return; }
-            if(address.length < 10) { tg.showAlert("آدرس کیف پول نامعتبر است."); return; }
-
-            const btn = document.getElementById('btn-buy');
-            btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ثبت سفارش...';
-
-            try {
-                const res = await fetch(`${API_BASE_URL}/webapp/usdt/buy`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ initData: tg.initData, amount: amount, address: address, network: document.getElementById('buy-network').value })
-                });
-                const data = await res.json();
-
-                if (data.status === 'success') {
-                    // Start Polling UI
-                    showPollingModal(data.order_id);
-                } else {
-                    tg.showAlert("❌ " + data.message);
-                    btn.disabled = false; btn.innerHTML = '<i class="fas fa-bolt"></i> خرید آنی';
-                }
-            } catch (e) { tg.showAlert("خطای شبکه"); btn.disabled = false; btn.innerHTML = '<i class="fas fa-bolt"></i> خرید آنی'; }
-        }
-
-        function showPollingModal(orderId) {
+        // --- SHARED POLLING FUNCTION ---
+        function showPollingModal(orderId, type) {
             const modal = document.getElementById('status-modal');
             modal.classList.add('active');
             
-            // Start checking status every 2 seconds
+            // Text adjustments based on type
+            if (type === 'sell') {
+                document.getElementById('modal-desc').innerHTML = "درخواست فروش ارسال شد.<br>در حال بررسی تراکنش...";
+                document.getElementById('txid-container').style.display = 'none'; // Hide TxID for sell (user already has it)
+            } else {
+                document.getElementById('modal-desc').innerHTML = "درخواست خرید ارسال شد.<br>منتظر تایید ادمین...";
+                document.getElementById('txid-container').style.display = 'none';
+            }
+
             const interval = setInterval(async () => {
                 try {
                     const res = await fetch(`${API_BASE_URL}/webapp/usdt/check_status`, {
                         method: 'POST', headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ order_id: orderId }) 
+                        body: JSON.stringify({ order_id: orderId, type: type }) // Pass Type
                     });
                     const data = await res.json();
 
                     if (data.status === 'completed') {
                         clearInterval(interval);
-                        // Update UI to Success
                         document.getElementById('modal-loader').style.display = 'none';
-                        document.getElementById('modal-success-icon').style.display = 'block'; // Show Animation
+                        document.getElementById('modal-success-icon').style.display = 'block';
                         
-                        document.getElementById('modal-title').innerText = "تراکنش موفق!";
+                        document.getElementById('modal-title').innerText = (type === 'buy') ? "تراکنش موفق!" : "واریز موفق!";
                         document.getElementById('modal-title').style.color = "#00D578";
-                        document.getElementById('modal-desc').innerHTML = "تتر با موفقیت به کیف پول شما ارسال شد.<br>شناسه تراکنش صادر گردید.";
                         
-                        document.getElementById('txid-container').style.display = 'block';
-                        document.getElementById('final-txid').innerText = data.txid;
+                        if (type === 'buy') {
+                            document.getElementById('modal-desc').innerText = "تتر به کیف پول شما واریز شد.";
+                            document.getElementById('txid-container').style.display = 'block';
+                            document.getElementById('final-txid').innerText = data.txid;
+                        } else {
+                            document.getElementById('modal-desc').innerText = "تراکنش تایید و مبلغ ریالی به کیف پول شما واریز شد.";
+                        }
                         
                         document.getElementById('modal-close-btn').style.display = 'inline-block';
                         tg.HapticFeedback.notificationOccurred('success');
@@ -261,9 +240,9 @@
                     } else if (data.status === 'rejected') {
                         clearInterval(interval);
                         document.getElementById('modal-loader').style.display = 'none';
-                        document.getElementById('modal-title').innerText = "سفارش رد شد";
+                        document.getElementById('modal-title').innerText = "رد شد";
                         document.getElementById('modal-title').style.color = "#FF3B30";
-                        document.getElementById('modal-desc').innerText = "سفارش شما توسط ادمین رد شد و مبلغ بازگشت داده شد.";
+                        document.getElementById('modal-desc').innerText = "سفارش توسط ادمین رد شد.";
                         document.getElementById('modal-close-btn').style.display = 'inline-block';
                         tg.HapticFeedback.notificationOccurred('error');
                     }
@@ -271,12 +250,33 @@
             }, 2000);
         }
 
-        // --- SELL LOGIC (Standard) ---
+        async function submitBuy() {
+            const amount = parseFloat(document.getElementById('buy-amount').value);
+            const address = document.getElementById('buy-address').value;
+            if(!amount || amount < 2) { tg.showAlert("حداقل خرید ۲ تتر."); return; }
+            if(address.length < 10) { tg.showAlert("آدرس نامعتبر."); return; }
+
+            const btn = document.getElementById('btn-buy');
+            btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ثبت...';
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/webapp/usdt/buy`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ initData: tg.initData, amount: amount, address: address, network: document.getElementById('buy-network').value })
+                });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    showPollingModal(data.order_id, 'buy'); // Type: Buy
+                } else { tg.showAlert("❌ " + data.message); }
+            } catch (e) { tg.showAlert("خطا"); }
+            btn.disabled = false; btn.innerHTML = '<i class="fas fa-bolt"></i> خرید آنی';
+        }
+
         async function submitSell() {
             const amount = parseFloat(document.getElementById('sell-amount').value);
             const txid = document.getElementById('sell-txid').value;
             if(!amount || amount < 2) { tg.showAlert("حداقل فروش ۲ تتر."); return; }
-            if(txid.length < 10) { tg.showAlert("شناسه تراکنش نامعتبر."); return; }
+            if(txid.length < 10) { tg.showAlert("TxID نامعتبر."); return; }
 
             const btn = document.getElementById('btn-sell');
             btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> پردازش...';
@@ -288,8 +288,7 @@
                 });
                 const data = await res.json();
                 if (data.status === 'success') {
-                    tg.showAlert("✅ " + data.message);
-                    document.getElementById('sell-amount').value = ""; document.getElementById('sell-txid').value = "";
+                    showPollingModal(data.order_id, 'sell'); // Type: Sell
                 } else { tg.showAlert("❌ " + data.message); }
             } catch (e) { tg.showAlert("خطا"); }
             btn.disabled = false; btn.innerHTML = '<i class="fas fa-check-circle"></i> ثبت فروش';

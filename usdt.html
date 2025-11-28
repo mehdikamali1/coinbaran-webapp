@@ -13,16 +13,9 @@
         @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700;900&display=swap');
         
         :root { 
-            --bg: #000000;
-            --card-bg: #141414;
-            --text-main: #FFFFFF;
-            --text-muted: #9CA3AF;
-            --usdt-green: #00D578; /* رنگ نئونی تتر */
-            --usdt-dark: #009655;
-            --sell-red: #FF3B30;
-            --input-bg: #1F1F1F;
-            --border: rgba(255,255,255,0.08);
-            --glow: 0 0 15px rgba(0, 213, 120, 0.3);
+            --bg: #000000; --card-bg: #141414; --text-main: #FFFFFF; --text-muted: #9CA3AF;
+            --usdt-green: #00D578; --sell-red: #FF3B30; --input-bg: #1F1F1F;
+            --border: rgba(255,255,255,0.08); --glow: 0 0 15px rgba(0, 213, 120, 0.3);
         }
         
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; outline: none; }
@@ -33,128 +26,101 @@
             display: flex; flex-direction: column; overflow: hidden;
         }
 
-        /* --- HEADER --- */
-        .header {
-            padding: 18px 24px; 
-            background: rgba(20, 20, 20, 0.8); backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border);
-            display: flex; align-items: center; justify-content: space-between;
-            z-index: 10;
-        }
-        .back-btn {
-            background: rgba(255,255,255,0.06); border: 1px solid var(--border);
-            color: var(--text-main); width: 38px; height: 38px; border-radius: 12px; 
-            cursor: pointer; display: flex; align-items: center; justify-content: center;
-            transition: all 0.2s ease;
-        }
+        /* --- HEADER & CONTENT Styles (Same as before) --- */
+        .header { padding: 18px 24px; background: rgba(20, 20, 20, 0.8); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; z-index: 10; }
+        .back-btn { background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text-main); width: 38px; height: 38px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; }
         .back-btn:active { transform: scale(0.92); background: rgba(255,255,255,0.1); }
         .page-title { margin: 0; font-size: 1.1rem; font-weight: 800; display: flex; align-items: center; gap: 8px; }
-        .tether-logo { width: 24px; height: 24px; }
-
-        /* --- SCROLLABLE CONTENT --- */
         .content { flex: 1; padding: 20px 24px; overflow-y: auto; padding-bottom: 50px; }
 
-        /* --- PRICE TICKER --- */
-        .price-card {
-            background: linear-gradient(135deg, rgba(0, 213, 120, 0.15) 0%, rgba(20, 20, 20, 0) 100%);
-            border: 1px solid rgba(0, 213, 120, 0.2);
-            border-radius: 20px; padding: 20px; margin-bottom: 25px;
-            display: flex; justify-content: space-between; align-items: center;
-            position: relative; overflow: hidden;
-        }
-        .price-item { display: flex; flex-direction: column; gap: 4px; z-index: 2; }
+        /* Price Card */
+        .price-card { background: linear-gradient(135deg, rgba(0, 213, 120, 0.15) 0%, rgba(20, 20, 20, 0) 100%); border: 1px solid rgba(0, 213, 120, 0.2); border-radius: 20px; padding: 20px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; }
+        .price-item { display: flex; flex-direction: column; gap: 4px; }
         .p-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; }
         .p-val { font-family: monospace; font-size: 1.2rem; font-weight: 800; letter-spacing: -0.5px; }
-        .buy-col { color: var(--sell-red); }
-        .sell-col { color: var(--usdt-green); text-shadow: 0 0 10px rgba(0, 213, 120, 0.4); }
+        .buy-col { color: var(--sell-red); } .sell-col { color: var(--usdt-green); text-shadow: 0 0 10px rgba(0, 213, 120, 0.4); }
 
-        /* --- TABS --- */
-        .switch-box {
-            background: var(--input-bg); border-radius: 16px; padding: 4px;
-            display: flex; margin-bottom: 25px; border: 1px solid var(--border);
-        }
-        .switch-btn {
-            flex: 1; padding: 12px; text-align: center; border-radius: 12px;
-            font-weight: 700; font-size: 0.95rem; color: var(--text-muted);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer;
-        }
-        .switch-btn.active.buy {
-            background: var(--usdt-green); color: #000; box-shadow: var(--glow);
-        }
-        .switch-btn.active.sell {
-            background: var(--sell-red); color: #fff; box-shadow: 0 0 15px rgba(255, 59, 48, 0.3);
-        }
+        /* Tabs */
+        .switch-box { background: var(--input-bg); border-radius: 16px; padding: 4px; display: flex; margin-bottom: 25px; border: 1px solid var(--border); }
+        .switch-btn { flex: 1; padding: 12px; text-align: center; border-radius: 12px; font-weight: 700; font-size: 0.95rem; color: var(--text-muted); transition: all 0.3s; cursor: pointer; }
+        .switch-btn.active.buy { background: var(--usdt-green); color: #000; box-shadow: var(--glow); }
+        .switch-btn.active.sell { background: var(--sell-red); color: #fff; box-shadow: 0 0 15px rgba(255, 59, 48, 0.3); }
 
-        /* --- FORMS --- */
+        /* Forms */
         .form-section { display: none; opacity: 0; transform: translateY(10px); transition: all 0.3s ease; }
         .form-section.active { display: block; opacity: 1; transform: translateY(0); }
-
         .inp-group { margin-bottom: 20px; }
         .inp-label { display: block; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 8px; margin-right: 4px; }
-        
         .input-wrapper { position: relative; }
-        .inp-field {
-            width: 100%; background: var(--input-bg); border: 1px solid var(--border);
-            color: #fff; padding: 16px; padding-left: 50px; border-radius: 16px;
-            font-size: 1.1rem; font-weight: 700; font-family: monospace;
-            transition: all 0.2s; text-align: right; direction: ltr;
-        }
+        .inp-field { width: 100%; background: var(--input-bg); border: 1px solid var(--border); color: #fff; padding: 16px; padding-left: 50px; border-radius: 16px; font-size: 1.1rem; font-weight: 700; font-family: monospace; transition: all 0.2s; text-align: right; direction: ltr; }
         .inp-field:focus { border-color: var(--usdt-green); background: #000; }
-        .inp-icon {
-            position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
-            color: var(--text-muted); font-size: 1rem;
-        }
-        .inp-suffix {
-            position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
-            color: var(--text-muted); font-size: 0.9rem; pointer-events: none;
-        }
-
-        .select-field {
-            width: 100%; background: var(--input-bg); border: 1px solid var(--border);
-            color: #fff; padding: 16px; border-radius: 16px; font-size: 1rem;
-            appearance: none; -webkit-appearance: none;
-            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23888%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
-            background-repeat: no-repeat; background-position: left 16px center; background-size: 12px;
-        }
-
-        /* --- INFO BOX (For Sell) --- */
-        .info-card {
-            background: rgba(255, 255, 255, 0.03); border: 1px dashed var(--border);
-            border-radius: 16px; padding: 16px; margin-bottom: 24px; text-align: center;
-        }
-        .wallet-address {
-            font-family: monospace; font-size: 0.85rem; color: var(--usdt-green);
-            word-break: break-all; background: rgba(0, 213, 120, 0.1);
-            padding: 10px; border-radius: 8px; margin: 10px 0; select-all: auto;
-        }
-        .copy-tag {
-            font-size: 0.8rem; color: var(--text-muted); display: flex; 
-            align-items: center; justify-content: center; gap: 6px; cursor: pointer;
-        }
-
-        /* --- CALCULATOR --- */
-        .calc-result {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-top: 10px; padding: 0 5px;
-        }
-        .calc-text { font-size: 0.9rem; color: var(--text-muted); }
-        .calc-val { font-size: 1.1rem; font-weight: 800; color: #fff; font-family: monospace; }
-
-        /* --- BUTTONS --- */
-        .action-btn {
-            width: 100%; padding: 18px; border-radius: 18px; border: none;
-            font-size: 1.1rem; font-weight: 800; cursor: pointer; margin-top: 30px;
-            display: flex; align-items: center; justify-content: center; gap: 10px;
-            transition: transform 0.1s; color: #fff;
-        }
+        .inp-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 1rem; }
+        .select-field { width: 100%; background: var(--input-bg); border: 1px solid var(--border); color: #fff; padding: 16px; border-radius: 16px; font-size: 1rem; appearance: none; -webkit-appearance: none; }
+        .calc-result { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding: 0 5px; }
+        .calc-text { font-size: 0.9rem; color: var(--text-muted); } .calc-val { font-size: 1.1rem; font-weight: 800; color: #fff; font-family: monospace; }
+        .action-btn { width: 100%; padding: 18px; border-radius: 18px; border: none; font-size: 1.1rem; font-weight: 800; cursor: pointer; margin-top: 30px; display: flex; align-items: center; justify-content: center; gap: 10px; transition: transform 0.1s; color: #fff; }
         .action-btn:active { transform: scale(0.97); }
         .btn-green { background: var(--usdt-green); color: #000; box-shadow: var(--glow); }
         .btn-red { background: var(--sell-red); box-shadow: 0 4px 20px rgba(255, 59, 48, 0.3); }
         .btn-disabled { opacity: 0.5; pointer-events: none; filter: grayscale(1); }
 
+        /* --- NEW: STATUS MODAL --- */
+        .status-modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9); 
+            z-index: 999; display: flex; flex-direction: column; 
+            align-items: center; justify-content: center;
+            opacity: 0; visibility: hidden; transition: all 0.3s;
+            backdrop-filter: blur(5px);
+        }
+        .status-modal.active { opacity: 1; visibility: visible; }
+        
+        .loader-ring {
+            width: 60px; height: 60px; border: 4px solid rgba(255,255,255,0.1);
+            border-top: 4px solid var(--usdt-green); border-radius: 50%;
+            animation: spin 1s linear infinite; margin-bottom: 20px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .status-content { text-align: center; padding: 20px; width: 85%; max-width: 350px; background: #1a1a1a; border-radius: 20px; border: 1px solid var(--border); }
+        .status-title { font-size: 1.1rem; font-weight: 800; margin-bottom: 10px; }
+        .status-desc { font-size: 0.9rem; color: #aaa; margin-bottom: 20px; line-height: 1.5; }
+        
+        /* TxID Box */
+        .txid-box {
+            background: #000; border: 1px dashed var(--usdt-green);
+            padding: 15px; border-radius: 12px; margin: 15px 0;
+            display: none;
+        }
+        .txid-text {
+            font-family: monospace; font-size: 0.85rem; color: var(--usdt-green);
+            word-break: break-all; margin-bottom: 10px;
+        }
+        .copy-btn-modal {
+            background: rgba(0, 213, 120, 0.2); color: var(--usdt-green);
+            border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.8rem;
+        }
+
     </style>
 </head>
 <body>
+
+    <div id="status-modal" class="status-modal">
+        <div class="status-content">
+            <div id="modal-loader" class="loader-ring"></div>
+            <div id="modal-icon" style="font-size:3rem; margin-bottom:15px; display:none">✅</div>
+            
+            <div id="modal-title" class="status-title">در حال پردازش...</div>
+            <div id="modal-desc" class="status-desc">درخواست شما ثبت شد. لطفاً تا تایید نهایی و صدور شناسه تراکنش منتظر بمانید.</div>
+            
+            <div id="txid-container" class="txid-box">
+                <div style="font-size:0.75rem; color:#666; margin-bottom:5px">شناسه تراکنش (TxID):</div>
+                <div id="final-txid" class="txid-text">...</div>
+                <button class="copy-btn-modal" onclick="copyTxID()">کپی کردن</button>
+            </div>
+
+            <button id="modal-close-btn" class="action-btn btn-green" style="margin-top:10px; display:none" onclick="closeModal()">متوجه شدم</button>
+        </div>
+    </div>
 
     <div class="header">
         <div class="back-btn" onclick="window.location.href='/'">
@@ -214,7 +180,7 @@
                 </div>
             </div>
 
-            <button id="btn-buy" class="action-btn btn-green" onclick="submitOrder('buy')">
+            <button id="btn-buy" class="action-btn btn-green" onclick="submitBuy()">
                 <i class="fas fa-bolt"></i> خرید آنی
             </button>
         </div>
@@ -227,15 +193,11 @@
                     <option value="BEP20">BNB Smart Chain (BEP20)</option>
                 </select>
             </div>
-
-            <div class="info-card">
+            <div style="background: rgba(255, 255, 255, 0.03); border: 1px dashed var(--border); border-radius: 16px; padding: 16px; margin-bottom: 24px; text-align: center;">
                 <span style="font-size:0.85rem; color:#aaa">تترها را به آدرس زیر واریز کنید:</span>
-                <div id="admin-wallet-address" class="wallet-address">Loading...</div>
-                <div class="copy-tag" onclick="copyAddress()">
-                    <i class="fas fa-copy"></i> کپی کردن آدرس
-                </div>
+                <div id="admin-wallet-address" style="font-family: monospace; font-size: 0.85rem; color: var(--usdt-green); word-break: break-all; background: rgba(0, 213, 120, 0.1); padding: 10px; border-radius: 8px; margin: 10px 0; select-all: auto;">Loading...</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer;" onclick="copyAddress()"><i class="fas fa-copy"></i> کپی کردن آدرس</div>
             </div>
-
             <div class="inp-group">
                 <label class="inp-label">مقدار واریزی (USDT)</label>
                 <div class="input-wrapper">
@@ -247,7 +209,6 @@
                     <span class="calc-val" id="sell-total" style="color:var(--usdt-green)">0 <span style="font-size:0.8rem;color:#888">تومان</span></span>
                 </div>
             </div>
-
             <div class="inp-group">
                 <label class="inp-label">هش تراکنش (TxID)</label>
                 <div class="input-wrapper">
@@ -255,149 +216,147 @@
                     <i class="fas fa-hashtag inp-icon"></i>
                 </div>
             </div>
-
-            <button id="btn-sell" class="action-btn btn-red" onclick="submitOrder('sell')">
+            <button id="btn-sell" class="action-btn btn-red" onclick="submitSell()">
                 <i class="fas fa-check-circle"></i> ثبت فروش
             </button>
         </div>
-
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         const API_BASE_URL = window.location.origin;
-        
-        // --- تنظیمات آدرس‌ها (این‌ها را از کانفیگ سرور می‌خوانیم یا اینجا ست می‌کنیم) ---
-        const WALLETS = {
-            'TRC20': 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t', // Example: Tether Contract (Change to yours)
-            'BEP20': '0x55d398326f99059fF775485246999027B3197955' // Example
-        };
-
-        let rates = { buy: 0, sell: 0 }; // Buy: کاربر می‌فروشد | Sell: کاربر می‌خرد
+        const WALLETS = { 'TRC20': 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t', 'BEP20': '0x55d398326f99059fF775485246999027B3197955' };
+        let rates = { buy: 0, sell: 0 };
 
         window.onload = function() {
             tg.ready(); tg.expand(); tg.setHeaderColor('#141414');
             if (!tg.initData) tg.initData = "query_id=TEST&user=%7B%22id%22%3A111111111%7D&auth_date=1700000000&hash=fake";
-            
             fetchRates();
-            updateWalletAddress(); // Set initial address
+            updateWalletAddress();
         };
 
         function setMode(mode) {
             tg.HapticFeedback.impactOccurred('light');
             document.querySelectorAll('.switch-btn').forEach(b => b.classList.remove('active', 'buy', 'sell'));
             document.querySelectorAll('.form-section').forEach(f => f.classList.remove('active'));
-
-            if(mode === 'buy') {
-                document.querySelector('.switch-btn:nth-child(1)').classList.add('active', 'buy');
-                document.getElementById('buy-form').classList.add('active');
-            } else {
-                document.querySelector('.switch-btn:nth-child(2)').classList.add('active', 'sell');
-                document.getElementById('sell-form').classList.add('active');
-            }
+            if(mode === 'buy') { document.querySelector('.switch-btn:nth-child(1)').classList.add('active', 'buy'); document.getElementById('buy-form').classList.add('active'); }
+            else { document.querySelector('.switch-btn:nth-child(2)').classList.add('active', 'sell'); document.getElementById('sell-form').classList.add('active'); }
         }
 
         async function fetchRates() {
             try {
-                const res = await fetch(`${API_BASE_URL}/webapp/usdt/rates`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ initData: tg.initData })
-                });
+                const res = await fetch(`${API_BASE_URL}/webapp/usdt/rates`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ initData: tg.initData }) });
                 const data = await res.json();
                 if(data.status === 'success') {
-                    rates.buy = data.sell; // نرخی که کاربر می‌خرد (Admin Sell)
-                    rates.sell = data.buy; // نرخی که کاربر می‌فروشد (Admin Buy)
-                    
+                    rates.buy = data.sell; rates.sell = data.buy;
                     document.getElementById('rate-sell').innerText = parseInt(rates.buy).toLocaleString();
                     document.getElementById('rate-buy').innerText = parseInt(rates.sell).toLocaleString();
                 }
-            } catch(e) { console.error("Rate Fetch Error", e); }
+            } catch(e) {}
         }
 
-        function updateWalletAddress() {
-            const net = document.getElementById('sell-network').value;
-            const addr = WALLETS[net] || "Loading...";
-            document.getElementById('admin-wallet-address').innerText = addr;
-        }
-
-        function copyAddress() {
-            const text = document.getElementById('admin-wallet-address').innerText;
-            navigator.clipboard.writeText(text);
-            tg.HapticFeedback.notificationOccurred('success');
-            tg.showAlert("✅ آدرس کیف پول کپی شد!");
-        }
+        function updateWalletAddress() { document.getElementById('admin-wallet-address').innerText = WALLETS[document.getElementById('sell-network').value] || "Loading..."; }
+        function copyAddress() { navigator.clipboard.writeText(document.getElementById('admin-wallet-address').innerText); tg.showAlert("✅ آدرس کپی شد!"); }
+        function copyTxID() { navigator.clipboard.writeText(document.getElementById('final-txid').innerText); tg.showAlert("✅ TxID کپی شد!"); }
+        function closeModal() { document.getElementById('status-modal').classList.remove('active'); window.location.reload(); }
 
         function calc(mode) {
             const amount = parseFloat(document.getElementById(mode + '-amount').value);
             const displayEl = document.getElementById(mode + '-total');
-            
-            if (isNaN(amount) || amount <= 0) {
-                displayEl.innerHTML = `0 <span style="font-size:0.8rem;color:#888">تومان</span>`;
-                return;
-            }
-
+            if (isNaN(amount) || amount <= 0) { displayEl.innerHTML = `0 <span style="font-size:0.8rem;color:#888">تومان</span>`; return; }
             let price = (mode === 'buy') ? rates.buy : rates.sell;
-            let total = amount * price;
-            
-            displayEl.innerHTML = `${parseInt(total).toLocaleString()} <span style="font-size:0.8rem;color:#888">تومان</span>`;
+            displayEl.innerHTML = `${parseInt(amount * price).toLocaleString()} <span style="font-size:0.8rem;color:#888">تومان</span>`;
         }
 
-        async function submitOrder(mode) {
-            tg.HapticFeedback.impactOccurred('medium');
-            const btn = document.getElementById(`btn-${mode}`);
-            const originalText = btn.innerHTML;
-            
-            // Validation
-            const amount = parseFloat(document.getElementById(`${mode}-amount`).value);
-            if(!amount || amount < 2) { tg.showAlert("حداقل مقدار ۲ تتر است."); return; }
+        // --- BUY LOGIC WITH POLLING ---
+        async function submitBuy() {
+            const amount = parseFloat(document.getElementById('buy-amount').value);
+            const address = document.getElementById('buy-address').value;
+            if(!amount || amount < 2) { tg.showAlert("حداقل خرید ۲ تتر است."); return; }
+            if(address.length < 10) { tg.showAlert("آدرس کیف پول نامعتبر است."); return; }
 
-            let payload = { initData: tg.initData, amount: amount };
-            let endpoint = "";
-
-            if (mode === 'buy') {
-                const address = document.getElementById('buy-address').value;
-                if(address.length < 10) { tg.showAlert("آدرس کیف پول نامعتبر است."); return; }
-                payload.address = address;
-                payload.network = document.getElementById('buy-network').value;
-                endpoint = "/webapp/usdt/buy";
-            } else {
-                const txid = document.getElementById('sell-txid').value;
-                if(txid.length < 10) { tg.showAlert("شناسه تراکنش (TxID) وارد نشده است."); return; }
-                payload.txid = txid;
-                payload.network = document.getElementById('sell-network').value;
-                endpoint = "/webapp/usdt/sell";
-            }
-
-            // UI Loading State
-            btn.disabled = true;
-            btn.classList.add('btn-disabled');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> در حال پردازش...';
+            const btn = document.getElementById('btn-buy');
+            btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ثبت سفارش...';
 
             try {
-                const res = await fetch(`${API_BASE_URL}${endpoint}`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(payload)
+                const res = await fetch(`${API_BASE_URL}/webapp/usdt/buy`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ initData: tg.initData, amount: amount, address: address, network: document.getElementById('buy-network').value })
                 });
                 const data = await res.json();
 
                 if (data.status === 'success') {
-                    tg.HapticFeedback.notificationOccurred('success');
-                    tg.showAlert("✅ " + data.message);
-                    // Clear inputs
-                    document.getElementById(`${mode}-amount`).value = "";
-                    if(mode === 'sell') document.getElementById('sell-txid').value = "";
+                    // Start Polling UI
+                    showPollingModal(data.order_id);
                 } else {
-                    tg.HapticFeedback.notificationOccurred('error');
                     tg.showAlert("❌ " + data.message);
+                    btn.disabled = false; btn.innerHTML = '<i class="fas fa-bolt"></i> خرید آنی';
                 }
-            } catch (e) {
-                tg.showAlert("خطای ارتباط با سرور");
-            } finally {
-                btn.disabled = false;
-                btn.classList.remove('btn-disabled');
-                btn.innerHTML = originalText;
-            }
+            } catch (e) { tg.showAlert("خطای شبکه"); btn.disabled = false; btn.innerHTML = '<i class="fas fa-bolt"></i> خرید آنی'; }
+        }
+
+        function showPollingModal(orderId) {
+            const modal = document.getElementById('status-modal');
+            modal.classList.add('active');
+            
+            // Start checking status every 3 seconds
+            const interval = setInterval(async () => {
+                try {
+                    const res = await fetch(`${API_BASE_URL}/webapp/usdt/check_status`, {
+                        method: 'POST', headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ order_id: orderId }) // No initData needed for simple status check
+                    });
+                    const data = await res.json();
+
+                    if (data.status === 'completed') {
+                        clearInterval(interval);
+                        // Update Modal to Success
+                        document.getElementById('modal-loader').style.display = 'none';
+                        document.getElementById('modal-icon').style.display = 'block';
+                        document.getElementById('modal-title').innerText = "تراکنش موفق!";
+                        document.getElementById('modal-title').style.color = "#00D578";
+                        document.getElementById('modal-desc').innerText = "تتر به کیف پول شما ارسال شد.";
+                        
+                        document.getElementById('txid-container').style.display = 'block';
+                        document.getElementById('final-txid').innerText = data.txid;
+                        
+                        document.getElementById('modal-close-btn').style.display = 'inline-block';
+                        tg.HapticFeedback.notificationOccurred('success');
+                    } else if (data.status === 'rejected') {
+                        clearInterval(interval);
+                        document.getElementById('modal-title').innerText = "سفارش رد شد";
+                        document.getElementById('modal-title').style.color = "#FF3B30";
+                        document.getElementById('modal-desc').innerText = "سفارش شما توسط ادمین رد شد و مبلغ بازگشت داده شد.";
+                        document.getElementById('modal-close-btn').style.display = 'inline-block';
+                        document.getElementById('modal-loader').style.display = 'none';
+                        tg.HapticFeedback.notificationOccurred('error');
+                    }
+                } catch(e) {}
+            }, 3000);
+        }
+
+        // --- SELL LOGIC (Same as before) ---
+        async function submitSell() {
+            const amount = parseFloat(document.getElementById('sell-amount').value);
+            const txid = document.getElementById('sell-txid').value;
+            if(!amount || amount < 2) { tg.showAlert("حداقل فروش ۲ تتر."); return; }
+            if(txid.length < 10) { tg.showAlert("شناسه تراکنش نامعتبر."); return; }
+
+            const btn = document.getElementById('btn-sell');
+            btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> پردازش...';
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/webapp/usdt/sell`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ initData: tg.initData, amount: amount, txid: txid, network: document.getElementById('sell-network').value })
+                });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    tg.showAlert("✅ " + data.message);
+                    document.getElementById('sell-amount').value = ""; document.getElementById('sell-txid').value = "";
+                } else { tg.showAlert("❌ " + data.message); }
+            } catch (e) { tg.showAlert("خطا"); }
+            btn.disabled = false; btn.innerHTML = '<i class="fas fa-check-circle"></i> ثبت فروش';
         }
     </script>
 </body>

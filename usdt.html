@@ -10,7 +10,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
     <style>
-        /* (استایل‌ها همان قبلی - بدون تغییر برای شلوغ نشدن) */
+        /* (استایل‌ها همان قبلی) */
         @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700;900&display=swap');
         :root { --bg: #000000; --card-bg: #141414; --text-main: #FFFFFF; --text-muted: #9CA3AF; --usdt-green: #00D578; --sell-red: #FF3B30; --input-bg: #1F1F1F; --border: rgba(255,255,255,0.08); --glow: 0 0 15px rgba(0, 213, 120, 0.3); }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; outline: none; }
@@ -59,7 +59,6 @@
         .txid-box { background: #000; border: 1px dashed var(--usdt-green); padding: 15px; border-radius: 12px; margin: 15px 0; display: none; text-align: center; }
         .txid-text { font-family: monospace; font-size: 0.9rem; color: var(--usdt-green); word-break: break-all; margin-bottom: 10px; background: rgba(0, 213, 120, 0.1); padding: 8px; border-radius: 6px; }
         .copy-btn-modal { background: var(--usdt-green); color: #000; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 700; width: 100%; transition: transform 0.1s; }
-        .copy-btn-modal:active { transform: scale(0.95); }
     </style>
 </head>
 <body>
@@ -105,12 +104,14 @@
         </div>
 
         <div id="sell-form" class="form-section">
-            <div class="inp-group"><label class="inp-label">شبکه واریز</label><select id="sell-network" class="select-field" onchange="updateWalletAddress()"><option value="TRC20">Tron (TRC20)</option><option value="BEP20">BNB Smart Chain (BEP20)</option><option value="TON">TON Network</option></select></div>
+            <div class="inp-group"><label class="inp-label">شبکه واریز</label><select id="sell-network" class="select-field" onchange="updateWalletAddress()"><option value="TRC20">Tron (TRC20)</option><option value="BEP20">BNB Smart Chain (BEP20)</option></select></div>
+            
             <div style="background: rgba(255, 255, 255, 0.03); border: 1px dashed var(--border); border-radius: 16px; padding: 16px; margin-bottom: 24px; text-align: center;">
                 <span style="font-size:0.85rem; color:#aaa">تترها را به آدرس زیر واریز کنید:</span>
-                <div id="admin-wallet-address" style="font-family: monospace; font-size: 0.85rem; color: var(--usdt-green); word-break: break-all; background: rgba(0, 213, 120, 0.1); padding: 10px; border-radius: 8px; margin: 10px 0; select-all: auto;">Loading...</div>
+                <div id="admin-wallet-address" style="font-family: monospace; font-size: 0.85rem; color: var(--usdt-green); word-break: break-all; background: rgba(0, 213, 120, 0.1); padding: 10px; border-radius: 8px; margin: 10px 0; select-all: auto;">در حال دریافت...</div>
                 <div style="font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer;" onclick="copyAddress()"><i class="fas fa-copy"></i> کپی کردن آدرس</div>
             </div>
+            
             <div class="inp-group"><label class="inp-label">مقدار واریزی (USDT)</label><div class="input-wrapper"><input type="tel" id="sell-amount" class="inp-field" placeholder="50" oninput="calc('sell')"><span class="inp-icon">₮</span></div><div class="calc-result"><span class="calc-text">دریافتی شما:</span><span class="calc-val" id="sell-total" style="color:var(--usdt-green)">0 <span style="font-size:0.8rem;color:#888">تومان</span></span></div></div>
             <div class="inp-group"><label class="inp-label">هش تراکنش (TxID)</label><div class="input-wrapper"><input type="text" id="sell-txid" class="inp-field" placeholder="شناسه تراکنش..." style="font-size:0.85rem"><i class="fas fa-hashtag inp-icon"></i></div></div>
             <button id="btn-sell" class="action-btn btn-red" onclick="submitSell()"><i class="fas fa-check-circle"></i> ثبت فروش</button>
@@ -121,8 +122,8 @@
         const tg = window.Telegram.WebApp;
         const API_BASE_URL = window.location.origin;
         
-        // این متغیر حالا داینامیک است و از سرور پر می‌شود
-        let WALLETS = { 'TRC20': '', 'BEP20': '', 'TON': '' }; 
+        // متغیر خالی؛ مقادیر از سرور پر می‌شوند
+        let WALLETS = { 'TRC20': '', 'BEP20': '' }; 
         let rates = { buy: 0, sell: 0 };
 
         window.onload = function() {
@@ -146,10 +147,10 @@
                 if(data.status === 'success') {
                     rates.buy = data.sell; rates.sell = data.buy;
                     
-                    // --- آپدیت داینامیک کیف پول‌ها ---
+                    // دریافت آدرس‌ها از سرور
                     if (data.wallets) {
                         WALLETS = data.wallets;
-                        updateWalletAddress(); // رفرش آدرس روی صفحه
+                        updateWalletAddress(); // رفرش فوری
                     }
                     
                     document.getElementById('rate-sell').innerText = parseInt(rates.buy).toLocaleString();
@@ -160,8 +161,9 @@
 
         function updateWalletAddress() { 
             const net = document.getElementById('sell-network').value;
-            const addr = WALLETS[net] || "در حال دریافت...";
-            document.getElementById('admin-wallet-address').innerText = addr; 
+            // اگر هنوز لود نشده یا تنظیم نشده، پیام مناسب بدهد
+            const addr = WALLETS[net];
+            document.getElementById('admin-wallet-address').innerText = (addr && addr.length > 5) ? addr : "تنظیم نشده (با پشتیبانی تماس بگیرید)"; 
         }
         
         function copyAddress() { navigator.clipboard.writeText(document.getElementById('admin-wallet-address').innerText); tg.showAlert("✅ آدرس کپی شد!"); }

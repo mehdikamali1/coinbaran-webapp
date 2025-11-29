@@ -10,9 +10,8 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
     <style>
-        /* (استایل‌ها همان قبلی) */
         @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700;900&display=swap');
-        :root { --bg: #000000; --card-bg: #141414; --text-main: #FFFFFF; --text-muted: #9CA3AF; --usdt-green: #00D578; --sell-red: #FF3B30; --input-bg: #1F1F1F; --border: rgba(255,255,255,0.08); --glow: 0 0 15px rgba(0, 213, 120, 0.3); }
+        :root { --bg: #000000; --card-bg: #141414; --text-main: #FFFFFF; --text-muted: #9CA3AF; --usdt-green: #00D578; --sell-red: #FF3B30; --warning-amber: #FFB340; --input-bg: #1F1F1F; --border: rgba(255,255,255,0.08); --glow: 0 0 15px rgba(0, 213, 120, 0.3); }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; outline: none; }
         body { margin: 0; padding: 0; font-family: 'Vazirmatn', sans-serif; background: var(--bg); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         .header { padding: 18px 24px; background: rgba(20, 20, 20, 0.8); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; z-index: 10; }
@@ -59,6 +58,22 @@
         .txid-box { background: #000; border: 1px dashed var(--usdt-green); padding: 15px; border-radius: 12px; margin: 15px 0; display: none; text-align: center; }
         .txid-text { font-family: monospace; font-size: 0.9rem; color: var(--usdt-green); word-break: break-all; margin-bottom: 10px; background: rgba(0, 213, 120, 0.1); padding: 8px; border-radius: 6px; }
         .copy-btn-modal { background: var(--usdt-green); color: #000; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 700; width: 100%; transition: transform 0.1s; }
+        
+        /* New Styles for Fee Warning */
+        .fee-alert {
+            background: rgba(255, 179, 64, 0.1);
+            border: 1px solid rgba(255, 179, 64, 0.3);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+        .fee-icon { color: var(--warning-amber); font-size: 1.3rem; margin-top: 2px; }
+        .fee-text { font-size: 0.85rem; line-height: 1.6; color: #eee; }
+        .fee-highlight { color: var(--warning-amber); font-weight: 800; }
+        .fee-small { display: block; font-size: 0.75rem; color: var(--text-muted); margin-top: 6px; }
     </style>
 </head>
 <body>
@@ -112,7 +127,16 @@
                 <div style="font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer;" onclick="copyAddress()"><i class="fas fa-copy"></i> کپی کردن آدرس</div>
             </div>
             
-            <div class="inp-group"><label class="inp-label">مقدار واریزی (USDT)</label><div class="input-wrapper"><input type="tel" id="sell-amount" class="inp-field" placeholder="50" oninput="calc('sell')"><span class="inp-icon">₮</span></div><div class="calc-result"><span class="calc-text">دریافتی شما:</span><span class="calc-val" id="sell-total" style="color:var(--usdt-green)">0 <span style="font-size:0.8rem;color:#888">تومان</span></span></div></div>
+            <div class="fee-alert">
+                <div class="fee-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                <div class="fee-text">
+                    <span class="fee-highlight">نکته بسیار مهم:</span><br>
+                    مبلغی که در فیلد زیر وارد می‌کنید باید <b>دقیقاً برابر با مبلغ خالص دریافتی ما</b> (Net Amount) باشد.<br>
+                    <span class="fee-small">مثال: اگر ۱۰۰ تتر می‌فروشید و صرافی شما ۱ تتر کارمزد کسر می‌کند، باید ۱۰۱ تتر ارسال کنید تا دقیقاً ۱۰۰ تتر به کیف پول ما بنشیند.</span>
+                </div>
+            </div>
+
+            <div class="inp-group"><label class="inp-label">مقدار خالص دریافتی ما (USDT)</label><div class="input-wrapper"><input type="tel" id="sell-amount" class="inp-field" placeholder="100" oninput="calc('sell')"><span class="inp-icon">₮</span></div><div class="calc-result"><span class="calc-text">دریافتی شما:</span><span class="calc-val" id="sell-total" style="color:var(--usdt-green)">0 <span style="font-size:0.8rem;color:#888">تومان</span></span></div></div>
             <div class="inp-group"><label class="inp-label">هش تراکنش (TxID)</label><div class="input-wrapper"><input type="text" id="sell-txid" class="inp-field" placeholder="شناسه تراکنش..." style="font-size:0.85rem"><i class="fas fa-hashtag inp-icon"></i></div></div>
             <button id="btn-sell" class="action-btn btn-red" onclick="submitSell()"><i class="fas fa-check-circle"></i> ثبت فروش</button>
         </div>
@@ -122,7 +146,6 @@
         const tg = window.Telegram.WebApp;
         const API_BASE_URL = window.location.origin;
         
-        // متغیر خالی؛ مقادیر از سرور پر می‌شوند
         let WALLETS = { 'TRC20': '', 'BEP20': '' }; 
         let rates = { buy: 0, sell: 0 };
 
@@ -147,10 +170,9 @@
                 if(data.status === 'success') {
                     rates.buy = data.sell; rates.sell = data.buy;
                     
-                    // دریافت آدرس‌ها از سرور
                     if (data.wallets) {
                         WALLETS = data.wallets;
-                        updateWalletAddress(); // رفرش فوری
+                        updateWalletAddress();
                     }
                     
                     document.getElementById('rate-sell').innerText = parseInt(rates.buy).toLocaleString();
@@ -161,7 +183,6 @@
 
         function updateWalletAddress() { 
             const net = document.getElementById('sell-network').value;
-            // اگر هنوز لود نشده یا تنظیم نشده، پیام مناسب بدهد
             const addr = WALLETS[net];
             document.getElementById('admin-wallet-address').innerText = (addr && addr.length > 5) ? addr : "تنظیم نشده (با پشتیبانی تماس بگیرید)"; 
         }
@@ -183,7 +204,7 @@
             modal.classList.add('active');
             
             if (type === 'sell') {
-                document.getElementById('modal-desc').innerHTML = "درخواست فروش ارسال شد.<br>در حال بررسی تراکنش...";
+                document.getElementById('modal-desc').innerHTML = "درخواست فروش ارسال شد.<br>در حال بررسی تراکنش در بلاکچین...";
                 document.getElementById('txid-container').style.display = 'none';
             } else {
                 document.getElementById('modal-desc').innerHTML = "درخواست خرید ارسال شد.<br>منتظر تایید ادمین...";
@@ -210,7 +231,7 @@
                             document.getElementById('txid-container').style.display = 'block';
                             document.getElementById('final-txid').innerText = data.txid;
                         } else {
-                            document.getElementById('modal-desc').innerText = "تراکنش تایید و مبلغ ریالی به کیف پول شما واریز شد.";
+                            document.getElementById('modal-desc').innerText = "تراکنش تایید و مبلغ ریالی آنی به کیف پول شما واریز شد.";
                         }
                         
                         document.getElementById('modal-close-btn').style.display = 'inline-block';
@@ -221,7 +242,7 @@
                         document.getElementById('modal-loader').style.display = 'none';
                         document.getElementById('modal-title').innerText = "رد شد";
                         document.getElementById('modal-title').style.color = "#FF3B30";
-                        document.getElementById('modal-desc').innerText = "سفارش توسط ادمین رد شد.";
+                        document.getElementById('modal-desc').innerText = "سفارش انجام نشد (تراکنش نامعتبر یا رد شده توسط ادمین).";
                         document.getElementById('modal-close-btn').style.display = 'inline-block';
                         tg.HapticFeedback.notificationOccurred('error');
                     }
@@ -250,7 +271,7 @@
             const txid = document.getElementById('sell-txid').value;
             if(!amount || amount < 2) { tg.showAlert("حداقل فروش ۲ تتر."); return; }
             if(txid.length < 10) { tg.showAlert("TxID نامعتبر."); return; }
-            const btn = document.getElementById('btn-sell'); btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> پردازش...';
+            const btn = document.getElementById('btn-sell'); btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> اعتبارسنجی...';
             try {
                 const res = await fetch(`${API_BASE_URL}/webapp/usdt/sell`, {
                     method: 'POST', headers: {'Content-Type': 'application/json'},
@@ -258,7 +279,7 @@
                 });
                 const data = await res.json();
                 if (data.status === 'success') { showPollingModal(data.order_id, 'sell'); } else { tg.showAlert("❌ " + data.message); btn.disabled = false; btn.innerHTML = '<i class="fas fa-check-circle"></i> ثبت فروش'; }
-            } catch (e) { tg.showAlert("خطا"); btn.disabled = false; btn.innerHTML = '<i class="fas fa-check-circle"></i> ثبت فروش'; }
+            } catch (e) { tg.showAlert("خطا در ارتباط با سرور"); btn.disabled = false; btn.innerHTML = '<i class="fas fa-check-circle"></i> ثبت فروش'; }
         }
     </script>
 </body>

@@ -1,4 +1,5 @@
-﻿(function () {
+﻿#live.js
+(function () {
     const tg = window.Telegram.WebApp;
     
     // ------------------------------------------------------------------------

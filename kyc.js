@@ -1,4 +1,5 @@
-﻿(function () {
+﻿#kyc.js
+(function () {
     const tg = window.Telegram.WebApp;
     
     // ------------------------------------------------------------------------

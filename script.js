@@ -1,35 +1,47 @@
-﻿/* webapp/script.js (Production Version) */
+﻿/* webapp/script.js (Production Version - Zero Trust Auth) */
 (function () {
     'use strict';
     const tg = window.Telegram.WebApp;
+    // استفاده از Origin برای سازگاری با تانل‌های Cloudflare
     const API_BASE_URL = window.location.origin;
 
+    // کش کردن عناصر DOM برای پرفورمنس بهتر
     const loader = document.getElementById('loader');
     const appContainer = document.getElementById('app-container');
     const els = {
         welcomeName: document.getElementById('welcome-name'),
         tomanBalance: document.getElementById('toman-balance'),
+        uusdBalance: document.getElementById('uusd-balance'), // اضافه شده
         xpBalance: document.getElementById('xp-balance'),
         kycText: document.getElementById('kyc-text'),
-        kycStatus: document.getElementById('kyc-status')
+        // اگر المان وضعیت KYC در HTML دارید، اینجا اضافه کنید
     };
 
     async function init() {
-        tg.ready();
-        tg.expand();
+        try {
+            tg.ready();
+            tg.expand();
+            // تنظیم رنگ هدر برای یکپارچگی با تم
+            tg.setHeaderColor('#050505'); 
+            tg.setBackgroundColor('#050505');
 
-        if (!tg.initData) {
-            // اگر خارج از تلگرام باز شود، فقط پیام خطا می‌دهد
-            document.body.innerHTML = "<h3 style='color:white;text-align:center;margin-top:50px'>لطفاً از داخل ربات تلگرام باز کنید</h3>";
-            return;
+            if (!tg.initData) {
+                // جلوگیری از دسترسی خارج از تلگرام (لایه اول امنیتی کلاینت)
+                document.body.innerHTML = "<div style='color:white;text-align:center;padding-top:50px;font-family:sans-serif;'>⛔️ دسترسی غیرمجاز<br>لطفاً از داخل ربات اجرا کنید.</div>";
+                return;
+            }
+
+            // نمایش لودر و شروع دریافت دیتا
+            await fetchAllData();
+
+        } catch (e) {
+            console.error("Init Error:", e);
         }
-
-        showLoader();
-        await fetchAllData();
     }
 
     async function fetchAllData() {
         try {
+            // درخواست به بک‌ند با ارسال initData برای احراز هویت
             const response = await fetch(`${API_BASE_URL}/webapp/get_user_data`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -37,37 +49,53 @@
             });
 
             if (!response.ok) throw new Error(`Server Error: ${response.status}`);
+            
             const userData = await response.json();
+            
+            if (userData.status === 'error') {
+                 tg.showAlert(userData.message || "خطا در دریافت اطلاعات کاربر");
+                 return;
+            }
+
             updateDashboard(userData);
             
-            // گیمیفیکیشن (اختیاری)
-            fetch(`${API_BASE_URL}/webapp/get_gamification_data`, {
-                method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ initData: tg.initData })
-            }).catch(e => console.log(e));
+            // مخفی کردن لودر با انیمیشن نرم
+            setTimeout(() => {
+                if(loader) loader.style.opacity = '0';
+                setTimeout(() => {
+                    hideLoader();
+                }, 300);
+            }, 500);
 
         } catch (error) {
             console.error(error);
-            alert("خطا در دریافت اطلاعات. لطفاً مجدداً تلاش کنید.");
-        } finally {
-            hideLoader();
+            tg.showAlert("⚠️ خطای شبکه. لطفاً اتصال اینترنت خود را بررسی کنید.");
         }
     }
 
     function updateDashboard(data) {
-        els.welcomeName.textContent = `سلام، ${data.first_name}`;
-        els.welcomeName.classList.remove('loading');
-        els.tomanBalance.textContent = `${data.toman_balance} تومان`;
-        els.tomanBalance.classList.remove('loading');
-        els.xpBalance.textContent = `${data.xp_balance} XP`;
-        els.xpBalance.classList.remove('loading');
-        els.kycText.textContent = data.kyc_status_text;
-        els.kycStatus.classList.remove('loading');
-        els.kycStatus.classList.add(data.kyc_status_code);
+        if (els.welcomeName) els.welcomeName.textContent = data.first_name;
+        
+        // فرمت‌دهی اعداد (جداکننده هزارگان)
+        if (els.tomanBalance) els.tomanBalance.textContent = data.toman_balance; 
+        if (els.uusdBalance) els.uusdBalance.textContent = `$ ${data.uusd_balance}`;
+        if (els.xpBalance) els.xpBalance.textContent = data.xp_balance;
+        
+        if (els.kycText) {
+            els.kycText.textContent = data.kyc_status_text;
+            // تغییر رنگ بج بر اساس وضعیت (اختیاری)
+            if (data.kyc_status_code === 'verified') {
+                els.kycText.style.color = 'var(--success)';
+                els.kycText.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+                els.kycText.style.background = 'rgba(16, 185, 129, 0.1)';
+            }
+        }
     }
 
-    function showLoader() { loader.style.display = 'flex'; appContainer.classList.add('hidden'); }
-    function hideLoader() { loader.style.display = 'none'; appContainer.classList.remove('hidden'); }
+    function hideLoader() { 
+        if(loader) loader.style.display = 'none'; 
+        if(appContainer) appContainer.classList.remove('hidden'); 
+    }
 
     document.addEventListener("DOMContentLoaded", init);
 })();

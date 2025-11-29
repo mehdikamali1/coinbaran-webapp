@@ -10,40 +10,25 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
     <style>
+        /* (استایل‌ها همان قبلی - بدون تغییر برای شلوغ نشدن) */
         @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700;900&display=swap');
-        
-        :root { 
-            --bg: #000000; --card-bg: #141414; --text-main: #FFFFFF; --text-muted: #9CA3AF;
-            --usdt-green: #00D578; --sell-red: #FF3B30; --input-bg: #1F1F1F;
-            --border: rgba(255,255,255,0.08); --glow: 0 0 15px rgba(0, 213, 120, 0.3);
-        }
-        
+        :root { --bg: #000000; --card-bg: #141414; --text-main: #FFFFFF; --text-muted: #9CA3AF; --usdt-green: #00D578; --sell-red: #FF3B30; --input-bg: #1F1F1F; --border: rgba(255,255,255,0.08); --glow: 0 0 15px rgba(0, 213, 120, 0.3); }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; outline: none; }
-        
-        body { 
-            margin: 0; padding: 0; font-family: 'Vazirmatn', sans-serif; 
-            background: var(--bg); color: var(--text-main); height: 100vh; 
-            display: flex; flex-direction: column; overflow: hidden;
-        }
-
-        /* --- HEADER & CONTENT --- */
+        body { margin: 0; padding: 0; font-family: 'Vazirmatn', sans-serif; background: var(--bg); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         .header { padding: 18px 24px; background: rgba(20, 20, 20, 0.8); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; z-index: 10; }
         .back-btn { background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text-main); width: 38px; height: 38px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; }
         .back-btn:active { transform: scale(0.92); background: rgba(255,255,255,0.1); }
         .page-title { margin: 0; font-size: 1.1rem; font-weight: 800; display: flex; align-items: center; gap: 8px; }
         .content { flex: 1; padding: 20px 24px; overflow-y: auto; padding-bottom: 50px; }
-
         .price-card { background: linear-gradient(135deg, rgba(0, 213, 120, 0.15) 0%, rgba(20, 20, 20, 0) 100%); border: 1px solid rgba(0, 213, 120, 0.2); border-radius: 20px; padding: 20px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; }
         .price-item { display: flex; flex-direction: column; gap: 4px; }
         .p-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; }
         .p-val { font-family: monospace; font-size: 1.2rem; font-weight: 800; letter-spacing: -0.5px; }
         .buy-col { color: var(--sell-red); } .sell-col { color: var(--usdt-green); text-shadow: 0 0 10px rgba(0, 213, 120, 0.4); }
-
         .switch-box { background: var(--input-bg); border-radius: 16px; padding: 4px; display: flex; margin-bottom: 25px; border: 1px solid var(--border); }
         .switch-btn { flex: 1; padding: 12px; text-align: center; border-radius: 12px; font-weight: 700; font-size: 0.95rem; color: var(--text-muted); transition: all 0.3s; cursor: pointer; }
         .switch-btn.active.buy { background: var(--usdt-green); color: #000; box-shadow: var(--glow); }
         .switch-btn.active.sell { background: var(--sell-red); color: #fff; box-shadow: 0 0 15px rgba(255, 59, 48, 0.3); }
-
         .form-section { display: none; opacity: 0; transform: translateY(10px); transition: all 0.3s ease; }
         .form-section.active { display: block; opacity: 1; transform: translateY(0); }
         .inp-group { margin-bottom: 20px; }
@@ -60,26 +45,21 @@
         .btn-green { background: var(--usdt-green); color: #000; box-shadow: var(--glow); }
         .btn-red { background: var(--sell-red); box-shadow: 0 4px 20px rgba(255, 59, 48, 0.3); }
         .btn-disabled { opacity: 0.5; pointer-events: none; filter: grayscale(1); }
-
-        /* --- MODAL STYLES --- */
         .status-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: all 0.3s; backdrop-filter: blur(5px); }
         .status-modal.active { opacity: 1; visibility: visible; }
-        
         .loader-ring { width: 60px; height: 60px; border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--usdt-green); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
         .checkmark-circle { width: 80px; height: 80px; position: relative; display: none; margin-bottom: 20px; }
         .checkmark-circle::before { content: ''; position: absolute; inset: 0; border-radius: 50%; border: 4px solid var(--usdt-green); animation: ripple 1s ease-out forwards; }
         .checkmark-icon { font-size: 3rem; color: var(--usdt-green); position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
         @keyframes ripple { 0% { transform: scale(0.8); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
-
         .status-content { text-align: center; padding: 25px; width: 85%; max-width: 350px; background: #1a1a1a; border-radius: 24px; border: 1px solid var(--border); box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
         .status-title { font-size: 1.2rem; font-weight: 800; margin-bottom: 10px; color: #fff; }
         .status-desc { font-size: 0.9rem; color: #aaa; margin-bottom: 20px; line-height: 1.6; }
-        
         .txid-box { background: #000; border: 1px dashed var(--usdt-green); padding: 15px; border-radius: 12px; margin: 15px 0; display: none; text-align: center; }
         .txid-text { font-family: monospace; font-size: 0.9rem; color: var(--usdt-green); word-break: break-all; margin-bottom: 10px; background: rgba(0, 213, 120, 0.1); padding: 8px; border-radius: 6px; }
         .copy-btn-modal { background: var(--usdt-green); color: #000; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 700; width: 100%; transition: transform 0.1s; }
+        .copy-btn-modal:active { transform: scale(0.95); }
     </style>
 </head>
 <body>
@@ -88,16 +68,13 @@
         <div class="status-content">
             <div id="modal-loader" class="loader-ring"></div>
             <div id="modal-success-icon" class="checkmark-circle"><i class="fas fa-check checkmark-icon"></i></div>
-
             <div id="modal-title" class="status-title">در حال پردازش...</div>
-            <div id="modal-desc" class="status-desc">درخواست شما به ادمین ارسال شد.</div>
-            
+            <div id="modal-desc" class="status-desc">درخواست شما به ادمین ارسال شد.<br>لطفاً منتظر تایید بمانید.</div>
             <div id="txid-container" class="txid-box">
                 <div style="font-size:0.75rem; color:#666; margin-bottom:8px">شناسه تراکنش (TxID):</div>
                 <div id="final-txid" class="txid-text">...</div>
                 <button class="copy-btn-modal" onclick="copyTxID()">کپی کردن TxID</button>
             </div>
-
             <button id="modal-close-btn" class="action-btn btn-green" style="margin-top:10px; display:none" onclick="closeModal()">بستن</button>
         </div>
     </div>
@@ -121,24 +98,14 @@
         </div>
 
         <div id="buy-form" class="form-section active">
-            <div class="inp-group">
-                <label class="inp-label">مقدار خرید (USDT)</label>
-                <div class="input-wrapper"><input type="tel" id="buy-amount" class="inp-field" placeholder="100" oninput="calc('buy')"><span class="inp-icon">₮</span></div>
-                <div class="calc-result"><span class="calc-text">مبلغ پرداختی:</span><span class="calc-val" id="buy-total">0 <span style="font-size:0.8rem;color:#888">تومان</span></span></div>
-            </div>
-            <div class="inp-group">
-                <label class="inp-label">شبکه انتقال</label>
-                <select id="buy-network" class="select-field"><option value="TRC20">Tron (TRC20)</option><option value="BEP20">BNB Smart Chain (BEP20)</option><option value="TON">TON Network</option></select>
-            </div>
-            <div class="inp-group">
-                <label class="inp-label">آدرس کیف پول شما</label>
-                <div class="input-wrapper"><input type="text" id="buy-address" class="inp-field" placeholder="T..." style="font-size:0.85rem"><i class="fas fa-wallet inp-icon"></i></div>
-            </div>
+            <div class="inp-group"><label class="inp-label">مقدار خرید (USDT)</label><div class="input-wrapper"><input type="tel" id="buy-amount" class="inp-field" placeholder="100" oninput="calc('buy')"><span class="inp-icon">₮</span></div><div class="calc-result"><span class="calc-text">مبلغ پرداختی:</span><span class="calc-val" id="buy-total">0 <span style="font-size:0.8rem;color:#888">تومان</span></span></div></div>
+            <div class="inp-group"><label class="inp-label">شبکه انتقال</label><select id="buy-network" class="select-field"><option value="TRC20">Tron (TRC20)</option><option value="BEP20">BNB Smart Chain (BEP20)</option><option value="TON">TON Network</option></select></div>
+            <div class="inp-group"><label class="inp-label">آدرس کیف پول شما</label><div class="input-wrapper"><input type="text" id="buy-address" class="inp-field" placeholder="T..." style="font-size:0.85rem"><i class="fas fa-wallet inp-icon"></i></div></div>
             <button id="btn-buy" class="action-btn btn-green" onclick="submitBuy()"><i class="fas fa-bolt"></i> خرید آنی</button>
         </div>
 
         <div id="sell-form" class="form-section">
-            <div class="inp-group"><label class="inp-label">شبکه واریز</label><select id="sell-network" class="select-field" onchange="updateWalletAddress()"><option value="TRC20">Tron (TRC20)</option><option value="BEP20">BNB Smart Chain (BEP20)</option></select></div>
+            <div class="inp-group"><label class="inp-label">شبکه واریز</label><select id="sell-network" class="select-field" onchange="updateWalletAddress()"><option value="TRC20">Tron (TRC20)</option><option value="BEP20">BNB Smart Chain (BEP20)</option><option value="TON">TON Network</option></select></div>
             <div style="background: rgba(255, 255, 255, 0.03); border: 1px dashed var(--border); border-radius: 16px; padding: 16px; margin-bottom: 24px; text-align: center;">
                 <span style="font-size:0.85rem; color:#aaa">تترها را به آدرس زیر واریز کنید:</span>
                 <div id="admin-wallet-address" style="font-family: monospace; font-size: 0.85rem; color: var(--usdt-green); word-break: break-all; background: rgba(0, 213, 120, 0.1); padding: 10px; border-radius: 8px; margin: 10px 0; select-all: auto;">Loading...</div>
@@ -153,14 +120,15 @@
     <script>
         const tg = window.Telegram.WebApp;
         const API_BASE_URL = window.location.origin;
-        const WALLETS = { 'TRC20': 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t', 'BEP20': '0x55d398326f99059fF775485246999027B3197955' };
+        
+        // این متغیر حالا داینامیک است و از سرور پر می‌شود
+        let WALLETS = { 'TRC20': '', 'BEP20': '', 'TON': '' }; 
         let rates = { buy: 0, sell: 0 };
 
         window.onload = function() {
             tg.ready(); tg.expand(); tg.setHeaderColor('#141414');
             if (!tg.initData) tg.initData = "query_id=TEST&user=%7B%22id%22%3A111111111%7D&auth_date=1700000000&hash=fake";
             fetchRates();
-            updateWalletAddress();
         };
 
         function setMode(mode) {
@@ -177,13 +145,25 @@
                 const data = await res.json();
                 if(data.status === 'success') {
                     rates.buy = data.sell; rates.sell = data.buy;
+                    
+                    // --- آپدیت داینامیک کیف پول‌ها ---
+                    if (data.wallets) {
+                        WALLETS = data.wallets;
+                        updateWalletAddress(); // رفرش آدرس روی صفحه
+                    }
+                    
                     document.getElementById('rate-sell').innerText = parseInt(rates.buy).toLocaleString();
                     document.getElementById('rate-buy').innerText = parseInt(rates.sell).toLocaleString();
                 }
             } catch(e) {}
         }
 
-        function updateWalletAddress() { document.getElementById('admin-wallet-address').innerText = WALLETS[document.getElementById('sell-network').value] || "Loading..."; }
+        function updateWalletAddress() { 
+            const net = document.getElementById('sell-network').value;
+            const addr = WALLETS[net] || "در حال دریافت...";
+            document.getElementById('admin-wallet-address').innerText = addr; 
+        }
+        
         function copyAddress() { navigator.clipboard.writeText(document.getElementById('admin-wallet-address').innerText); tg.showAlert("✅ آدرس کپی شد!"); }
         function copyTxID() { navigator.clipboard.writeText(document.getElementById('final-txid').innerText); tg.showAlert("✅ TxID کپی شد!"); }
         function closeModal() { document.getElementById('status-modal').classList.remove('active'); window.location.reload(); }
@@ -196,15 +176,13 @@
             displayEl.innerHTML = `${parseInt(amount * price).toLocaleString()} <span style="font-size:0.8rem;color:#888">تومان</span>`;
         }
 
-        // --- SHARED POLLING FUNCTION ---
         function showPollingModal(orderId, type) {
             const modal = document.getElementById('status-modal');
             modal.classList.add('active');
             
-            // Text adjustments based on type
             if (type === 'sell') {
                 document.getElementById('modal-desc').innerHTML = "درخواست فروش ارسال شد.<br>در حال بررسی تراکنش...";
-                document.getElementById('txid-container').style.display = 'none'; // Hide TxID for sell (user already has it)
+                document.getElementById('txid-container').style.display = 'none';
             } else {
                 document.getElementById('modal-desc').innerHTML = "درخواست خرید ارسال شد.<br>منتظر تایید ادمین...";
                 document.getElementById('txid-container').style.display = 'none';
@@ -214,7 +192,7 @@
                 try {
                     const res = await fetch(`${API_BASE_URL}/webapp/usdt/check_status`, {
                         method: 'POST', headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ order_id: orderId, type: type }) // Pass Type
+                        body: JSON.stringify({ order_id: orderId, type: type })
                     });
                     const data = await res.json();
 
@@ -222,7 +200,6 @@
                         clearInterval(interval);
                         document.getElementById('modal-loader').style.display = 'none';
                         document.getElementById('modal-success-icon').style.display = 'block';
-                        
                         document.getElementById('modal-title').innerText = (type === 'buy') ? "تراکنش موفق!" : "واریز موفق!";
                         document.getElementById('modal-title').style.color = "#00D578";
                         
@@ -255,21 +232,15 @@
             const address = document.getElementById('buy-address').value;
             if(!amount || amount < 2) { tg.showAlert("حداقل خرید ۲ تتر."); return; }
             if(address.length < 10) { tg.showAlert("آدرس نامعتبر."); return; }
-
-            const btn = document.getElementById('btn-buy');
-            btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ثبت...';
-
+            const btn = document.getElementById('btn-buy'); btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ثبت...';
             try {
                 const res = await fetch(`${API_BASE_URL}/webapp/usdt/buy`, {
                     method: 'POST', headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ initData: tg.initData, amount: amount, address: address, network: document.getElementById('buy-network').value })
                 });
                 const data = await res.json();
-                if (data.status === 'success') {
-                    showPollingModal(data.order_id, 'buy'); // Type: Buy
-                } else { tg.showAlert("❌ " + data.message); }
-            } catch (e) { tg.showAlert("خطا"); }
-            btn.disabled = false; btn.innerHTML = '<i class="fas fa-bolt"></i> خرید آنی';
+                if (data.status === 'success') { showPollingModal(data.order_id, 'buy'); } else { tg.showAlert("❌ " + data.message); btn.disabled = false; btn.innerHTML = '<i class="fas fa-bolt"></i> خرید آنی'; }
+            } catch (e) { tg.showAlert("خطای شبکه"); btn.disabled = false; btn.innerHTML = '<i class="fas fa-bolt"></i> خرید آنی'; }
         }
 
         async function submitSell() {
@@ -277,21 +248,15 @@
             const txid = document.getElementById('sell-txid').value;
             if(!amount || amount < 2) { tg.showAlert("حداقل فروش ۲ تتر."); return; }
             if(txid.length < 10) { tg.showAlert("TxID نامعتبر."); return; }
-
-            const btn = document.getElementById('btn-sell');
-            btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> پردازش...';
-
+            const btn = document.getElementById('btn-sell'); btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> پردازش...';
             try {
                 const res = await fetch(`${API_BASE_URL}/webapp/usdt/sell`, {
                     method: 'POST', headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ initData: tg.initData, amount: amount, txid: txid, network: document.getElementById('sell-network').value })
                 });
                 const data = await res.json();
-                if (data.status === 'success') {
-                    showPollingModal(data.order_id, 'sell'); // Type: Sell
-                } else { tg.showAlert("❌ " + data.message); }
-            } catch (e) { tg.showAlert("خطا"); }
-            btn.disabled = false; btn.innerHTML = '<i class="fas fa-check-circle"></i> ثبت فروش';
+                if (data.status === 'success') { showPollingModal(data.order_id, 'sell'); } else { tg.showAlert("❌ " + data.message); btn.disabled = false; btn.innerHTML = '<i class="fas fa-check-circle"></i> ثبت فروش'; }
+            } catch (e) { tg.showAlert("خطا"); btn.disabled = false; btn.innerHTML = '<i class="fas fa-check-circle"></i> ثبت فروش'; }
         }
     </script>
 </body>

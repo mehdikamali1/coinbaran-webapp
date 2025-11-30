@@ -1,4 +1,4 @@
-﻿/* webapp/game.js (v31.0 - Final with Swap Feature) */
+﻿/* webapp/game.js (v33.0 - Final Logic with Auto-Format & Result Modal) */
 
 const tg = window.Telegram.WebApp;
 const API_BASE_URL = window.location.origin;
@@ -13,7 +13,7 @@ let lastTime = 0;
 // متغیرهای بازی
 const LOCKOUT_TIME = 15;
 const ROUND_DURATION = 60;
-const EST_USDT_RATE = 70000; // نرخ تقریبی جهت نمایش (محاسبه دقیق در سرور انجام می‌شود)
+const EST_USDT_RATE = 90000; // نرخ تقریبی برای نمایش در کلاینت
 
 // --- سیستم صوتی ---
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -52,22 +52,37 @@ window.onload = function() {
 
     initChart();
     
+    // دریافت دیتای زنده
     setInterval(fetchServerData, 1000);
     fetchServerData();
 
-    // هندل کردن دکمه‌ها (Haptic)
+    // هندل کردن ویبره دکمه‌ها
     document.querySelectorAll('button').forEach(btn => {
         btn.addEventListener('click', () => {
-            if(!btn.disabled) tg.HapticFeedback.impactOccurred('light');
+            if(!btn.disabled && !btn.classList.contains('close-modal')) {
+                tg.HapticFeedback.impactOccurred('light');
+            }
         });
     });
 
-    // لیسنر برای محاسبه مقدار دلاری در مودال
+    // --- لاجیک فرمت 3 رقم (50,000) ---
     const swapInput = document.getElementById('swap-input-toman');
     if(swapInput) {
         swapInput.addEventListener('input', function(e) {
-            const tomans = parseFloat(e.target.value) || 0;
-            // این فقط یک نمایش تقریبی است
+            // 1. حذف کاماها برای محاسبه
+            let rawValue = e.target.value.replace(/,/g, '');
+            // 2. حذف کاراکترهای غیر عددی
+            if(!/^\d*$/.test(rawValue)) { rawValue = rawValue.replace(/\D/g, ''); }
+            
+            // 3. فرمت کردن (اضافه کردن کاما)
+            if (rawValue) {
+                e.target.value = parseInt(rawValue).toLocaleString('en-US');
+            } else {
+                e.target.value = '';
+            }
+            
+            // 4. محاسبه دلاری
+            const tomans = parseFloat(rawValue) || 0;
             const usd = tomans / EST_USDT_RATE;
             document.getElementById('swap-calc-usd').innerText = usd.toFixed(2);
         });
@@ -75,7 +90,7 @@ window.onload = function() {
 };
 
 // =========================================
-// 1. تنظیمات چارت (Mobile Perfect)
+// 1. تنظیمات چارت (Area Chart - Mobile Optimized)
 // =========================================
 function initChart() {
     const container = document.getElementById('tv-chart-container');
@@ -126,9 +141,6 @@ function initChart() {
     }).observe(container);
 }
 
-// =========================================
-// 2. تولید تاریخچه
-// =========================================
 function generateHistoryFromRealPrice(realPrice) {
     const res = [];
     let currentPrice = realPrice;
@@ -145,7 +157,7 @@ function generateHistoryFromRealPrice(realPrice) {
 }
 
 // =========================================
-// 3. دریافت دیتا و آپدیت
+// 2. دریافت دیتا و آپدیت
 // =========================================
 async function fetchServerData() {
     try {
@@ -154,7 +166,10 @@ async function fetchServerData() {
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ initData: tg.initData })
         });
-        if (res.ok) updateGameUI(await res.json());
+        if (res.ok) {
+            const data = await res.json();
+            updateGameUI(data);
+        }
     } catch (e) {
         if (!isFirstLoad) simulateSmoothLocalMovement();
     }
@@ -164,6 +179,11 @@ function updateGameUI(data) {
     const serverPrice = data.current_price;
     const domPrice = document.getElementById('btc-price');
 
+    // [NEW] آپدیت موجودی کاربر در هدر
+    if (data.user_balance !== undefined) {
+        document.getElementById('user-balance-display').innerText = data.user_balance.toLocaleString('en-US', {minimumFractionDigits: 2});
+    }
+
     // لود اولیه بدون گپ
     if (isFirstLoad && serverPrice > 0) {
         const historyData = generateHistoryFromRealPrice(serverPrice);
@@ -171,23 +191,20 @@ function updateGameUI(data) {
         lastTime = Math.floor(Date.now() / 1000);
         areaSeries.update({ time: lastTime, value: serverPrice });
         chart.timeScale().fitContent(); 
-        
-        const loader = document.getElementById('chart-loader');
-        if(loader) loader.classList.add('fade-out');
-        
+        document.getElementById('chart-loader').classList.add('fade-out');
         isFirstLoad = false;
         lastPrice = serverPrice;
     }
 
-    // آپدیت قیمت
+    // تغییر رنگ بر اساس قیمت
     if (serverPrice !== lastPrice) {
         const isUp = serverPrice >= lastPrice;
         const color = isUp ? '#0ECB81' : '#F6465D';
+        
         domPrice.style.color = color;
         domPrice.innerText = serverPrice.toLocaleString('en-US', {minimumFractionDigits: 2});
         
-        const dot = document.querySelector('.blink-dot');
-        if(dot) dot.style.backgroundColor = color;
+        document.querySelector('.blink-dot').style.backgroundColor = color;
         
         areaSeries.applyOptions({
             lineColor: color,
@@ -210,13 +227,14 @@ function updateGameUI(data) {
         }
     }
 
+    // لاجیک بازی
     if (data.round) {
         updateTimerCircle(data.round.time_left);
         updateRoundStatus(data);
     }
     if (data.history) {
         updateHistoryRibbon(data.history);
-        checkWinLoss(data.history);
+        checkWinLoss(data.history); // بررسی نتیجه
     }
 }
 
@@ -225,8 +243,7 @@ function simulateSmoothLocalMovement() {
     const move = (Math.random() - 0.5) * 1.5;
     const newPrice = lastPrice + move;
     
-    const domPrice = document.getElementById('btc-price');
-    domPrice.innerText = newPrice.toFixed(2);
+    document.getElementById('btc-price').innerText = newPrice.toFixed(2);
     
     const now = Math.floor(Date.now() / 1000);
     if (now > lastTime) {
@@ -239,7 +256,7 @@ function simulateSmoothLocalMovement() {
 }
 
 // =========================================
-// 4. تایمر و وضعیت
+// 3. تایمر و وضعیت راند
 // =========================================
 function updateTimerCircle(timeLeft) {
     const elText = document.getElementById('timer-text');
@@ -247,8 +264,7 @@ function updateTimerCircle(timeLeft) {
     const elRing = document.querySelector('.timer-progress');
     
     elText.innerText = timeLeft;
-    const maxDash = 283;
-    const offset = maxDash - (timeLeft / ROUND_DURATION) * maxDash;
+    const offset = 283 - (timeLeft / ROUND_DURATION) * 283;
     elCircle.style.strokeDashoffset = offset;
 
     if (timeLeft <= 5) {
@@ -288,7 +304,7 @@ function updateRoundStatus(data) {
 }
 
 // =========================================
-// 5. هندلینگ شرط‌ها و تبدیل (Swap)
+// 4. لاجیک شرط‌بندی و تبدیل (Swap)
 // =========================================
 window.setAmount = function(val) {
     document.getElementById('bet-amount').value = val;
@@ -299,12 +315,14 @@ window.setAmount = function(val) {
     tg.HapticFeedback.selectionChanged();
 };
 
-// --- توابع جدید تبدیل ارز ---
 window.openSwapModal = () => document.getElementById('swap-modal').classList.add('active');
 window.closeSwapModal = () => document.getElementById('swap-modal').classList.remove('active');
+window.closeResultModal = () => document.getElementById('result-modal').classList.remove('active');
 
 window.performSwap = async function() {
-    const amountToman = parseFloat(document.getElementById('swap-input-toman').value);
+    // خواندن مقدار (حذف کاماها قبل از ارسال)
+    const rawVal = document.getElementById('swap-input-toman').value.replace(/,/g, '');
+    const amountToman = parseFloat(rawVal);
     
     if (!amountToman || amountToman < 50000) {
         showToast("⚠️ حداقل مبلغ ۵۰,۰۰۰ تومان است");
@@ -327,7 +345,6 @@ window.performSwap = async function() {
         if (result.status === 'success') {
             showToast(`✅ ${result.message}`);
             window.closeSwapModal();
-            // پاک کردن اینپوت
             document.getElementById('swap-input-toman').value = '';
             document.getElementById('swap-calc-usd').innerText = '0.00';
         } else {
@@ -356,8 +373,10 @@ window.placeBet = async function(pred) {
         
         if (result.status === 'success') {
             showToast(`✅ Position Open: ${pred} $${amount}`);
+            // ذخیره برای بررسی نتیجه
             localStorage.setItem('last_bet_round_id', result.round_id || "CURRENT"); 
             localStorage.setItem('last_bet_prediction', pred);
+            localStorage.setItem('last_bet_amount', amount);
         } else {
             showToast(`⚠️ ${result.message}`);
             SoundFX.lose();
@@ -367,14 +386,76 @@ window.placeBet = async function(pred) {
     }
 };
 
+// =========================================
+// 5. تشخیص برد/باخت (Result Logic)
+// =========================================
+function checkWinLoss(history) {
+    const myRoundId = localStorage.getItem('last_bet_round_id');
+    const myPrediction = localStorage.getItem('last_bet_prediction');
+    
+    if (!myRoundId || !myPrediction) return;
+
+    // پیدا کردن راند در تاریخچه
+    // نکته: چون آیدی سرور ممکن است کمی تاخیر داشته باشد، آخرین مورد را هم چک میکنیم
+    const round = history.find(h => String(h.round_id) === String(myRoundId)) || history[history.length - 1]; 
+
+    // اگر نتیجه این راند مشخص شده است
+    if (round && round.result) {
+        // برای جلوگیری از نمایش تکراری
+        const processedKey = 'processed_' + round.round_id;
+        if (localStorage.getItem(processedKey)) return;
+        
+        // مارک کردن به عنوان پردازش شده
+        localStorage.setItem(processedKey, 'true');
+        
+        // پاک کردن وضعیت شرط فعلی
+        localStorage.removeItem('last_bet_round_id');
+        localStorage.removeItem('last_bet_prediction');
+        
+        const amount = parseFloat(localStorage.getItem('last_bet_amount') || 0);
+        const elModal = document.getElementById('result-modal');
+        const elTitle = document.getElementById('res-title');
+        const elAmount = document.getElementById('res-amount');
+        const elIcon = document.getElementById('res-icon');
+        const elMsg = document.getElementById('res-message');
+
+        if (round.result === myPrediction) {
+            // --- حالت برد ---
+            SoundFX.win();
+            tg.HapticFeedback.notificationOccurred('success');
+            confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } });
+            
+            elTitle.innerText = "YOU WON!";
+            elTitle.style.color = "#0ECB81"; // سبز
+            elAmount.className = "res-amount res-win";
+            elAmount.innerText = `+$${(amount * 1.95).toFixed(2)}`;
+            elIcon.innerText = "🏆";
+            elMsg.innerText = `Price moved ${round.result}. Great job!`;
+            
+            elModal.classList.add('active');
+        } else {
+            // --- حالت باخت ---
+            SoundFX.lose();
+            tg.HapticFeedback.notificationOccurred('error');
+            
+            elTitle.innerText = "LIQUIDATED";
+            elTitle.style.color = "#F6465D"; // قرمز
+            elAmount.className = "res-amount res-loss";
+            elAmount.innerText = `-$${amount.toFixed(2)}`;
+            elIcon.innerText = "📉";
+            elMsg.innerText = `Market went against you. Try again!`;
+            
+            elModal.classList.add('active');
+        }
+    }
+}
+
+// ابزارها
 function toggleButtons(disable) {
     const btns = document.querySelectorAll('.trade-btn');
     btns.forEach(b => b.disabled = disable);
 }
 
-// =========================================
-// 6. تاریخچه و ابزارها
-// =========================================
 function updateHistoryRibbon(history) {
     const container = document.getElementById('history-container');
     container.innerHTML = '';
@@ -383,28 +464,6 @@ function updateHistoryRibbon(history) {
         div.className = `hist-pill ${h.result === 'UP' ? 'up' : 'down'}`;
         container.appendChild(div);
     });
-}
-
-function checkWinLoss(history) {
-    const myRoundId = localStorage.getItem('last_bet_round_id');
-    const myPrediction = localStorage.getItem('last_bet_prediction');
-    if (!myRoundId || !myPrediction) return;
-
-    const round = history.find(h => String(h.round_id) === String(myRoundId)); 
-    if (round) {
-        localStorage.removeItem('last_bet_round_id');
-        localStorage.removeItem('last_bet_prediction');
-        if (round.result === myPrediction) {
-            SoundFX.win();
-            tg.HapticFeedback.notificationOccurred('success');
-            confetti({ particleCount: 150, spread: 80, origin: { y: 0.7 } });
-            showToast(`🎉 WIN! Settlement Complete.`);
-        } else {
-            SoundFX.lose();
-            tg.HapticFeedback.notificationOccurred('error');
-            showToast(`❌ Position Closed.`);
-        }
-    }
 }
 
 function showToast(msg) {

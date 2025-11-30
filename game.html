@@ -10,76 +10,84 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
-    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="webapp/style.css?v=20.0">
 </head>
 <body>
 
-    <div style="padding: 15px 20px;">
-        <div class="game-header">
-            <div style="display:flex; gap:10px; align-items:center">
-                <button onclick="window.location.href='/'" class="back-btn">
-                    🏠
+    <div id="app-container">
+        
+        <div style="padding: 15px 20px; background: var(--bg-color); z-index: 10;">
+            <div class="game-header">
+                <div style="display:flex; gap:10px; align-items:center">
+                    <button onclick="window.location.href='/'" class="back-btn">
+                        🏠
+                    </button>
+                    <button onclick="window.openLeaderboard()" class="trophy-btn">
+                        🏆
+                    </button>
+                </div>
+                <div class="live-badge">● LIVE</div>
+            </div>
+        </div>
+
+        <main style="padding: 0 20px;">
+            
+            <div class="price-display">
+                <div class="price-label">BTC/USDT</div>
+                <div id="btc-price">...</div>
+            </div>
+
+            <div class="timer-circle">
+                <svg class="circular-chart" viewBox="0 0 36 36">
+                    <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    <path id="timer-path" class="circle" stroke-dasharray="100, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" style="stroke: var(--accent-green);" />
+                </svg>
+                <div id="timer-text" class="timer-text">--</div>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="btcChart"></canvas>
+            </div>
+
+            <div id="history-container" style="margin-bottom: 20px;"></div>
+
+            <div style="height: 220px;"></div>
+
+        </main>
+
+        <div class="bet-controls">
+            <div id="round-status" style="text-align: center; color: var(--text-muted); margin-bottom: 15px; font-size: 0.9rem;">
+                در حال اتصال...
+            </div>
+            
+            <div class="quick-amounts">
+                <button onclick="window.setAmount(1)" class="chip active">$1</button>
+                <button onclick="window.setAmount(5)" class="chip">$5</button>
+                <button onclick="window.setAmount(10)" class="chip">$10</button>
+                <button onclick="window.setAmount(25)" class="chip">$25</button>
+            </div>
+
+            <div class="amount-selector">
+                <span>مبلغ شرط (UUSD):</span>
+                <input type="number" id="bet-amount" value="1" min="1">
+            </div>
+
+            <div class="action-buttons-game">
+                <button id="btn-up" class="game-btn btn-up" onclick="window.placeBet('UP')">
+                    خرید 📈
                 </button>
-                <button onclick="window.openLeaderboard()" class="trophy-btn">
-                    🏆
+                <button id="btn-down" class="game-btn btn-down" onclick="window.placeBet('DOWN')">
+                    فروش 📉
                 </button>
             </div>
-            <div class="live-badge">● LIVE</div>
-        </div>
-    </div>
 
-    <div id="app-container" style="padding: 0 20px 100px 20px;">
-        
-        <div class="price-display">
-            <div class="price-label">BTC/USDT</div>
-            <div id="btc-price">...</div>
+            <div class="history-trigger" onclick="window.openHistory()" style="text-align:center; margin-top:15px; color:var(--text-muted); font-size:0.8rem; cursor:pointer;">
+                📜 تاریخچه شرط‌های من
+            </div>
         </div>
 
-        <div class="timer-circle">
-            <svg class="circular-chart" viewBox="0 0 36 36">
-                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                <path id="timer-path" class="circle" stroke-dasharray="100, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" style="stroke: var(--accent-green);" />
-            </svg>
-            <div id="timer-text" class="timer-text">--</div>
-        </div>
-
-        <div class="chart-container">
-            <canvas id="btcChart"></canvas>
-        </div>
-
-        <div id="history-container"></div>
-
-    </div>
-
-    <div class="bet-controls">
-        <div id="round-status" style="text-align: center; color: var(--text-muted); margin-bottom: 15px; font-size: 0.9rem;">
-            در حال اتصال...
-        </div>
-        
-        <div class="quick-amounts">
-            <button onclick="window.setAmount(1)" class="chip active">$1</button>
-            <button onclick="window.setAmount(5)" class="chip">$5</button>
-            <button onclick="window.setAmount(10)" class="chip">$10</button>
-            <button onclick="window.setAmount(25)" class="chip">$25</button>
-        </div>
-
-        <div class="amount-selector">
-            <span>مبلغ شرط (UUSD):</span>
-            <input type="number" id="bet-amount" value="1" min="1">
-        </div>
-
-        <div class="action-buttons-game">
-            <button id="btn-up" class="game-btn btn-up" onclick="window.placeBet('UP')">
-                خرید 📈
-            </button>
-            <button id="btn-down" class="game-btn btn-down" onclick="window.placeBet('DOWN')">
-                فروش 📉
-            </button>
-        </div>
-
-        <div class="history-trigger" onclick="window.openHistory()" style="text-align:center; margin-top:15px; color:var(--text-muted); font-size:0.8rem; cursor:pointer;">
-            📜 تاریخچه شرط‌های من
-        </div>
     </div>
 
     <div id="history-modal" class="modal">
@@ -123,6 +131,6 @@
         </div>
     </div>
 
-    <script src="game.js"></script>
+    <script src="webapp/game.js?v=20.0"></script>
 </body>
 </html>

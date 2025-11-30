@@ -1,0 +1,211 @@
+﻿/* webapp/game-style.css - (Luxurious Game Theme - Isolated) */
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700;800&family=Roboto+Mono:wght@400;500;700&display=swap');
+
+:root {
+    /* --- پالت اختصاصی بازی --- */
+    --game-bg: #171B26;          
+    --game-card: #1E2329;           
+    --game-panel: #2B3139;          
+    --game-border: rgba(255, 255, 255, 0.1);
+    
+    --game-gold: #F0B90B;      
+    --game-green: #0ECB81;          
+    --game-red: #F6465D;          
+    --game-text: #EAECEF;      
+    --game-muted: #848E9C;    
+
+    --header-height: 60px;
+    --footer-height: 220px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --safe-area-bottom: env(safe-area-inset-bottom, 20px);
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; user-select: none; }
+
+body {
+    margin: 0; padding: 0;
+    font-family: 'Vazirmatn', sans-serif;
+    background-color: var(--game-bg);
+    color: var(--game-text);
+    height: 100vh;
+    overflow: hidden;
+    direction: rtl;
+}
+
+#app-container {
+    display: flex; flex-direction: column;
+    height: 100%; width: 100%;
+    max-width: 600px; margin: 0 auto;
+    position: relative;
+}
+
+/* Header */
+.game-header {
+    height: var(--header-height);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 16px;
+    background-color: var(--game-bg);
+    border-bottom: 1px solid var(--game-border);
+    z-index: 50;
+}
+.icon-btn {
+    background: transparent; border: none; color: var(--game-muted);
+    padding: 8px; border-radius: 8px; cursor: pointer; display: flex;
+}
+.icon-btn:active { background: rgba(255,255,255,0.05); color: var(--game-text); }
+.header-center { display: flex; flex-direction: column; align-items: center; }
+.pair-name { font-family: 'Roboto Mono', monospace; font-weight: 700; font-size: 1rem; letter-spacing: 0.5px; }
+.live-indicator { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+.blink-dot { width: 6px; height: 6px; background-color: var(--game-green); border-radius: 50%; animation: pulse-live 2s infinite; }
+.status-text { font-size: 0.7rem; color: var(--game-green); font-weight: 700; letter-spacing: 0.5px; }
+
+/* Market Stats */
+.market-stats {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 20px 10px 20px;
+    background: var(--game-bg);
+}
+.price-container { display: flex; flex-direction: column; }
+.main-price {
+    margin: 0; font-family: 'Roboto Mono', monospace;
+    font-size: 2rem; font-weight: 700; letter-spacing: -1px;
+    color: var(--game-text); transition: color 0.3s ease;
+}
+.price-label { font-size: 0.75rem; color: var(--game-muted); margin-top: 4px; }
+.timer-container { position: relative; width: 50px; height: 50px; }
+.timer-wrapper { position: relative; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
+.timer-svg { transform: rotate(-90deg); width: 100%; height: 100%; }
+.timer-bg { fill: none; stroke: var(--game-panel); stroke-width: 6; }
+.timer-progress {
+    fill: none; stroke: var(--game-gold); stroke-width: 6;
+    stroke-dasharray: 283; stroke-dashoffset: 0;
+    transition: stroke-dashoffset 1s linear, stroke 0.3s;
+}
+.timer-text-box { position: absolute; font-family: 'Roboto Mono', monospace; font-weight: bold; font-size: 1.1rem; color: var(--game-text); }
+
+/* Chart Area */
+.chart-section {
+    position: relative; flex: 1; width: 100%;
+    background: var(--game-bg); overflow: hidden;
+}
+.chart-box { width: 100%; height: 100%; direction: ltr; }
+.chart-loader {
+    position: absolute; inset: 0; background: var(--game-bg);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 10; transition: opacity 0.5s;
+}
+.chart-loader.fade-out { opacity: 0; pointer-events: none; }
+.spinner-gold {
+    width: 30px; height: 30px; border: 3px solid rgba(240, 185, 11, 0.3);
+    border-top-color: var(--game-gold); border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* History Ribbon */
+.history-section {
+    height: 40px; background: var(--game-bg);
+    display: flex; align-items: center; padding: 0 16px;
+    border-top: 1px solid var(--game-border);
+    position: relative; z-index: 5;
+}
+.history-scroll {
+    display: flex; gap: 6px; overflow-x: auto; width: 100%;
+    align-items: center; direction: ltr; scrollbar-width: none;
+}
+.history-scroll::-webkit-scrollbar { display: none; }
+.hist-pill {
+    min-width: 6px; height: 24px; border-radius: 4px;
+    background: var(--game-panel); display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: bold; color: #000;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.hist-pill.win { min-width: 24px; color: #fff; }
+.hist-pill.up { background: var(--game-green); }
+.hist-pill.down { background: var(--game-red); }
+
+/* Spacer */
+.spacer-bottom { height: var(--footer-height); width: 100%; }
+
+/* Controls */
+.trading-controls {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    max-width: 600px; margin: 0 auto;
+    height: auto;
+    background: var(--game-card);
+    border-top-left-radius: 20px; border-top-right-radius: 20px;
+    box-shadow: 0 -8px 30px rgba(0,0,0,0.5);
+    padding: 20px 20px var(--safe-area-bottom) 20px;
+    z-index: 100;
+    display: flex; flex-direction: column; gap: 16px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+}
+.round-status-bar { display: flex; justify-content: space-between; align-items: center; font-family: 'Roboto Mono'; font-size: 0.8rem; }
+.round-id { color: var(--game-muted); }
+.round-state { font-weight: bold; color: var(--game-gold); }
+
+.amount-area { display: flex; flex-direction: column; gap: 12px; }
+.quick-chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+.quick-chips::-webkit-scrollbar { display: none; }
+.chip {
+    background: var(--game-panel); border: 1px solid transparent;
+    color: var(--game-muted); padding: 8px 18px; border-radius: 8px;
+    font-family: 'Roboto Mono'; font-size: 0.9rem; font-weight: 600;
+    white-space: nowrap; cursor: pointer; transition: all 0.2s;
+}
+.chip.active { background: rgba(240, 185, 11, 0.15); color: var(--game-gold); border-color: var(--game-gold); }
+.input-wrapper {
+    position: relative; width: 100%;
+    background: var(--game-bg); border: 1px solid var(--game-border);
+    border-radius: var(--radius-md); overflow: hidden;
+    display: flex; align-items: center;
+}
+.currency-prefix { padding-left: 16px; color: var(--game-gold); font-weight: bold; font-family: 'Roboto Mono'; }
+#bet-amount {
+    width: 100%; padding: 14px; background: transparent; border: none;
+    color: var(--game-text); font-family: 'Roboto Mono'; font-size: 1.2rem; font-weight: bold;
+}
+.action-buttons { display: flex; gap: 12px; height: 56px; }
+.trade-btn {
+    flex: 1; border: none; border-radius: var(--radius-md);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    cursor: pointer; position: relative; overflow: hidden;
+    color: white; transition: transform 0.1s;
+}
+.trade-btn:active { transform: scale(0.97); }
+.trade-btn:disabled { opacity: 0.5; filter: grayscale(1); cursor: not-allowed; }
+.btn-long { background: var(--game-green); box-shadow: 0 4px 15px rgba(14, 203, 129, 0.25); }
+.btn-short { background: var(--game-red); box-shadow: 0 4px 15px rgba(246, 70, 93, 0.25); }
+.btn-title { font-weight: 800; font-size: 1rem; font-family: 'Roboto Mono'; line-height: 1.1; }
+.btn-subtitle { font-size: 0.7rem; font-weight: 500; opacity: 0.9; }
+
+/* Modals & Toast */
+.modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px);
+    z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.3s;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+.modal-overlay.active { opacity: 1; visibility: visible; }
+.modal-content {
+    background: var(--game-card); width: 100%; max-width: 400px;
+    border-radius: var(--radius-lg); border: 1px solid var(--game-border);
+    display: flex; flex-direction: column; max-height: 80vh;
+    transform: translateY(20px); transition: transform 0.3s;
+}
+.modal-overlay.active .modal-content { transform: translateY(0); }
+.modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid var(--game-border); }
+.modal-header h3 { margin: 0; font-size: 1rem; }
+.close-modal { background: none; border: none; color: var(--game-muted); font-size: 1.2rem; cursor: pointer; }
+.modal-body { padding: 16px; overflow-y: auto; }
+.gold-text { color: var(--game-gold); }
+.toast {
+    position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+    background: rgba(30, 35, 41, 0.95); border: 1px solid var(--game-border);
+    color: var(--game-text); padding: 12px 24px; border-radius: 8px;
+    font-size: 0.9rem; z-index: 2000; box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+    display: flex; align-items: center; gap: 8px; transition: all 0.3s; opacity: 1;
+}
+.toast.hidden { top: 60px; opacity: 0; pointer-events: none; }
+
+@keyframes pulse-live { 0% { opacity: 1; box-shadow: 0 0 0 0 rgba(14,203,129,0.7); } 70% { opacity: 0.8; box-shadow: 0 0 0 6px rgba(14,203,129,0); } 100% { opacity: 1; } }
+@keyframes spin { 100% { transform: rotate(360deg); } }

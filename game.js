@@ -1,137 +1,136 @@
-﻿/* webapp/game.js (v24.0 - Robust Chart Loading) */
+﻿/* webapp/game.js (v25.0 - Final Luxury Engine) */
 
+// --- تنظیمات سراسری ---
 const tg = window.Telegram.WebApp;
 const API_BASE_URL = window.location.origin;
 
+// متغیرهای چارت
 let chart;
 let candleSeries;
 let currentBar = null;
-const LOCKOUT_TIME = 15;
+let lastPrice = 0;
 
-// --- سیستم صوتی ---
-const AudioContext = window.AudioContext || window.webkitAudioContext;
-let audioCtx = null;
+// متغیرهای بازی
+const LOCKOUT_TIME = 15; // ثانیه قفل شدن دکمه‌ها
+const ROUND_DURATION = 60; // طول کل راند برای محاسبه دایره تایمر
+let isChartLoaded = false;
 
-function initAudio() {
-    if (!audioCtx) {
-        audioCtx = new AudioContext();
-        const buffer = audioCtx.createBuffer(1, 1, 22050);
-        const source = audioCtx.createBufferSource();
-        source.buffer = buffer;
-        source.connect(audioCtx.destination);
-        source.start(0);
-    } else if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-    }
-}
-document.addEventListener('click', initAudio, { once: true });
-document.addEventListener('touchstart', initAudio, { once: true });
-
+// --- سیستم صوتی (Audio Context) ---
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 const SoundFX = {
-    tick: () => playBeep(1000, 0.05),
-    win: () => playBeep(600, 0.3),
-    lose: () => playBeep(150, 0.4)
+    tick: () => playTone(800, 'sine', 0.05),
+    lock: () => playTone(400, 'sawtooth', 0.2),
+    win: () => playTone(1200, 'triangle', 0.1, 2), // دو بوق خوشحال
+    lose: () => playTone(150, 'sawtooth', 0.4)
 };
 
-function playBeep(freq, dur) {
-    if (!audioCtx) return;
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.frequency.value = freq;
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.start();
-    gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + dur);
-    osc.stop(audioCtx.currentTime + dur);
+function playTone(freq, type, dur, count = 1) {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    for(let i=0; i<count; i++) {
+        setTimeout(() => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+            osc.stop(audioCtx.currentTime + dur);
+        }, i * 150);
+    }
 }
 
 // --- شروع برنامه ---
 window.onload = function() {
+    // تنظیمات تلگرام
     tg.ready();
     tg.expand();
-    tg.setHeaderColor('#161616');
+    tg.setHeaderColor('#171B26'); // همرنگ هدر
+    tg.setBackgroundColor('#171B26');
     
-    if (!tg.initData) tg.initData = "query_id=TEST"; 
+    // اگر خارج از تلگرام تست می‌کنید
+    if (!tg.initData) tg.initData = "query_id=TEST_DEV_MODE";
 
-    // بررسی لود شدن کتابخانه
-    if (typeof LightweightCharts === 'undefined') {
-        alert("خطا: کتابخانه نمودار لود نشد. لطفاً اینترنت خود را چک کنید (VPN).");
-        return;
-    }
-
+    // راه‌اندازی چارت
     initChart();
-    
-    // دریافت اطلاعات از سرور
+
+    // شروع دریافت دیتا
     setInterval(fetchServerData, 1000);
     fetchServerData();
+
+    // هندل کردن کلیک‌ها برای فیدبک لمسی
+    document.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', () => {
+            if(!btn.disabled) tg.HapticFeedback.impactOccurred('light');
+        });
+    });
 };
 
+// =========================================
+// 1. تنظیمات چارت (Lightweight Charts)
+// =========================================
 function initChart() {
     const container = document.getElementById('tv-chart-container');
-    if (!container) return;
-
-    // تنظیمات چارت
+    
     chart = LightweightCharts.createChart(container, {
         width: container.clientWidth,
-        height: 300,
+        height: container.clientHeight,
         layout: {
-            background: { type: 'solid', color: '#161616' },
-            textColor: '#888',
+            background: { type: 'solid', color: '#171B26' }, // همرنگ پس‌زمینه
+            textColor: '#848E9C',
+            fontFamily: "'Roboto Mono', monospace",
         },
         grid: {
-            vertLines: { color: 'rgba(255, 255, 255, 0.05)' },
-            horzLines: { color: 'rgba(255, 255, 255, 0.05)' },
-        },
-        timeScale: {
-            timeVisible: true,
-            secondsVisible: false,
-            borderColor: '#333',
+            vertLines: { visible: false }, // حذف خطوط عمودی
+            horzLines: { color: 'rgba(255, 255, 255, 0.03)' }, // خطوط افقی بسیار محو
         },
         rightPriceScale: {
-            borderColor: '#333',
+            borderColor: 'rgba(255, 255, 255, 0.1)',
+            scaleMargins: { top: 0.2, bottom: 0.2 }, // فاصله از بالا و پایین
+        },
+        timeScale: {
+            borderColor: 'rgba(255, 255, 255, 0.1)',
+            timeVisible: true,
+            secondsVisible: true,
+        },
+        crosshair: {
+            mode: LightweightCharts.CrosshairMode.Magnet, // حالت مگنت برای حس حرفه‌ای
+            vertLine: { color: '#F0B90B', width: 1, style: 3, labelBackgroundColor: '#F0B90B' },
+            horzLine: { color: '#F0B90B', width: 1, style: 3, labelBackgroundColor: '#F0B90B' },
         },
     });
 
     candleSeries = chart.addCandlestickSeries({
-        upColor: '#10B981',
-        downColor: '#EF4444',
+        upColor: '#0ECB81',
+        downColor: '#F6465D',
         borderVisible: false,
-        wickUpColor: '#10B981',
-        wickDownColor: '#EF4444',
+        wickUpColor: '#0ECB81',
+        wickDownColor: '#F6465D',
     });
 
-    // دیتای اولیه (Local Mock) برای نمایش فوری
+    // دیتای ساختگی اولیه تا لود شدن سرور (برای خالی نبودن صفحه)
     const data = generateInitialBars();
     candleSeries.setData(data);
     currentBar = data[data.length - 1];
 
-    window.addEventListener('resize', () => {
-        chart.resize(container.clientWidth, 300);
-    });
+    // حذف لودر وقتی چارت آماده شد
+    setTimeout(() => {
+        document.getElementById('chart-loader').classList.add('fade-out');
+        isChartLoaded = true;
+    }, 1000);
+
+    // ریسپانسیو کردن چارت با تغییر سایز پنجره
+    new ResizeObserver(entries => {
+        if (entries.length === 0 || entries[0].target !== container) return;
+        const newRect = entries[0].contentRect;
+        chart.applyOptions({ height: newRect.height, width: newRect.width });
+    }).observe(container);
 }
 
-function generateInitialBars() {
-    const initialPrice = 96500;
-    let price = initialPrice;
-    const res = [];
-    const timeNow = Math.floor(Date.now() / 1000);
-    
-    // ساخت 40 کندل ۱ دقیقه‌ای
-    for (let i = 40; i > 0; i--) {
-        const open = price;
-        const close = open + (Math.random() - 0.5) * 50;
-        const high = Math.max(open, close) + Math.random() * 15;
-        const low = Math.min(open, close) - Math.random() * 15;
-        
-        res.push({
-            time: timeNow - (i * 60),
-            open: open, high: high, low: low, close: close
-        });
-        price = close;
-    }
-    return res;
-}
-
+// =========================================
+// 2. دریافت و پردازش دیتا از سرور
+// =========================================
 async function fetchServerData() {
     try {
         const res = await fetch(`${API_BASE_URL}/webapp/game/state`, {
@@ -145,7 +144,7 @@ async function fetchServerData() {
             updateGameUI(data);
         }
     } catch (e) {
-        // Fallback: حرکت مصنوعی اگر سرور قطع بود
+        // اگر سرور قطع بود، حرکت مصنوعی بده تا چارت فریز نشود
         simulateLocalMovement();
     }
 }
@@ -153,20 +152,25 @@ async function fetchServerData() {
 function updateGameUI(data) {
     const serverPrice = data.current_price;
     const domPrice = document.getElementById('btc-price');
-    
-    // 1. آپدیت قیمت UI
-    if (domPrice) {
-        const prev = parseFloat(domPrice.dataset.prev || serverPrice);
-        domPrice.style.color = serverPrice >= prev ? '#10B981' : '#EF4444';
-        domPrice.innerText = `$${serverPrice.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-        domPrice.dataset.prev = serverPrice;
+
+    // الف) آپدیت قیمت و رنگ (سبز/قرمز)
+    if (serverPrice !== lastPrice) {
+        const color = serverPrice >= lastPrice ? '#0ECB81' : '#F6465D';
+        domPrice.style.color = color;
+        domPrice.innerText = serverPrice.toLocaleString('en-US', {minimumFractionDigits: 2});
+        
+        // افکت چشمک زن زنده
+        const dot = document.querySelector('.blink-dot');
+        if(dot) dot.style.backgroundColor = color;
+        
+        lastPrice = serverPrice;
     }
 
-    // 2. آپدیت چارت
+    // ب) آپدیت کندل‌ها
     if (currentBar) {
         const now = Math.floor(Date.now() / 1000);
-        // منطق ساده: هر 60 ثانیه کندل جدید
-        // برای دقیق‌تر شدن باید تایم سرور را چک کرد
+        // لاجیک ساده: هر 60 ثانیه یک کندل جدید (سمت کلاینت)
+        // برای دقت صددرصد، باید تایم کندل را هم از سرور بگیرید
         if (now > currentBar.time + 60) {
             currentBar = {
                 time: currentBar.time + 60,
@@ -180,58 +184,199 @@ function updateGameUI(data) {
         candleSeries.update(currentBar);
     }
 
-    // 3. آپدیت وضعیت راند
+    // ج) وضعیت راند و تایمر
     if (data.round) {
-        const elTimer = document.getElementById('timer-text');
-        const elStatus = document.getElementById('round-status');
-        const elRoundId = document.getElementById('round-id');
-
-        if(elTimer) elTimer.innerText = data.round.time_left + "s";
-        if(elRoundId) elRoundId.innerText = `Round #${data.round.id}`;
-        
-        const isLocked = data.round.time_left <= LOCKOUT_TIME;
-        
-        if(elStatus) {
-            elStatus.innerHTML = isLocked ? "بسته شد 🔒" : "باز است 🟢";
-            elStatus.style.color = isLocked ? '#EF4444' : '#10B981';
-        }
-        
-        // قفل دکمه‌ها
-        toggleButtons(isLocked || !!data.user_bet);
-
-        // صدا
-        if (data.round.time_left <= 5 && data.round.time_left > 0) {
-             if (!window['tick_' + data.round.time_left]) {
-                 SoundFX.tick();
-                 window['tick_' + data.round.time_left] = true;
-             }
-        }
+        updateTimerCircle(data.round.time_left);
+        updateRoundStatus(data);
     }
 
-    // 4. نمایش شرط
-    if(data.user_bet) {
-        const elStatus = document.getElementById('round-status');
-        const dir = data.user_bet.prediction === 'UP' ? 'خرید (LONG)' : 'فروش (SHORT)';
-        if(elStatus) {
-            elStatus.innerHTML = `<span style="color:#3B82F6">شرط شما: ${dir}</span>`;
+    // د) تاریخچه نتایج
+    if (data.history) {
+        updateHistoryRibbon(data.history);
+        checkWinLoss(data.history);
+    }
+}
+
+// =========================================
+// 3. انیمیشن تایمر و وضعیت راند
+// =========================================
+function updateTimerCircle(timeLeft) {
+    const elText = document.getElementById('timer-text');
+    const elCircle = document.getElementById('timer-progress');
+    const elRing = document.querySelector('.timer-progress');
+    
+    elText.innerText = timeLeft;
+
+    // محاسبه دایره SVG (محیط = 283)
+    const maxDash = 283;
+    const offset = maxDash - (timeLeft / ROUND_DURATION) * maxDash;
+    elCircle.style.strokeDashoffset = offset;
+
+    // تغییر رنگ بر اساس زمان
+    if (timeLeft <= 5) {
+        elRing.style.stroke = '#F6465D'; // قرمز در 5 ثانیه آخر
+        elText.style.color = '#F6465D';
+        
+        // صدای تیک تاک در ثانیه‌های آخر
+        if (!window[`tick_${timeLeft}`]) {
+            SoundFX.tick();
+            tg.HapticFeedback.impactOccurred('soft');
+            window[`tick_${timeLeft}`] = true;
         }
+    } else {
+        elRing.style.stroke = '#F0B90B'; // طلایی عادی
+        elText.style.color = '#EAECEF';
+        // ریست کردن فلگ صدا برای راند بعدی
+        window[`tick_5`] = false; 
+        window[`tick_4`] = false; 
+        window[`tick_3`] = false; 
+        window[`tick_2`] = false; 
+        window[`tick_1`] = false; 
+    }
+}
+
+function updateRoundStatus(data) {
+    const elStatus = document.getElementById('round-status');
+    const elRoundId = document.getElementById('round-id');
+    const timeLeft = data.round.time_left;
+
+    elRoundId.innerText = `ROUND #${data.round.id}`;
+
+    const isLocked = timeLeft <= LOCKOUT_TIME;
+    const hasBet = !!data.user_bet;
+
+    // متن وضعیت
+    if (hasBet) {
+        const type = data.user_bet.prediction === 'UP' ? 'LONG (BUY)' : 'SHORT (SELL)';
+        elStatus.innerHTML = `<span style="color:#3B82F6">POSITION: ${type}</span>`;
+    } else if (isLocked) {
+        elStatus.innerHTML = `<span style="color:#F6465D">LOCKED 🔒</span>`;
+    } else {
+        elStatus.innerHTML = `<span style="color:#0ECB81">OPEN FOR BET 🟢</span>`;
     }
 
-    // 5. تاریخچه
-    if(data.history) {
-        updateHistory(data.history);
-        checkResult(data.history);
+    // قفل کردن دکمه‌ها
+    toggleButtons(isLocked || hasBet);
+}
+
+// =========================================
+// 4. لاجیک شرط‌بندی و دکمه‌ها
+// =========================================
+window.setAmount = function(val) {
+    document.getElementById('bet-amount').value = val;
+    
+    // آپدیت کلاس Active چیپ‌ها
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    // پیدا کردن چیپی که کلیک شده (اگر با کلیک بوده)
+    const chips = document.querySelectorAll('.chip');
+    chips.forEach(c => {
+        if(c.innerText == val) c.classList.add('active');
+    });
+
+    tg.HapticFeedback.selectionChanged();
+};
+
+window.placeBet = async function(pred) {
+    const amount = document.getElementById('bet-amount').value;
+    
+    // ویبره سنگین برای حس ثبت سفارش
+    tg.HapticFeedback.impactOccurred('heavy'); 
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/webapp/game/bet`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ 
+                initData: tg.initData, 
+                amount: parseFloat(amount), 
+                prediction: pred 
+            })
+        });
+        const result = await res.json();
+        
+        if (result.status === 'success') {
+            showToast(`✅ Order Confirmed: ${pred} $${amount}`);
+            // ذخیره برای چک کردن نتیجه در آینده
+            localStorage.setItem('last_bet_round_id', result.round_id || "CURRENT"); 
+            localStorage.setItem('last_bet_prediction', pred);
+        } else {
+            showToast(`⚠️ ${result.message}`);
+            SoundFX.lose(); // صدای خطا
+        }
+    } catch(e) { 
+        showToast("Connection Error");
     }
+};
+
+function toggleButtons(disable) {
+    const btns = document.querySelectorAll('.trade-btn');
+    btns.forEach(b => b.disabled = disable);
+}
+
+// =========================================
+// 5. تاریخچه و نتایج
+// =========================================
+function updateHistoryRibbon(history) {
+    const container = document.getElementById('history-container');
+    container.innerHTML = ''; // پاک کردن قبلی‌ها
+    
+    // نمایش 15 مورد آخر
+    history.slice().reverse().slice(0, 15).forEach(h => {
+        const div = document.createElement('div');
+        div.className = `hist-pill ${h.result === 'UP' ? 'up' : 'down'}`;
+        // اگر این همان راندی است که کاربر برده، کلاس win اضافه کن
+        container.appendChild(div);
+    });
+}
+
+function checkWinLoss(history) {
+    const myRoundId = localStorage.getItem('last_bet_round_id'); // اینجا باید آیدی واقعی از سرور بیاد
+    const myPrediction = localStorage.getItem('last_bet_prediction');
+    
+    if (!myRoundId || !myPrediction) return;
+
+    // پیدا کردن راند در تاریخچه
+    // نکته: چون در نسخه فعلی بک‌ند شاید round_id دقیق در ریسپانس bet نباشد، 
+    // بهتر است آخرین آیتم تاریخچه را چک کنیم اگر تازه اضافه شده.
+    // اما اینجا فرض می‌کنیم لاجیک سرور round_id دارد.
+    
+    const round = history.find(h => String(h.round_id) === String(myRoundId)); 
+    // اگر آیدی نداشتید، می‌توانید آخرین نتیجه را چک کنید (با احتیاط)
+
+    if (round) {
+        localStorage.removeItem('last_bet_round_id');
+        localStorage.removeItem('last_bet_prediction');
+
+        if (round.result === myPrediction) {
+            SoundFX.win();
+            tg.HapticFeedback.notificationOccurred('success');
+            confetti({ particleCount: 150, spread: 80, origin: { y: 0.7 } });
+            showToast(`🎉 WIN! Payout Received.`);
+        } else {
+            SoundFX.lose();
+            tg.HapticFeedback.notificationOccurred('error');
+            showToast(`❌ Position Liquidated.`);
+        }
+    }
+}
+
+// =========================================
+// 6. ابزارهای کمکی (Helpers)
+// =========================================
+function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.innerText = msg;
+    toast.classList.remove('hidden');
+    setTimeout(() => toast.classList.add('hidden'), 3000);
 }
 
 function simulateLocalMovement() {
     if (!currentBar) return;
-    const move = (Math.random() - 0.5) * 15;
+    const move = (Math.random() - 0.5) * 20; // نوسان رندوم
     const newPrice = currentBar.close + move;
     
-    // آپدیت UI
     const domPrice = document.getElementById('btc-price');
-    if(domPrice) domPrice.innerText = `$${newPrice.toFixed(2)}`;
+    domPrice.innerText = newPrice.toFixed(2);
     
     currentBar.close = newPrice;
     currentBar.high = Math.max(currentBar.high, newPrice);
@@ -239,66 +384,21 @@ function simulateLocalMovement() {
     candleSeries.update(currentBar);
 }
 
-function updateHistory(history) {
-    const container = document.getElementById('history-container');
-    if(!container) return;
-    container.innerHTML = '';
-    
-    history.slice().reverse().slice(0, 10).forEach(h => {
-        const div = document.createElement('div');
-        const color = h.result === 'UP' ? '#10B981' : '#EF4444';
-        const arrow = h.result === 'UP' ? '↑' : '↓';
-        div.style.cssText = `min-width:24px; height:24px; background:${color}; border-radius:6px; display:flex; align-items:center; justify-content:center; color:black; font-weight:bold; font-size:12px;`;
-        div.innerText = arrow;
-        container.appendChild(div);
-    });
-}
-
-function checkResult(history) {
-    const myRoundId = localStorage.getItem('last_bet_round_id');
-    const myPrediction = localStorage.getItem('last_bet_prediction');
-    if (!myRoundId) return;
-    
-    const round = history.find(h => String(h.round_id) === String(myRoundId));
-    if (round) {
-        localStorage.removeItem('last_bet_round_id');
-        if (round.result === myPrediction) {
-            SoundFX.win();
-            tg.showAlert(`🎉 تبریک! برنده شدید.\nقیمت بسته شدن: ${round.end_price}`);
-            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-        } else {
-            SoundFX.lose();
-            tg.showAlert(`❌ متاسفانه باختید.`);
-        }
+function generateInitialBars() {
+    const initialPrice = 96500;
+    let price = initialPrice;
+    const res = [];
+    const timeNow = Math.floor(Date.now() / 1000);
+    // ساخت 50 کندل گذشته برای پر بودن چارت
+    for (let i = 50; i > 0; i--) {
+        const open = price;
+        const close = open + (Math.random() - 0.5) * 50;
+        const high = Math.max(open, close) + Math.random() * 10;
+        const low = Math.min(open, close) - Math.random() * 10;
+        res.push({ time: timeNow - (i * 60), open, high, low, close });
+        price = close;
     }
-}
-
-// --- دکمه‌ها ---
-window.setAmount = function(val) {
-    document.getElementById('bet-amount').value = val;
-    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-    if(event.target) event.target.classList.add('active');
-    SoundFX.tick();
-};
-
-window.placeBet = async function(pred) {
-    const amount = document.getElementById('bet-amount').value;
-    SoundFX.tick();
-    try {
-        const res = await fetch(`${API_BASE_URL}/webapp/game/bet`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ initData: tg.initData, amount: parseFloat(amount), prediction: pred })
-        });
-        const result = await res.json();
-        if(result.status === 'success') tg.showAlert("✅ شرط ثبت شد");
-        else tg.showAlert("⚠️ " + result.message);
-    } catch(e) { tg.showAlert("خطای اتصال"); }
-};
-
-function toggleButtons(disable) {
-    document.getElementById('btn-up').disabled = disable;
-    document.getElementById('btn-down').disabled = disable;
+    return res;
 }
 
 // مودال‌ها

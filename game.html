@@ -3,136 +3,136 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>بازی کندل</title>
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#171B26">
+    <title>Coin Baran | Pro Trading</title>
+
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     
     <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
     
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-
-    <link rel="stylesheet" href="webapp/style.css?v=22.0">
-
-    <style>
-        /* استایل اجباری برای اطمینان از دیده شدن چارت */
-        #tv-chart-container {
-            width: 100%; 
-            height: 300px; /* ارتفاع ثابت */
-            background-color: #161616; /* رنگ پس‌زمینه موقت تا لود شود */
-            border-radius: 12px; 
-            overflow: hidden;
-            border: 1px solid rgba(255,255,255,0.1);
-            position: relative;
-            direction: ltr; /* چارت باید چپ‌چین باشد */
-        }
-        .market-stat-card {
-            display: flex; justify-content: space-between; align-items: center;
-            background: #161616; padding: 12px 15px; border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.05); margin-bottom: 10px;
-        }
-        .price-box h1 { margin: 0; font-size: 1.8rem; font-family: monospace; letter-spacing: -1px; color: white; }
-        .price-box span { font-size: 0.8rem; color: #888; }
-        
-        .compact-timer {
-            display: flex; align-items: center; gap: 8px;
-            background: rgba(255,255,255,0.05); padding: 5px 10px; border-radius: 8px;
-        }
-        .timer-val { font-family: monospace; font-size: 1.1rem; font-weight: 700; color: white; }
-    </style>
+    <link rel="stylesheet" href="webapp/style.css?v=25.0">
 </head>
 <body>
 
     <div id="app-container">
         
-        <div style="padding: 10px 15px; background: var(--bg-color);">
-            <div class="game-header" style="padding-bottom:0; border:none; margin-bottom:0;">
-                <div style="display:flex; gap:10px; align-items:center">
-                    <button onclick="window.location.href='/'" class="back-btn">🏠</button>
-                    <button onclick="window.openLeaderboard()" class="trophy-btn">🏆</button>
+        <header class="game-header">
+            <div class="header-left">
+                <button onclick="window.location.href='/'" class="icon-btn back-btn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                </button>
+            </div>
+            
+            <div class="header-center">
+                <span class="pair-name">BTC/USDT</span>
+                <div class="live-indicator">
+                    <span class="blink-dot"></span>
+                    <span class="status-text">LIVE</span>
                 </div>
-                <div class="live-badge">BTC/USDT ● LIVE</div>
+            </div>
+
+            <div class="header-right">
+                <button onclick="window.openLeaderboard()" class="icon-btn trophy-btn">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+                </button>
+            </div>
+        </header>
+
+        <div class="market-stats">
+            <div class="price-container">
+                <h1 id="btc-price" class="main-price">00,000.00</h1>
+                <span class="price-label">شاخص کل (Index Price)</span>
+            </div>
+            
+            <div class="timer-container">
+                <div class="timer-wrapper">
+                    <svg class="timer-svg" viewBox="0 0 100 100">
+                        <circle class="timer-bg" cx="50" cy="50" r="45"></circle>
+                        <circle id="timer-progress" class="timer-progress" cx="50" cy="50" r="45"></circle>
+                    </svg>
+                    <div class="timer-text-box">
+                        <span id="timer-text">--</span>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <main style="padding: 0 15px;">
-            
-            <div class="market-stat-card">
-                <div class="price-box">
-                    <h1 id="btc-price">...</h1>
-                    <span>قیمت لحظه‌ای</span>
-                </div>
-                <div class="compact-timer">
-                    <i class="fas fa-clock" style="color:var(--accent-gold)"></i>
-                    <span id="timer-text" class="timer-val">--</span>
-                </div>
-            </div>
-
-            <div id="tv-chart-container"></div>
-
-            <div id="history-container" style="margin-top: 10px; display: flex; gap: 5px; flex-wrap: wrap;"></div>
-
-            <div style="height: 240px;"></div>
-        </main>
-
-        <div class="bet-controls">
-            <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:0.8rem; color:#888;">
-                <span id="round-id">Round #...</span>
-                <span id="round-status">اتصال...</span>
-            </div>
-            
-            <div class="quick-amounts">
-                <button onclick="window.setAmount(1)" class="chip active">$1</button>
-                <button onclick="window.setAmount(5)" class="chip">$5</button>
-                <button onclick="window.setAmount(10)" class="chip">$10</button>
-                <button onclick="window.setAmount(50)" class="chip">$50</button>
-            </div>
-
-            <div class="amount-selector" style="background:rgba(255,255,255,0.03);">
-                <span style="font-size:0.8rem">مبلغ (UUSD):</span>
-                <input type="number" id="bet-amount" value="1" min="1">
-            </div>
-
-            <div class="action-buttons-game">
-                <button id="btn-up" class="game-btn btn-up" onclick="window.placeBet('UP')">
-                    <div style="display:flex; flex-direction:column; line-height:1.2;">
-                        <span>خرید (LONG)</span>
-                        <span style="font-size:0.7rem; opacity:0.8">کندل صعودی 📈</span>
-                    </div>
-                </button>
-                <button id="btn-down" class="game-btn btn-down" onclick="window.placeBet('DOWN')">
-                    <div style="display:flex; flex-direction:column; line-height:1.2;">
-                        <span>فروش (SHORT)</span>
-                        <span style="font-size:0.7rem; opacity:0.8">کندل نزولی 📉</span>
-                    </div>
-                </button>
+        <div class="chart-section">
+            <div id="tv-chart-container" class="chart-box"></div>
+            <div id="chart-loader" class="chart-loader">
+                <div class="spinner-gold"></div>
             </div>
         </div>
+
+        <div class="history-section">
+            <div id="history-container" class="history-scroll">
+                </div>
+        </div>
+
+        <div class="spacer-bottom"></div>
+
+        <footer class="trading-controls">
+            
+            <div class="round-status-bar">
+                <span id="round-id" class="round-id">Round #...</span>
+                <span id="round-status" class="round-state">Connecting...</span>
+            </div>
+
+            <div class="amount-area">
+                <div class="quick-chips">
+                    <button class="chip" onclick="window.setAmount(1)">1</button>
+                    <button class="chip active" onclick="window.setAmount(5)">5</button>
+                    <button class="chip" onclick="window.setAmount(10)">10</button>
+                    <button class="chip" onclick="window.setAmount(50)">50</button>
+                    <button class="chip" onclick="window.setAmount(100)">100</button>
+                </div>
+                
+                <div class="input-wrapper">
+                    <span class="currency-prefix">$</span>
+                    <input type="number" id="bet-amount" value="5" min="1" inputmode="decimal">
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button id="btn-up" class="trade-btn btn-long" onclick="window.placeBet('UP')">
+                    <span class="btn-title">LONG</span>
+                    <span class="btn-subtitle">خرید صعودی</span>
+                </button>
+                
+                <button id="btn-down" class="trade-btn btn-short" onclick="window.placeBet('DOWN')">
+                    <span class="btn-title">SHORT</span>
+                    <span class="btn-subtitle">فروش نزولی</span>
+                </button>
+            </div>
+        </footer>
 
     </div>
 
-    <div id="history-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header" style="display:flex; justify-content:space-between;">
-                <h3>تاریخچه</h3>
-                <button onclick="window.closeHistory()" style="background:none; border:none; color:white; font-size:1.2rem;">✕</button>
-            </div>
-            <div id="history-list" style="max-height: 300px; overflow-y: auto;"></div>
-        </div>
-    </div>
-
-    <div id="leaderboard-modal" class="modal">
+    <div id="history-modal" class="modal-overlay">
         <div class="modal-content glass-panel">
-            <div class="modal-header" style="display:flex; justify-content:space-between;">
-                <h3 style="color:var(--accent-gold)">🏆 برترین‌ها</h3>
-                <button onclick="window.closeLeaderboard()" style="background:none; border:none; color:white; font-size:1.2rem;">✕</button>
+            <div class="modal-header">
+                <h3>تاریخچه معاملات</h3>
+                <button onclick="window.closeHistory()" class="close-modal">✕</button>
             </div>
-            <div id="leaderboard-list" style="padding:20px; text-align:center; color:#888">در حال بروزرسانی...</div>
+            <div id="history-list" class="modal-body"></div>
         </div>
     </div>
 
-    <script src="webapp/game.js?v=22.0"></script>
+    <div id="leaderboard-modal" class="modal-overlay">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h3 class="gold-text">🏆 برترین معامله‌گران</h3>
+                <button onclick="window.closeLeaderboard()" class="close-modal">✕</button>
+            </div>
+            <div id="leaderboard-list" class="modal-body">در حال بارگذاری...</div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast hidden"></div>
+
+    <script src="webapp/game.js?v=25.0"></script>
 </body>
 </html>

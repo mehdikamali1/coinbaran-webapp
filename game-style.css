@@ -1,8 +1,7 @@
-﻿/* webapp/game-style.css (v28.1 - Mobile Viewport Fix) */
+﻿/* webapp/game-style.css (v30.0 - Absolute Layout Fix) */
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700;800&family=Roboto+Mono:wght@400;500;700&display=swap');
 
 :root {
-    /* --- پالت اختصاصی بازی --- */
     --game-bg: #171B26;          
     --game-card: #1E2329;           
     --game-panel: #2B3139;          
@@ -15,10 +14,9 @@
     --game-muted: #848E9C;    
 
     --header-height: 60px;
+    --stats-height: 70px; /* ارتفاع تقریبی بخش قیمت */
+    --history-height: 40px;
     --footer-height: 220px;
-    --radius-md: 12px;
-    --radius-lg: 16px;
-    --safe-area-bottom: env(safe-area-inset-bottom, 20px);
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; user-select: none; }
@@ -28,9 +26,8 @@ body {
     font-family: 'Vazirmatn', sans-serif;
     background-color: var(--game-bg);
     color: var(--game-text);
-    /* اصلاح مهم برای موبایل: استفاده از ارتفاع داینامیک */
-    height: 100vh; 
-    height: 100dvh; 
+    height: 100vh;
+    height: 100dvh; /* ارتفاع دقیق موبایل */
     overflow: hidden;
     direction: rtl;
 }
@@ -42,76 +39,67 @@ body {
     position: relative;
 }
 
-/* Header */
+/* Header (Fixed Height) */
 .game-header {
     height: var(--header-height);
-    flex-shrink: 0; /* جلوگیری از جمع شدن هدر */
+    flex-shrink: 0; 
     display: flex; align-items: center; justify-content: space-between;
     padding: 0 16px;
     background-color: var(--game-bg);
     border-bottom: 1px solid var(--game-border);
     z-index: 50;
 }
-.icon-btn {
-    background: transparent; border: none; color: var(--game-muted);
-    padding: 8px; border-radius: 8px; cursor: pointer; display: flex;
-}
-.icon-btn:active { background: rgba(255,255,255,0.05); color: var(--game-text); }
+.icon-btn { background: transparent; border: none; color: var(--game-muted); padding: 8px; border-radius: 8px; display: flex; }
 .header-center { display: flex; flex-direction: column; align-items: center; }
-.pair-name { font-family: 'Roboto Mono', monospace; font-weight: 700; font-size: 1rem; letter-spacing: 0.5px; }
+.pair-name { font-family: 'Roboto Mono', monospace; font-weight: 700; font-size: 1rem; }
 .live-indicator { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
 .blink-dot { width: 6px; height: 6px; background-color: var(--game-green); border-radius: 50%; animation: pulse-live 2s infinite; }
-.status-text { font-size: 0.7rem; color: var(--game-green); font-weight: 700; letter-spacing: 0.5px; }
+.status-text { font-size: 0.7rem; color: var(--game-green); font-weight: 700; }
 
-/* Market Stats */
+/* Market Stats (Fixed Height) */
 .market-stats {
-    flex-shrink: 0; /* جلوگیری از جمع شدن */
+    flex-shrink: 0;
     display: flex; justify-content: space-between; align-items: center;
-    padding: 10px 20px; /* کاهش پدینگ برای فضای بیشتر چارت */
+    padding: 10px 20px;
     background: var(--game-bg);
+    border-bottom: 1px solid rgba(255,255,255,0.02);
 }
 .price-container { display: flex; flex-direction: column; }
-.main-price {
-    margin: 0; font-family: 'Roboto Mono', monospace;
-    font-size: 1.8rem; /* کمی کوچک‌تر برای موبایل */
-    font-weight: 700; letter-spacing: -1px;
-    color: var(--game-text); transition: color 0.3s ease;
-}
+.main-price { margin: 0; font-family: 'Roboto Mono', monospace; font-size: 1.8rem; font-weight: 700; color: var(--game-text); }
 .price-label { font-size: 0.75rem; color: var(--game-muted); margin-top: 4px; }
 .timer-container { position: relative; width: 45px; height: 45px; }
 .timer-wrapper { position: relative; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
 .timer-svg { transform: rotate(-90deg); width: 100%; height: 100%; }
 .timer-bg { fill: none; stroke: var(--game-panel); stroke-width: 5; }
-.timer-progress {
-    fill: none; stroke: var(--game-gold); stroke-width: 5;
-    stroke-dasharray: 283; stroke-dashoffset: 0;
-    transition: stroke-dashoffset 1s linear, stroke 0.3s;
-}
+.timer-progress { fill: none; stroke: var(--game-gold); stroke-width: 5; stroke-dasharray: 283; stroke-dashoffset: 0; transition: stroke-dashoffset 1s linear; }
 .timer-text-box { position: absolute; font-family: 'Roboto Mono', monospace; font-weight: bold; font-size: 1rem; color: var(--game-text); }
 
-/* Chart Area (Fix applied here) */
+/* --- اصلاح اصلی اینجاست: Chart Area --- */
 .chart-section {
-    position: relative; 
-    flex: 1; /* پر کردن فضای خالی */
+    position: relative; /* لنگرگاه */
+    flex: 1; /* پر کردن تمام فضای باقی مانده */
     width: 100%;
-    min-height: 0; /* فیکس حیاتی برای موبایل: اجازه می‌دهد چارت جمع شود */
-    background: var(--game-bg); 
     overflow: hidden;
+    background: var(--game-bg);
 }
-.chart-box { width: 100%; height: 100%; direction: ltr; }
+
+.chart-box {
+    position: absolute; /* کلید طلایی: اجبار به پر کردن والد */
+    top: 0; left: 0; right: 0; bottom: 0;
+    width: 100% !important; 
+    height: 100% !important;
+    direction: ltr;
+}
+
 .chart-loader {
     position: absolute; inset: 0; background: var(--game-bg);
     display: flex; align-items: center; justify-content: center;
     z-index: 10; transition: opacity 0.5s;
 }
 .chart-loader.fade-out { opacity: 0; pointer-events: none; }
-.spinner-gold {
-    width: 30px; height: 30px; border: 3px solid rgba(240, 185, 11, 0.3);
-    border-top-color: var(--game-gold); border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
+.spinner-gold { width: 30px; height: 30px; border: 3px solid rgba(240, 185, 11, 0.3); border-top-color: var(--game-gold); border-radius: 50%; animation: spin 1s linear infinite; }
 
-/* History Ribbon */
+/* History Ribbon (Fixed Height) */
 .history-section {
     flex-shrink: 0;
     height: 36px; background: var(--game-bg);
@@ -119,106 +107,50 @@ body {
     border-top: 1px solid var(--game-border);
     position: relative; z-index: 5;
 }
-.history-scroll {
-    display: flex; gap: 6px; overflow-x: auto; width: 100%;
-    align-items: center; direction: ltr; scrollbar-width: none;
-}
-.history-scroll::-webkit-scrollbar { display: none; }
-.hist-pill {
-    min-width: 6px; height: 20px; border-radius: 4px;
-    background: var(--game-panel); display: flex; align-items: center; justify-content: center;
-    font-size: 10px; font-weight: bold; color: #000;
-    transition: all 0.3s;
-}
-.hist-pill.win { min-width: 24px; color: #fff; }
+.history-scroll { display: flex; gap: 6px; overflow-x: auto; width: 100%; align-items: center; direction: ltr; }
+.hist-pill { min-width: 6px; height: 20px; border-radius: 4px; background: var(--game-panel); transition: all 0.3s; }
 .hist-pill.up { background: var(--game-green); }
 .hist-pill.down { background: var(--game-red); }
 
-/* Spacer (Reduced for mobile) */
-.spacer-bottom { 
-    height: var(--footer-height); 
-    width: 100%; 
-    flex-shrink: 0;
-}
+/* Spacer */
+.spacer-bottom { height: var(--footer-height); width: 100%; flex-shrink: 0; }
 
 /* Controls */
 .trading-controls {
     position: fixed; bottom: 0; left: 0; right: 0;
     max-width: 600px; margin: 0 auto;
-    height: auto;
     background: var(--game-card);
     border-top-left-radius: 20px; border-top-right-radius: 20px;
-    box-shadow: 0 -8px 30px rgba(0,0,0,0.5);
-    padding: 15px 15px var(--safe-area-bottom) 15px;
+    padding: 15px 15px 25px 15px; /* پدینگ پایین بیشتر */
     z-index: 100;
     display: flex; flex-direction: column; gap: 12px;
     border-top: 1px solid rgba(255,255,255,0.05);
 }
 .round-status-bar { display: flex; justify-content: space-between; align-items: center; font-family: 'Roboto Mono'; font-size: 0.8rem; }
-.round-id { color: var(--game-muted); }
 .round-state { font-weight: bold; color: var(--game-gold); }
-
 .amount-area { display: flex; flex-direction: column; gap: 10px; }
-.quick-chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
-.quick-chips::-webkit-scrollbar { display: none; }
-.chip {
-    background: var(--game-panel); border: 1px solid transparent;
-    color: var(--game-muted); padding: 8px 16px; border-radius: 8px;
-    font-family: 'Roboto Mono'; font-size: 0.85rem; font-weight: 600;
-    white-space: nowrap; cursor: pointer; transition: all 0.2s;
-}
+.quick-chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+.chip { background: var(--game-panel); color: var(--game-muted); padding: 8px 16px; border-radius: 8px; font-family: 'Roboto Mono'; font-weight: 600; white-space: nowrap; }
 .chip.active { background: rgba(240, 185, 11, 0.15); color: var(--game-gold); border-color: var(--game-gold); }
-.input-wrapper {
-    position: relative; width: 100%;
-    background: var(--game-bg); border: 1px solid var(--game-border);
-    border-radius: var(--radius-md); overflow: hidden;
-    display: flex; align-items: center;
-}
+.input-wrapper { position: relative; width: 100%; background: var(--game-bg); border: 1px solid var(--game-border); border-radius: var(--radius-md); display: flex; align-items: center; }
 .currency-prefix { padding-left: 16px; color: var(--game-gold); font-weight: bold; font-family: 'Roboto Mono'; }
-#bet-amount {
-    width: 100%; padding: 12px; background: transparent; border: none;
-    color: var(--game-text); font-family: 'Roboto Mono'; font-size: 1.1rem; font-weight: bold;
-}
+#bet-amount { width: 100%; padding: 12px; background: transparent; border: none; color: var(--game-text); font-family: 'Roboto Mono'; font-size: 1.1rem; font-weight: bold; }
 .action-buttons { display: flex; gap: 10px; height: 50px; }
-.trade-btn {
-    flex: 1; border: none; border-radius: var(--radius-md);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    cursor: pointer; position: relative; overflow: hidden;
-    color: white; transition: transform 0.1s;
-}
-.trade-btn:active { transform: scale(0.97); }
-.trade-btn:disabled { opacity: 0.5; filter: grayscale(1); cursor: not-allowed; }
-.btn-long { background: var(--game-green); box-shadow: 0 4px 15px rgba(14, 203, 129, 0.25); }
-.btn-short { background: var(--game-red); box-shadow: 0 4px 15px rgba(246, 70, 93, 0.25); }
-.btn-title { font-weight: 800; font-size: 0.95rem; font-family: 'Roboto Mono'; line-height: 1.1; }
-.btn-subtitle { font-size: 0.65rem; font-weight: 500; opacity: 0.9; }
+.trade-btn { flex: 1; border: none; border-radius: var(--radius-md); display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; }
+.btn-long { background: var(--game-green); }
+.btn-short { background: var(--game-red); }
+.btn-title { font-weight: 800; font-size: 0.95rem; font-family: 'Roboto Mono'; }
+.btn-subtitle { font-size: 0.65rem; opacity: 0.9; }
 
 /* Modals & Toast */
-.modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px);
-    z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.3s;
-    display: flex; align-items: center; justify-content: center; padding: 20px;
-}
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); z-index: 1000; opacity: 0; visibility: hidden; display: flex; align-items: center; justify-content: center; padding: 20px; transition: all 0.3s; }
 .modal-overlay.active { opacity: 1; visibility: visible; }
-.modal-content {
-    background: var(--game-card); width: 100%; max-width: 400px;
-    border-radius: var(--radius-lg); border: 1px solid var(--game-border);
-    display: flex; flex-direction: column; max-height: 80vh;
-    transform: translateY(20px); transition: transform 0.3s;
-}
+.modal-content { background: var(--game-card); width: 100%; max-width: 400px; border-radius: var(--radius-lg); display: flex; flex-direction: column; max-height: 80vh; transform: translateY(20px); transition: transform 0.3s; }
 .modal-overlay.active .modal-content { transform: translateY(0); }
 .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid var(--game-border); }
-.modal-header h3 { margin: 0; font-size: 1rem; }
-.close-modal { background: none; border: none; color: var(--game-muted); font-size: 1.2rem; cursor: pointer; }
+.close-modal { background: none; border: none; color: var(--game-muted); font-size: 1.2rem; }
 .modal-body { padding: 16px; overflow-y: auto; }
-.gold-text { color: var(--game-gold); }
-.toast {
-    position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
-    background: rgba(30, 35, 41, 0.95); border: 1px solid var(--game-border);
-    color: var(--game-text); padding: 12px 24px; border-radius: 8px;
-    font-size: 0.9rem; z-index: 2000; box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-    display: flex; align-items: center; gap: 8px; transition: all 0.3s; opacity: 1;
-}
+.toast { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); background: rgba(30, 35, 41, 0.95); border: 1px solid var(--game-border); color: var(--game-text); padding: 12px 24px; border-radius: 8px; font-size: 0.9rem; z-index: 2000; opacity: 1; transition: all 0.3s; display: flex; align-items: center; gap: 8px; }
 .toast.hidden { top: 60px; opacity: 0; pointer-events: none; }
 
 @keyframes pulse-live { 0% { opacity: 1; box-shadow: 0 0 0 0 rgba(14,203,129,0.7); } 70% { opacity: 0.8; box-shadow: 0 0 0 6px rgba(14,203,129,0); } 100% { opacity: 1; } }

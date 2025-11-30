@@ -373,8 +373,8 @@ window.placeBet = async function(pred) {
         
         if (result.status === 'success') {
             showToast(`✅ Position Open: ${pred} $${amount}`);
-            // ذخیره برای بررسی نتیجه
-            localStorage.setItem('last_bet_round_id', result.round_id || "CURRENT"); 
+            // [FIX] ذخیره دقیق آیدی راند از سرور
+            localStorage.setItem('last_bet_round_id', result.round_id); 
             localStorage.setItem('last_bet_prediction', pred);
             localStorage.setItem('last_bet_amount', amount);
         } else {
@@ -386,76 +386,56 @@ window.placeBet = async function(pred) {
     }
 };
 
-// =========================================
-// 5. تشخیص برد/باخت (Result Logic)
-// =========================================
 function checkWinLoss(history) {
     const myRoundId = localStorage.getItem('last_bet_round_id');
     const myPrediction = localStorage.getItem('last_bet_prediction');
     
     if (!myRoundId || !myPrediction) return;
 
-    // پیدا کردن راند در تاریخچه
-    // نکته: چون آیدی سرور ممکن است کمی تاخیر داشته باشد، آخرین مورد را هم چک میکنیم
-    const round = history.find(h => String(h.round_id) === String(myRoundId)) || history[history.length - 1]; 
+    // [CRITICAL FIX] جستجوی دقیق آیدی. اگر راند هنوز تمام نشده (در تاریخچه نیست)، نال برمی‌گردد.
+    const round = history.find(h => String(h.round_id) === String(myRoundId));
+    
+    // اگر راند پیدا نشد، یعنی هنوز در جریان است. پس برگرد و کاری نکن.
+    if (!round) return;
 
-    // اگر نتیجه این راند مشخص شده است
-    if (round && round.result) {
-        // برای جلوگیری از نمایش تکراری
-        const processedKey = 'processed_' + round.round_id;
-        if (localStorage.getItem(processedKey)) return;
-        
-        // مارک کردن به عنوان پردازش شده
-        localStorage.setItem(processedKey, 'true');
-        
-        // پاک کردن وضعیت شرط فعلی
-        localStorage.removeItem('last_bet_round_id');
-        localStorage.removeItem('last_bet_prediction');
+    if (!localStorage.getItem('processed_' + round.round_id)) {
+        localStorage.setItem('processed_' + round.round_id, 'true');
+        localStorage.removeItem('last_bet_round_id'); 
         
         const amount = parseFloat(localStorage.getItem('last_bet_amount') || 0);
         const elModal = document.getElementById('result-modal');
         const elTitle = document.getElementById('res-title');
         const elAmount = document.getElementById('res-amount');
         const elIcon = document.getElementById('res-icon');
-        const elMsg = document.getElementById('res-message');
 
         if (round.result === myPrediction) {
-            // --- حالت برد ---
             SoundFX.win();
             tg.HapticFeedback.notificationOccurred('success');
             confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } });
             
             elTitle.innerText = "YOU WON!";
-            elTitle.style.color = "#0ECB81"; // سبز
+            elTitle.style.color = "#0ECB81";
             elAmount.className = "res-amount res-win";
             elAmount.innerText = `+$${(amount * 1.95).toFixed(2)}`;
             elIcon.innerText = "🏆";
-            elMsg.innerText = `Price moved ${round.result}. Great job!`;
             
             elModal.classList.add('active');
         } else {
-            // --- حالت باخت ---
             SoundFX.lose();
             tg.HapticFeedback.notificationOccurred('error');
             
             elTitle.innerText = "LIQUIDATED";
-            elTitle.style.color = "#F6465D"; // قرمز
+            elTitle.style.color = "#F6465D";
             elAmount.className = "res-amount res-loss";
             elAmount.innerText = `-$${amount.toFixed(2)}`;
             elIcon.innerText = "📉";
-            elMsg.innerText = `Market went against you. Try again!`;
             
             elModal.classList.add('active');
         }
     }
 }
 
-// ابزارها
-function toggleButtons(disable) {
-    const btns = document.querySelectorAll('.trade-btn');
-    btns.forEach(b => b.disabled = disable);
-}
-
+function toggleButtons(disable) { document.querySelectorAll('.trade-btn').forEach(b => b.disabled = disable); }
 function updateHistoryRibbon(history) {
     const container = document.getElementById('history-container');
     container.innerHTML = '';
@@ -465,7 +445,6 @@ function updateHistoryRibbon(history) {
         container.appendChild(div);
     });
 }
-
 function showToast(msg) {
     const toast = document.getElementById('toast');
     toast.innerText = msg;

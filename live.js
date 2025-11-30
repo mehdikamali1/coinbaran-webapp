@@ -1,299 +1,302 @@
-﻿#live.js
+﻿/* webapp/live.js (v52.0 - Final Production Engine) */
 (function () {
-    const tg = window.Telegram.WebApp;
-    
-    // ------------------------------------------------------------------------
-    // ⚠️ قدم شما: مطمئن شوید این آدرس، آدرس فعال فعلی کلودفلر شماست
-    // ------------------------------------------------------------------------
-    const API_BASE_URL = window.location.origin;
-    const WS_BASE_URL = `wss://${API_HOST}`;
-    const API_BASE_URL = `https://${API_HOST}`; // برای ارسال رای
-    // ------------------------------------------------------------------------
+    'use strict';
 
-    // --- عناصر DOM ---
+    const tg = window.Telegram.WebApp;
+    // تشخیص آدرس سرور برای اتصال سوکت (تبدیل http به ws و https به wss)
+    const HOST = window.location.host;
+    const PROTOCOL = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const WS_BASE_URL = `${PROTOCOL}//${HOST}`;
+    const API_BASE_URL = window.location.origin;
+
+    // شناسه بازی پیش‌فرض (در نسخه پیشرفته می‌تواند از URL خوانده شود)
+    const MATCH_ID = "current_live_match";
+
+    // عناصر DOM
     const loader = document.getElementById('loader');
     const appContainer = document.getElementById('app-container');
-    const matchTitleEl = document.getElementById('match-title');
-    const matchStatusEl = document.getElementById('match-status');
-    const homeTeamEl = document.getElementById('home-team-name');
-    const awayTeamEl = document.getElementById('away-team-name');
-    const scoreEl = document.getElementById('live-score');
-    const pollsContainer = document.getElementById('polls-container');
-    const noPollsMessage = document.getElementById('no-polls-message');
-    const connectionStatusEl = document.getElementById('connection-status');
+    const els = {
+        matchTitle: document.getElementById('match-title'),
+        matchStatus: document.getElementById('match-status'),
+        homeTeam: document.getElementById('home-team-name'),
+        awayTeam: document.getElementById('away-team-name'),
+        score: document.getElementById('live-score'),
+        pollsContainer: document.getElementById('polls-container'),
+        connectionStatus: document.getElementById('connection-status'),
+        noPollsMsg: document.getElementById('no-polls-message')
+    };
 
-    let websocket = null;
-    let matchDbId = null;
-    let pollTimers = {}; // برای مدیریت تایمرهای شمارش معکوس
+    let socket = null;
+    let pollTimers = {}; // ذخیره تایمرهای فعال برای جلوگیری از تداخل
 
-    /**
-     * نمایش لودر
-     */
-    function showLoader(message = "در حال بارگذاری...") {
-        loader.querySelector('p').textContent = message;
-        loader.classList.remove('hidden');
-        appContainer.classList.add('hidden');
-    }
-
-    /**
-     * پنهان کردن لودر و نمایش برنامه
-     */
-    function hideLoader() {
-        loader.classList.add('hidden');
-        appContainer.classList.remove('hidden');
-    }
-
-    /**
-     * به‌روزرسانی وضعیت اتصال در فوتر
-     */
-    function updateConnectionStatus(isConnected, message) {
-        connectionStatusEl.textContent = message;
-        if (isConnected) {
-            connectionStatusEl.classList.remove('disconnected');
-            connectionStatusEl.classList.add('connected');
-        } else {
-            connectionStatusEl.classList.remove('connected');
-            connectionStatusEl.classList.add('disconnected');
+    // --- نقطه شروع ---
+    window.onload = function() {
+        tg.ready();
+        tg.expand();
+        tg.setHeaderColor('#050505');
+        
+        if (!tg.initData) {
+            // حالت تست
+            console.warn("initData Missing. Using Test Data.");
+            tg.initData = "query_id=TEST&user=%7B%22id%22%3A111111111%2C%22first_name%22%3A%22Guest%22%7D";
         }
-    }
 
-    /**
-     * استخراج پارامترها از URL
-     */
-    function getUrlParams() {
-        const params = new URLSearchParams(window.location.search);
-        return {
-            match_id: params.get('match_id')
+        connectWebSocket();
+    };
+
+    // --- مدیریت اتصال WebSocket ---
+    function connectWebSocket() {
+        updateConnectionStatus("connecting", "در حال برقراری ارتباط...");
+
+        // ساخت آدرس سوکت همراه با initData برای احراز هویت
+        const wsUrl = `${WS_BASE_URL}/ws/live_game/${MATCH_ID}?initData=${encodeURIComponent(tg.initData)}`;
+        
+        socket = new WebSocket(wsUrl);
+
+        socket.onopen = () => {
+            console.log("WS Connected");
+            updateConnectionStatus("connected", "🟢 متصل به استادیوم");
+            hideLoader();
+        };
+
+        socket.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                handleServerMessage(data);
+            } catch (e) {
+                console.error("Parse Error:", e);
+            }
+        };
+
+        socket.onclose = (event) => {
+            console.warn("WS Closed:", event.code);
+            updateConnectionStatus("disconnected", "🔴 قطع شد. تلاش مجدد...");
+            // تلاش برای اتصال مجدد بعد از 3 ثانیه
+            setTimeout(connectWebSocket, 3000);
+        };
+
+        socket.onerror = (error) => {
+            console.error("WS Error:", error);
+            updateConnectionStatus("disconnected", "⚠️ خطای شبکه");
         };
     }
 
-    /**
-     * به‌روزرسانی اسکوربورد
-     */
-    function updateScoreboard(data) {
-        matchTitleEl.textContent = `${data.home_team_fa} - ${data.away_team_fa}`;
-        homeTeamEl.textContent = data.home_team_fa;
-        awayTeamEl.textContent = data.away_team_fa;
-        scoreEl.textContent = `${data.score_home} - ${data.score_away}`;
-        matchStatusEl.textContent = `دقیقه ${data.elapsed}' | ${data.status_long}`;
+    // --- پردازش پیام‌های سرور ---
+    function handleServerMessage(data) {
+        switch (data.type) {
+            case 'initial_state':
+                // بارگذاری کامل وضعیت بازی
+                updateScoreboard(data.scoreboard);
+                if (data.active_polls && data.active_polls.length > 0) {
+                    renderPolls(data.active_polls);
+                } else {
+                    showNoPollsMessage(true);
+                }
+                break;
 
-        // حذف کلاس‌های loading
-        [matchTitleEl, matchStatusEl, homeTeamEl, awayTeamEl, scoreEl].forEach(el => el.classList.remove('loading'));
+            case 'scoreboard_update':
+                // آپدیت فقط اسکوربورد (مثلاً وقتی گل زده میشه)
+                updateScoreboard(data.scoreboard);
+                tg.HapticFeedback.notificationOccurred('success'); // ویبره برای گل
+                break;
+
+            case 'new_poll':
+                // نظرسنجی جدید
+                addSinglePoll(data.poll);
+                showNoPollsMessage(false);
+                tg.HapticFeedback.impactOccurred('medium');
+                break;
+
+            case 'poll_closed':
+                // بسته شدن نظرسنجی
+                closePollUI(data.poll_id);
+                break;
+        }
     }
 
-    /**
-     * ایجاد یا به‌روزرسانی کارت نظرسنجی
-     */
-    function createOrUpdatePollCard(poll) {
-        noPollsMessage.classList.add('hidden');
+    // --- آپدیت UI اسکوربورد ---
+    function updateScoreboard(data) {
+        if (!data) return;
+        els.homeTeam.innerText = data.home_team_fa;
+        els.awayTeam.innerText = data.away_team_fa;
+        els.score.innerText = `${data.score_home} - ${data.score_away}`;
+        els.matchTitle.innerText = `${data.home_team_fa} vs ${data.away_team_fa}`;
         
-        let card = document.getElementById(`poll-${poll.poll_id}`);
-        let isNew = false;
-        if (!card) {
-            card = document.createElement('div');
-            card.className = 'poll-card new'; // افزودن کلاس new برای انیمیشن
-            card.id = `poll-${poll.poll_id}`;
-            isNew = true;
+        // وضعیت بازی (دقیقه یا وضعیت کلی)
+        const timeText = data.elapsed > 0 ? `دقیقه ${data.elapsed}` : data.status_long;
+        els.matchStatus.innerText = timeText;
+        
+        // تغییر رنگ وضعیت اگر بازی زنده است
+        if (data.status_long === "زنده" || data.elapsed > 0) {
+            els.matchStatus.style.color = "#10B981"; // سبز
+            els.matchStatus.classList.add("blink"); // کلاس چشمک‌زن (باید در CSS باشد)
+        } else {
+            els.matchStatus.style.color = "#888";
+            els.matchStatus.classList.remove("blink");
         }
+    }
 
-        let optionsHtml = '';
-        for (const [key, text] of Object.entries(poll.options)) {
-            optionsHtml += `<button class="poll-btn" data-key="${key}">${text}</button>`;
-        }
+    // --- مدیریت نظرسنجی‌ها ---
+    function addSinglePoll(poll) {
+        // جلوگیری از تکرار
+        if (document.getElementById(`poll-${poll.id}`)) return;
 
-        card.innerHTML = `
+        const pollCard = document.createElement('div');
+        pollCard.className = 'poll-card new'; // کلاس new برای انیمیشن ورود
+        pollCard.id = `poll-${poll.id}`;
+
+        // ساخت دکمه‌ها
+        let buttonsHtml = '';
+        poll.options.forEach(opt => {
+            buttonsHtml += `<button class="poll-btn" onclick="submitVote('${poll.id}', '${opt.key}', this)">${opt.text}</button>`;
+        });
+
+        pollCard.innerHTML = `
             <div class="poll-header">
-                <span class="poll-question">${poll.question}</span>
-                <span class="poll-timer" id="timer-${poll.poll_id}"></span>
+                <span>${poll.question}</span>
+                <span class="poll-timer" id="timer-${poll.id}">--</span>
             </div>
             <div class="poll-options">
-                ${optionsHtml}
+                ${buttonsHtml}
             </div>
         `;
 
-        if (isNew) {
-            pollsContainer.prepend(card); // نظرسنجی جدید همیشه در بالا
-            setTimeout(() => card.classList.remove('new'), 1500); // حذف انیمیشن
-        }
+        // اضافه کردن به بالای لیست
+        els.pollsContainer.prepend(pollCard);
         
-        // افزودن event listener به دکمه‌ها
-        card.querySelectorAll('.poll-btn').forEach(btn => {
-            btn.addEventListener('click', () => handlePollVote(poll.poll_id, btn));
-        });
-        
-        // راه‌اندازی تایمر
-        startPollTimer(poll.poll_id, poll.seconds_left);
+        // شروع تایمر معکوس
+        startPollTimer(poll.id, poll.seconds_left);
+
+        // حذف کلاس انیمیشن بعد از چند ثانیه
+        setTimeout(() => pollCard.classList.remove('new'), 2000);
     }
 
-    /**
-     * مدیریت تایمر شمارش معکوس
-     */
-    function startPollTimer(pollId, secondsLeft) {
-        if (pollTimers[pollId]) {
-            clearInterval(pollTimers[pollId]);
-        }
-        
+    function renderPolls(polls) {
+        els.pollsContainer.innerHTML = ''; // پاک کردن قبلی‌ها
+        polls.forEach(addSinglePoll);
+    }
+
+    function startPollTimer(pollId, seconds) {
+        // پاک کردن تایمر قبلی اگر وجود دارد
+        if (pollTimers[pollId]) clearInterval(pollTimers[pollId]);
+
         const timerEl = document.getElementById(`timer-${pollId}`);
         if (!timerEl) return;
 
-        let remaining = secondsLeft;
+        let left = seconds;
         
-        const updateTimer = () => {
-            if (remaining <= 0) {
+        const tick = () => {
+            if (left <= 0) {
                 clearInterval(pollTimers[pollId]);
-                timerEl.textContent = "بسته شد";
-                document.getElementById(`poll-${pollId}`).classList.add('closed');
+                timerEl.innerText = "بسته شد";
+                timerEl.style.color = "#EF4444";
+                // غیرفعال کردن دکمه‌ها
+                const card = document.getElementById(`poll-${pollId}`);
+                if (card) {
+                    card.classList.add('closed');
+                    const btns = card.querySelectorAll('.poll-btn');
+                    btns.forEach(b => b.disabled = true);
+                }
             } else {
-                timerEl.textContent = `⏱ ${remaining} ثانیه`;
-                remaining--;
+                const m = Math.floor(left / 60);
+                const s = left % 60;
+                timerEl.innerText = `${m}:${s < 10 ? '0'+s : s}`;
+                
+                if (left <= 10) timerEl.style.color = "#FFD700"; // هشدار زرد
+                left--;
             }
         };
-        
-        updateTimer(); // اجرای فوری
-        pollTimers[pollId] = setInterval(updateTimer, 1000);
+
+        tick();
+        pollTimers[pollId] = setInterval(tick, 1000);
     }
 
-    /**
-     * بستن یک نظرسنجی (وقتی سرور اعلام می‌کند)
-     */
-    function closePoll(pollId) {
-        if (pollTimers[pollId]) {
-            clearInterval(pollTimers[pollId]);
-        }
-        const timerEl = document.getElementById(`timer-${pollId}`);
-        if (timerEl) {
-            timerEl.textContent = "بسته شد";
-        }
+    function closePollUI(pollId) {
+        if (pollTimers[pollId]) clearInterval(pollTimers[pollId]);
         const card = document.getElementById(`poll-${pollId}`);
         if (card) {
             card.classList.add('closed');
+            const timer = card.querySelector('.poll-timer');
+            if (timer) {
+                timer.innerText = "پایان مهلت";
+                timer.style.color = "#EF4444";
+            }
+            const btns = card.querySelectorAll('.poll-btn');
+            btns.forEach(b => b.disabled = true);
         }
     }
 
-    /**
-     * ارسال رای کاربر به سرور
-     */
-    async function handlePollVote(pollId, selectedButton) {
-        const pollKey = selectedButton.dataset.key;
+    // --- ارسال رای (Global Function) ---
+    window.submitVote = async function(pollId, guessKey, btnElement) {
+        // تغییر ظاهر دکمه
         const card = document.getElementById(`poll-${pollId}`);
-
-        // غیرفعال کردن همه دکمه‌های این کارت
-        card.querySelectorAll('.poll-btn').forEach(btn => {
-            btn.disabled = true;
-        });
-        selectedButton.classList.add('selected'); // انتخاب شده را سبز کن
+        const allBtns = card.querySelectorAll('.poll-btn');
+        allBtns.forEach(b => b.disabled = true); // غیرفعال کردن همه
+        btnElement.classList.add('selected'); // هایلایت انتخاب شده
+        
+        tg.HapticFeedback.selectionChanged();
 
         try {
-            const response = await fetch(`${API_BASE_URL}/webapp/submit_live_guess`, {
+            const res = await fetch(`${API_BASE_URL}/webapp/submit_live_guess`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
                     initData: tg.initData,
                     poll_id: pollId,
-                    guess: pollKey
+                    guess: guessKey
                 })
             });
 
-            const result = await response.json();
-            if (!response.ok) {
-                throw new Error(result.message || "خطای سرور");
+            const result = await res.json();
+            if (result.status === 'success') {
+                tg.showAlert("✅ رای شما ثبت شد");
+            } else {
+                tg.showAlert("❌ " + result.message);
+                // بازگرداندن دکمه‌ها در صورت خطا
+                allBtns.forEach(b => b.disabled = false);
+                btnElement.classList.remove('selected');
             }
-            
-            tg.HapticFeedback.notificationOccurred('success');
-            // سرور موفقیت را تایید کرد، همه چیز خوب است
-        
-        } catch (error) {
-            tg.HapticFeedback.notificationOccurred('error');
-            tg.showAlert(`خطا در ثبت رای: ${error.message}`);
-            // بازگرداندن دکمه‌ها به حالت اولیه در صورت خطا
-            card.querySelectorAll('.poll-btn').forEach(btn => {
-                btn.disabled = false;
-                btn.classList.remove('selected');
-            });
+        } catch (e) {
+            tg.showAlert("خطای اتصال");
+            allBtns.forEach(b => b.disabled = false);
+            btnElement.classList.remove('selected');
+        }
+    };
+
+    // --- توابع کمکی ---
+    function updateConnectionStatus(state, msg) {
+        if (els.connectionStatus) {
+            els.connectionStatus.innerHTML = `<i class="fas fa-circle" style="font-size:0.6rem; margin-left:5px;"></i> ${msg}`;
+            els.connectionStatus.className = ""; // پاک کردن کلاس‌ها
+            els.connectionStatus.classList.add(state); // connected / disconnected
         }
     }
 
-    /**
-     * اتصال به WebSocket
-     */
-    function connectWebSocket() {
-        const wsUrl = `${WS_BASE_URL}/ws/live_game/${matchDbId}?initData=${encodeURIComponent(tg.initData)}`;
-        
-        websocket = new WebSocket(wsUrl);
-
-        websocket.onopen = () => {
-            console.log("WebSocket connection established.");
-            updateConnectionStatus(true, "✅ اتصال برقرار شد (زنده)");
-            hideLoader();
-        };
-
-        websocket.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            console.log("Received data from WebSocket:", data);
-
-            switch(data.type) {
-                case 'initial_state':
-                    // بارگذاری اطلاعات اولیه بازی
-                    updateScoreboard(data.scoreboard);
-                    // بارگذاری نظرسنجی‌های فعال موجود
-                    if (data.active_polls && data.active_polls.length > 0) {
-                        data.active_polls.forEach(createOrUpdatePollCard);
-                    }
-                    break;
-                case 'scoreboard_update':
-                    updateScoreboard(data.scoreboard);
-                    break;
-                case 'new_poll':
-                    tg.HapticFeedback.notificationOccurred('success');
-                    createOrUpdatePollCard(data.poll);
-                    break;
-                case 'poll_closed':
-                    tg.HapticFeedback.notificationOccurred('warning');
-                    closePoll(data.poll_id);
-                    break;
+    function showNoPollsMessage(show) {
+        if (!els.noPollsMsg) {
+            // اگر پیام در HTML نبود، می‌سازیم
+            if (show) {
+                const msgDiv = document.createElement('div');
+                msgDiv.id = 'no-polls-message';
+                msgDiv.style.textAlign = 'center';
+                msgDiv.style.color = '#888';
+                msgDiv.style.marginTop = '20px';
+                msgDiv.innerText = "منتظر نظرسنجی‌های جدید باشید...";
+                els.pollsContainer.appendChild(msgDiv);
             }
-        };
-
-        websocket.onclose = (event) => {
-            console.warn(`WebSocket closed. Code: ${event.code}, Reason: ${event.reason}`);
-            updateConnectionStatus(false, "❌ اتصال قطع شد. در حال تلاش مجدد...");
-            tg.HapticFeedback.notificationOccurred('error');
-            // تلاش مجدد برای اتصال پس از 3 ثانیه
-            setTimeout(connectWebSocket, 3000);
-        };
-
-        websocket.onerror = (error) => {
-            console.error("WebSocket error:", error);
-            updateConnectionStatus(false, "❌ خطای اتصال به سرور.");
-        };
+        } else {
+            els.noPollsMsg.style.display = show ? 'block' : 'none';
+        }
     }
 
-    /**
-     * راه‌اندازی اولیه برنامه
-     */
-    function init() {
-        initTelegram();
-        showLoader("در حال اعتبارسنجی...");
-        
-        const params = getUrlParams();
-        matchDbId = params.match_id;
-
-        if (!matchDbId) {
-            showLoader("خطا: شناسه بازی یافت نشد.");
-            updateConnectionStatus(false, "خطا: شناسه بازی (match_id) در URL وجود ندارد.");
-            return;
+    function hideLoader() {
+        if (loader) {
+            loader.style.opacity = '0';
+            setTimeout(() => {
+                loader.style.display = 'none';
+                appContainer.classList.remove('hidden');
+            }, 500);
         }
-        
-        if (!tg.initData) {
-            showLoader("خطا: اطلاعات تلگرام یافت نشد.");
-            updateConnectionStatus(false, "لطفاً این صفحه را فقط از داخل تلگرام باز کنید.");
-            return;
-        }
-        
-        connectWebSocket();
     }
-
-    // --- Entry Point ---
-    document.addEventListener("DOMContentLoaded", init);
 
 })();

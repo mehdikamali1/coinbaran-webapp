@@ -1,194 +1,116 @@
 ﻿#kyc.html
-
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>احراز هویت کوین باران</title>
-    <link rel="stylesheet" href="style.css?v=1.2"> 
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <style>
-        body {
-            padding: 16px;
-        }
-        .form-container {
-            width: 100%;
-            max-width: 500px;
-            margin: 0 auto;
-            background-color: var(--secondary-bg-color);
-            border-radius: var(--border-radius-lg);
-            padding: 20px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
-        .form-header {
-            text-align: center;
-            margin-bottom: 20px;
-            border-bottom: 1px solid var(--bg-color);
-            padding-bottom: 15px;
-        }
-        .form-header h1 {
-            color: var(--text-color);
-            margin: 0 0 5px 0;
-            font-size: 1.4rem;
-        }
-        .form-header p {
-            color: var(--hint-color);
-            font-size: 0.9rem;
-            margin: 0;
-        }
-        .form-group {
-            margin-bottom: 16px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 6px;
-            font-weight: 500;
-            color: var(--hint-color);
-            font-size: 0.9rem;
-        }
-        .form-group input[type="text"],
-        .form-group input[type="tel"] {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid var(--bg-color);
-            background-color: var(--bg-color);
-            border-radius: var(--border-radius-sm);
-            color: var(--text-color);
-            font-family: 'Vazirmatn', sans-serif;
-            font-size: 1rem;
-            box-sizing: border-box; 
-        }
-        .form-group input:focus {
-            outline: none;
-            border-color: var(--button-color);
-        }
-
-        .file-upload-wrapper {
-            position: relative;
-            background: var(--bg-color);
-            border: 2px dashed var(--hint-color);
-            border-radius: var(--border-radius-sm);
-            padding: 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        .file-upload-wrapper.file-selected {
-            border-color: var(--color-success);
-            background: #28a74522; /* سبز کم‌رنگ */
-        }
-        .file-upload-wrapper input[type="file"] {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            opacity: 0;
-            cursor: pointer;
-        }
-        .file-upload-icon {
-            font-size: 1.5rem;
-            color: var(--hint-color);
-        }
-        .file-upload-text {
-            color: var(--hint-color);
-            margin-top: 8px;
-            font-size: 0.9rem;
-        }
-        .file-upload-wrapper.file-selected .file-upload-icon {
-            color: var(--color-success);
-        }
-        .file-upload-wrapper.file-selected .file-upload-text {
-            color: var(--color-success);
-            font-weight: 700;
-        }
-        
-        #telegram-main-button {
-            display: none;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>احراز هویت</title>
+    
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    
+
     <div id="loader" class="hidden">
         <div class="spinner"></div>
-        <p>در حال ارسال اطلاعات...</p>
+        <p style="color:#888; font-size:0.8rem">در حال ارسال مدارک...</p>
     </div>
 
-    <div id="kyc-form-container" class="form-container">
-        <div class="form-header">
-            <h1>📝 فرم احراز هویت</h1>
-            <p>لطفاً تمام اطلاعات را با دقت وارد کنید.</p>
+    <div id="app-container" style="padding: 20px;">
+        
+        <div class="game-header" style="margin-bottom: 20px;">
+            <div style="display:flex; gap:10px; align-items:center">
+                <button onclick="window.location.href='/'" class="back-btn">
+                    🏠 بازگشت
+                </button>
+            </div>
+            <div style="color: var(--accent-gold); font-weight: 800;">KYC Verification</div>
         </div>
 
-        <form id="kyc-form">
+        <div class="form-container">
             
-            <div class="form-group">
-                <label for="full_name">نام و نام خانوادگی (مطابق کارت ملی)</label>
-                <input type="text" id="full_name" name="full_name" required>
+            <div style="text-align: center; margin-bottom: 25px;">
+                <i class="fas fa-shield-alt" style="font-size: 3rem; color: var(--accent-gold); margin-bottom: 10px;"></i>
+                <h2 style="margin: 0; color: white;">تکمیل مدارک</h2>
+                <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 5px;">
+                    برای برداشت وجه و افزایش سقف معاملات، لطفاً فرم زیر را پر کنید.
+                </p>
             </div>
+
+            <form id="kyc-form">
+                
+                <div class="form-group">
+                    <label>نام و نام خانوادگی (طبق کارت ملی)</label>
+                    <input type="text" id="full_name" placeholder="مثال: علی محمدی">
+                </div>
+
+                <div class="form-group">
+                    <label>کد ملی (۱۰ رقم)</label>
+                    <input type="tel" id="national_id" maxlength="10" placeholder="0123456789">
+                </div>
+
+                <div class="form-group">
+                    <label>تاریخ تولد</label>
+                    <input type="text" id="birth_date" placeholder="1370/01/01">
+                </div>
+
+                <div class="form-group">
+                    <label>شماره موبایل</label>
+                    <input type="tel" id="phone_number" maxlength="11" placeholder="0912...">
+                </div>
+
+                <div class="form-group">
+                    <label>شماره کارت بانکی (به نام خودتان)</label>
+                    <input type="tel" id="card_number" maxlength="16" placeholder="6037...">
+                </div>
+
+                <hr style="border: 0; border-top: 1px solid var(--border); margin: 25px 0;">
+
+                <div style="margin-bottom: 15px; color: white; font-weight: 700;">📂 بارگذاری مدارک</div>
+
+                <div class="form-group">
+                    <label>تصویر روی کارت ملی</label>
+                    <div class="file-upload-wrapper">
+                        <input type="file" id="id_front_file" accept="image/*">
+                        <i class="fas fa-id-card file-upload-icon"></i>
+                        <p class="file-upload-text">برای انتخاب فایل کلیک کنید</p>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>تصویر پشت کارت ملی</label>
+                    <div class="file-upload-wrapper">
+                        <input type="file" id="id_back_file" accept="image/*">
+                        <i class="fas fa-id-card file-upload-icon"></i>
+                        <p class="file-upload-text">برای انتخاب فایل کلیک کنید</p>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>تصویر کارت بانکی</label>
+                    <div class="file-upload-wrapper">
+                        <input type="file" id="bank_card_file" accept="image/*">
+                        <i class="fas fa-credit-card file-upload-icon"></i>
+                        <p class="file-upload-text">برای انتخاب فایل کلیک کنید</p>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>تصویر سلفی (با کارت ملی)</label>
+                    <div class="file-upload-wrapper">
+                        <input type="file" id="selfie_file" accept="image/*">
+                        <i class="fas fa-user-check file-upload-icon"></i>
+                        <p class="file-upload-text">برای انتخاب فایل کلیک کنید</p>
+                    </div>
+                </div>
+
+            </form>
             
-            <div class="form-group">
-                <label for="national_id">کد ملی (۱۰ رقمی)</label>
-                <input type="tel" id="national_id" name="national_id" inputmode="numeric" pattern="[0-9]{10}" maxlength="10" required>
-            </div>
-
-            <div class="form-group">
-                <label for="birth_date">تاریخ تولد (مثال: ۱۳۷۰/۰۵/۱۴)</label>
-                <input type="text" id="birth_date" name="birth_date" placeholder="1370/05/14" required>
-            </div>
-
-            <div class="form-group">
-                <label for="phone_number">شماره موبایل (مثال: 09123456789)</label>
-                <input type="tel" id="phone_number" name="phone_number" inputmode="tel" pattern="09[0-9]{9}" maxlength="11" required>
-            </div>
-
-            <div class="form-group">
-                <label for="card_number">شماره کارت بانکی (۱۶ رقمی، به نام خودتان)</label>
-                <input type="tel" id="card_number" name="card_number" inputmode="numeric" pattern="[0-9]{16}" maxlength="16" required>
-            </div>
-
-            <div class="form-group">
-                <label>عکس روی کارت ملی</label>
-                <div class="file-upload-wrapper">
-                    <input type="file" id="id_front_file" name="id_front_file" accept="image/*" required>
-                    <i class="fas fa-id-card file-upload-icon"></i>
-                    <p class="file-upload-text">برای آپلود کلیک کنید</p>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>عکس پشت کارت ملی</label>
-                <div class="file-upload-wrapper">
-                    <input type="file" id="id_back_file" name="id_back_file" accept="image/*" required>
-                    <i class="fas fa-id-card-alt file-upload-icon"></i>
-                    <p class="file-upload-text">برای آپلود کلیک کنید</p>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>عکس روی کارت بانکی</label>
-                <div class="file-upload-wrapper">
-                    <input type="file" id="bank_card_file" name="bank_card_file" accept="image/*" required>
-                    <i class="fas fa-credit-card file-upload-icon"></i>
-                    <p class="file-upload-text">برای آپلود کلیک کنید</p>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>عکس سلفی (طبق راهنما)</label>
-                <div class="file-upload-wrapper">
-                    <input type="file" id="selfie_file" name="selfie_file" accept="image/*" required>
-                    <i class="fas fa-camera-retro file-upload-icon"></i>
-                    <p class="file-upload-text">برای آپلود کلیک کنید</p>
-                </div>
-            </div>
-
-        </form>
+            <div style="height: 50px;"></div>
+        </div>
     </div>
 
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="kyc.js?v=2.1"></script>
-    </body>
+    <script src="kyc.js"></script>
+</body>
 </html>

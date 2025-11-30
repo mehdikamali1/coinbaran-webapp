@@ -1,5 +1,4 @@
 ﻿#game.html
-
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
@@ -11,28 +10,35 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
-    <link rel="stylesheet" href="style.css"> 
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div class="game-header">
-        <div style="display:flex; gap:10px; align-items:center">
-            <button onclick="window.location.href='/'" class="back-btn">🏠</button>
-            <button onclick="window.openLeaderboard()" class="trophy-btn">🏆</button>
+    <div style="padding: 15px 20px;">
+        <div class="game-header">
+            <div style="display:flex; gap:10px; align-items:center">
+                <button onclick="window.location.href='/'" class="back-btn">
+                    🏠
+                </button>
+                <button onclick="window.openLeaderboard()" class="trophy-btn">
+                    🏆
+                </button>
+            </div>
+            <div class="live-badge">● LIVE</div>
         </div>
-        <div class="live-badge blink">● LIVE</div>
     </div>
 
-    <div id="game-container">
+    <div id="app-container" style="padding: 0 20px 100px 20px;">
+        
         <div class="price-display">
             <div class="price-label">BTC/USDT</div>
-            <div id="btc-price" class="text-white">...</div>
+            <div id="btc-price">...</div>
         </div>
 
         <div class="timer-circle">
             <svg class="circular-chart" viewBox="0 0 36 36">
                 <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                <path id="timer-path" class="circle" stroke-dasharray="100, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" style="stroke: #00E096;" />
+                <path id="timer-path" class="circle" stroke-dasharray="100, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" style="stroke: var(--accent-green);" />
             </svg>
             <div id="timer-text" class="timer-text">--</div>
         </div>
@@ -43,73 +49,76 @@
 
         <div id="history-container"></div>
 
-        <div class="bet-controls">
-            <div id="round-status" class="round-status">در حال اتصال...</div>
-            
-            <div class="quick-amounts">
-                <button onclick="window.setAmount(1)" class="chip active">$1</button>
-                <button onclick="window.setAmount(5)" class="chip">$5</button>
-                <button onclick="window.setAmount(10)" class="chip">$10</button>
-                <button onclick="window.setAmount(25)" class="chip">$25</button>
-            </div>
+    </div>
 
-            <div class="amount-selector">
-                <span>مبلغ (UUSD):</span>
-                <input type="number" id="bet-amount" value="1" min="1">
-            </div>
+    <div class="bet-controls">
+        <div id="round-status" style="text-align: center; color: var(--text-muted); margin-bottom: 15px; font-size: 0.9rem;">
+            در حال اتصال...
+        </div>
+        
+        <div class="quick-amounts">
+            <button onclick="window.setAmount(1)" class="chip active">$1</button>
+            <button onclick="window.setAmount(5)" class="chip">$5</button>
+            <button onclick="window.setAmount(10)" class="chip">$10</button>
+            <button onclick="window.setAmount(25)" class="chip">$25</button>
+        </div>
 
-            <div class="action-buttons-game">
-                <button id="btn-up" class="game-btn btn-up" onclick="window.placeBet('UP')">
-                    خرید 📈
-                </button>
-                <button id="btn-down" class="game-btn btn-down" onclick="window.placeBet('DOWN')">
-                    فروش 📉
-                </button>
-            </div>
-            
-            <div class="history-trigger" onclick="window.openHistory()">
-                📜 تاریخچه شرط‌های من
-            </div>
+        <div class="amount-selector">
+            <span>مبلغ شرط (UUSD):</span>
+            <input type="number" id="bet-amount" value="1" min="1">
+        </div>
+
+        <div class="action-buttons-game">
+            <button id="btn-up" class="game-btn btn-up" onclick="window.placeBet('UP')">
+                خرید 📈
+            </button>
+            <button id="btn-down" class="game-btn btn-down" onclick="window.placeBet('DOWN')">
+                فروش 📉
+            </button>
+        </div>
+
+        <div class="history-trigger" onclick="window.openHistory()" style="text-align:center; margin-top:15px; color:var(--text-muted); font-size:0.8rem; cursor:pointer;">
+            📜 تاریخچه شرط‌های من
         </div>
     </div>
 
-    <div id="history-modal" class="modal hidden">
+    <div id="history-modal" class="modal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h3>تاریخچه بازی‌ها</h3>
-                <button onclick="window.closeHistory()" class="close-btn">✕</button>
+            <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3 style="margin:0; color:white;">تاریخچه بازی‌ها</h3>
+                <button onclick="window.closeHistory()" style="background:none; border:none; color:white; font-size:1.5rem;">✕</button>
             </div>
-            <div id="history-list" class="history-list">
-                <div class="loading-spinner"></div>
+            <div id="history-list" style="max-height: 400px; overflow-y: auto;">
+                <div style="text-align:center; padding:20px; color:#888">در حال بارگذاری...</div>
             </div>
         </div>
     </div>
 
-    <div id="leaderboard-modal" class="modal hidden">
+    <div id="leaderboard-modal" class="modal">
         <div class="modal-content glass-panel">
-            <div class="modal-header">
-                <h3>🏆 تالار برترین‌ها</h3>
-                <button onclick="window.closeLeaderboard()" class="close-btn">✕</button>
+            <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3 style="margin:0; color:var(--accent-gold);">🏆 تالار برترین‌ها</h3>
+                <button onclick="window.closeLeaderboard()" style="background:none; border:none; color:white; font-size:1.5rem;">✕</button>
             </div>
             
-            <div class="stats-card">
-                <div class="stat-item">
-                    <span class="stat-label">بازی‌ها</span>
-                    <span class="stat-value" id="my-total-games">--</span>
+            <div class="stats-card" style="display:flex; justify-content:space-around; background:#222; padding:15px; border-radius:12px; margin-bottom:20px;">
+                <div class="stat-item" style="text-align:center;">
+                    <span class="stat-label" style="display:block; font-size:0.7rem; color:#888;">بازی‌ها</span>
+                    <span class="stat-value" id="my-total-games" style="color:white; font-weight:bold;">--</span>
                 </div>
-                <div class="stat-item">
-                    <span class="stat-label">بردها</span>
-                    <span class="stat-value text-up" id="my-total-wins">--</span>
+                <div class="stat-item" style="text-align:center;">
+                    <span class="stat-label" style="display:block; font-size:0.7rem; color:#888;">بردها</span>
+                    <span class="stat-value text-up" id="my-total-wins" style="color:var(--accent-green); font-weight:bold;">--</span>
                 </div>
-                <div class="stat-item">
-                    <span class="stat-label">نرخ برد</span>
-                    <span class="stat-value text-gold" id="my-win-rate">--%</span>
+                <div class="stat-item" style="text-align:center;">
+                    <span class="stat-label" style="display:block; font-size:0.7rem; color:#888;">نرخ برد</span>
+                    <span class="stat-value text-gold" id="my-win-rate" style="color:var(--accent-gold); font-weight:bold;">--%</span>
                 </div>
             </div>
 
-            <div class="leaderboard-title">نفرات برتر (۲۴ ساعت)</div>
-            <div id="leaderboard-list" class="leaderboard-list">
-                <div class="loading-spinner"></div>
+            <div class="leaderboard-title" style="margin-bottom:10px; font-size:0.9rem; color:#aaa;">نفرات برتر (۲۴ ساعت)</div>
+            <div id="leaderboard-list" class="leaderboard-list" style="max-height: 300px; overflow-y: auto;">
+                <div class="loading-spinner" style="text-align:center; color:#888;">در حال دریافت...</div>
             </div>
         </div>
     </div>

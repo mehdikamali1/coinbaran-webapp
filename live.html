@@ -3,183 +3,73 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>اتاق بازی زنده - کوین باران</title>
-    <link rel="stylesheet" href="style.css?v=1.2">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <style>
-        /* استایل‌های اختصاصی این صفحه */
-        body {
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            min-height: 95vh;
-        }
-        #app-container { gap: 12px; }
-
-        .live-header {
-            text-align: center;
-            padding: 10px;
-            background-color: var(--secondary-bg-color);
-            border-radius: var(--border-radius-md);
-        }
-        .live-header h1 {
-            font-size: 1.2rem;
-            margin: 0 0 5px 0;
-            color: var(--text-color);
-        }
-        .live-header #match-status {
-            font-size: 0.9rem;
-            color: var(--color-success);
-            font-weight: 700;
-        }
-        .live-header #match-status.loading {
-            color: var(--hint-color);
-            font-weight: 400;
-        }
-
-        .scoreboard-live {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: var(--secondary-bg-color);
-            border-radius: var(--border-radius-md);
-            padding: 16px 20px;
-            font-weight: 700;
-        }
-        .scoreboard-live .team {
-            font-size: 1.1rem;
-        }
-        .scoreboard-live .score {
-            font-size: 2rem;
-            font-weight: 800;
-            direction: ltr;
-            min-width: 80px;
-            text-align: center;
-            letter-spacing: 2px;
-        }
-
-        #polls-container {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .poll-card {
-            background-color: var(--secondary-bg-color);
-            border-radius: var(--border-radius-md);
-            padding: 16px;
-            transition: all 0.3s ease;
-            border: 1px solid var(--secondary-bg-color);
-        }
-        .poll-card.new {
-            border-color: var(--color-xp);
-            animation: pulse 1.5s 2;
-        }
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(251, 192, 45, 0.4); }
-            70% { box-shadow: 0 0 0 10px rgba(251, 192, 45, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(251, 192, 45, 0); }
-        }
-        .poll-card.closed {
-            opacity: 0.5;
-            background-color: var(--bg-color);
-        }
-        .poll-card.closed .poll-options {
-            pointer-events: none;
-        }
-        .poll-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        .poll-question {
-            font-size: 1rem;
-            font-weight: 700;
-        }
-        .poll-timer {
-            font-size: 0.9rem;
-            color: var(--color-danger);
-            font-weight: 700;
-        }
-        .poll-options {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-            gap: 8px;
-        }
-        .poll-btn {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            border: 1px solid var(--bg-color);
-            padding: 10px;
-            border-radius: var(--border-radius-sm);
-            font-family: 'Vazirmatn', sans-serif;
-            font-size: 0.9rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        .poll-btn.selected {
-            background-color: var(--color-success);
-            color: var(--button-text-color);
-            border-color: var(--color-success);
-            font-weight: 700;
-            pointer-events: none;
-        }
-        .poll-btn:not(.selected):disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        #connection-status {
-            font-size: 0.8rem;
-            color: var(--hint-color);
-            text-align: center;
-            padding: 10px;
-            background-color: var(--secondary-bg-color);
-            border-radius: var(--border-radius-sm);
-            margin-top: auto; /* به پایین صفحه می‌چسبد */
-        }
-        #connection-status.connected {
-            color: var(--color-success);
-        }
-        #connection-status.disconnected {
-            color: var(--color-danger);
-        }
-
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>اتاق بازی زنده</title>
+    
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    
+
     <div id="loader">
         <div class="spinner"></div>
-        <p>در حال ورود به اتاق بازی...</p>
+        <p style="color:#888; font-size:0.8rem">در حال اتصال به استادیوم...</p>
     </div>
 
-    <div id="app-container" class="hidden">
-        <header class="live-header">
-            <h1 id="match-title" class="loading">...</h1>
-            <span id="match-status" class="loading">...</span>
-        </header>
-
-        <section class="scoreboard-live">
-            <span id="home-team-name" class="team loading">تیم میزبان</span>
-            <span id="live-score" class="score loading">0-0</span>
-            <span id="away-team-name" class="team loading">تیم میهمان</span>
-        </section>
-
-        <main id="polls-container">
-            <div id="no-polls-message" class="card" style="text-align: center; color: var(--hint-color);">
-                منتظر نظرسنجی‌های زنده از طرف ادمین باشید...
+    <div id="app-container" class="hidden" style="padding: 20px; padding-bottom: 60px;">
+        
+        <div class="game-header" style="margin-bottom: 20px;">
+            <div style="display:flex; gap:10px; align-items:center">
+                <button onclick="window.location.href='/'" class="back-btn">
+                    🏠 بازگشت
+                </button>
             </div>
-        </main>
+            <div class="live-badge">● LIVE MATCH</div>
+        </div>
 
-        <footer id="connection-status">
-            <i class="fas fa-spinner fa-spin"></i> در حال اتصال به سرور...
-        </footer>
+        <div style="text-align: center; margin-bottom: 15px;">
+            <h2 id="match-title" style="margin: 0; font-size: 1rem; color: white;">...</h2>
+            <span id="match-status" style="font-size: 0.8rem; color: var(--accent-gold);">در حال بارگذاری...</span>
+        </div>
+
+        <div class="scoreboard-live">
+            <div class="team">
+                <span id="home-team-name">میزبان</span>
+            </div>
+            
+            <div class="score">
+                <span id="live-score">0-0</span>
+            </div>
+            
+            <div class="team">
+                <span id="away-team-name">میهمان</span>
+            </div>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid var(--border); margin: 25px 0;">
+
+        <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <span style="font-weight: 700; color: white;">📊 پیش‌بینی‌های زنده</span>
+                <span style="font-size: 0.7rem; color: var(--text-muted);">برای ثبت رای ضربه بزنید</span>
+            </div>
+
+            <div id="polls-container">
+                <div id="no-polls-message" style="text-align: center; color: var(--text-muted); padding: 30px; background: var(--card-bg); border-radius: 16px; border: 1px dashed var(--border);">
+                    <i class="fas fa-clipboard-list" style="font-size: 2rem; margin-bottom: 10px; opacity: 0.5;"></i>
+                    <p style="margin: 0; font-size: 0.9rem;">هنوز سوالی مطرح نشده است.</p>
+                    <p style="margin: 5px 0 0 0; font-size: 0.7rem;">منتظر سوالات ادمین باشید...</p>
+                </div>
+            </div>
+        </div>
+
     </div>
 
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="live.js?v=1.0"></script>
+    <div id="connection-status">
+        <i class="fas fa-circle-notch fa-spin"></i> در حال برقراری ارتباط...
+    </div>
+
+    <script src="live.js"></script>
 </body>
 </html>

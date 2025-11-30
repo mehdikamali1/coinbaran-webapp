@@ -1,4 +1,4 @@
-﻿/* webapp/game.js (v33.0 - Final Logic with Auto-Format & Result Modal) */
+﻿/* webapp/game.js (v35.0 - Server-Driven Result & Entry Display) */
 
 const tg = window.Telegram.WebApp;
 const API_BASE_URL = window.location.origin;
@@ -11,9 +11,8 @@ let isFirstLoad = true;
 let lastTime = 0;
 
 // متغیرهای بازی
-const LOCKOUT_TIME = 15;
 const ROUND_DURATION = 60;
-const EST_USDT_RATE = 90000; // نرخ تقریبی برای نمایش در کلاینت
+const EST_USDT_RATE = 90000;
 
 // --- سیستم صوتی ---
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -52,7 +51,7 @@ window.onload = function() {
 
     initChart();
     
-    // دریافت دیتای زنده
+    // شروع دریافت دیتا
     setInterval(fetchServerData, 1000);
     fetchServerData();
 
@@ -65,23 +64,16 @@ window.onload = function() {
         });
     });
 
-    // --- لاجیک فرمت 3 رقم (50,000) ---
+    // فرمت دهی اینپوت تبدیل (50,000)
     const swapInput = document.getElementById('swap-input-toman');
     if(swapInput) {
         swapInput.addEventListener('input', function(e) {
-            // 1. حذف کاماها برای محاسبه
             let rawValue = e.target.value.replace(/,/g, '');
-            // 2. حذف کاراکترهای غیر عددی
             if(!/^\d*$/.test(rawValue)) { rawValue = rawValue.replace(/\D/g, ''); }
             
-            // 3. فرمت کردن (اضافه کردن کاما)
-            if (rawValue) {
-                e.target.value = parseInt(rawValue).toLocaleString('en-US');
-            } else {
-                e.target.value = '';
-            }
+            if (rawValue) e.target.value = parseInt(rawValue).toLocaleString('en-US');
+            else e.target.value = '';
             
-            // 4. محاسبه دلاری
             const tomans = parseFloat(rawValue) || 0;
             const usd = tomans / EST_USDT_RATE;
             document.getElementById('swap-calc-usd').innerText = usd.toFixed(2);
@@ -90,49 +82,22 @@ window.onload = function() {
 };
 
 // =========================================
-// 1. تنظیمات چارت (Area Chart - Mobile Optimized)
+// 1. تنظیمات چارت
 // =========================================
 function initChart() {
     const container = document.getElementById('tv-chart-container');
-    
     chart = LightweightCharts.createChart(container, {
         width: container.clientWidth,
         height: container.clientHeight,
-        layout: {
-            background: { type: 'solid', color: '#171B26' },
-            textColor: '#848E9C',
-            fontFamily: "'Roboto Mono', monospace",
-        },
+        layout: { background: { type: 'solid', color: '#171B26' }, textColor: '#848E9C', fontFamily: "'Roboto Mono', monospace" },
         grid: { vertLines: { visible: false }, horzLines: { visible: false } },
-        rightPriceScale: {
-            borderColor: 'transparent',
-            visible: true,
-            scaleMargins: { top: 0.1, bottom: 0.05 },
-        },
-        timeScale: {
-            borderColor: 'transparent',
-            timeVisible: true,
-            secondsVisible: true,
-            rightOffset: 5,
-            fixLeftEdge: true,
-        },
-        crosshair: {
-            vertLine: { width: 1, color: 'rgba(240, 185, 11, 0.5)', style: 0, labelBackgroundColor: '#171B26' },
-            horzLine: { width: 1, color: 'rgba(240, 185, 11, 0.5)', style: 0, labelBackgroundColor: '#171B26' },
-        },
+        rightPriceScale: { borderColor: 'transparent', visible: true, scaleMargins: { top: 0.1, bottom: 0.05 } },
+        timeScale: { borderColor: 'transparent', timeVisible: true, secondsVisible: true, rightOffset: 5, fixLeftEdge: true },
+        crosshair: { vertLine: { width: 1, color: 'rgba(240, 185, 11, 0.5)', style: 0, labelBackgroundColor: '#171B26' }, horzLine: { width: 1, color: 'rgba(240, 185, 11, 0.5)', style: 0, labelBackgroundColor: '#171B26' } },
         handleScroll: { mouseWheel: false, pressedMouseMove: true },
         handleScale: { axisPressedMouseMove: false, mouseWheel: false, pinch: false },
     });
-
-    areaSeries = chart.addAreaSeries({
-        topColor: 'rgba(14, 203, 129, 0.56)',
-        bottomColor: 'rgba(14, 203, 129, 0.04)',
-        lineColor: 'rgba(14, 203, 129, 1)',
-        lineWidth: 2,
-        crosshairMarkerVisible: true,
-        crosshairMarkerRadius: 4,
-    });
-
+    areaSeries = chart.addAreaSeries({ topColor: 'rgba(14, 203, 129, 0.56)', bottomColor: 'rgba(14, 203, 129, 0.04)', lineColor: 'rgba(14, 203, 129, 1)', lineWidth: 2, crosshairMarkerVisible: true, crosshairMarkerRadius: 4 });
     new ResizeObserver(entries => {
         if (entries.length === 0 || entries[0].target !== container) return;
         const newRect = entries[0].contentRect;
@@ -142,22 +107,16 @@ function initChart() {
 }
 
 function generateHistoryFromRealPrice(realPrice) {
-    const res = [];
-    let currentPrice = realPrice;
-    const timeNow = Math.floor(Date.now() / 1000);
-    
+    const res = []; let currentPrice = realPrice; const timeNow = Math.floor(Date.now() / 1000);
     for (let i = 1; i <= 60; i++) {
-        const volatility = 3; 
-        const move = (Math.random() - 0.5) * volatility;
-        const value = currentPrice - move;
-        res.push({ time: timeNow - i, value: value });
-        currentPrice = value;
+        const move = (Math.random() - 0.5) * 3; const value = currentPrice - move;
+        res.push({ time: timeNow - i, value: value }); currentPrice = value;
     }
     return res.reverse();
 }
 
 // =========================================
-// 2. دریافت دیتا و آپدیت
+// 2. دریافت دیتا و آپدیت UI
 // =========================================
 async function fetchServerData() {
     try {
@@ -177,14 +136,43 @@ async function fetchServerData() {
 
 function updateGameUI(data) {
     const serverPrice = data.current_price;
-    const domPrice = document.getElementById('btc-price');
-
-    // [NEW] آپدیت موجودی کاربر در هدر
+    
+    // 1. آپدیت موجودی
     if (data.user_balance !== undefined) {
         document.getElementById('user-balance-display').innerText = data.user_balance.toLocaleString('en-US', {minimumFractionDigits: 2});
     }
 
-    // لود اولیه بدون گپ
+    // 2. نمایش قیمت ورود (Entry Price) اگر شرطی فعال باشد
+    const elEntry = document.getElementById('entry-display');
+    if (data.user_bet && data.user_bet.entry_price) {
+        const dirArrow = data.user_bet.prediction === 'UP' ? '▲' : '▼';
+        const color = data.user_bet.prediction === 'UP' ? '#0ECB81' : '#F6465D';
+        elEntry.innerHTML = `<span style="color:${color}">${dirArrow} Entry: $${data.user_bet.entry_price.toLocaleString()}</span>`;
+    } else {
+        elEntry.innerHTML = ""; // خالی کردن اگر شرطی نیست
+    }
+
+    // 3. بررسی نتیجه قطعی از سرور (New Logic)
+    if (data.last_result) {
+        showResultModal(data.last_result);
+    }
+
+    // 4. آپدیت چارت و قیمت لحظه ای
+    updateChartData(serverPrice);
+
+    // 5. تایمر و تاریخچه
+    if (data.round) {
+        updateTimerCircle(data.round.time_left);
+        updateRoundStatus(data);
+    }
+    if (data.history) {
+        updateHistoryRibbon(data.history);
+    }
+}
+
+function updateChartData(serverPrice) {
+    const domPrice = document.getElementById('btc-price');
+    
     if (isFirstLoad && serverPrice > 0) {
         const historyData = generateHistoryFromRealPrice(serverPrice);
         areaSeries.setData(historyData);
@@ -192,92 +180,93 @@ function updateGameUI(data) {
         areaSeries.update({ time: lastTime, value: serverPrice });
         chart.timeScale().fitContent(); 
         document.getElementById('chart-loader').classList.add('fade-out');
-        isFirstLoad = false;
-        lastPrice = serverPrice;
+        isFirstLoad = false; lastPrice = serverPrice;
     }
 
-    // تغییر رنگ بر اساس قیمت
     if (serverPrice !== lastPrice) {
         const isUp = serverPrice >= lastPrice;
         const color = isUp ? '#0ECB81' : '#F6465D';
-        
         domPrice.style.color = color;
         domPrice.innerText = serverPrice.toLocaleString('en-US', {minimumFractionDigits: 2});
-        
         document.querySelector('.blink-dot').style.backgroundColor = color;
-        
-        areaSeries.applyOptions({
-            lineColor: color,
-            topColor: isUp ? 'rgba(14, 203, 129, 0.5)' : 'rgba(246, 70, 93, 0.5)',
-            bottomColor: isUp ? 'rgba(14, 203, 129, 0.01)' : 'rgba(246, 70, 93, 0.01)',
-            crosshairMarkerBackgroundColor: color
-        });
-
+        areaSeries.applyOptions({ lineColor: color, topColor: isUp ? 'rgba(14, 203, 129, 0.5)' : 'rgba(246, 70, 93, 0.5)', bottomColor: isUp ? 'rgba(14, 203, 129, 0.01)' : 'rgba(246, 70, 93, 0.01)', crosshairMarkerBackgroundColor: color });
         lastPrice = serverPrice;
     }
 
-    // آپدیت چارت
     if (!isFirstLoad) {
         const now = Math.floor(Date.now() / 1000);
-        if (now > lastTime) {
-            lastTime = now;
-            areaSeries.update({ time: now, value: serverPrice });
-        } else {
-            areaSeries.update({ time: lastTime, value: serverPrice });
-        }
-    }
-
-    // لاجیک بازی
-    if (data.round) {
-        updateTimerCircle(data.round.time_left);
-        updateRoundStatus(data);
-    }
-    if (data.history) {
-        updateHistoryRibbon(data.history);
-        checkWinLoss(data.history); // بررسی نتیجه
+        if (now > lastTime) { lastTime = now; areaSeries.update({ time: now, value: serverPrice }); }
+        else { areaSeries.update({ time: lastTime, value: serverPrice }); }
     }
 }
 
 function simulateSmoothLocalMovement() {
     if (isFirstLoad) return;
-    const move = (Math.random() - 0.5) * 1.5;
-    const newPrice = lastPrice + move;
-    
+    const move = (Math.random() - 0.5) * 1.5; const newPrice = lastPrice + move;
     document.getElementById('btc-price').innerText = newPrice.toFixed(2);
-    
     const now = Math.floor(Date.now() / 1000);
-    if (now > lastTime) {
-        lastTime = now;
-        areaSeries.update({ time: now, value: newPrice });
-    } else {
-        areaSeries.update({ time: lastTime, value: newPrice });
-    }
+    if (now > lastTime) { lastTime = now; areaSeries.update({ time: now, value: newPrice }); }
+    else { areaSeries.update({ time: lastTime, value: newPrice }); }
     lastPrice = newPrice;
 }
 
 // =========================================
-// 3. تایمر و وضعیت راند
+// 3. نمایش نتیجه (Result Modal)
+// =========================================
+function showResultModal(result) {
+    const elModal = document.getElementById('result-modal');
+    const elTitle = document.getElementById('res-title');
+    const elAmount = document.getElementById('res-amount');
+    const elIcon = document.getElementById('res-icon');
+    const elMsg = document.getElementById('res-message');
+    
+    // پر کردن جزئیات دقیق
+    const elEntry = document.getElementById('res-entry');
+    const elClose = document.getElementById('res-close');
+    if(elEntry) elEntry.innerText = `$${result.entry_price.toLocaleString()}`;
+    if(elClose) elClose.innerText = `$${result.close_price.toLocaleString()}`;
+
+    if (result.status === 'WIN') {
+        SoundFX.win();
+        tg.HapticFeedback.notificationOccurred('success');
+        confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } });
+        
+        elTitle.innerText = "YOU WON!";
+        elTitle.style.color = "#0ECB81";
+        elAmount.className = "res-amount res-win";
+        elAmount.innerText = `+$${result.profit.toFixed(2)}`;
+        elIcon.innerText = "🏆";
+        elMsg.innerText = "Target hit successfully.";
+    } else {
+        SoundFX.lose();
+        tg.HapticFeedback.notificationOccurred('error');
+        
+        elTitle.innerText = "LIQUIDATED";
+        elTitle.style.color = "#F6465D";
+        elAmount.className = "res-amount res-loss";
+        elAmount.innerText = `-$${Math.abs(result.profit).toFixed(2)}`;
+        elIcon.innerText = "📉";
+        elMsg.innerText = "Market went against your position.";
+    }
+    
+    elModal.classList.add('active');
+}
+
+// =========================================
+// 4. تایمر و وضعیت
 // =========================================
 function updateTimerCircle(timeLeft) {
     const elText = document.getElementById('timer-text');
     const elCircle = document.getElementById('timer-progress');
     const elRing = document.querySelector('.timer-progress');
-    
     elText.innerText = timeLeft;
     const offset = 283 - (timeLeft / ROUND_DURATION) * 283;
     elCircle.style.strokeDashoffset = offset;
-
     if (timeLeft <= 5) {
-        elRing.style.stroke = '#F6465D';
-        elText.style.color = '#F6465D';
-        if (!window[`tick_${timeLeft}`]) {
-            SoundFX.tick();
-            tg.HapticFeedback.impactOccurred('soft');
-            window[`tick_${timeLeft}`] = true;
-        }
+        elRing.style.stroke = '#F6465D'; elText.style.color = '#F6465D';
+        if (!window[`tick_${timeLeft}`]) { SoundFX.tick(); tg.HapticFeedback.impactOccurred('soft'); window[`tick_${timeLeft}`] = true; }
     } else {
-        elRing.style.stroke = '#F0B90B';
-        elText.style.color = '#EAECEF';
+        elRing.style.stroke = '#F0B90B'; elText.style.color = '#EAECEF';
         for(let i=1; i<=5; i++) window[`tick_${i}`] = false;
     }
 }
@@ -286,15 +275,13 @@ function updateRoundStatus(data) {
     const elStatus = document.getElementById('round-status');
     const elRoundId = document.getElementById('round-id');
     const timeLeft = data.round.time_left;
-
     elRoundId.innerText = `ROUND #${data.round.id}`;
-    const isLocked = timeLeft <= LOCKOUT_TIME;
+    
+    const isLocked = timeLeft <= 10; // قفل شدن در 10 ثانیه آخر
     const hasBet = !!data.user_bet;
 
     if (hasBet) {
-        const type = data.user_bet.prediction === 'UP' ? 'LONG' : 'SHORT';
-        const color = data.user_bet.prediction === 'UP' ? '#0ECB81' : '#F6465D';
-        elStatus.innerHTML = `<span style="color:${color}">POSITION: ${type}</span>`;
+        elStatus.innerHTML = `<span style="color:#0ECB81">POSITION OPEN</span>`;
     } else if (isLocked) {
         elStatus.innerHTML = `<span style="color:#F6465D">LOCKED 🔒</span>`;
     } else {
@@ -304,14 +291,12 @@ function updateRoundStatus(data) {
 }
 
 // =========================================
-// 4. لاجیک شرط‌بندی و تبدیل (Swap)
+// 5. هندلینگ شرط‌ها و تبدیل (Swap)
 // =========================================
 window.setAmount = function(val) {
     document.getElementById('bet-amount').value = val;
     document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-    const chips = Array.from(document.querySelectorAll('.chip'));
-    const targetChip = chips.find(c => c.innerText.trim() === String(val));
-    if(targetChip) targetChip.classList.add('active');
+    Array.from(document.querySelectorAll('.chip')).find(c => c.innerText.trim() === String(val))?.classList.add('active');
     tg.HapticFeedback.selectionChanged();
 };
 
@@ -320,122 +305,47 @@ window.closeSwapModal = () => document.getElementById('swap-modal').classList.re
 window.closeResultModal = () => document.getElementById('result-modal').classList.remove('active');
 
 window.performSwap = async function() {
-    // خواندن مقدار (حذف کاماها قبل از ارسال)
     const rawVal = document.getElementById('swap-input-toman').value.replace(/,/g, '');
     const amountToman = parseFloat(rawVal);
     
-    if (!amountToman || amountToman < 50000) {
-        showToast("⚠️ حداقل مبلغ ۵۰,۰۰۰ تومان است");
-        return;
-    }
-
+    if (!amountToman || amountToman < 50000) { showToast("⚠️ حداقل ۵۰,۰۰۰ تومان"); return; }
     tg.HapticFeedback.impactOccurred('medium');
     
     try {
         const res = await fetch(`${API_BASE_URL}/webapp/game/swap-to-usd`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ 
-                initData: tg.initData, 
-                amount_toman: amountToman 
-            })
+            body: JSON.stringify({ initData: tg.initData, amount_toman: amountToman })
         });
         const result = await res.json();
-        
         if (result.status === 'success') {
             showToast(`✅ ${result.message}`);
             window.closeSwapModal();
             document.getElementById('swap-input-toman').value = '';
-            document.getElementById('swap-calc-usd').innerText = '0.00';
-        } else {
-            showToast(`❌ ${result.message}`);
-        }
-    } catch(e) {
-        showToast("خطای اتصال");
-    }
+        } else { showToast(`❌ ${result.message}`); }
+    } catch(e) { showToast("خطای اتصال"); }
 };
 
 window.placeBet = async function(pred) {
     const amount = document.getElementById('bet-amount').value;
     tg.HapticFeedback.impactOccurred('heavy'); 
-
     try {
         const res = await fetch(`${API_BASE_URL}/webapp/game/bet`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ 
-                initData: tg.initData, 
-                amount: parseFloat(amount), 
-                prediction: pred 
-            })
+            body: JSON.stringify({ initData: tg.initData, amount: parseFloat(amount), prediction: pred })
         });
         const result = await res.json();
-        
         if (result.status === 'success') {
-            showToast(`✅ Position Open: ${pred} $${amount}`);
-            // [FIX] ذخیره دقیق آیدی راند از سرور
-            localStorage.setItem('last_bet_round_id', result.round_id); 
-            localStorage.setItem('last_bet_prediction', pred);
-            localStorage.setItem('last_bet_amount', amount);
-        } else {
-            showToast(`⚠️ ${result.message}`);
-            SoundFX.lose();
-        }
-    } catch(e) { 
-        showToast("Connection Error");
-    }
+            showToast(`✅ Order Open: ${pred} $${amount}`);
+            // توجه: دیگر اینجا چیزی در localStorage ذخیره نمی‌کنیم برای برد/باخت
+            // چون همه چیز از سرور می‌آید.
+        } else { showToast(`⚠️ ${result.message}`); SoundFX.lose(); }
+    } catch(e) { showToast("Connection Error"); }
 };
 
-function checkWinLoss(history) {
-    const myRoundId = localStorage.getItem('last_bet_round_id');
-    const myPrediction = localStorage.getItem('last_bet_prediction');
-    
-    if (!myRoundId || !myPrediction) return;
-
-    // [CRITICAL FIX] جستجوی دقیق آیدی. اگر راند هنوز تمام نشده (در تاریخچه نیست)، نال برمی‌گردد.
-    const round = history.find(h => String(h.round_id) === String(myRoundId));
-    
-    // اگر راند پیدا نشد، یعنی هنوز در جریان است. پس برگرد و کاری نکن.
-    if (!round) return;
-
-    if (!localStorage.getItem('processed_' + round.round_id)) {
-        localStorage.setItem('processed_' + round.round_id, 'true');
-        localStorage.removeItem('last_bet_round_id'); 
-        
-        const amount = parseFloat(localStorage.getItem('last_bet_amount') || 0);
-        const elModal = document.getElementById('result-modal');
-        const elTitle = document.getElementById('res-title');
-        const elAmount = document.getElementById('res-amount');
-        const elIcon = document.getElementById('res-icon');
-
-        if (round.result === myPrediction) {
-            SoundFX.win();
-            tg.HapticFeedback.notificationOccurred('success');
-            confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } });
-            
-            elTitle.innerText = "YOU WON!";
-            elTitle.style.color = "#0ECB81";
-            elAmount.className = "res-amount res-win";
-            elAmount.innerText = `+$${(amount * 1.95).toFixed(2)}`;
-            elIcon.innerText = "🏆";
-            
-            elModal.classList.add('active');
-        } else {
-            SoundFX.lose();
-            tg.HapticFeedback.notificationOccurred('error');
-            
-            elTitle.innerText = "LIQUIDATED";
-            elTitle.style.color = "#F6465D";
-            elAmount.className = "res-amount res-loss";
-            elAmount.innerText = `-$${amount.toFixed(2)}`;
-            elIcon.innerText = "📉";
-            
-            elModal.classList.add('active');
-        }
-    }
-}
-
 function toggleButtons(disable) { document.querySelectorAll('.trade-btn').forEach(b => b.disabled = disable); }
+
 function updateHistoryRibbon(history) {
     const container = document.getElementById('history-container');
     container.innerHTML = '';
@@ -445,10 +355,10 @@ function updateHistoryRibbon(history) {
         container.appendChild(div);
     });
 }
+
 function showToast(msg) {
     const toast = document.getElementById('toast');
-    toast.innerText = msg;
-    toast.classList.remove('hidden');
+    toast.innerText = msg; toast.classList.remove('hidden');
     setTimeout(() => toast.classList.add('hidden'), 3000);
 }
 

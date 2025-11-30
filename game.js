@@ -1,4 +1,4 @@
-﻿/* webapp/game.js (v28.0 - Luxury Area Chart) */
+﻿/* webapp/game.js (v29.0 - Mobile Auto-Fit Fixed) */
 
 // --- تنظیمات سراسری ---
 const tg = window.Telegram.WebApp;
@@ -6,7 +6,7 @@ const API_BASE_URL = window.location.origin;
 
 // متغیرهای چارت
 let chart;
-let areaSeries; // به جای candleSeries
+let areaSeries;
 let lastPrice = 0;
 let isFirstLoad = true;
 let lastTime = 0;
@@ -41,10 +41,9 @@ function playTone(freq, type, dur, count = 1) {
     }
 }
 
-// --- شروع برنامه ---
 window.onload = function() {
     tg.ready();
-    tg.expand();
+    tg.expand(); // درخواست تمام صفحه شدن در تلگرام
     tg.setHeaderColor('#171B26');
     tg.setBackgroundColor('#171B26');
     
@@ -63,11 +62,14 @@ window.onload = function() {
 };
 
 // =========================================
-// 1. تنظیمات چارت ناحیه‌ای (Area Chart)
+// 1. تنظیمات چارت (بهینه‌شده برای موبایل)
 // =========================================
 function initChart() {
     const container = document.getElementById('tv-chart-container');
     
+    // تشخیص موبایل برای تنظیم حاشیه‌ها
+    const isMobile = window.innerWidth < 600;
+
     chart = LightweightCharts.createChart(container, {
         width: container.clientWidth,
         height: container.clientHeight,
@@ -78,72 +80,65 @@ function initChart() {
         },
         grid: {
             vertLines: { visible: false },
-            horzLines: { visible: false }, // حذف کامل گرید برای تمیزی مطلق
+            horzLines: { visible: false },
         },
         rightPriceScale: {
-            borderColor: 'transparent', // حذف خط مرزی قیمت
-            scaleMargins: { top: 0.3, bottom: 0.3 }, // تمرکز روی وسط نمودار
+            borderColor: 'transparent',
             visible: true,
+            // اصلاح مهم: کاهش حاشیه خالی بالا و پایین در موبایل
+            scaleMargins: { 
+                top: isMobile ? 0.1 : 0.2,    // در موبایل فقط 10% فضای خالی بالا
+                bottom: isMobile ? 0.05 : 0.2 // در موبایل فقط 5% فضای خالی پایین
+            },
         },
         timeScale: {
-            borderColor: 'transparent', // حذف خط مرزی زمان
+            borderColor: 'transparent',
             timeVisible: true,
             secondsVisible: true,
-            rightOffset: 20, // فضای خالی جلو برای زیبایی
+            rightOffset: 10,
             fixLeftEdge: true,
         },
         crosshair: {
-            // کراس‌هیر شناور (مثل روبین‌هود)
             vertLine: { width: 1, color: 'rgba(240, 185, 11, 0.5)', style: 0, labelBackgroundColor: '#171B26' },
             horzLine: { width: 1, color: 'rgba(240, 185, 11, 0.5)', style: 0, labelBackgroundColor: '#171B26' },
         },
         handleScroll: { mouseWheel: false, pressedMouseMove: true },
-        handleScale: { axisPressedMouseMove: false, mouseWheel: false, pinch: false }, // قفل کردن زوم برای ثبات بصری
+        handleScale: { axisPressedMouseMove: false, mouseWheel: false, pinch: false },
     });
 
-    // تعریف سری ناحیه‌ای (Area Series)
-    // این استایل "نورانی" و گرادینت دارد
     areaSeries = chart.addAreaSeries({
-        topColor: 'rgba(14, 203, 129, 0.56)', // رنگ بالا (سبز نیمه شفاف)
-        bottomColor: 'rgba(14, 203, 129, 0.04)', // رنگ پایین (محو)
-        lineColor: 'rgba(14, 203, 129, 1)', // خط اصلی
+        topColor: 'rgba(14, 203, 129, 0.56)',
+        bottomColor: 'rgba(14, 203, 129, 0.04)',
+        lineColor: 'rgba(14, 203, 129, 1)',
         lineWidth: 2,
         crosshairMarkerVisible: true,
         crosshairMarkerRadius: 4,
-        crosshairMarkerBorderColor: 'rgb(255, 255, 255, 1)',
-        crosshairMarkerBackgroundColor: 'rgba(14, 203, 129, 1)',
     });
 
     new ResizeObserver(entries => {
         if (entries.length === 0 || entries[0].target !== container) return;
         const newRect = entries[0].contentRect;
         chart.applyOptions({ height: newRect.height, width: newRect.width });
+        // هر بار سایز عوض شد، نمودار را فیت کن
+        chart.timeScale().fitContent(); 
     }).observe(container);
 }
 
 // =========================================
-// 2. تولید تاریخچه هوشمند برای Area Chart
+// 2. تولید تاریخچه
 // =========================================
 function generateHistoryFromRealPrice(realPrice) {
     const res = [];
     let currentPrice = realPrice;
     const timeNow = Math.floor(Date.now() / 1000);
     
-    // تولید 60 نقطه دیتا به عقب
     for (let i = 1; i <= 60; i++) {
-        // نوسان نرم
         const volatility = 3; 
         const move = (Math.random() - 0.5) * volatility;
         const value = currentPrice - move;
-        
-        res.push({
-            time: timeNow - i, // ثانیه‌ای
-            value: value
-        });
-        
+        res.push({ time: timeNow - i, value: value });
         currentPrice = value;
     }
-    
     return res.reverse();
 }
 
@@ -157,11 +152,7 @@ async function fetchServerData() {
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ initData: tg.initData })
         });
-
-        if (res.ok) {
-            const data = await res.json();
-            updateGameUI(data);
-        }
+        if (res.ok) updateGameUI(await res.json());
     } catch (e) {
         if (!isFirstLoad) simulateSmoothLocalMovement();
     }
@@ -171,16 +162,17 @@ function updateGameUI(data) {
     const serverPrice = data.current_price;
     const domPrice = document.getElementById('btc-price');
 
-    // --- مدیریت اولین لود (بدون گپ) ---
+    // --- لود اولیه ---
     if (isFirstLoad && serverPrice > 0) {
         const historyData = generateHistoryFromRealPrice(serverPrice);
         areaSeries.setData(historyData);
         
-        // آخرین نقطه
         lastTime = Math.floor(Date.now() / 1000);
         areaSeries.update({ time: lastTime, value: serverPrice });
         
-        // حذف لودر
+        // --- اصلاح حیاتی: فیت کردن نمودار در صفحه ---
+        chart.timeScale().fitContent(); 
+        
         const loader = document.getElementById('chart-loader');
         if(loader) loader.classList.add('fade-out');
         
@@ -188,10 +180,10 @@ function updateGameUI(data) {
         lastPrice = serverPrice;
     }
 
-    // --- آپدیت قیمت و رنگ چارت ---
+    // --- آپدیت قیمت و رنگ ---
     if (serverPrice !== lastPrice) {
         const isUp = serverPrice >= lastPrice;
-        const color = isUp ? '#0ECB81' : '#F6465D'; // سبز یا قرمز
+        const color = isUp ? '#0ECB81' : '#F6465D';
         
         domPrice.style.color = color;
         domPrice.innerText = serverPrice.toLocaleString('en-US', {minimumFractionDigits: 2});
@@ -199,8 +191,6 @@ function updateGameUI(data) {
         const dot = document.querySelector('.blink-dot');
         if(dot) dot.style.backgroundColor = color;
         
-        // آپدیت رنگ چارت بر اساس روند لحظه‌ای (ویژگی لوکس)
-        // اگر قیمت بالا رفت چارت سبز، اگر پایین آمد قرمز
         areaSeries.applyOptions({
             lineColor: color,
             topColor: isUp ? 'rgba(14, 203, 129, 0.5)' : 'rgba(246, 70, 93, 0.5)',
@@ -211,15 +201,13 @@ function updateGameUI(data) {
         lastPrice = serverPrice;
     }
 
-    // --- آپدیت دیتا روی چارت ---
+    // --- آپدیت چارت ---
     if (!isFirstLoad) {
         const now = Math.floor(Date.now() / 1000);
-        // فقط اگر ثانیه عوض شده آپدیت کن
         if (now > lastTime) {
             lastTime = now;
             areaSeries.update({ time: now, value: serverPrice });
         } else {
-            // آپدیت همان ثانیه (Tick Update)
             areaSeries.update({ time: lastTime, value: serverPrice });
         }
     }
@@ -236,16 +224,12 @@ function updateGameUI(data) {
 
 function simulateSmoothLocalMovement() {
     if (isFirstLoad) return;
-    
-    // شبیه‌سازی حرکت خیلی نرم
     const move = (Math.random() - 0.5) * 1.5;
     const newPrice = lastPrice + move;
     
-    // آپدیت UI
     const domPrice = document.getElementById('btc-price');
     domPrice.innerText = newPrice.toFixed(2);
     
-    // آپدیت چارت
     const now = Math.floor(Date.now() / 1000);
     if (now > lastTime) {
         lastTime = now;
@@ -253,12 +237,11 @@ function simulateSmoothLocalMovement() {
     } else {
         areaSeries.update({ time: lastTime, value: newPrice });
     }
-    
     lastPrice = newPrice;
 }
 
 // =========================================
-// 4. تایمر و وضعیت (بدون تغییر)
+// 4. تایمر و وضعیت
 // =========================================
 function updateTimerCircle(timeLeft) {
     const elText = document.getElementById('timer-text');

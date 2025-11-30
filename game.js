@@ -1,4 +1,4 @@
-﻿/* webapp/game.js (v26.0 - Pro Chart & Smooth Math) */
+﻿/* webapp/game.js (v27.0 - Gap-Free Pro Chart) */
 
 // --- تنظیمات سراسری ---
 const tg = window.Telegram.WebApp;
@@ -9,11 +9,11 @@ let chart;
 let candleSeries;
 let currentBar = null;
 let lastPrice = 0;
+let isFirstLoad = true; // فلگ مهم برای جلوگیری از گپ قیمت
 
 // متغیرهای بازی
 const LOCKOUT_TIME = 15;
 const ROUND_DURATION = 60;
-let isChartLoaded = false;
 
 // --- سیستم صوتی ---
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -41,6 +41,7 @@ function playTone(freq, type, dur, count = 1) {
     }
 }
 
+// --- شروع برنامه ---
 window.onload = function() {
     tg.ready();
     tg.expand();
@@ -50,9 +51,12 @@ window.onload = function() {
     if (!tg.initData) tg.initData = "query_id=TEST_DEV_MODE";
 
     initChart();
+    
+    // دریافت دیتا
     setInterval(fetchServerData, 1000);
     fetchServerData();
 
+    // فیدبک دکمه‌ها
     document.querySelectorAll('button').forEach(btn => {
         btn.addEventListener('click', () => {
             if(!btn.disabled) tg.HapticFeedback.impactOccurred('light');
@@ -61,7 +65,7 @@ window.onload = function() {
 };
 
 // =========================================
-// 1. تنظیمات چارت حرفه‌ای (Pro Style)
+// 1. تنظیمات چارت (بدون دیتای اولیه)
 // =========================================
 function initChart() {
     const container = document.getElementById('tv-chart-container');
@@ -76,45 +80,35 @@ function initChart() {
         },
         grid: {
             vertLines: { visible: false },
-            horzLines: { color: 'rgba(255, 255, 255, 0.02)', style: 1 }, // خط‌چین بسیار محو
+            horzLines: { color: 'rgba(255, 255, 255, 0.02)', style: 1 },
         },
         rightPriceScale: {
             borderColor: 'rgba(255, 255, 255, 0.08)',
-            scaleMargins: { top: 0.25, bottom: 0.25 }, // فضای بیشتر برای دیده شدن کندل‌ها
+            scaleMargins: { top: 0.25, bottom: 0.25 },
         },
         timeScale: {
             borderColor: 'rgba(255, 255, 255, 0.08)',
             timeVisible: true,
             secondsVisible: true,
-            rightOffset: 5, // فاصله خالی سمت راست برای حس زنده بودن
+            rightOffset: 10,
         },
         crosshair: {
             mode: LightweightCharts.CrosshairMode.Normal,
-            vertLine: { color: '#F0B90B', width: 1, style: 3, labelBackgroundColor: '#F0B90B' },
-            horzLine: { color: '#F0B90B', width: 1, style: 3, labelBackgroundColor: '#F0B90B' },
+            vertLine: { color: '#F0B90B', width: 1, style: 3, labelBackgroundColor: '#171B26' },
+            horzLine: { color: '#F0B90B', width: 1, style: 3, labelBackgroundColor: '#171B26' },
         },
     });
 
-    // استایل کندل استیک حرفه‌ای (Hollow style for Up candles)
     candleSeries = chart.addCandlestickSeries({
-        upColor: '#171B26',           // بدنه توخالی (همرنگ پس‌زمینه)
-        downColor: '#F6465D',         // قرمز توپر
-        borderUpColor: '#0ECB81',     // حاشیه سبز
-        borderDownColor: '#F6465D',   // حاشیه قرمز
-        wickUpColor: '#0ECB81',       // سایه سبز
-        wickDownColor: '#F6465D',     // سایه قرمز
+        upColor: '#171B26',           // بدنه توخالی (Professional Style)
+        downColor: '#F6465D',         
+        borderUpColor: '#0ECB81',     
+        borderDownColor: '#F6465D',   
+        wickUpColor: '#0ECB81',       
+        wickDownColor: '#F6465D',     
     });
 
-    const data = generateInitialBars();
-    candleSeries.setData(data);
-    currentBar = data[data.length - 1];
-
-    setTimeout(() => {
-        const loader = document.getElementById('chart-loader');
-        if(loader) loader.classList.add('fade-out');
-        isChartLoaded = true;
-    }, 1000);
-
+    // ریسپانسیو
     new ResizeObserver(entries => {
         if (entries.length === 0 || entries[0].target !== container) return;
         const newRect = entries[0].contentRect;
@@ -123,40 +117,42 @@ function initChart() {
 }
 
 // =========================================
-// 2. تولید دیتای واقع‌گرایانه (Realistic Math)
+// 2. تولید تاریخچه هوشمند (Smart Backfill)
 // =========================================
-function generateInitialBars() {
-    const initialPrice = 96500;
-    let price = initialPrice;
+function generateHistoryFromRealPrice(realPrice) {
     const res = [];
+    let currentPrice = realPrice;
     const timeNow = Math.floor(Date.now() / 1000);
     
-    // الگوریتم حرکت تصادفی هموار (Smoothed Random Walk)
-    for (let i = 60; i > 0; i--) {
-        // تغییر قیمت کوچک و کنترل شده
-        const volatility = 8; // نوسان کم (قبلاً 50 بود!)
-        const change = (Math.random() - 0.5) * volatility; 
+    // ما از قیمت واقعی شروع می‌کنیم و به عقب برمی‌گردیم
+    // تا مطمئن شویم آخرین کندل دقیقاً به قیمت واقعی ختم می‌شود
+    for (let i = 1; i <= 60; i++) {
+        const volatility = 5; // نوسان معقول
+        const move = (Math.random() - 0.5) * volatility * 2;
         
-        const close = price + change;
+        const close = currentPrice;
+        const open = currentPrice - move; // برعکس محاسبه می‌کنیم
         
-        // تولید High/Low منطقی
-        const high = Math.max(price, close) + Math.random() * 2;
-        const low = Math.min(price, close) - Math.random() * 2;
+        // محاسبه High/Low
+        const high = Math.max(open, close) + Math.random() * 2;
+        const low = Math.min(open, close) - Math.random() * 2;
         
         res.push({
             time: timeNow - (i * 60),
-            open: price,
+            open: open,
             high: high,
             low: low,
             close: close
         });
-        price = close;
+        
+        currentPrice = open; // قیمت شروع کندل قبلی می‌شود قیمت پایان کندل ماقبل آن
     }
-    return res;
+    
+    return res.reverse(); // آرایه را معکوس می‌کنیم تا زمانی درست شود
 }
 
 // =========================================
-// 3. دریافت دیتا از سرور
+// 3. ارتباط با سرور
 // =========================================
 async function fetchServerData() {
     try {
@@ -171,7 +167,8 @@ async function fetchServerData() {
             updateGameUI(data);
         }
     } catch (e) {
-        simulateSmoothLocalMovement(); // استفاده از تابع جدید و نرم
+        // اگر هنوز دیتای اول لود نشده، شبیه‌سازی نکن تا چارت خراب نشود
+        if (!isFirstLoad) simulateSmoothLocalMovement();
     }
 }
 
@@ -179,6 +176,28 @@ function updateGameUI(data) {
     const serverPrice = data.current_price;
     const domPrice = document.getElementById('btc-price');
 
+    // --- مدیریت اولین لود (جلوگیری از گپ) ---
+    if (isFirstLoad && serverPrice > 0) {
+        const historyData = generateHistoryFromRealPrice(serverPrice);
+        candleSeries.setData(historyData);
+        
+        // تنظیم آخرین بار
+        currentBar = {
+            time: Math.floor(Date.now() / 1000),
+            open: serverPrice, high: serverPrice, low: serverPrice, close: serverPrice
+        };
+        candleSeries.update(currentBar);
+        
+        // حذف لودر
+        const loader = document.getElementById('chart-loader');
+        if(loader) loader.classList.add('fade-out');
+        
+        isFirstLoad = false;
+        lastPrice = serverPrice;
+    }
+    // ------------------------------------------
+
+    // آپدیت قیمت
     if (serverPrice !== lastPrice) {
         const color = serverPrice >= lastPrice ? '#0ECB81' : '#F6465D';
         domPrice.style.color = color;
@@ -190,12 +209,18 @@ function updateGameUI(data) {
         lastPrice = serverPrice;
     }
 
-    if (currentBar) {
+    // آپدیت کندل جاری
+    if (currentBar && !isFirstLoad) {
         const now = Math.floor(Date.now() / 1000);
+        
+        // اگر بیشتر از 60 ثانیه گذشته، کندل جدید بساز
         if (now > currentBar.time + 60) {
             currentBar = {
                 time: currentBar.time + 60,
-                open: serverPrice, high: serverPrice, low: serverPrice, close: serverPrice
+                open: currentBar.close, // شروع از بسته شدن قبلی
+                high: serverPrice,
+                low: serverPrice,
+                close: serverPrice
             };
         } else {
             currentBar.close = serverPrice;
@@ -205,22 +230,20 @@ function updateGameUI(data) {
         candleSeries.update(currentBar);
     }
 
+    // سایر آپدیت‌ها
     if (data.round) {
         updateTimerCircle(data.round.time_left);
         updateRoundStatus(data);
     }
-
     if (data.history) {
         updateHistoryRibbon(data.history);
         checkWinLoss(data.history);
     }
 }
 
-// تابع جدید برای حرکت نرم وقتی سرور قطع است
 function simulateSmoothLocalMovement() {
     if (!currentBar) return;
-    // نوسان بسیار ریز (Micro-movements)
-    const move = (Math.random() - 0.5) * 3; 
+    const move = (Math.random() - 0.5) * 2; // نوسان ریز
     const newPrice = currentBar.close + move;
     
     const domPrice = document.getElementById('btc-price');
@@ -256,11 +279,7 @@ function updateTimerCircle(timeLeft) {
     } else {
         elRing.style.stroke = '#F0B90B';
         elText.style.color = '#EAECEF';
-        window[`tick_5`] = false; 
-        window[`tick_4`] = false; 
-        window[`tick_3`] = false; 
-        window[`tick_2`] = false; 
-        window[`tick_1`] = false; 
+        for(let i=1; i<=5; i++) window[`tick_${i}`] = false;
     }
 }
 
@@ -286,16 +305,14 @@ function updateRoundStatus(data) {
 }
 
 // =========================================
-// 5. لاجیک شرط‌بندی
+// 5. هندلینگ شرط‌ها
 // =========================================
 window.setAmount = function(val) {
     document.getElementById('bet-amount').value = val;
     document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-    // پیدا کردن چیپی که مقدارش برابر است
     const chips = Array.from(document.querySelectorAll('.chip'));
     const targetChip = chips.find(c => c.innerText.trim() === String(val));
     if(targetChip) targetChip.classList.add('active');
-    
     tg.HapticFeedback.selectionChanged();
 };
 
@@ -334,12 +351,11 @@ function toggleButtons(disable) {
 }
 
 // =========================================
-// 6. تاریخچه
+// 6. تاریخچه و مودال‌ها
 // =========================================
 function updateHistoryRibbon(history) {
     const container = document.getElementById('history-container');
     container.innerHTML = '';
-    
     history.slice().reverse().slice(0, 15).forEach(h => {
         const div = document.createElement('div');
         div.className = `hist-pill ${h.result === 'UP' ? 'up' : 'down'}`;
@@ -350,15 +366,12 @@ function updateHistoryRibbon(history) {
 function checkWinLoss(history) {
     const myRoundId = localStorage.getItem('last_bet_round_id');
     const myPrediction = localStorage.getItem('last_bet_prediction');
-    
     if (!myRoundId || !myPrediction) return;
 
     const round = history.find(h => String(h.round_id) === String(myRoundId)); 
-
     if (round) {
         localStorage.removeItem('last_bet_round_id');
         localStorage.removeItem('last_bet_prediction');
-
         if (round.result === myPrediction) {
             SoundFX.win();
             tg.HapticFeedback.notificationOccurred('success');
@@ -372,7 +385,6 @@ function checkWinLoss(history) {
     }
 }
 
-// Helpers & Modals
 function showToast(msg) {
     const toast = document.getElementById('toast');
     toast.innerText = msg;

@@ -1,4 +1,5 @@
-﻿#game.html
+﻿#game.html نسخه v31.0 - با قابلیت تبدیل ارز)
+
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
@@ -13,7 +14,7 @@
     
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
-    <link rel="stylesheet" href="webapp/game-style.css?v=25.0">
+    <link rel="stylesheet" href="webapp/game-style.css?v=30.0">
 </head>
 <body>
 
@@ -93,6 +94,22 @@
                 <div class="input-wrapper">
                     <span class="currency-prefix">$</span>
                     <input type="number" id="bet-amount" value="5" min="1" inputmode="decimal">
+                    
+                    <button onclick="window.openSwapModal()" style="
+                        background: var(--game-gold);
+                        border: none;
+                        border-radius: 8px;
+                        width: 36px;
+                        height: 36px;
+                        margin-left: 8px;
+                        margin-right: 4px;
+                        font-weight: bold;
+                        font-size: 1.4rem;
+                        cursor: pointer;
+                        color: #000;
+                        display: flex; align-items: center; justify-content: center;
+                        flex-shrink: 0;
+                    ">+</button>
                 </div>
             </div>
 
@@ -128,6 +145,33 @@
                 <button onclick="window.closeLeaderboard()" class="close-modal">✕</button>
             </div>
             <div id="leaderboard-list" class="modal-body">در حال بارگذاری...</div>
+        </div>
+    </div>
+
+    <div id="swap-modal" class="modal-overlay">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h3 class="gold-text">شارژ حساب بازی ⚡️</h3>
+                <button onclick="window.closeSwapModal()" class="close-modal">✕</button>
+            </div>
+            <div class="modal-body" style="display:flex; flex-direction:column; gap:15px;">
+                <div style="font-size:0.85rem; color:#888; text-align:center; line-height: 1.5;">
+                    موجودی تومان خود را به صورت آنی به دلار بازی تبدیل کنید.
+                </div>
+                
+                <div class="input-wrapper">
+                    <span style="padding-left:10px; font-size:0.8rem; color:#888;">Toman</span>
+                    <input type="number" id="swap-input-toman" placeholder="مبلغ به تومان" style="width:100%; padding:12px; background:transparent; border:none; color:white; font-family:'Vazirmatn'; font-weight:bold;">
+                </div>
+
+                <div style="text-align:center; font-size:0.9rem;">
+                    ≈ <span id="swap-calc-usd" style="color:var(--game-gold); font-weight:bold; font-family:'Roboto Mono'">0.00</span> USD
+                </div>
+
+                <button onclick="window.performSwap()" style="background:var(--game-gold); color:black; border:none; padding:14px; border-radius:10px; font-weight:bold; cursor:pointer; font-size: 1rem;">
+                    تبدیل و شروع بازی
+                </button>
+            </div>
         </div>
     </div>
 

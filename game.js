@@ -1,22 +1,21 @@
-﻿/* webapp/game.js (v20.0 - Final Production Engine) */
+﻿/* webapp/game.js (v21.0 - TradingView Candles Edition) */
 
-// --- متغیرهای سراسری ---
 const tg = window.Telegram.WebApp;
-const API_BASE_URL = window.location.origin; // آدرس سرور (اتوماتیک)
-let chart; // شیء نمودار
-let priceHistory = []; // آرایه قیمت‌ها برای رسم نمودار
-const MAX_POINTS = 30; // تعداد نقاط روی نمودار
-const LOCKOUT_TIME = 15; // زمان قفل شدن شرط‌بندی (ثانیه)
+const API_BASE_URL = window.location.origin;
 
-// --- سیستم صوتی (Web Audio API) ---
+// --- تنظیمات چارت ---
+let chart;
+let candleSeries;
+let currentCandle = null;
+let lastServerTime = 0;
+
+// --- سیستم صوتی ---
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 let audioCtx = null;
 
-// راه‌اندازی سیستم صوتی با اولین کلیک کاربر (محدودیت مرورگرها)
 function initAudio() {
     if (!audioCtx) {
         audioCtx = new AudioContext();
-        // پخش یک صدای بی‌صدا برای باز کردن قفل صوتی مرورگر
         const buffer = audioCtx.createBuffer(1, 1, 22050);
         const source = audioCtx.createBufferSource();
         source.buffer = buffer;
@@ -26,7 +25,6 @@ function initAudio() {
         audioCtx.resume();
     }
 }
-
 document.addEventListener('click', initAudio, { once: true });
 document.addEventListener('touchstart', initAudio, { once: true });
 
@@ -43,7 +41,7 @@ const SoundFX = {
         gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
         osc.stop(audioCtx.currentTime + duration);
     },
-    tick: () => SoundFX.playTone(1000, 'triangle', 0.05), // صدای تیک ثانیه
+    tick: () => SoundFX.playTone(1200, 'triangle', 0.05),
     win: () => {
         if(!audioCtx) return;
         const now = audioCtx.currentTime;
@@ -75,404 +73,300 @@ const SoundFX = {
     }
 };
 
-// --- انیمیشن پرواز سکه ---
-function animateFlyingChip(startElementId, targetElementId) {
-    const startElem = document.getElementById(startElementId);
-    const targetElem = document.getElementById(targetElementId);
-    
-    if (!startElem || !targetElem) return;
+// --- راه‌اندازی چارت تریدینگ‌ویو ---
+function initTradingViewChart() {
+    const container = document.getElementById('tv-chart-container');
+    if (!container) return;
 
-    const startRect = startElem.getBoundingClientRect();
-    const targetRect = targetElem.getBoundingClientRect();
-
-    const chip = document.createElement('div');
-    chip.className = 'flying-chip';
-    chip.innerHTML = '$'; 
-    
-    chip.style.left = (startRect.left + startRect.width / 2 - 15) + 'px';
-    chip.style.top = (startRect.top + startRect.height / 2 - 15) + 'px';
-    
-    document.body.appendChild(chip);
-
-    // شروع انیمیشن
-    setTimeout(() => {
-        chip.style.transition = 'all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275)'; 
-        chip.style.left = (targetRect.left + targetRect.width / 2 - 15) + 'px';
-        chip.style.top = (targetRect.top + targetRect.height / 2 - 15) + 'px';
-        chip.style.opacity = '0';
-        chip.style.transform = 'scale(0.5)';
-    }, 50);
-
-    // حذف عنصر بعد از پایان انیمیشن
-    setTimeout(() => {
-        chip.remove();
-    }, 900);
-}
-
-// --- توابع عمومی رابط کاربری ---
-
-window.setAmount = function(val) {
-    const input = document.getElementById('bet-amount');
-    if (input) input.value = val;
-    
-    initAudio();
-    SoundFX.tick();
-    if(tg.HapticFeedback) tg.HapticFeedback.selectionChanged();
-    
-    // تغییر استایل دکمه‌های سریع
-    const buttons = document.querySelectorAll('.chip');
-    buttons.forEach(btn => btn.classList.remove('active'));
-    
-    if (event && event.target) {
-        event.target.classList.add('active');
-    }
-};
-
-// --- توابع نمودار (Chart.js) ---
-function initChart() {
-    const canvas = document.getElementById('btcChart');
-    if (!canvas) return;
-    
-    const ctx = canvas.getContext('2d');
-    
-    // گرادینت زیر نمودار
-    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-    gradient.addColorStop(0, 'rgba(54, 123, 255, 0.5)');
-    gradient.addColorStop(1, 'rgba(54, 123, 255, 0.0)');
-
-    chart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: Array(MAX_POINTS).fill(''),
-            datasets: [{
-                data: Array(MAX_POINTS).fill(null),
-                borderColor: '#3B82F6', // رنگ خط (آبی)
-                backgroundColor: gradient,
-                borderWidth: 2,
-                pointRadius: 0,
-                fill: true,
-                tension: 0.4 // نرمی خط
-            }]
+    // ساخت چارت
+    chart = LightweightCharts.createChart(container, {
+        width: container.clientWidth,
+        height: container.clientHeight,
+        layout: {
+            background: { type: 'solid', color: '#161616' },
+            textColor: '#888',
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                x: { display: false },
-                y: { 
-                    display: true, 
-                    position: 'right', 
-                    grid: { color: '#333', borderDash: [5, 5] },
-                    ticks: { color: '#888', font: { family: 'monospace' } }
-                }
-            },
-            animation: { duration: 0 } // غیرفعال کردن انیمیشن پیش‌فرض برای روانی حرکت
-        }
+        grid: {
+            vertLines: { color: 'rgba(255, 255, 255, 0.05)' },
+            horzLines: { color: 'rgba(255, 255, 255, 0.05)' },
+        },
+        timeScale: {
+            timeVisible: true,
+            secondsVisible: true,
+            borderColor: '#333',
+        },
+        rightPriceScale: {
+            borderColor: '#333',
+        },
+        crosshair: {
+            mode: LightweightCharts.CrosshairMode.Normal,
+        },
+    });
+
+    // افزودن سری کندل استیک
+    candleSeries = chart.addCandlestickSeries({
+        upColor: '#10B981',
+        downColor: '#EF4444',
+        borderVisible: false,
+        wickUpColor: '#10B981',
+        wickDownColor: '#EF4444',
+    });
+
+    // پر کردن داده‌های اولیه (فیک) برای اینکه چارت خالی نباشد
+    const initialData = generateInitialData();
+    candleSeries.setData(initialData);
+    
+    // آخرین کندل را نگه می‌داریم تا آپدیتش کنیم
+    currentCandle = initialData[initialData.length - 1];
+
+    // ریسایز خودکار
+    window.addEventListener('resize', () => {
+        chart.resize(container.clientWidth, container.clientHeight);
     });
 }
 
-// --- هسته اصلی بازی (Game Loop) ---
+function generateInitialData() {
+    // تولید 30 کندل قبلی بر اساس قیمت حدودی سرور
+    let price = 96500;
+    const data = [];
+    const now = Math.floor(Date.now() / 1000);
+    
+    for (let i = 30; i > 0; i--) {
+        const open = price;
+        const close = price + (Math.random() - 0.5) * 50;
+        const high = Math.max(open, close) + Math.random() * 10;
+        const low = Math.min(open, close) - Math.random() * 10;
+        price = close;
+        
+        data.push({
+            time: now - (i * 60), // هر کندل 1 دقیقه
+            open: open,
+            high: high,
+            low: low,
+            close: close
+        });
+    }
+    return data;
+}
+
+// --- دریافت وضعیت از سرور ---
 async function fetchState() {
     try {
         const res = await fetch(`${API_BASE_URL}/webapp/game/state`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ initData: tg.initData }) // ارسال هویت
+            body: JSON.stringify({ initData: tg.initData })
         });
         
         if (res.ok) {
             const data = await res.json();
-            updateUI(data);
+            updateGameUI(data);
         }
     } catch (e) {
-        console.error("Game State Error:", e);
+        console.error("Connection Error:", e);
     }
 }
 
-function updateUI(data) {
-    const elPrice = document.getElementById('btc-price');
-    const elPriceContainer = document.querySelector('.price-display');
+function updateGameUI(data) {
     const currentPrice = data.current_price;
-    
-    // 1. بروزرسانی قیمت و فلش زدن
+    const nowTimestamp = Math.floor(Date.now() / 1000); // زمان فعلی کلاینت
+
+    // 1. آپدیت قیمت در هدر
+    const elPrice = document.getElementById('btc-price');
     if(elPrice) {
-        elPrice.textContent = `$${currentPrice.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+        // تغییر رنگ بر اساس حرکت قیمت
+        const prevPrice = parseFloat(elPrice.getAttribute('data-prev') || currentPrice);
+        if (currentPrice > prevPrice) elPrice.style.color = '#10B981';
+        else if (currentPrice < prevPrice) elPrice.style.color = '#EF4444';
         
-        if (priceHistory.length > 0) {
-            const lastPrice = priceHistory[priceHistory.length - 1];
-            if (currentPrice > lastPrice) {
-                elPrice.className = 'text-up'; // سبز
-            } else if (currentPrice < lastPrice) {
-                elPrice.className = 'text-down'; // قرمز
-            } else {
-                elPrice.className = 'text-white';
-            }
+        elPrice.innerText = `$${currentPrice.toLocaleString("en-US", {minimumFractionDigits: 2})}`;
+        elPrice.setAttribute('data-prev', currentPrice);
+    }
+
+    // 2. آپدیت چارت (کندل زنده)
+    if (candleSeries && currentCandle) {
+        // اگر راند عوض شده یا زمان زیادی گذشته، کندل جدید بساز
+        // اینجا فرض می‌کنیم هر راند یک کندل جدید است یا هر 60 ثانیه
+        const candleTimeStep = 60; // هر کندل 1 دقیقه
+        const nextCandleTime = currentCandle.time + candleTimeStep;
+
+        if (nowTimestamp >= nextCandleTime) {
+            // بستن کندل قبلی و شروع جدید
+            currentCandle = {
+                time: nextCandleTime,
+                open: currentPrice,
+                high: currentPrice,
+                low: currentPrice,
+                close: currentPrice
+            };
+        } else {
+            // آپدیت کندل فعلی
+            currentCandle.close = currentPrice;
+            currentCandle.high = Math.max(currentCandle.high, currentPrice);
+            currentCandle.low = Math.min(currentCandle.low, currentPrice);
         }
+        
+        candleSeries.update(currentCandle);
     }
 
-    // 2. آپدیت نمودار
-    priceHistory.push(currentPrice);
-    if (priceHistory.length > MAX_POINTS) priceHistory.shift();
-    
-    if (chart) {
-        chart.data.datasets[0].data = priceHistory;
-        
-        // تنظیم مقیاس عمودی نمودار برای زوم بهتر
-        const min = Math.min(...priceHistory) * 0.9999;
-        const max = Math.max(...priceHistory) * 1.0001;
-        chart.options.scales.y.min = min;
-        chart.options.scales.y.max = max;
-        
-        chart.update();
-    }
-
-    // 3. بروزرسانی تایمر و وضعیت راند
+    // 3. تایمر و وضعیت راند
     if (data.round) {
         const elTimer = document.getElementById('timer-text');
-        const elPath = document.getElementById('timer-path');
         const elStatus = document.getElementById('round-status');
+        const elRoundId = document.getElementById('round-id');
         
-        if(elTimer) elTimer.textContent = data.round.time_left;
-        
-        if(elPath) {
-            // محاسبه درصد دایره
-            const pct = (data.round.time_left / 60) * 100;
-            elPath.style.strokeDasharray = `${pct}, 100`;
-            
-            // تغییر رنگ دایره در 15 ثانیه آخر
-            if (data.round.time_left <= LOCKOUT_TIME) {
-                elPath.style.stroke = "#EF4444"; // قرمز
+        if(elRoundId) elRoundId.innerText = `Round #${data.round.id}`;
+        if(elTimer) elTimer.innerText = data.round.time_left + "s";
+
+        // مدیریت رنگ تایمر (هشدار در 15 ثانیه آخر)
+        const isLocked = data.round.time_left <= 15;
+        if(elTimer) elTimer.style.color = isLocked ? '#EF4444' : '#fff';
+
+        if(elStatus) {
+            if (isLocked) {
+                elStatus.innerHTML = '<span style="color:#EF4444">بسته شد 🔒</span>';
+                toggleButtons(true);
             } else {
-                elPath.style.stroke = "#10B981"; // سبز
+                elStatus.innerHTML = '<span style="color:#10B981">باز است 🟢</span>';
+                if (!data.user_bet) toggleButtons(false);
             }
         }
 
-        // صدای تیک‌تاک در 5 ثانیه آخر
+        // صدای تیک‌تاک
         if (data.round.time_left <= 5 && data.round.time_left > 0) {
             if (!window['tick_' + data.round.time_left]) {
                 SoundFX.tick();
                 window['tick_' + data.round.time_left] = true;
             }
         }
-
-        // 4. قفل کردن دکمه‌ها در 15 ثانیه آخر
-        if (data.round.time_left <= LOCKOUT_TIME) {
-            if(elStatus) {
-                elStatus.textContent = "⏳ شرط‌بندی بسته شد! منتظر نتیجه...";
-                elStatus.style.color = "#FFD700";
-            }
-            toggleButtons(true); // غیرفعال کردن دکمه‌ها
-        } else {
-            if(elStatus) {
-                elStatus.textContent = "🟢 شرط‌بندی باز است";
-                elStatus.style.color = "#10B981";
-            }
-            // اگر کاربر شرط نبسته، دکمه‌ها را فعال کن
-            if(!data.user_bet) toggleButtons(false);
-        }
     }
 
-    // 5. نمایش وضعیت شرط کاربر
+    // 4. نمایش شرط کاربر
     if(data.user_bet) {
         const elStatus = document.getElementById('round-status');
-        const typeText = data.user_bet.prediction === 'UP' ? 'خرید (LONG) 📈' : 'فروش (SHORT) 📉';
+        const dir = data.user_bet.prediction === 'UP' ? 'صعودی 📈' : 'نزولی 📉';
         if(elStatus) {
-            elStatus.textContent = `پوزیشن باز شما: ${typeText}`;
-            elStatus.style.color = "#3B82F6"; // آبی
+            elStatus.innerHTML = `<span style="color:#3B82F6">شرط شما: ${dir}</span>`;
         }
         toggleButtons(true);
         
-        // ذخیره لوکال برای چک کردن نتیجه در راند بعدی
+        // ذخیره برای بررسی نتیجه
         if(data.round) {
             localStorage.setItem('last_bet_round_id', String(data.round.id));
             localStorage.setItem('last_bet_prediction', data.user_bet.prediction);
         }
     }
 
-    // 6. بروزرسانی حباب‌های تاریخچه
-    if (data.history) {
-        updateHistoryBubbles(data.history);
+    // 5. تاریخچه نتایج (حباب‌ها)
+    if(data.history) {
+        updateHistory(data.history);
         checkResult(data.history);
     }
 }
 
-// رسم حباب‌های تاریخچه (۱۰ تای آخر)
-function updateHistoryBubbles(history) {
+function updateHistory(history) {
     const container = document.getElementById('history-container');
     if(!container) return;
+    container.innerHTML = '';
     
-    container.innerHTML = ''; // پاک کردن قبلی‌ها
-    
-    history.slice(0, 10).reverse().forEach(h => {
-        const div = document.createElement('div');
-        // کلاس استایل بر اساس نتیجه
-        const resultClass = h.result === 'UP' ? 'up' : 'down';
-        div.className = `history-bubble ${resultClass}`;
-        div.textContent = h.result === 'UP' ? '↑' : '↓';
-        container.appendChild(div);
+    // نمایش 10 نتیجه آخر
+    history.slice().reverse().slice(0, 15).forEach(h => {
+        const badge = document.createElement('div');
+        const color = h.result === 'UP' ? '#10B981' : '#EF4444';
+        const arrow = h.result === 'UP' ? '↑' : '↓';
+        
+        badge.style.cssText = `
+            min-width: 24px; height: 24px; background: ${color}; 
+            color: black; border-radius: 6px; display: flex; 
+            align-items: center; justify-content: center; 
+            font-size: 12px; font-weight: bold; margin-right: 4px;
+        `;
+        badge.innerText = arrow;
+        container.appendChild(badge);
     });
 }
 
-// بررسی نتیجه شرط قبلی کاربر
 function checkResult(history) {
     const myRoundId = localStorage.getItem('last_bet_round_id');
     const myPrediction = localStorage.getItem('last_bet_prediction');
-    
     if (!myRoundId || !myPrediction) return;
     
-    // پیدا کردن راند تمام شده در تاریخچه
-    const finishedRound = history.find(h => String(h.round_id) === String(myRoundId));
-    
-    if (finishedRound) {
-        // پاک کردن استوریج تا دوباره چک نشود
-        localStorage.removeItem('last_bet_round_id'); 
+    const round = history.find(h => String(h.round_id) === String(myRoundId));
+    if (round) {
+        localStorage.removeItem('last_bet_round_id');
         localStorage.removeItem('last_bet_prediction');
         
-        if (finishedRound.result === myPrediction) {
-            // برنده!
+        if (round.result === myPrediction) {
             SoundFX.win();
-            tg.showAlert(`🎉 تبریک! شما برنده شدید.\nقیمت بسته شدن: ${finishedRound.end_price}`);
-            triggerConfetti(); // افکت کاغذ رنگی
-            tg.HapticFeedback.notificationOccurred('success');
+            tg.showAlert(`🎉 تبریک! برنده شدید.\nقیمت بسته شده: ${round.end_price}`);
+            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
         } else {
-            // بازنده!
             SoundFX.lose();
-            tg.showAlert(`❌ متاسفانه باختید.\nپیش‌بینی شما: ${myPrediction}\nنتیجه: ${finishedRound.result}`);
-            tg.HapticFeedback.notificationOccurred('error');
+            tg.showAlert(`❌ متاسفانه باختید.\nنتیجه: ${round.result}`);
         }
     }
 }
 
-// فعال/غیرفعال کردن دکمه‌ها
-function toggleButtons(disable) {
-    const btnUp = document.getElementById('btn-up');
-    const btnDown = document.getElementById('btn-down');
-    if(btnUp) btnUp.disabled = disable;
-    if(btnDown) btnDown.disabled = disable;
-}
-
-// افکت کاغذ رنگی (استفاده از کتابخانه canvas-confetti)
-function triggerConfetti() {
-    if (typeof confetti === 'function') {
-        confetti({ 
-            particleCount: 150, 
-            spread: 80, 
-            origin: { y: 0.6 },
-            colors: ['#FFD700', '#10B981', '#3B82F6']
-        });
-    }
-}
-
-// --- ارسال شرط به سرور ---
-window.placeBet = async function(pred) {
-    const amount = document.getElementById('bet-amount').value;
-    
-    // انیمیشن پرتاب سکه
-    const btnId = pred === 'UP' ? 'btn-up' : 'btn-down';
-    animateFlyingChip(btnId, 'btcChart'); // پرتاب به سمت نمودار
-
+// --- تعاملات کاربر ---
+window.setAmount = function(val) {
+    document.getElementById('bet-amount').value = val;
     initAudio();
     SoundFX.tick();
+    tg.HapticFeedback.selectionChanged();
+    
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    if(event.target) event.target.classList.add('active');
+};
+
+window.placeBet = async function(pred) {
+    const amount = document.getElementById('bet-amount').value;
+    initAudio();
+    SoundFX.tick();
+    tg.HapticFeedback.impactOccurred('medium');
 
     try {
         const res = await fetch(`${API_BASE_URL}/webapp/game/bet`, {
-            method: 'POST', 
+            method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ 
-                initData: tg.initData, 
-                amount: parseFloat(amount), 
-                prediction: pred 
-            })
+            body: JSON.stringify({ initData: tg.initData, amount: parseFloat(amount), prediction: pred })
         });
-        
         const result = await res.json();
         
-        if (result.status === "success") {
-            tg.HapticFeedback.impactOccurred('heavy');
-            // پیام موفقیت نمی‌دهیم تا بازی متوقف نشود، فقط وضعیت آپدیت می‌شود
+        if (result.status === 'success') {
+            tg.showAlert("✅ شرط ثبت شد");
         } else {
-            tg.showAlert(`❌ ${result.message}`);
+            tg.showAlert("⚠️ " + result.message);
         }
-    } catch (e) { 
-        tg.showAlert("خطای اتصال به سرور"); 
+    } catch (e) {
+        tg.showAlert("خطای اتصال");
     }
 };
 
-// --- توابع مودال (تاریخچه و لیدربورد) ---
+function toggleButtons(disabled) {
+    document.getElementById('btn-up').disabled = disabled;
+    document.getElementById('btn-down').disabled = disabled;
+}
 
-// 1. باز کردن تاریخچه
-window.openHistory = async function() {
-    const modal = document.getElementById('history-modal');
-    const list = document.getElementById('history-list');
-    
-    if (modal) {
-        modal.classList.remove('hidden');
-        setTimeout(() => modal.classList.add('active'), 10); // انیمیشن
-    }
+// مودال‌ها
+window.openHistory = () => { document.getElementById('history-modal').classList.add('active'); }
+window.closeHistory = () => { document.getElementById('history-modal').classList.remove('active'); }
+window.openLeaderboard = () => { document.getElementById('leaderboard-modal').classList.add('active'); }
+window.closeLeaderboard = () => { document.getElementById('leaderboard-modal').classList.remove('active'); }
 
-    // لودینگ
-    if (list) list.innerHTML = '<div style="text-align:center;padding:20px;color:#888">⏳ در حال دریافت...</div>';
-
-    // درخواست به سرور (فعلاً ماک)
-    try {
-        const res = await fetch(`${API_BASE_URL}/webapp/game/user-history`, {
-            method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ initData: tg.initData })
-        });
-        const data = await res.json();
-        
-        if(data.status === 'success') {
-            // رندر لیست تاریخچه (فعلاً خالی چون دیتابیس پر نیست)
-            list.innerHTML = '<div style="text-align:center;padding:20px;color:#888">هنوز تاریخچه‌ای موجود نیست.</div>';
-        }
-    } catch(e) {
-        list.innerHTML = '<div style="text-align:center;color:red">خطای شبکه</div>';
-    }
-};
-
-// بستن تاریخچه
-window.closeHistory = function() {
-    const modal = document.getElementById('history-modal');
-    if (modal) {
-        modal.classList.remove('active');
-        setTimeout(() => modal.classList.add('hidden'), 300);
-    }
-};
-
-// 2. باز کردن لیدربورد
-window.openLeaderboard = function() {
-    const modal = document.getElementById('leaderboard-modal');
-    if (modal) {
-        modal.classList.remove('hidden');
-        setTimeout(() => modal.classList.add('active'), 10);
-    }
-    // در فاز بعدی می‌توانید دیتای واقعی لیدربورد را اینجا فچ کنید
-};
-
-// بستن لیدربورد
-window.closeLeaderboard = function() {
-    const modal = document.getElementById('leaderboard-modal');
-    if (modal) {
-        modal.classList.remove('active');
-        setTimeout(() => modal.classList.add('hidden'), 300);
-    }
-};
-
-// --- نقطه شروع (Entry Point) ---
+// --- اجرا ---
 window.onload = function() {
     tg.ready();
     tg.expand();
-    tg.setHeaderColor('#050505');
+    tg.setHeaderColor('#161616'); // هماهنگ با هدر جدید
     
     if (!tg.initData) {
-        document.body.innerHTML = "<h3 style='color:white;text-align:center;margin-top:50px'>لطفاً از داخل ربات باز کنید</h3>";
-        return;
+        // Mock data for browser testing
+        tg.initData = "query_id=TEST"; 
     }
     
-    initChart(); // راه‌اندازی نمودار
+    initTradingViewChart();
     
-    // شروع دریافت وضعیت بازی هر 1 ثانیه
+    // لوپ آپدیت
     setInterval(fetchState, 1000);
-    fetchState(); // اولین فراخوانی فوری
+    fetchState();
 };

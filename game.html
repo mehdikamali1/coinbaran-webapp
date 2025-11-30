@@ -7,84 +7,113 @@
     <title>بازی کندل</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
-    <link rel="stylesheet" href="webapp/style.css?v=20.0">
+    <link rel="stylesheet" href="webapp/style.css?v=21.0">
+
+    <style>
+        /* استایل‌های اختصاصی برای چارت حرفه‌ای */
+        .market-stat-card {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #161616; padding: 12px 15px; border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.05); margin-bottom: 10px;
+        }
+        .price-box h1 { margin: 0; font-size: 1.8rem; font-family: monospace; letter-spacing: -1px; }
+        .price-box span { font-size: 0.8rem; color: #888; }
+        
+        /* تایمر جدید: کوچک و شیک */
+        .compact-timer {
+            display: flex; align-items: center; gap: 8px;
+            background: rgba(255,255,255,0.05); padding: 5px 10px; border-radius: 8px;
+        }
+        .timer-val { font-family: monospace; font-size: 1.1rem; font-weight: 700; color: white; }
+        .timer-icon { font-size: 0.9rem; animation: pulse 1s infinite; }
+
+        /* کانتینر چارت */
+        #tv-chart-container {
+            width: 100%; height: 280px; 
+            border-radius: 12px; overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.05);
+            position: relative;
+        }
+        .watermark {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 3rem; font-weight: 900; color: rgba(255,255,255,0.03);
+            pointer-events: none; z-index: 1;
+        }
+    </style>
 </head>
 <body>
 
     <div id="app-container">
         
-        <div style="padding: 15px 20px; background: var(--bg-color); z-index: 10;">
-            <div class="game-header">
+        <div style="padding: 10px 15px; background: var(--bg-color);">
+            <div class="game-header" style="padding-bottom:0; border:none; margin-bottom:0;">
                 <div style="display:flex; gap:10px; align-items:center">
-                    <button onclick="window.location.href='/'" class="back-btn">
-                        🏠
-                    </button>
-                    <button onclick="window.openLeaderboard()" class="trophy-btn">
-                        🏆
-                    </button>
+                    <button onclick="window.location.href='/'" class="back-btn">🏠</button>
+                    <button onclick="window.openLeaderboard()" class="trophy-btn">🏆</button>
                 </div>
-                <div class="live-badge">● LIVE</div>
+                <div class="live-badge">BTC/USDT ● LIVE</div>
             </div>
         </div>
 
-        <main style="padding: 0 20px;">
+        <main style="padding: 0 15px;">
             
-            <div class="price-display">
-                <div class="price-label">BTC/USDT</div>
-                <div id="btc-price">...</div>
+            <div class="market-stat-card">
+                <div class="price-box">
+                    <h1 id="btc-price">...</h1>
+                    <span>قیمت لحظه‌ای</span>
+                </div>
+                <div class="compact-timer">
+                    <i class="fas fa-clock timer-icon" style="color:var(--accent-gold)"></i>
+                    <span id="timer-text" class="timer-val">--</span>
+                </div>
             </div>
 
-            <div class="timer-circle">
-                <svg class="circular-chart" viewBox="0 0 36 36">
-                    <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                    <path id="timer-path" class="circle" stroke-dasharray="100, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" style="stroke: var(--accent-green);" />
-                </svg>
-                <div id="timer-text" class="timer-text">--</div>
+            <div id="tv-chart-container">
+                <div class="watermark">COINBARAN</div>
             </div>
 
-            <div class="chart-container">
-                <canvas id="btcChart"></canvas>
-            </div>
+            <div id="history-container" style="margin-top: 10px; justify-content: flex-start; overflow-x: auto; padding-bottom: 5px;"></div>
 
-            <div id="history-container" style="margin-bottom: 20px;"></div>
-
-            <div style="height: 220px;"></div>
-
-        </main>
+            <div style="height: 240px;"></div> </main>
 
         <div class="bet-controls">
-            <div id="round-status" style="text-align: center; color: var(--text-muted); margin-bottom: 15px; font-size: 0.9rem;">
-                در حال اتصال...
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:0.8rem; color:#888;">
+                <span id="round-id">Round #...</span>
+                <span id="round-status">اتصال...</span>
             </div>
             
             <div class="quick-amounts">
                 <button onclick="window.setAmount(1)" class="chip active">$1</button>
                 <button onclick="window.setAmount(5)" class="chip">$5</button>
                 <button onclick="window.setAmount(10)" class="chip">$10</button>
-                <button onclick="window.setAmount(25)" class="chip">$25</button>
+                <button onclick="window.setAmount(50)" class="chip">$50</button>
             </div>
 
-            <div class="amount-selector">
-                <span>مبلغ شرط (UUSD):</span>
+            <div class="amount-selector" style="background:rgba(255,255,255,0.03);">
+                <span style="font-size:0.8rem">مبلغ (UUSD):</span>
                 <input type="number" id="bet-amount" value="1" min="1">
             </div>
 
             <div class="action-buttons-game">
                 <button id="btn-up" class="game-btn btn-up" onclick="window.placeBet('UP')">
-                    خرید 📈
+                    <div style="display:flex; flex-direction:column; line-height:1.2;">
+                        <span>خرید (LONG)</span>
+                        <span style="font-size:0.7rem; opacity:0.8">کندل صعودی 📈</span>
+                    </div>
                 </button>
                 <button id="btn-down" class="game-btn btn-down" onclick="window.placeBet('DOWN')">
-                    فروش 📉
+                    <div style="display:flex; flex-direction:column; line-height:1.2;">
+                        <span>فروش (SHORT)</span>
+                        <span style="font-size:0.7rem; opacity:0.8">کندل نزولی 📉</span>
+                    </div>
                 </button>
-            </div>
-
-            <div class="history-trigger" onclick="window.openHistory()" style="text-align:center; margin-top:15px; color:var(--text-muted); font-size:0.8rem; cursor:pointer;">
-                📜 تاریخچه شرط‌های من
             </div>
         </div>
 
@@ -92,45 +121,24 @@
 
     <div id="history-modal" class="modal">
         <div class="modal-content">
-            <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h3 style="margin:0; color:white;">تاریخچه بازی‌ها</h3>
-                <button onclick="window.closeHistory()" style="background:none; border:none; color:white; font-size:1.5rem;">✕</button>
+            <div class="modal-header" style="display:flex; justify-content:space-between;">
+                <h3>تاریخچه</h3>
+                <button onclick="window.closeHistory()" style="background:none; border:none; color:white; font-size:1.2rem;">✕</button>
             </div>
-            <div id="history-list" style="max-height: 400px; overflow-y: auto;">
-                <div style="text-align:center; padding:20px; color:#888">در حال بارگذاری...</div>
-            </div>
+            <div id="history-list" style="max-height: 300px; overflow-y: auto;"></div>
         </div>
     </div>
 
     <div id="leaderboard-modal" class="modal">
         <div class="modal-content glass-panel">
-            <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h3 style="margin:0; color:var(--accent-gold);">🏆 تالار برترین‌ها</h3>
-                <button onclick="window.closeLeaderboard()" style="background:none; border:none; color:white; font-size:1.5rem;">✕</button>
+            <div class="modal-header" style="display:flex; justify-content:space-between;">
+                <h3 style="color:var(--accent-gold)">🏆 برترین‌ها</h3>
+                <button onclick="window.closeLeaderboard()" style="background:none; border:none; color:white; font-size:1.2rem;">✕</button>
             </div>
-            
-            <div class="stats-card" style="display:flex; justify-content:space-around; background:#222; padding:15px; border-radius:12px; margin-bottom:20px;">
-                <div class="stat-item" style="text-align:center;">
-                    <span class="stat-label" style="display:block; font-size:0.7rem; color:#888;">بازی‌ها</span>
-                    <span class="stat-value" id="my-total-games" style="color:white; font-weight:bold;">--</span>
-                </div>
-                <div class="stat-item" style="text-align:center;">
-                    <span class="stat-label" style="display:block; font-size:0.7rem; color:#888;">بردها</span>
-                    <span class="stat-value text-up" id="my-total-wins" style="color:var(--accent-green); font-weight:bold;">--</span>
-                </div>
-                <div class="stat-item" style="text-align:center;">
-                    <span class="stat-label" style="display:block; font-size:0.7rem; color:#888;">نرخ برد</span>
-                    <span class="stat-value text-gold" id="my-win-rate" style="color:var(--accent-gold); font-weight:bold;">--%</span>
-                </div>
-            </div>
-
-            <div class="leaderboard-title" style="margin-bottom:10px; font-size:0.9rem; color:#aaa;">نفرات برتر (۲۴ ساعت)</div>
-            <div id="leaderboard-list" class="leaderboard-list" style="max-height: 300px; overflow-y: auto;">
-                <div class="loading-spinner" style="text-align:center; color:#888;">در حال دریافت...</div>
-            </div>
+            <div id="leaderboard-list" style="padding:20px; text-align:center; color:#888">در حال بروزرسانی...</div>
         </div>
     </div>
 
-    <script src="webapp/game.js?v=20.0"></script>
+    <script src="webapp/game.js?v=21.0"></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-﻿/* webapp/dashboard-style.css (v31.0 - Final Gold Logo Edition) */
+﻿/* webapp/dashboard-style.css (v32.0 - Perfect Round Gold Logo) */
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;300;400;500;700;800;900&display=swap');
 
 :root {
@@ -82,19 +82,41 @@ body {
 
 .loader-content { text-align: center; }
 
-/* استایل لوگوی طلایی */
+/* استایل اصلاح شده برای گرد کردن لوگوی مربعی */
 .main-logo-img {
-    width: 120px; /* سایز لوگو */
-    height: auto;
-    margin-bottom: 20px;
-    filter: drop-shadow(0 0 15px rgba(240, 185, 11, 0.5));
+    width: 130px;
+    height: 130px; /* ارتفاع و عرض برابر برای دایره شدن دقیق */
+    object-fit: cover; /* جلوگیری از دفرمه شدن عکس */
+    
+    /* تبدیل مربع به دایره (حذف گوشه‌های سفید) */
+    border-radius: 50%;
+    
+    /* یک حاشیه طلایی نازک برای تمیزی لبه‌ها */
+    border: 2px solid var(--gold-primary);
+    
+    margin-bottom: 25px;
+    
+    /* درخشش طلایی بیرونی */
+    box-shadow: 0 0 30px rgba(240, 185, 11, 0.4);
+    
+    /* انیمیشن تپش */
     animation: logoPulse 2.5s infinite ease-in-out;
 }
 
 @keyframes logoPulse {
-    0% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(240, 185, 11, 0.5)); }
-    50% { transform: scale(1.05); filter: drop-shadow(0 0 30px rgba(240, 185, 11, 0.8)); }
-    100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(240, 185, 11, 0.5)); }
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 30px rgba(240, 185, 11, 0.4);
+    }
+    50% {
+        transform: scale(1.05);
+        /* افزایش درخشش در اوج تپش */
+        box-shadow: 0 0 50px rgba(240, 185, 11, 0.7), 0 0 80px rgba(240, 185, 11, 0.3);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 30px rgba(240, 185, 11, 0.4);
+    }
 }
 
 .brand-text {
@@ -102,6 +124,7 @@ body {
     background: linear-gradient(45deg, #fff, var(--gold-primary));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    margin-top: 5px;
     margin-bottom: 8px;
 }
 .loading-status { font-size: 0.75rem; color: var(--text-muted); }

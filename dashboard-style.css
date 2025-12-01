@@ -1,4 +1,4 @@
-﻿/* webapp/dashboard-style.css (v32.0 - Perfect Round Gold Logo) */
+﻿/* webapp/dashboard-style.css (v35.0 - Final Production Gold Edition) */
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;300;400;500;700;800;900&display=swap');
 
 :root {
@@ -82,21 +82,19 @@ body {
 
 .loader-content { text-align: center; }
 
-/* استایل اصلاح شده برای گرد کردن لوگوی مربعی */
+/* استایل لوگوی بزرگ (صفحه لودینگ) */
+/* نکته: این تنظیمات عکس مربعی را دایره می‌کند */
 .main-logo-img {
-    width: 130px;
-    height: 130px; /* ارتفاع و عرض برابر برای دایره شدن دقیق */
-    object-fit: cover; /* جلوگیری از دفرمه شدن عکس */
+    width: 130px; 
+    height: 130px; 
+    object-fit: cover; /* پر کردن کامل دایره */
     
-    /* تبدیل مربع به دایره (حذف گوشه‌های سفید) */
-    border-radius: 50%;
-    
-    /* یک حاشیه طلایی نازک برای تمیزی لبه‌ها */
-    border: 2px solid var(--gold-primary);
+    border-radius: 50%; /* تبدیل مربع به دایره */
+    border: 2px solid var(--gold-primary); /* خط دور طلایی */
     
     margin-bottom: 25px;
     
-    /* درخشش طلایی بیرونی */
+    /* درخشش اولیه */
     box-shadow: 0 0 30px rgba(240, 185, 11, 0.4);
     
     /* انیمیشن تپش */
@@ -109,7 +107,7 @@ body {
         box-shadow: 0 0 30px rgba(240, 185, 11, 0.4);
     }
     50% {
-        transform: scale(1.05);
+        transform: scale(1.05); /* کمی بزرگ شدن */
         /* افزایش درخشش در اوج تپش */
         box-shadow: 0 0 50px rgba(240, 185, 11, 0.7), 0 0 80px rgba(240, 185, 11, 0.3);
     }
@@ -124,7 +122,6 @@ body {
     background: linear-gradient(45deg, #fff, var(--gold-primary));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    margin-top: 5px;
     margin-bottom: 8px;
 }
 .loading-status { font-size: 0.75rem; color: var(--text-muted); }
@@ -133,8 +130,20 @@ body {
 .glass-wrapper {
     height: 100%;
     display: flex; flex-direction: column;
-    opacity: 1; transition: opacity 0.5s;
+    transition: opacity 0.8s ease-out; /* ترنزیشن نرم برای فید شدن */
 }
+
+/* کلاس‌های مربوط به انیمیشن ورود بعد از لودر */
+.hidden-content { opacity: 0; pointer-events: none; }
+.fade-in-active { 
+    opacity: 1; pointer-events: all; 
+    animation: slideUpFade 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes slideUpFade { 
+    from { opacity: 0; transform: translateY(20px); } 
+    to { opacity: 1; transform: translateY(0); } 
+}
+
 .hidden { display: none !important; }
 
 /* --- هدر شیشه‌ای --- */
@@ -227,9 +236,20 @@ body {
     margin-bottom: 25px; position: relative; z-index: 2;
 }
 .chip-icon { font-size: 2rem; color: #ffffff20; transform: rotate(90deg); }
+
+/* استایل لوگوی کوچک داخل کارت */
 .card-brand-logo { 
-    font-size: 0.8rem; letter-spacing: 2px; color: var(--text-muted); 
-    display: flex; align-items: center; gap: 6px;
+    display: flex; align-items: center; gap: 8px;
+}
+.mini-card-logo {
+    width: 28px; height: 28px; /* سایز لوگوی کوچک */
+    border-radius: 50%; /* دایره کردن */
+    object-fit: cover;
+    border: 1px solid var(--gold-primary); /* حاشیه طلایی ظریف */
+    box-shadow: 0 0 10px rgba(240, 185, 11, 0.4); /* درخشش کوچک */
+}
+.card-brand-logo span { 
+    font-size: 0.8rem; letter-spacing: 2px; color: var(--text-muted); font-weight: 700;
 }
 
 .balance-display { margin-bottom: 25px; position: relative; z-index: 2; text-align: right; }

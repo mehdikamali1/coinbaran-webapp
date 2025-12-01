@@ -1,4 +1,4 @@
-﻿/* webapp/dashboard-style.css (v40.0 - Floating Hero Logo & Luxury Theme) */
+﻿/* webapp/dashboard-style.css (v42.0 - Final Header Logo Edition) */
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;300;400;500;700;800;900&display=swap');
 
 :root {
@@ -71,7 +71,7 @@ body {
     z-index: -1;
 }
 
-/* --- لودر اختصاصی --- */
+/* --- لودر اختصاصی (Logo Animation) --- */
 #loader {
     position: fixed; inset: 0;
     background: #000;
@@ -82,7 +82,7 @@ body {
 
 .loader-content { text-align: center; }
 
-/* استایل لوگوی بزرگ در صفحه لودینگ */
+/* استایل لوگوی بزرگ (صفحه لودینگ) */
 .main-logo-img {
     width: 130px; 
     height: 130px; 
@@ -128,7 +128,7 @@ body {
 
 .hidden { display: none !important; }
 
-/* --- هدر --- */
+/* --- هدر شیشه‌ای --- */
 .glass-header {
     padding: 15px 20px;
     display: flex; justify-content: space-between; align-items: center;
@@ -155,6 +155,36 @@ body {
     width: 10px; height: 10px; background: var(--color-up);
     border: 2px solid #000; border-radius: 50%;
     box-shadow: 0 0 5px var(--color-up);
+}
+
+/* --- استایل لوگوی جدید در هدر --- */
+.header-logo-container {
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    margin-right: 5px; margin-left: 5px;
+}
+
+.header-logo-img {
+    width: 48px; height: 48px; /* سایز متناسب با هدر */
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px solid var(--gold-primary);
+    box-shadow: 0 0 15px rgba(240, 185, 11, 0.5);
+    animation: headerFloat 3s ease-in-out infinite;
+}
+
+.header-glow {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 55px; height: 55px;
+    background: var(--gold-primary);
+    filter: blur(20px); opacity: 0.3;
+    z-index: -1;
+}
+
+@keyframes headerFloat {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+    100% { transform: translateY(0); }
 }
 
 .user-details { display: flex; flex-direction: column; justify-content: center; }
@@ -186,41 +216,7 @@ body {
     padding: 20px; position: relative;
 }
 
-/* --- استایل لوگوی شناور (Hero Logo) --- */
-.hero-logo-section {
-    display: flex; justify-content: center; align-items: center;
-    position: relative; 
-    margin-bottom: -35px; /* تداخل با کارت برای زیبایی */
-    z-index: 10; 
-    pointer-events: none; /* تا جلوی تاچ را نگیرد */
-    padding-top: 10px;
-}
-
-.hero-logo-img {
-    width: 75px; height: 75px; 
-    object-fit: cover;
-    border-radius: 50%;
-    border: 2px solid var(--gold-primary);
-    background: #000; /* جلوگیری از دیده شدن خط کارت */
-    box-shadow: 0 0 25px rgba(240, 185, 11, 0.6);
-    animation: floatingLogo 4s ease-in-out infinite;
-}
-
-.glow-point {
-    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    width: 100px; height: 100px; 
-    background: var(--gold-primary);
-    filter: blur(45px); opacity: 0.4; 
-    z-index: -1;
-}
-
-@keyframes floatingLogo {
-    0% { transform: translateY(0); box-shadow: 0 0 25px rgba(240, 185, 11, 0.6); }
-    50% { transform: translateY(-10px); box-shadow: 0 10px 40px rgba(240, 185, 11, 0.9); }
-    100% { transform: translateY(0); box-shadow: 0 0 25px rgba(240, 185, 11, 0.6); }
-}
-
-/* --- کارت موجودی --- */
+/* --- کارت موجودی (Hero Card) --- */
 .asset-card {
     background: linear-gradient(160deg, #1e1e1e 0%, #050505 100%);
     border-radius: var(--radius-xl);
@@ -252,22 +248,7 @@ body {
     margin-bottom: 25px; position: relative; z-index: 2;
 }
 .chip-icon { font-size: 2rem; color: #ffffff20; transform: rotate(90deg); }
-
-/* لوگوی کوچک داخل کارت */
-.card-brand-logo { 
-    display: flex; align-items: center; gap: 8px;
-}
-.mini-card-logo {
-    width: 28px; height: 28px; 
-    border-radius: 50%;
-    object-fit: cover;
-    border: 1px solid var(--gold-primary);
-    box-shadow: 0 0 10px rgba(240, 185, 11, 0.4);
-}
-.card-brand-logo span { 
-    font-size: 0.8rem; letter-spacing: 2px; 
-    color: var(--text-muted); font-weight: 700;
-}
+.card-brand-text { font-size: 0.8rem; letter-spacing: 2px; color: var(--text-muted); font-weight: 700; }
 
 .balance-display { margin-bottom: 25px; position: relative; z-index: 2; text-align: right; }
 .label-muted { font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 6px; }
@@ -291,7 +272,7 @@ body {
 .color-xp { color: var(--gold-primary); }
 .align-left { align-items: flex-end; }
 
-/* --- گرید دسترسی سریع --- */
+/* --- دسترسی سریع --- */
 .quick-access-grid {
     display: grid; grid-template-columns: repeat(4, 1fr);
     gap: 12px; margin-bottom: 30px;

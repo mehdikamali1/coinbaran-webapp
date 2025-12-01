@@ -7,7 +7,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    <link rel="stylesheet" href="webapp/dashboard-style.css?v=36.0">
+    <link rel="stylesheet" href="webapp/dashboard-style.css?v=45.0">
 </head>
 <body class="loading-active">
 
@@ -18,6 +18,7 @@
     <div id="loader">
         <div class="loader-content">
             <img src="webapp/images/logo-gold.png" alt="Coin Baran Logo" class="main-logo-img">
+            
             <div class="brand-text">COIN BARAN</div>
             <p class="loading-status">در حال برقراری ارتباط امن...</p>
         </div>
@@ -30,6 +31,11 @@
                 <div class="avatar-frame">
                     <div class="avatar-img">👤</div>
                     <div class="online-dot"></div>
+                </div>
+
+                <div class="header-logo-container">
+                    <div class="header-glow"></div>
+                    <img src="webapp/images/logo-gold.png" alt="Logo" class="header-logo-img">
                 </div>
                 <div class="user-details">
                     <h2 id="welcome-name" class="fade-in-text">کاربر مهمان</h2>
@@ -49,11 +55,6 @@
 
         <main class="main-scroll-area">
             
-            <div class="hero-logo-section">
-                <div class="glow-point"></div>
-                <img src="webapp/images/logo-gold.png" alt="Logo" class="hero-logo-img">
-            </div>
-
             <div class="asset-card premium-glass">
                 <div class="card-shine-effect"></div>
                 <div class="card-pattern-overlay"></div>
@@ -62,10 +63,7 @@
                     <div class="chip-icon">
                         <i class="fas fa-microchip"></i>
                     </div>
-                    <div class="card-brand-logo">
-                        <img src="webapp/images/logo-gold.png" class="mini-card-logo" alt="Logo">
-                        <span>COINBARAN</span>
-                    </div>
+                    <div class="card-brand-text">COINBARAN</div>
                 </div>
 
                 <div class="balance-display">
@@ -195,7 +193,7 @@
                 window.Telegram.WebApp.setBackgroundColor('#000000');
             }
 
-            // تایمر 4 ثانیه‌ای برای نمایش کامل لوگو
+            // تایمر 4 ثانیه‌ای (4000 میلی‌ثانیه) برای نمایش کامل لوگو
             setTimeout(function() {
                 const loader = document.getElementById('loader');
                 const app = document.getElementById('app-container');
@@ -208,7 +206,7 @@
                 app.classList.remove('hidden-content');
                 app.classList.add('fade-in-active');
                 
-                // حذف کامل لودر از DOM
+                // حذف کامل لودر از صفحه بعد از پایان انیمیشن
                 setTimeout(() => {
                     loader.style.display = 'none';
                 }, 500);

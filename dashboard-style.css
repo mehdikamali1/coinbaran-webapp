@@ -1,4 +1,4 @@
-﻿/* webapp/dashboard-style.css (v30.0 - Luxury Gold Edition) */
+﻿/* webapp/dashboard-style.css (v31.0 - Final Gold Logo Edition) */
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;300;400;500;700;800;900&display=swap');
 
 :root {
@@ -71,7 +71,7 @@ body {
     z-index: -1;
 }
 
-/* --- لودر اختصاصی (Full Screen) --- */
+/* --- لودر اختصاصی (Logo Animation) --- */
 #loader {
     position: fixed; inset: 0;
     background: #000;
@@ -82,18 +82,19 @@ body {
 
 .loader-content { text-align: center; }
 
-.logo-spinner {
-    width: 60px; height: 60px; margin: 0 auto 20px;
-    border: 2px solid rgba(240, 185, 11, 0.2);
-    border-radius: 50%; position: relative;
-    animation: pulseBorder 2s infinite;
+/* استایل لوگوی طلایی */
+.main-logo-img {
+    width: 120px; /* سایز لوگو */
+    height: auto;
+    margin-bottom: 20px;
+    filter: drop-shadow(0 0 15px rgba(240, 185, 11, 0.5));
+    animation: logoPulse 2.5s infinite ease-in-out;
 }
-.inner-spin {
-    position: absolute; inset: -2px;
-    border-radius: 50%;
-    border: 2px solid transparent;
-    border-top-color: var(--gold-primary);
-    animation: spin 1s linear infinite;
+
+@keyframes logoPulse {
+    0% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(240, 185, 11, 0.5)); }
+    50% { transform: scale(1.05); filter: drop-shadow(0 0 30px rgba(240, 185, 11, 0.8)); }
+    100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(240, 185, 11, 0.5)); }
 }
 
 .brand-text {
@@ -104,9 +105,6 @@ body {
     margin-bottom: 8px;
 }
 .loading-status { font-size: 0.75rem; color: var(--text-muted); }
-
-@keyframes spin { 100% { transform: rotate(360deg); } }
-@keyframes pulseBorder { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
 
 /* --- کانتینر اصلی اپلیکیشن --- */
 .glass-wrapper {

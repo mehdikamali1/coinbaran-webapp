@@ -1,109 +1,194 @@
-﻿# webapp/dashboard.html
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>کوین باران</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>کوین باران | داشبورد</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    <link rel="stylesheet" href="webapp/style.css?v=20.0">
+    <link rel="stylesheet" href="webapp/dashboard-style.css?v=30.0">
 </head>
 <body>
 
+    <div class="ambient-glow glow-top"></div>
+    <div class="ambient-glow glow-bottom"></div>
+    <div class="scanlines"></div>
+
     <div id="loader">
-        <div class="logo-loader">💎</div>
-        <p style="color:#888; font-size:0.8rem">در حال بارگذاری...</p>
+        <div class="loader-content">
+            <div class="logo-spinner">
+                <div class="inner-spin"></div>
+            </div>
+            <div class="brand-text">COIN BARAN</div>
+            <p class="loading-status">در حال برقراری ارتباط امن...</p>
+        </div>
     </div>
 
-    <div id="app-container" class="hidden">
+    <div id="app-container" class="hidden glass-wrapper">
         
-        <header>
-            <div class="user-profile">
-                <div class="avatar">👤</div>
-                <div class="user-text">
-                    <h2 id="welcome-name">...</h2>
-                    <span id="kyc-text" class="kyc-badge">...</span>
+        <header class="glass-header">
+            <div class="profile-section">
+                <div class="avatar-frame">
+                    <div class="avatar-img">👤</div>
+                    <div class="online-dot"></div>
+                </div>
+                <div class="user-details">
+                    <h2 id="welcome-name" class="fade-in-text">کاربر مهمان</h2>
+                    <div class="kyc-wrapper">
+                        <span id="kyc-text" class="kyc-tag">سطح برنزی</span>
+                    </div>
                 </div>
             </div>
-            <div style="color: var(--accent-gold); font-size: 1.2rem;">
-                <i class="fas fa-bell"></i>
+            
+            <div class="header-icons">
+                <button class="icon-btn notif-btn">
+                    <i class="fas fa-bell"></i>
+                    <span class="badge-point"></span>
+                </button>
             </div>
         </header>
 
-        <main>
+        <main class="main-scroll-area">
             
-            <div class="balance-card">
-                <div class="card-row">
-                    <div>
-                        <div class="card-label">موجودی تومانی</div>
-                        <div class="main-balance" id="toman-balance">... <span class="currency">T</span></div>
-                    </div>
-                    <div style="font-size:2rem; opacity:0.2; color:white">
-                        <i class="fas fa-wallet"></i>
-                    </div>
-                </div>
-                <div class="sub-balances">
-                    <div class="sub-item">
-                        <span class="card-label">دلاری (UUSD)</span>
-                        <span class="sub-val color-usd" id="uusd-balance">...</span>
-                    </div>
-                    <div class="sub-item" style="text-align:left">
-                        <span class="card-label">امتیاز</span>
-                        <span class="sub-val color-xp" id="xp-balance">...</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="menu-title">دسترسی سریع</div>
-
-            <div class="menu-grid">
+            <div class="asset-card premium-glass">
+                <div class="card-shine-effect"></div>
+                <div class="card-pattern-overlay"></div>
                 
-                <div class="menu-item item-game" onclick="window.location.href='game'">
-                    <div>
-                        <div class="menu-text">بازی کندل 🚀</div>
-                        <span class="menu-sub">پیش‌بینی کن و دلار ببر!</span>
+                <div class="card-top-row">
+                    <div class="chip-icon">
+                        <i class="fas fa-microchip"></i>
                     </div>
-                    <div class="game-icon">📈</div>
-                </div>
-
-                <div class="menu-item item-usdt" onclick="window.location.href='usdt'">
-                    <div>
-                        <div class="menu-text" style="color:var(--usdt-green)">ترید تتر (USDT)</div>
-                        <span class="menu-sub">خرید و فروش اتوماتیک</span>
+                    <div class="card-brand-logo">
+                        <i class="fas fa-gem"></i> WALLET
                     </div>
-                    <div class="usdt-icon">₮</div>
                 </div>
 
-                <div class="menu-item item-wallet" onclick="window.location.href='wallet'">
-                    <i class="fas fa-credit-card menu-icon-font" style="color: var(--accent-green)"></i>
-                    <span class="menu-text">کیف پول</span>
-                    <span class="menu-sub">واریز / برداشت</span>
+                <div class="balance-display">
+                    <span class="label-muted">موجودی کل دارایی‌ها</span>
+                    <div class="amount-row">
+                        <h1 id="toman-balance" class="main-digit">---</h1>
+                        <span class="currency-symbol">تومان</span>
+                    </div>
                 </div>
 
-                <div class="menu-item item-utopia" onclick="window.location.href='utopia'">
-                    <img src="images/utopia_logo.png" alt="Utopia" class="menu-icon-img">
-                    <span class="menu-text">یوتوپیا</span>
-                    <span class="menu-sub">ووچر آنی</span>
+                <div class="card-footer-row">
+                    <div class="stat-item">
+                        <span class="stat-label">موجودی تتر</span>
+                        <span class="stat-value color-usd" id="uusd-balance">0.00 <small>UUSD</small></span>
+                    </div>
+                    <div class="stat-item align-left">
+                        <span class="stat-label">امتیاز کلاب</span>
+                        <span class="stat-value color-xp" id="xp-balance">0 <small>XP</small></span>
+                    </div>
                 </div>
-
-                <div class="menu-item" onclick="window.location.href='kyc'" style="border-bottom: 2px solid #FF9800;">
-                    <i class="fas fa-id-card-clip menu-icon-font" style="color: #FF9800"></i>
-                    <span class="menu-text">احراز هویت</span>
-                    <span class="menu-sub">تکمیل پروفایل</span>
-                </div>
-
-                <div class="menu-item" onclick="window.location.href='live'" style="border-bottom: 2px solid #fff;">
-                    <i class="fas fa-futbol menu-icon-font" style="color: #fff"></i>
-                    <span class="menu-text">نتایج زنده</span>
-                    <span class="menu-sub">پیش‌بینی فوتبال</span>
-                </div>
-
             </div>
+
+            <div class="quick-access-grid">
+                <div class="action-item" onclick="window.location.href='wallet'">
+                    <div class="action-icon deposit-glow">
+                        <i class="fas fa-arrow-down"></i>
+                    </div>
+                    <span>واریز</span>
+                </div>
+                <div class="action-item" onclick="window.location.href='wallet?tab=withdraw'">
+                    <div class="action-icon withdraw-glow">
+                        <i class="fas fa-arrow-up"></i>
+                    </div>
+                    <span>برداشت</span>
+                </div>
+                <div class="action-item" onclick="window.location.href='usdt'">
+                    <div class="action-icon trade-glow">
+                        <i class="fas fa-exchange-alt"></i>
+                    </div>
+                    <span>ترید</span>
+                </div>
+                <div class="action-item" onclick="window.location.href='kyc'">
+                    <div class="action-icon kyc-glow">
+                        <i class="fas fa-fingerprint"></i>
+                    </div>
+                    <span>احراز</span>
+                </div>
+            </div>
+
+            <div class="services-section">
+                <div class="section-title">
+                    <h3>مارکت و سرگرمی</h3>
+                </div>
+
+                <div class="featured-game-card" onclick="window.location.href='game'">
+                    <div class="game-bg"></div>
+                    <div class="game-content">
+                        <div class="game-info">
+                            <h4>بازی کندل 🚀</h4>
+                            <p>پیش‌بینی کن و دلار ببر!</p>
+                        </div>
+                        <div class="play-button">
+                            شروع <i class="fas fa-play"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="services-grid">
+                    
+                    <div class="service-box glass-panel" onclick="window.location.href='usdt'">
+                        <div class="srv-icon usdt-theme">
+                            <i class="fas fa-sack-dollar"></i>
+                        </div>
+                        <div class="srv-text">
+                            <h5>ترید تتر</h5>
+                            <span>خرید و فروش آنی</span>
+                        </div>
+                    </div>
+
+                    <div class="service-box glass-panel" onclick="window.location.href='utopia'">
+                        <div class="srv-icon utopia-theme">
+                            <i class="fas fa-ticket-alt"></i>
+                        </div>
+                        <div class="srv-text">
+                            <h5>یوتوپیا</h5>
+                            <span>ووچر بدون کارمزد</span>
+                        </div>
+                    </div>
+
+                    <div class="service-box glass-panel" onclick="window.location.href='live'">
+                        <div class="srv-icon live-theme">
+                            <i class="fas fa-futbol"></i>
+                        </div>
+                        <div class="srv-text">
+                            <h5>نتایج زنده</h5>
+                            <span>فوتبال اروپا</span>
+                        </div>
+                    </div>
+
+                    <div class="service-box glass-panel" onclick="Telegram.WebApp.openTelegramLink('https://t.me/CoinBaranSupport')">
+                        <div class="srv-icon support-theme">
+                            <i class="fas fa-headset"></i>
+                        </div>
+                        <div class="srv-text">
+                            <h5>پشتیبانی</h5>
+                            <span>۲۴ ساعته آنلاین</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div style="height: 100px;"></div>
         </main>
+
+        <div class="bottom-blur-bar"></div>
     </div>
     
     <script src="webapp/script.js?v=20.0"></script>
+    
+    <script>
+        // اطمینان از اینکه WebApp تلگرام اکسپند شده است
+        if(window.Telegram && window.Telegram.WebApp) {
+            window.Telegram.WebApp.expand();
+            window.Telegram.WebApp.setHeaderColor('#000000');
+            window.Telegram.WebApp.setBackgroundColor('#000000');
+        }
+    </script>
 </body>
 </html>

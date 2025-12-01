@@ -6,19 +6,30 @@
     <title>خرید و فروش تتر</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
     <link rel="stylesheet" href="webapp/dashboard-style.css?v=30.0">
 
     <style>
+        /* استایل‌های اختصاصی صفحه */
+        
+        /* حیاتی: اصلاح اسکرول برای دیده شدن دکمه انتهایی */
+        .main-scroll-area {
+            padding-bottom: 150px !important; /* فضای زیاد پایین صفحه */
+        }
+
         .ticker-card {
             background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(0,0,0,0.4) 100%);
-            border: 1px solid var(--glass-border); border-radius: var(--radius-lg);
-            padding: 20px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 20px; margin-bottom: 25px;
+            display: flex; justify-content: space-between; align-items: center;
+            position: relative; overflow: hidden;
         }
-        .ticker-col { display: flex; flex-direction: column; gap: 5px; }
+        .ticker-col { display: flex; flex-direction: column; gap: 5px; z-index: 2; }
         .ticker-label { font-size: 0.75rem; color: var(--text-muted); }
         .ticker-val { font-family: monospace; font-size: 1.3rem; font-weight: 800; letter-spacing: -0.5px; }
-        .col-buy { color: var(--color-down); } 
-        .col-sell { color: var(--color-up); text-shadow: 0 0 10px rgba(14, 203, 129, 0.3); }
+        .col-buy { color: var(--color-down); } /* ما میفروشیم (قرمز) */
+        .col-sell { color: var(--color-up); text-shadow: 0 0 10px rgba(14, 203, 129, 0.3); } /* ما میخریم (سبز) */
 
         .switch-tabs {
             background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
@@ -26,7 +37,8 @@
         }
         .tab-btn {
             flex: 1; padding: 12px; text-align: center; border-radius: 12px;
-            font-weight: 700; font-size: 0.9rem; color: var(--text-muted); cursor: pointer; transition: all 0.3s;
+            font-weight: 700; font-size: 0.9rem; color: var(--text-muted);
+            cursor: pointer; transition: all 0.3s;
         }
         .tab-btn.active.buy-mode { background: var(--color-up); color: #000; box-shadow: 0 0 15px rgba(14, 203, 129, 0.3); }
         .tab-btn.active.sell-mode { background: var(--color-down); color: #fff; box-shadow: 0 0 15px rgba(246, 70, 93, 0.3); }
@@ -51,12 +63,14 @@
         .btn-submit {
             width: 100%; padding: 18px; border-radius: 18px; border: none;
             font-size: 1.1rem; font-weight: 800; cursor: pointer; color: #fff;
-            display: flex; align-items: center; justify-content: center; gap: 10px; transition: transform 0.1s;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            transition: transform 0.1s; margin-top: 30px;
         }
         .btn-submit:active { transform: scale(0.97); }
         .bg-green { background: var(--color-up); color: #000; box-shadow: 0 5px 20px rgba(14, 203, 129, 0.2); }
         .bg-red { background: var(--color-down); box-shadow: 0 5px 20px rgba(246, 70, 93, 0.2); }
 
+        /* مودال */
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
             z-index: 999; display: flex; align-items: center; justify-content: center;
@@ -70,18 +84,22 @@
     </style>
 </head>
 <body>
+
     <div class="ambient-glow glow-top"></div>
     <div class="scanlines"></div>
 
     <header class="glass-header">
         <div class="profile-section">
-            <div class="icon-btn" onclick="window.location.href='/'"><i class="fas fa-arrow-right"></i></div>
+            <div class="icon-btn" onclick="window.location.href='/'">
+                <i class="fas fa-arrow-right"></i>
+            </div>
             <div style="font-weight:800; font-size:1.1rem">خرید و فروش <span style="color:var(--color-up)">تتر</span></div>
         </div>
         <div style="width:40px"></div>
     </header>
 
     <div class="glass-wrapper main-scroll-area">
+        
         <div class="ticker-card">
             <div class="ticker-col">
                 <span class="ticker-label">خرید (از شما)</span>
@@ -109,6 +127,7 @@
                 <span style="font-size:0.8rem; color:#888">مبلغ پرداختی:</span>
                 <span class="calc-val" id="buy-total">0 <span style="font-size:0.7rem">تومان</span></span>
             </div>
+
             <div class="input-box">
                 <label class="inp-label">شبکه انتقال</label>
                 <select id="buy-network" class="glass-inp" style="padding-left:16px; appearance:none;">
@@ -117,10 +136,12 @@
                     <option value="TON">TON Network</option>
                 </select>
             </div>
+
             <div class="input-box">
                 <label class="inp-label">آدرس کیف پول مقصد</label>
                 <input type="text" id="buy-address" class="glass-inp" placeholder="T..." style="font-size:0.9rem">
             </div>
+
             <button id="btn-buy" class="btn-submit bg-green" onclick="submitBuy()">
                 <i class="fas fa-bolt"></i> خرید آنی
             </button>
@@ -134,6 +155,7 @@
                     <option value="BEP20">BNB Smart Chain (BEP20)</option>
                 </select>
             </div>
+
             <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:12px; margin-bottom:20px; text-align:center; border:1px dashed var(--glass-border);">
                 <span style="font-size:0.75rem; color:#aaa; display:block; margin-bottom:8px">تترها را به این آدرس واریز کنید:</span>
                 <div id="admin-wallet-address" style="font-family:monospace; color:var(--color-up); word-break:break-all; font-size:0.85rem; margin-bottom:10px">...</div>
@@ -141,6 +163,7 @@
                     <i class="fas fa-copy"></i> کپی آدرس
                 </div>
             </div>
+
             <div class="input-box">
                 <label class="inp-label">مقدار خالص دریافتی ما</label>
                 <input type="tel" id="sell-amount" class="glass-inp" placeholder="100" oninput="calc('sell')">
@@ -150,14 +173,17 @@
                 <span style="font-size:0.8rem; color:#888">دریافتی شما:</span>
                 <span class="calc-val" id="sell-total">0 <span style="font-size:0.7rem">تومان</span></span>
             </div>
+
             <div class="input-box">
                 <label class="inp-label">شناسه تراکنش (TxID)</label>
                 <input type="text" id="sell-txid" class="glass-inp" placeholder="Hash..." style="font-size:0.8rem">
             </div>
+
             <button id="btn-sell" class="btn-submit bg-red" onclick="submitSell()">
                 <i class="fas fa-check-circle"></i> ثبت فروش
             </button>
         </div>
+
     </div>
 
     <div id="status-modal" class="modal-overlay">
@@ -186,8 +212,14 @@
         function setMode(mode) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active', 'buy-mode', 'sell-mode'));
             document.querySelectorAll('.form-section').forEach(f => f.classList.remove('active'));
-            if(mode === 'buy') { document.querySelector('.tab-btn:nth-child(1)').classList.add('active', 'buy-mode'); document.getElementById('buy-form').classList.add('active'); }
-            else { document.querySelector('.tab-btn:nth-child(2)').classList.add('active', 'sell-mode'); document.getElementById('sell-form').classList.add('active'); }
+            
+            if(mode === 'buy') { 
+                document.querySelector('.tab-btn:nth-child(1)').classList.add('active', 'buy-mode'); 
+                document.getElementById('buy-form').classList.add('active'); 
+            } else { 
+                document.querySelector('.tab-btn:nth-child(2)').classList.add('active', 'sell-mode'); 
+                document.getElementById('sell-form').classList.add('active'); 
+            }
         }
 
         async function fetchRates() {
@@ -208,7 +240,9 @@
             const addr = WALLETS[net];
             document.getElementById('admin-wallet-address').innerText = (addr && addr.length > 5) ? addr : "تنظیم نشده"; 
         }
+        
         function copyAddress() { navigator.clipboard.writeText(document.getElementById('admin-wallet-address').innerText); tg.showAlert("✅ آدرس کپی شد!"); }
+
         function calc(mode) {
             const amount = parseFloat(document.getElementById(mode + '-amount').value);
             const displayEl = document.getElementById(mode + '-total');
@@ -216,28 +250,52 @@
             let price = (mode === 'buy') ? rates.buy : rates.sell;
             displayEl.innerHTML = `${parseInt(amount * price).toLocaleString()} <span style="font-size:0.7rem">تومان</span>`;
         }
+
         async function submitBuy() {
             const amount = parseFloat(document.getElementById('buy-amount').value);
             const address = document.getElementById('buy-address').value;
             if(!amount || amount < 2) { tg.showAlert("حداقل خرید ۲ تتر."); return; }
             if(address.length < 10) { tg.showAlert("آدرس نامعتبر."); return; }
+            
             document.getElementById('status-modal').classList.add('active');
+            
             try {
-                const res = await fetch(`${API_BASE_URL}/webapp/usdt/buy`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ initData: tg.initData, amount: amount, address: address, network: document.getElementById('buy-network').value }) });
+                const res = await fetch(`${API_BASE_URL}/webapp/usdt/buy`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ initData: tg.initData, amount: amount, address: address, network: document.getElementById('buy-network').value })
+                });
                 const data = await res.json();
-                if (data.status === 'success') { tg.showAlert("✅ درخواست ثبت شد"); location.reload(); } else { tg.showAlert("❌ " + data.message); document.getElementById('status-modal').classList.remove('active'); }
+                if (data.status === 'success') { 
+                    tg.showAlert("✅ درخواست ثبت شد"); 
+                    location.reload(); 
+                } else { 
+                    tg.showAlert("❌ " + data.message); 
+                    document.getElementById('status-modal').classList.remove('active'); 
+                }
             } catch (e) { tg.showAlert("خطای شبکه"); document.getElementById('status-modal').classList.remove('active'); }
         }
+
         async function submitSell() {
             const amount = parseFloat(document.getElementById('sell-amount').value);
             const txid = document.getElementById('sell-txid').value;
             if(!amount || amount < 2) { tg.showAlert("حداقل فروش ۲ تتر."); return; }
             if(txid.length < 10) { tg.showAlert("TxID نامعتبر."); return; }
+            
             document.getElementById('status-modal').classList.add('active');
+            
             try {
-                const res = await fetch(`${API_BASE_URL}/webapp/usdt/sell`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ initData: tg.initData, amount: amount, txid: txid, network: document.getElementById('sell-network').value }) });
+                const res = await fetch(`${API_BASE_URL}/webapp/usdt/sell`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ initData: tg.initData, amount: amount, txid: txid, network: document.getElementById('sell-network').value })
+                });
                 const data = await res.json();
-                if (data.status === 'success') { tg.showAlert("✅ فروش ثبت شد"); location.reload(); } else { tg.showAlert("❌ " + data.message); document.getElementById('status-modal').classList.remove('active'); }
+                if (data.status === 'success') { 
+                    tg.showAlert("✅ فروش ثبت شد"); 
+                    location.reload();
+                } else { 
+                    tg.showAlert("❌ " + data.message); 
+                    document.getElementById('status-modal').classList.remove('active'); 
+                }
             } catch (e) { tg.showAlert("خطا در ارتباط"); document.getElementById('status-modal').classList.remove('active'); }
         }
     </script>

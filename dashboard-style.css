@@ -1,23 +1,23 @@
-﻿/* webapp/dashboard-style.css (v35.0 - Final Production Gold Edition) */
+﻿/* webapp/dashboard-style.css (v40.0 - Floating Hero Logo & Luxury Theme) */
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;300;400;500;700;800;900&display=swap');
 
 :root {
-    /* --- پالت رنگی اختصاصی کوین باران --- */
-    --bg-deep: #000000;          /* مشکی مطلق */
-    --bg-card: #111111;          /* رنگ کارت‌ها */
-    --gold-primary: #F0B90B;     /* طلایی بایننس */
+    /* --- پالت رنگی اختصاصی --- */
+    --bg-deep: #000000;
+    --bg-card: #111111;
+    --gold-primary: #F0B90B;
     --gold-dim: rgba(240, 185, 11, 0.15);
     
     --text-white: #ffffff;
-    --text-muted: #848E9C;       /* خاکستری استاندارد تریدینگ */
+    --text-muted: #848E9C;
     
     --glass-border: rgba(255, 255, 255, 0.08);
     --glass-highlight: rgba(255, 255, 255, 0.05);
     
     /* --- رنگ‌های وضعیت --- */
-    --color-up: #0ECB81;         /* سبز صعودی */
-    --color-down: #F6465D;       /* قرمز نزولی */
-    --color-blue: #3B82F6;       /* آبی سیستمی */
+    --color-up: #0ECB81;
+    --color-down: #F6465D;
+    --color-blue: #3B82F6;
     
     /* --- ابعاد --- */
     --radius-xl: 24px;
@@ -25,7 +25,7 @@
     --radius-md: 12px;
 }
 
-/* --- تنظیمات پایه و ریست --- */
+/* --- تنظیمات پایه --- */
 * {
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
@@ -44,7 +44,7 @@ body {
     position: relative;
 }
 
-/* --- افکت‌های پس‌زمینه (Ambient Glow) --- */
+/* --- پس‌زمینه نوری (Ambient Glow) --- */
 .ambient-glow {
     position: fixed;
     width: 250px; height: 250px;
@@ -60,7 +60,7 @@ body {
 }
 .glow-bottom {
     bottom: -80px; right: -50px;
-    background: #1a237e; /* سایه آبی عمیق برای کنتراست */
+    background: #1a237e;
 }
 
 .scanlines {
@@ -71,7 +71,7 @@ body {
     z-index: -1;
 }
 
-/* --- لودر اختصاصی (Logo Animation) --- */
+/* --- لودر اختصاصی --- */
 #loader {
     position: fixed; inset: 0;
     background: #000;
@@ -82,39 +82,22 @@ body {
 
 .loader-content { text-align: center; }
 
-/* استایل لوگوی بزرگ (صفحه لودینگ) */
-/* نکته: این تنظیمات عکس مربعی را دایره می‌کند */
+/* استایل لوگوی بزرگ در صفحه لودینگ */
 .main-logo-img {
     width: 130px; 
     height: 130px; 
-    object-fit: cover; /* پر کردن کامل دایره */
-    
-    border-radius: 50%; /* تبدیل مربع به دایره */
-    border: 2px solid var(--gold-primary); /* خط دور طلایی */
-    
+    object-fit: cover;
+    border-radius: 50%; /* دایره کردن کامل */
+    border: 2px solid var(--gold-primary);
     margin-bottom: 25px;
-    
-    /* درخشش اولیه */
     box-shadow: 0 0 30px rgba(240, 185, 11, 0.4);
-    
-    /* انیمیشن تپش */
     animation: logoPulse 2.5s infinite ease-in-out;
 }
 
 @keyframes logoPulse {
-    0% {
-        transform: scale(1);
-        box-shadow: 0 0 30px rgba(240, 185, 11, 0.4);
-    }
-    50% {
-        transform: scale(1.05); /* کمی بزرگ شدن */
-        /* افزایش درخشش در اوج تپش */
-        box-shadow: 0 0 50px rgba(240, 185, 11, 0.7), 0 0 80px rgba(240, 185, 11, 0.3);
-    }
-    100% {
-        transform: scale(1);
-        box-shadow: 0 0 30px rgba(240, 185, 11, 0.4);
-    }
+    0% { transform: scale(1); box-shadow: 0 0 30px rgba(240, 185, 11, 0.4); }
+    50% { transform: scale(1.05); box-shadow: 0 0 50px rgba(240, 185, 11, 0.7), 0 0 80px rgba(240, 185, 11, 0.3); }
+    100% { transform: scale(1); box-shadow: 0 0 30px rgba(240, 185, 11, 0.4); }
 }
 
 .brand-text {
@@ -126,14 +109,13 @@ body {
 }
 .loading-status { font-size: 0.75rem; color: var(--text-muted); }
 
-/* --- کانتینر اصلی اپلیکیشن --- */
+/* --- کانتینر اصلی و انیمیشن ورود --- */
 .glass-wrapper {
     height: 100%;
     display: flex; flex-direction: column;
-    transition: opacity 0.8s ease-out; /* ترنزیشن نرم برای فید شدن */
+    transition: opacity 0.8s ease-out;
 }
 
-/* کلاس‌های مربوط به انیمیشن ورود بعد از لودر */
 .hidden-content { opacity: 0; pointer-events: none; }
 .fade-in-active { 
     opacity: 1; pointer-events: all; 
@@ -146,7 +128,7 @@ body {
 
 .hidden { display: none !important; }
 
-/* --- هدر شیشه‌ای --- */
+/* --- هدر --- */
 .glass-header {
     padding: 15px 20px;
     display: flex; justify-content: space-between; align-items: center;
@@ -198,13 +180,47 @@ body {
     border-radius: 50%; border: 1px solid #000;
 }
 
-/* --- ناحیه اسکرول (Main) --- */
+/* --- محتوای اصلی --- */
 .main-scroll-area {
     flex: 1; overflow-y: auto; overflow-x: hidden;
     padding: 20px; position: relative;
 }
 
-/* --- کارت موجودی (Hero Card) --- */
+/* --- استایل لوگوی شناور (Hero Logo) --- */
+.hero-logo-section {
+    display: flex; justify-content: center; align-items: center;
+    position: relative; 
+    margin-bottom: -35px; /* تداخل با کارت برای زیبایی */
+    z-index: 10; 
+    pointer-events: none; /* تا جلوی تاچ را نگیرد */
+    padding-top: 10px;
+}
+
+.hero-logo-img {
+    width: 75px; height: 75px; 
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px solid var(--gold-primary);
+    background: #000; /* جلوگیری از دیده شدن خط کارت */
+    box-shadow: 0 0 25px rgba(240, 185, 11, 0.6);
+    animation: floatingLogo 4s ease-in-out infinite;
+}
+
+.glow-point {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 100px; height: 100px; 
+    background: var(--gold-primary);
+    filter: blur(45px); opacity: 0.4; 
+    z-index: -1;
+}
+
+@keyframes floatingLogo {
+    0% { transform: translateY(0); box-shadow: 0 0 25px rgba(240, 185, 11, 0.6); }
+    50% { transform: translateY(-10px); box-shadow: 0 10px 40px rgba(240, 185, 11, 0.9); }
+    100% { transform: translateY(0); box-shadow: 0 0 25px rgba(240, 185, 11, 0.6); }
+}
+
+/* --- کارت موجودی --- */
 .asset-card {
     background: linear-gradient(160deg, #1e1e1e 0%, #050505 100%);
     border-radius: var(--radius-xl);
@@ -237,19 +253,20 @@ body {
 }
 .chip-icon { font-size: 2rem; color: #ffffff20; transform: rotate(90deg); }
 
-/* استایل لوگوی کوچک داخل کارت */
+/* لوگوی کوچک داخل کارت */
 .card-brand-logo { 
     display: flex; align-items: center; gap: 8px;
 }
 .mini-card-logo {
-    width: 28px; height: 28px; /* سایز لوگوی کوچک */
-    border-radius: 50%; /* دایره کردن */
+    width: 28px; height: 28px; 
+    border-radius: 50%;
     object-fit: cover;
-    border: 1px solid var(--gold-primary); /* حاشیه طلایی ظریف */
-    box-shadow: 0 0 10px rgba(240, 185, 11, 0.4); /* درخشش کوچک */
+    border: 1px solid var(--gold-primary);
+    box-shadow: 0 0 10px rgba(240, 185, 11, 0.4);
 }
 .card-brand-logo span { 
-    font-size: 0.8rem; letter-spacing: 2px; color: var(--text-muted); font-weight: 700;
+    font-size: 0.8rem; letter-spacing: 2px; 
+    color: var(--text-muted); font-weight: 700;
 }
 
 .balance-display { margin-bottom: 25px; position: relative; z-index: 2; text-align: right; }
@@ -274,7 +291,7 @@ body {
 .color-xp { color: var(--gold-primary); }
 .align-left { align-items: flex-end; }
 
-/* --- دسترسی سریع (Action Grid) --- */
+/* --- گرید دسترسی سریع --- */
 .quick-access-grid {
     display: grid; grid-template-columns: repeat(4, 1fr);
     gap: 12px; margin-bottom: 30px;
@@ -294,76 +311,42 @@ body {
 }
 .action-item:active .action-icon { transform: scale(0.9); }
 
-.deposit-glow { color: var(--color-up); box-shadow: 0 0 0 rgba(14, 203, 129, 0); }
+.deposit-glow { color: var(--color-up); } 
 .action-item:hover .deposit-glow { box-shadow: 0 0 15px rgba(14, 203, 129, 0.2); border-color: rgba(14, 203, 129, 0.4); }
 
-.withdraw-glow { color: var(--color-down); }
+.withdraw-glow { color: var(--color-down); } 
 .action-item:hover .withdraw-glow { box-shadow: 0 0 15px rgba(246, 70, 93, 0.2); border-color: rgba(246, 70, 93, 0.4); }
 
-.trade-glow { color: var(--color-blue); }
+.trade-glow { color: var(--color-blue); } 
 .action-item:hover .trade-glow { box-shadow: 0 0 15px rgba(59, 130, 246, 0.2); border-color: rgba(59, 130, 246, 0.4); }
 
-.kyc-glow { color: var(--gold-primary); }
+.kyc-glow { color: var(--gold-primary); } 
 .action-item:hover .kyc-glow { box-shadow: 0 0 15px rgba(240, 185, 11, 0.2); border-color: rgba(240, 185, 11, 0.4); }
 
-/* --- بخش سرویس‌ها --- */
+/* --- سرویس‌ها --- */
 .services-section { display: flex; flex-direction: column; gap: 15px; }
 .section-title h3 {
     margin: 0 0 15px 0; font-size: 1rem; color: #fff;
-    border-right: 3px solid var(--gold-primary);
-    padding-right: 10px;
+    border-right: 3px solid var(--gold-primary); padding-right: 10px;
 }
 
-/* کارت بازی ویژه */
 .featured-game-card {
     position: relative; height: 120px;
-    border-radius: var(--radius-lg);
-    overflow: hidden; cursor: pointer;
-    border: 1px solid rgba(59, 130, 246, 0.3);
-    margin-bottom: 5px;
+    border-radius: var(--radius-lg); overflow: hidden; cursor: pointer;
+    border: 1px solid rgba(59, 130, 246, 0.3); margin-bottom: 5px;
 }
-.game-bg {
-    position: absolute; inset: 0;
-    background: linear-gradient(90deg, #000 0%, #1a237e 100%);
-    z-index: 1;
-}
-.game-bg::after {
-    content: "GAME"; position: absolute; right: 10px; bottom: -10px;
-    font-size: 4rem; font-weight: 900; color: rgba(255,255,255,0.05);
-}
-.game-content {
-    position: relative; z-index: 2; height: 100%;
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 20px;
-}
+.game-bg { position: absolute; inset: 0; background: linear-gradient(90deg, #000 0%, #1a237e 100%); z-index: 1; }
+.game-bg::after { content: "GAME"; position: absolute; right: 10px; bottom: -10px; font-size: 4rem; font-weight: 900; color: rgba(255,255,255,0.05); }
+.game-content { position: relative; z-index: 2; height: 100%; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; }
 .game-info h4 { margin: 0 0 5px 0; font-size: 1.1rem; color: #fff; text-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
 .game-info p { margin: 0; font-size: 0.75rem; color: #aaa; }
+.play-button { background: var(--color-blue); color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); display: flex; gap: 6px; align-items: center; }
 
-.play-button {
-    background: var(--color-blue); color: #fff;
-    padding: 8px 16px; border-radius: 20px;
-    font-size: 0.8rem; font-weight: 700;
-    box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
-    display: flex; gap: 6px; align-items: center;
-}
-
-/* گرید سرویس‌ها */
-.services-grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
-}
-.glass-panel {
-    background: #111; border: 1px solid var(--glass-border);
-    border-radius: var(--radius-md); padding: 15px;
-    display: flex; flex-direction: column; gap: 12px;
-    cursor: pointer; transition: background 0.2s;
-}
+.services-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.glass-panel { background: #111; border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 15px; display: flex; flex-direction: column; gap: 12px; cursor: pointer; transition: background 0.2s; }
 .glass-panel:active { background: #222; }
 
-.srv-icon {
-    width: 36px; height: 36px; border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.1rem;
-}
+.srv-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
 .usdt-theme { background: rgba(14, 203, 129, 0.1); color: var(--color-up); }
 .utopia-theme { background: rgba(255, 0, 122, 0.1); color: #FF007A; }
 .live-theme { background: rgba(255, 255, 255, 0.1); color: #fff; }
@@ -372,7 +355,6 @@ body {
 .srv-text h5 { margin: 0 0 3px 0; font-size: 0.9rem; color: #eee; }
 .srv-text span { font-size: 0.7rem; color: #666; }
 
-/* نوار بلور پایین */
 .bottom-blur-bar {
     position: fixed; bottom: 0; left: 0; width: 100%; height: 20px;
     background: linear-gradient(to top, #000 0%, transparent 100%);

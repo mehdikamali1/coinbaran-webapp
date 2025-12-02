@@ -1,4 +1,4 @@
-﻿/* webapp/dashboard-style.css (v85.0 - Golden Infinity Edition) */
+﻿/* webapp/dashboard-style.css (v86.0 - Thick Golden Infinity) */
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;300;400;500;700;800;900&family=Cinzel:wght@400;700;900&display=swap');
 
 :root {
@@ -28,7 +28,7 @@ body {
 }
 
 /* =========================================
-   1. انیمیشن ورودی (The Golden Infinity)
+   1. انیمیشن ورودی (The Thick Infinity)
    ========================================= */
 #loader {
     position: fixed; inset: 0;
@@ -40,14 +40,13 @@ body {
     transition: opacity 1.5s ease-in-out;
 }
 
-/* کانتینر مرکزی برای بی‌نهایت و لوگو */
+/* کانتینر مرکزی */
 .infinity-container {
     position: relative;
-    width: 320px; height: 160px;
+    width: 340px; height: 170px;
     display: flex; align-items: center; justify-content: center;
 }
 
-/* SVG نماد بی‌نهایت */
 .infinity-svg {
     position: absolute; top: 0; left: 0;
     width: 100%; height: 100%;
@@ -55,39 +54,40 @@ body {
     overflow: visible;
 }
 
-/* مسیر پس‌زمینه (کم‌رنگ) */
+/* مسیر پس‌زمینه (ضخیم‌تر) */
 .infinity-bg {
-    stroke: rgba(255, 255, 255, 0.05);
-    stroke-width: 2;
+    stroke: rgba(255, 255, 255, 0.08);
+    stroke-width: 10; /* ضخامت بیشتر برای زمینه */
+    stroke-linecap: round;
 }
 
-/* مسیر اصلی (رسم شدن) */
+/* مسیر اصلی متحرک (خیلی ضخیم و طلایی) */
 .infinity-path {
-    stroke: url(#goldGradient); /* گرادیانت طلایی تعریف شده در HTML */
-    stroke-width: 4;
+    stroke: url(#goldGradient);
+    stroke-width: 12; /* ضخامت اصلی بسیار بالا */
     stroke-linecap: round;
-    stroke-dasharray: 800; /* طول تقریبی مسیر */
-    stroke-dashoffset: 800; /* شروع از حالت مخفی */
-    animation: draw-infinity 4s ease-out forwards, flow-light 3s linear infinite 4s;
-    filter: drop-shadow(0 0 8px var(--gold-primary));
+    stroke-dasharray: 900; 
+    stroke-dashoffset: 900; 
+    /* انیمیشن رسم شدن (۴ ثانیه) + جریان نور (تکرار بی‌پایان) */
+    animation: draw-infinity 4s ease-out forwards, flow-light 2.5s linear infinite 4s;
+    filter: drop-shadow(0 0 15px rgba(240, 185, 11, 0.6)); /* درخشش بیشتر */
 }
 
 /* لوگوی شناور در مرکز */
 .center-logo {
     position: absolute;
-    width: 80px; height: 80px;
+    width: 90px; height: 90px; /* کمی بزرگتر */
     border-radius: 50%;
     z-index: 10;
-    box-shadow: 0 0 50px rgba(240, 185, 11, 0.3);
-    animation: logo-float 4s ease-in-out infinite;
-    opacity: 0; /* ابتدا مخفی */
-    animation: logo-appear 1.5s ease-out forwards 1s, logo-float 4s ease-in-out infinite 1.5s;
-    border: 2px solid rgba(240, 185, 11, 0.2);
+    box-shadow: 0 0 60px rgba(240, 185, 11, 0.4);
+    opacity: 0;
+    border: 3px solid rgba(240, 185, 11, 0.3);
+    animation: logo-appear 2s ease-out forwards 1.5s, logo-pulse 3s ease-in-out infinite 3.5s;
 }
 
 /* متن سینمایی پایین */
 .loader-text-wrapper {
-    margin-top: 40px;
+    margin-top: 50px;
     text-align: center;
     position: relative;
     z-index: 20;
@@ -95,25 +95,26 @@ body {
 
 .luxury-title {
     font-family: 'Cinzel', serif;
-    font-size: 2.2rem;
-    font-weight: 700;
-    letter-spacing: 5px;
+    font-size: 2.4rem;
+    font-weight: 900;
+    letter-spacing: 6px;
     color: transparent;
-    background: linear-gradient(to bottom, #FFD700, #B8860B);
+    background: linear-gradient(to bottom, #FFD700 20%, #B8860B 80%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     opacity: 0;
-    animation: text-fade-up 1.5s ease-out forwards 2s;
-    text-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    animation: text-fade-up 1.5s ease-out forwards 2.5s;
+    text-shadow: 0 10px 40px rgba(240, 185, 11, 0.2);
 }
 
+/* نوار لودینگ */
 .loading-bar-container {
-    width: 200px; height: 2px;
+    width: 220px; height: 4px; /* کمی ضخیم‌تر */
     background: rgba(255,255,255,0.1);
-    margin: 15px auto;
+    margin: 20px auto;
     position: relative;
     overflow: hidden;
-    border-radius: 2px;
+    border-radius: 4px;
     opacity: 0;
     animation: fade-in 1s ease forwards 3s;
 }
@@ -122,16 +123,18 @@ body {
     position: absolute; top: 0; left: 0; height: 100%; width: 100%;
     background: var(--gold-primary);
     transform: translateX(-100%);
-    animation: load-progress 12s linear forwards 3s; /* پر شدن در طول زمان باقی‌مانده */
-    box-shadow: 0 0 10px var(--gold-primary);
+    /* پر شدن در طول ۱۷ ثانیه (با احتساب ۳ ثانیه تاخیر اولیه = ۲۰ ثانیه کل) */
+    animation: load-progress 17s linear forwards 3s; 
+    box-shadow: 0 0 15px var(--gold-primary);
 }
 
 .status-msg {
     font-family: 'Roboto Mono', monospace;
-    font-size: 0.7rem; color: #666;
-    letter-spacing: 2px;
+    font-size: 0.75rem; color: #888;
+    letter-spacing: 3px;
     opacity: 0;
-    animation: text-fade-up 1s ease forwards 3.5s;
+    animation: text-fade-up 1s ease forwards 4s;
+    text-transform: uppercase;
 }
 
 /* --- انیمیشن‌ها --- */
@@ -140,19 +143,19 @@ body {
 }
 
 @keyframes flow-light {
-    0% { filter: drop-shadow(0 0 5px var(--gold-dark)); stroke-width: 4; }
-    50% { filter: drop-shadow(0 0 15px var(--gold-primary)); stroke-width: 5; }
-    100% { filter: drop-shadow(0 0 5px var(--gold-dark)); stroke-width: 4; }
+    0% { filter: drop-shadow(0 0 5px var(--gold-dark)); stroke-opacity: 0.8; }
+    50% { filter: drop-shadow(0 0 25px var(--gold-pure)); stroke-opacity: 1; stroke-width: 14; } /* تپش ضخامت */
+    100% { filter: drop-shadow(0 0 5px var(--gold-dark)); stroke-opacity: 0.8; }
 }
 
 @keyframes logo-appear {
-    from { opacity: 0; transform: scale(0.5); }
-    to { opacity: 1; transform: scale(1); }
+    from { opacity: 0; transform: scale(0.5) rotate(-90deg); }
+    to { opacity: 1; transform: scale(1) rotate(0deg); }
 }
 
-@keyframes logo-float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
+@keyframes logo-pulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 40px rgba(240, 185, 11, 0.3); }
+    50% { transform: scale(1.08); box-shadow: 0 0 70px rgba(240, 185, 11, 0.6); }
 }
 
 @keyframes text-fade-up {

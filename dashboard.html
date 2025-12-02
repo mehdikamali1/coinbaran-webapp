@@ -218,7 +218,7 @@
                 window.Telegram.WebApp.setHeaderColor('#000000'); // مشکی مطلق برای لودر
             }
             
-            // تایمر ۸.۵ ثانیه‌ای برای نمایش کامل انیمیشن‌ها
+            // افزایش زمان به ۱۲ ثانیه برای لذت بردن از انیمیشن
             setTimeout(function() {
                 const loader = document.getElementById('loader');
                 const app = document.getElementById('app-container');
@@ -232,7 +232,7 @@
                     app.classList.remove('hidden-content');
                     app.classList.add('fade-in-active');
                     
-                    // برگرداندن رنگ هدر به رنگ تم بعد از لود
+                    // برگرداندن رنگ هدر به رنگ تم
                     if(window.Telegram && window.Telegram.WebApp) {
                         window.Telegram.WebApp.setHeaderColor('#050505');
                         window.Telegram.WebApp.setBackgroundColor('#050505');
@@ -240,7 +240,7 @@
                 }
                 
                 setTimeout(() => { if(loader) loader.style.display = 'none'; }, 1000);
-            }, 8500); 
+            }, 12000); // 12000ms = 12 Seconds
         });
     </script>
 </body>

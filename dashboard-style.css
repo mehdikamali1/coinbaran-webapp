@@ -1,343 +1,343 @@
-﻿/* webapp/dashboard-style.css (v42.0 - Final Header Logo Edition) */
-@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;300;400;500;700;800;900&display=swap');
+﻿/* webapp/dashboard-style.css (v71.0 - Platinum Black & Logo Restore Edition) */
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700;800&family=Roboto+Mono:wght@400;500;700&display=swap');
 
 :root {
-    /* --- پالت رنگی اختصاصی --- */
-    --bg-deep: #000000;
-    --bg-card: #111111;
-    --gold-primary: #F0B90B;
-    --gold-dim: rgba(240, 185, 11, 0.15);
-    
-    --text-white: #ffffff;
-    --text-muted: #848E9C;
-    
+    /* --- پالت رنگی هسته --- */
+    --bg-deep: #050505;
+    --bg-surface: #121212;
+    --glass-bg: rgba(20, 20, 20, 0.65);
     --glass-border: rgba(255, 255, 255, 0.08);
-    --glass-highlight: rgba(255, 255, 255, 0.05);
     
-    /* --- رنگ‌های وضعیت --- */
-    --color-up: #0ECB81;
-    --color-down: #F6465D;
-    --color-blue: #3B82F6;
+    --primary-gold: #F0B90B;
+    --accent-green: #0ECB81;
+    --accent-red: #F6465D;
+    --accent-blue: #3B82F6;
+    --accent-purple: #8B5CF6;
     
-    /* --- ابعاد --- */
+    --text-main: #FFFFFF;
+    --text-muted: #848E9C;
+
+    /* --- گرادیانت‌ها و افکت‌ها --- */
+    --card-gradient: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+    --card-shine: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+    
     --radius-xl: 24px;
     --radius-lg: 16px;
     --radius-md: 12px;
+    
+    --safe-area-bottom: env(safe-area-inset-bottom, 20px);
 }
 
-/* --- تنظیمات پایه --- */
-* {
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
-    outline: none;
-    user-select: none;
-}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; user-select: none; }
 
 body {
     margin: 0; padding: 0;
     font-family: 'Vazirmatn', sans-serif;
     background-color: var(--bg-deep);
-    color: var(--text-white);
-    height: 100vh;
-    overflow: hidden;
+    color: var(--text-main);
+    min-height: 100vh;
+    overflow-x: hidden;
     direction: rtl;
-    position: relative;
 }
 
-/* --- پس‌زمینه نوری (Ambient Glow) --- */
+#app-container {
+    max-width: 600px; margin: 0 auto;
+    position: relative; z-index: 2;
+    min-height: 100vh; display: flex; flex-direction: column;
+}
+
+/* =========================================
+   1. پس‌زمینه و لودر (Ambient & Loader)
+   ========================================= */
 .ambient-glow {
-    position: fixed;
-    width: 250px; height: 250px;
-    border-radius: 50%;
-    filter: blur(90px);
-    z-index: -1;
-    opacity: 0.3;
-    pointer-events: none;
+    position: fixed; width: 300px; height: 300px;
+    border-radius: 50%; filter: blur(120px);
+    z-index: 1; opacity: 0.35; pointer-events: none;
 }
-.glow-top {
-    top: -80px; left: -50px;
-    background: var(--gold-primary);
-}
-.glow-bottom {
-    bottom: -80px; right: -50px;
-    background: #1a237e;
-}
+.glow-top { top: -100px; left: -50px; background: radial-gradient(circle, rgba(240,185,11,0.2) 0%, transparent 70%); }
+.glow-bottom { bottom: -100px; right: -50px; background: radial-gradient(circle, rgba(59,130,246,0.15) 0%, transparent 70%); }
 
-.scanlines {
+.grid-overlay {
     position: fixed; inset: 0;
-    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
-    background-size: 100% 4px;
-    pointer-events: none;
-    z-index: -1;
+    background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
+    background-size: 30px 30px;
+    z-index: 1; pointer-events: none;
+    mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
 }
 
-/* --- لودر اختصاصی (Logo Animation) --- */
+/* --- تنظیمات لودر --- */
 #loader {
-    position: fixed; inset: 0;
-    background: #000;
-    z-index: 9999;
-    display: flex; align-items: center; justify-content: center;
+    position: fixed; inset: 0; background: #000;
+    z-index: 9999; display: flex; align-items: center; justify-content: center;
     transition: opacity 0.5s ease;
 }
+.loader-content { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 20px; }
 
-.loader-content { text-align: center; }
-
-/* استایل لوگوی بزرگ (صفحه لودینگ) */
+/* بازگردانی استایل لوگوی اصلی (Main Logo Restore) */
 .main-logo-img {
-    width: 130px; 
-    height: 130px; 
-    object-fit: cover;
-    border-radius: 50%; /* دایره کردن کامل */
-    border: 2px solid var(--gold-primary);
-    margin-bottom: 25px;
-    box-shadow: 0 0 30px rgba(240, 185, 11, 0.4);
+    width: 120px; height: 120px;
+    object-fit: cover; border-radius: 50%;
+    border: 3px solid var(--primary-gold);
+    box-shadow: 0 0 40px rgba(240, 185, 11, 0.4);
     animation: logoPulse 2.5s infinite ease-in-out;
+    margin-bottom: 10px;
 }
 
-@keyframes logoPulse {
-    0% { transform: scale(1); box-shadow: 0 0 30px rgba(240, 185, 11, 0.4); }
-    50% { transform: scale(1.05); box-shadow: 0 0 50px rgba(240, 185, 11, 0.7), 0 0 80px rgba(240, 185, 11, 0.3); }
-    100% { transform: scale(1); box-shadow: 0 0 30px rgba(240, 185, 11, 0.4); }
+/* اسپینر مدرن (جایگزین احتمالی) */
+.spinner-premium {
+    width: 60px; height: 60px;
+    border: 3px solid rgba(240, 185, 11, 0.1);
+    border-top-color: var(--primary-gold); border-radius: 50%;
+    animation: spin 1s cubic-bezier(0.55, 0.055, 0.675, 0.19) infinite;
+    box-shadow: 0 0 30px rgba(240, 185, 11, 0.2);
 }
 
 .brand-text {
-    font-size: 1.2rem; font-weight: 800; letter-spacing: 3px;
-    background: linear-gradient(45deg, #fff, var(--gold-primary));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-bottom: 8px;
+    font-size: 1.5rem; font-weight: 900; letter-spacing: 4px;
+    background: linear-gradient(45deg, #fff, var(--primary-gold));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
 }
-.loading-status { font-size: 0.75rem; color: var(--text-muted); }
+.loading-status { font-size: 0.7rem; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
 
-/* --- کانتینر اصلی و انیمیشن ورود --- */
-.glass-wrapper {
-    height: 100%;
-    display: flex; flex-direction: column;
-    transition: opacity 0.8s ease-out;
+/* انیمیشن ورود محتوا */
+.hidden-content { opacity: 0; transform: translateY(20px); }
+.fade-in-active {
+    opacity: 1; transform: translateY(0);
+    transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.hidden-content { opacity: 0; pointer-events: none; }
-.fade-in-active { 
-    opacity: 1; pointer-events: all; 
-    animation: slideUpFade 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-@keyframes slideUpFade { 
-    from { opacity: 0; transform: translateY(20px); } 
-    to { opacity: 1; transform: translateY(0); } 
-}
-
-.hidden { display: none !important; }
-
-/* --- هدر شیشه‌ای --- */
+/* =========================================
+   2. هدر داشبورد
+   ========================================= */
 .glass-header {
     padding: 15px 20px;
     display: flex; justify-content: space-between; align-items: center;
-    background: rgba(0, 0, 0, 0.2);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
+    background: rgba(10, 10, 10, 0.6);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid var(--glass-border);
-    position: relative; z-index: 100;
+    position: sticky; top: 0; z-index: 100;
 }
 
 .profile-section { display: flex; align-items: center; gap: 12px; }
 
-.avatar-frame {
-    width: 44px; height: 44px;
-    border-radius: 12px;
-    background: linear-gradient(135deg, #222, #000);
-    display: flex; align-items: center; justify-content: center;
-    border: 1px solid var(--gold-dim);
-    position: relative;
-}
-.avatar-img { font-size: 1.4rem; }
-.online-dot {
-    position: absolute; bottom: -2px; right: -2px;
-    width: 10px; height: 10px; background: var(--color-up);
-    border: 2px solid #000; border-radius: 50%;
-    box-shadow: 0 0 5px var(--color-up);
-}
-
-/* --- استایل لوگوی جدید در هدر --- */
+/* بازگردانی لوگوی شناور هدر (Header Logo Restore) */
 .header-logo-container {
-    position: relative;
-    display: flex; align-items: center; justify-content: center;
-    margin-right: 5px; margin-left: 5px;
+    position: relative; display: flex; align-items: center; justify-content: center;
+    margin-left: 8px;
 }
-
 .header-logo-img {
-    width: 48px; height: 48px; /* سایز متناسب با هدر */
-    object-fit: cover;
-    border-radius: 50%;
-    border: 2px solid var(--gold-primary);
-    box-shadow: 0 0 15px rgba(240, 185, 11, 0.5);
+    width: 44px; height: 44px;
+    object-fit: cover; border-radius: 50%;
+    border: 2px solid var(--primary-gold);
+    box-shadow: 0 0 15px rgba(240, 185, 11, 0.4);
     animation: headerFloat 3s ease-in-out infinite;
 }
-
 .header-glow {
     position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    width: 55px; height: 55px;
-    background: var(--gold-primary);
-    filter: blur(20px); opacity: 0.3;
-    z-index: -1;
+    width: 50px; height: 50px; background: var(--primary-gold);
+    filter: blur(25px); opacity: 0.3; z-index: -1;
+}
+
+.avatar-frame {
+    width: 48px; height: 48px; border-radius: 14px;
+    background: linear-gradient(135deg, #222, #111);
+    padding: 2px; position: relative;
+    border: 1px solid rgba(240, 185, 11, 0.3);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+}
+.avatar-img { width: 100%; height: 100%; border-radius: 12px; object-fit: cover; }
+.online-dot {
+    position: absolute; bottom: -2px; right: -2px;
+    width: 12px; height: 12px; background: var(--accent-green);
+    border: 2px solid #000; border-radius: 50%;
+    box-shadow: 0 0 8px var(--accent-green);
+}
+
+.user-details { display: flex; flex-direction: column; justify-content: center; }
+#welcome-name { font-size: 1rem; font-weight: 800; margin: 0; color: #fff; line-height: 1.2; }
+.kyc-tag {
+    font-size: 0.65rem; color: var(--primary-gold);
+    background: rgba(240, 185, 11, 0.1); padding: 2px 6px; border-radius: 4px;
+    border: 1px solid rgba(240, 185, 11, 0.2); display: inline-block; margin-top: 4px;
+    font-weight: 700; letter-spacing: 0.5px;
+}
+
+.icon-btn {
+    width: 42px; height: 42px; border-radius: 12px;
+    background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
+    color: var(--text-main); display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; cursor: pointer; position: relative;
+}
+.badge-point {
+    position: absolute; top: 10px; right: 12px;
+    width: 8px; height: 8px; background: var(--accent-red);
+    border-radius: 50%; border: 1px solid #000;
+}
+
+.main-scroll-area { padding: 20px; overflow-y: auto; overflow-x: hidden; }
+
+/* =========================================
+   3. کارت دارایی (Platinum Asset Card)
+   ========================================= */
+.asset-card {
+    background: var(--card-gradient);
+    border-radius: var(--radius-xl);
+    padding: 24px; margin-bottom: 30px;
+    position: relative; overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 15px 40px -10px rgba(0,0,0,0.8);
+}
+
+/* افکت توری و درخشش */
+.card-mesh {
+    position: absolute; inset: 0;
+    background-image: radial-gradient(circle at 100% 0%, rgba(255,255,255,0.08) 0%, transparent 30%);
+    pointer-events: none;
+}
+.card-shine-effect {
+    position: absolute; top: 0; left: -150%;
+    width: 100%; height: 100%;
+    background: var(--card-shine); transform: skewX(-25deg);
+    animation: shine 8s infinite ease-in-out; pointer-events: none;
+}
+
+.card-top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; position: relative; z-index: 2; }
+.chip-icon { font-size: 2.2rem; color: rgba(255,255,255,0.15); transform: rotate(90deg); }
+.card-brand-text { font-size: 0.75rem; letter-spacing: 2px; color: var(--text-muted); font-weight: 800; opacity: 0.6; }
+
+.balance-display { text-align: right; margin-bottom: 25px; position: relative; z-index: 2; }
+.label-muted { font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 6px; }
+.amount-row { display: flex; align-items: baseline; gap: 8px; justify-content: flex-end; }
+.main-digit {
+    font-size: 2.4rem; font-weight: 900; margin: 0; color: #fff;
+    font-family: 'Roboto Mono', monospace; letter-spacing: -1.5px;
+    text-shadow: 0 0 25px rgba(255,255,255,0.15);
+}
+.currency-symbol { color: var(--primary-gold); font-size: 1rem; font-weight: 700; }
+
+.card-footer-row {
+    display: flex; justify-content: space-between; align-items: center;
+    background: rgba(0,0,0,0.2); border-radius: 12px; padding: 12px;
+    border: 1px solid rgba(255,255,255,0.05); position: relative; z-index: 2;
+}
+.stat-item { display: flex; flex-direction: column; gap: 2px; }
+.stat-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; }
+.stat-value { font-family: 'Roboto Mono'; font-size: 1rem; font-weight: 700; }
+.stat-divider { width: 1px; height: 25px; background: rgba(255,255,255,0.1); }
+.color-usd { color: var(--accent-green); }
+.color-xp { color: var(--primary-gold); }
+
+/* =========================================
+   4. دسترسی سریع (Action Grid)
+   ========================================= */
+.section-label {
+    font-size: 0.9rem; font-weight: 700; color: var(--text-main);
+    margin-bottom: 15px; padding-right: 5px;
+    border-right: 3px solid var(--primary-gold); margin-right: 5px;
+}
+
+.quick-access-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 10px; margin-bottom: 35px;
+}
+.action-item {
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    cursor: pointer;
+}
+.action-item span { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; }
+
+.action-icon {
+    width: 56px; height: 56px; border-radius: 20px;
+    display: flex; align-items: center; justify-content: center; font-size: 1.4rem;
+    background: #111; border: 1px solid var(--glass-border);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+/* رنگ‌بندی نئونی آیکون‌ها */
+.deposit-theme { color: var(--accent-green); box-shadow: 0 0 15px rgba(14,203,129,0.05); }
+.withdraw-theme { color: var(--accent-red); box-shadow: 0 0 15px rgba(246,70,93,0.05); }
+.trade-theme { color: var(--accent-blue); box-shadow: 0 0 15px rgba(59,130,246,0.05); }
+.kyc-theme { color: var(--primary-gold); box-shadow: 0 0 15px rgba(240,185,11,0.05); }
+
+/* =========================================
+   5. ویجت بازی (Featured Game)
+   ========================================= */
+.featured-game-card {
+    position: relative; height: 140px; border-radius: var(--radius-lg);
+    overflow: hidden; cursor: pointer; border: 1px solid rgba(59,130,246,0.3);
+    margin-bottom: 15px;
+    background: linear-gradient(135deg, #0f172a 0%, #000 100%);
+    display: flex; align-items: center;
+}
+.game-glow {
+    position: absolute; top: -50px; right: -50px; width: 150px; height: 150px;
+    background: var(--accent-blue); filter: blur(80px); opacity: 0.4;
+}
+.game-content {
+    position: relative; z-index: 2; width: 100%; padding: 0 24px;
+    display: flex; align-items: center; gap: 20px;
+}
+.game-icon-box {
+    width: 60px; height: 60px; background: rgba(59,130,246,0.2);
+    border-radius: 16px; display: flex; align-items: center; justify-content: center;
+    font-size: 1.8rem; color: var(--accent-blue); border: 1px solid rgba(59,130,246,0.3);
+}
+.game-info { flex: 1; }
+.game-info h4 { margin: 0 0 6px 0; font-size: 1.2rem; color: #fff; font-weight: 800; }
+.game-info p { margin: 0; font-size: 0.8rem; color: var(--text-muted); }
+
+.play-button {
+    background: var(--accent-blue); color: #fff;
+    padding: 10px 20px; border-radius: 12px; font-weight: 800; font-size: 0.85rem;
+    box-shadow: 0 4px 15px rgba(59,130,246,0.4);
+    display: flex; align-items: center; gap: 8px;
+}
+
+/* =========================================
+   6. لیست سرویس‌ها (Grid)
+   ========================================= */
+.services-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.service-box {
+    background: rgba(20, 20, 20, 0.4); border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md); padding: 16px;
+    display: flex; flex-direction: column; gap: 12px;
+    cursor: pointer; transition: background 0.2s;
+}
+
+.srv-icon {
+    width: 40px; height: 40px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+}
+.usdt-icon-theme { background: rgba(14, 203, 129, 0.1); color: var(--accent-green); }
+.utopia-icon-theme { background: rgba(236, 72, 153, 0.1); color: #ec4899; }
+.live-icon-theme { background: rgba(255, 255, 255, 0.1); color: #fff; }
+.support-icon-theme { background: rgba(240, 185, 11, 0.1); color: var(--primary-gold); }
+
+.srv-text h5 { margin: 0 0 4px 0; font-size: 0.95rem; color: #eee; }
+.srv-text span { font-size: 0.75rem; color: #666; }
+
+/* =========================================
+   7. انیمیشن‌ها (Ripple & Effects)
+   ========================================= */
+.ripple-btn:active, .ripple-effect:active { transform: scale(0.96); opacity: 0.8; }
+
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+@keyframes shine { 
+    0% { left: -150%; } 
+    10% { left: 150%; } 
+    100% { left: 150%; } 
+}
+
+/* انیمیشن‌های بازگردانی شده برای لوگوها */
+@keyframes logoPulse {
+    0% { transform: scale(1); box-shadow: 0 0 40px rgba(240, 185, 11, 0.4); }
+    50% { transform: scale(1.05); box-shadow: 0 0 60px rgba(240, 185, 11, 0.6), 0 0 90px rgba(240, 185, 11, 0.3); }
+    100% { transform: scale(1); box-shadow: 0 0 40px rgba(240, 185, 11, 0.4); }
 }
 
 @keyframes headerFloat {
     0% { transform: translateY(0); }
     50% { transform: translateY(-3px); }
     100% { transform: translateY(0); }
-}
-
-.user-details { display: flex; flex-direction: column; justify-content: center; }
-.fade-in-text { font-size: 0.95rem; font-weight: 800; margin: 0; color: #fff; }
-.kyc-tag {
-    font-size: 0.7rem; color: var(--gold-primary);
-    background: rgba(240, 185, 11, 0.1);
-    padding: 1px 6px; border-radius: 4px;
-    border: 1px solid rgba(240, 185, 11, 0.2);
-    display: inline-block; margin-top: 4px;
-}
-
-.icon-btn {
-    width: 40px; height: 40px;
-    border-radius: 12px; background: rgba(255,255,255,0.03);
-    border: 1px solid var(--glass-border); color: #fff;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.1rem; cursor: pointer; position: relative;
-}
-.badge-point {
-    position: absolute; top: 10px; right: 10px;
-    width: 6px; height: 6px; background: var(--color-down);
-    border-radius: 50%; border: 1px solid #000;
-}
-
-/* --- محتوای اصلی --- */
-.main-scroll-area {
-    flex: 1; overflow-y: auto; overflow-x: hidden;
-    padding: 20px; position: relative;
-}
-
-/* --- کارت موجودی (Hero Card) --- */
-.asset-card {
-    background: linear-gradient(160deg, #1e1e1e 0%, #050505 100%);
-    border-radius: var(--radius-xl);
-    padding: 24px; margin-bottom: 25px;
-    position: relative; overflow: hidden;
-    border: 1px solid rgba(255,255,255,0.08);
-    box-shadow: 0 10px 40px -10px rgba(0,0,0,0.8);
-}
-.card-pattern-overlay {
-    position: absolute; inset: 0;
-    background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px);
-    background-size: 20px 20px; opacity: 0.5;
-}
-.card-shine-effect {
-    position: absolute; top: 0; left: -150%;
-    width: 100%; height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
-    transform: skewX(-20deg);
-    animation: shine 6s infinite; pointer-events: none;
-}
-@keyframes shine { 
-    0% { left: -150%; } 
-    20% { left: 150%; } 
-    100% { left: 150%; } 
-}
-
-.card-top-row {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 25px; position: relative; z-index: 2;
-}
-.chip-icon { font-size: 2rem; color: #ffffff20; transform: rotate(90deg); }
-.card-brand-text { font-size: 0.8rem; letter-spacing: 2px; color: var(--text-muted); font-weight: 700; }
-
-.balance-display { margin-bottom: 25px; position: relative; z-index: 2; text-align: right; }
-.label-muted { font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 6px; }
-.amount-row { display: flex; align-items: baseline; gap: 8px; }
-.main-digit {
-    font-size: 2.2rem; font-weight: 800; margin: 0; color: #fff;
-    font-family: monospace; letter-spacing: -1px;
-    text-shadow: 0 0 20px rgba(255,255,255,0.1);
-}
-.currency-symbol { color: var(--gold-primary); font-size: 1rem; font-weight: 500; }
-
-.card-footer-row {
-    display: flex; justify-content: space-between;
-    border-top: 1px solid rgba(255,255,255,0.05);
-    padding-top: 15px; position: relative; z-index: 2;
-}
-.stat-item { display: flex; flex-direction: column; gap: 2px; }
-.stat-label { font-size: 0.7rem; color: var(--text-muted); }
-.stat-value { font-family: monospace; font-size: 1.1rem; font-weight: 700; }
-.color-usd { color: var(--color-up); }
-.color-xp { color: var(--gold-primary); }
-.align-left { align-items: flex-end; }
-
-/* --- دسترسی سریع --- */
-.quick-access-grid {
-    display: grid; grid-template-columns: repeat(4, 1fr);
-    gap: 12px; margin-bottom: 30px;
-}
-.action-item {
-    display: flex; flex-direction: column; align-items: center; gap: 8px;
-    cursor: pointer;
-}
-.action-item span { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; }
-
-.action-icon {
-    width: 52px; height: 52px; border-radius: 18px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.3rem;
-    background: #111; border: 1px solid var(--glass-border);
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-.action-item:active .action-icon { transform: scale(0.9); }
-
-.deposit-glow { color: var(--color-up); } 
-.action-item:hover .deposit-glow { box-shadow: 0 0 15px rgba(14, 203, 129, 0.2); border-color: rgba(14, 203, 129, 0.4); }
-
-.withdraw-glow { color: var(--color-down); } 
-.action-item:hover .withdraw-glow { box-shadow: 0 0 15px rgba(246, 70, 93, 0.2); border-color: rgba(246, 70, 93, 0.4); }
-
-.trade-glow { color: var(--color-blue); } 
-.action-item:hover .trade-glow { box-shadow: 0 0 15px rgba(59, 130, 246, 0.2); border-color: rgba(59, 130, 246, 0.4); }
-
-.kyc-glow { color: var(--gold-primary); } 
-.action-item:hover .kyc-glow { box-shadow: 0 0 15px rgba(240, 185, 11, 0.2); border-color: rgba(240, 185, 11, 0.4); }
-
-/* --- سرویس‌ها --- */
-.services-section { display: flex; flex-direction: column; gap: 15px; }
-.section-title h3 {
-    margin: 0 0 15px 0; font-size: 1rem; color: #fff;
-    border-right: 3px solid var(--gold-primary); padding-right: 10px;
-}
-
-.featured-game-card {
-    position: relative; height: 120px;
-    border-radius: var(--radius-lg); overflow: hidden; cursor: pointer;
-    border: 1px solid rgba(59, 130, 246, 0.3); margin-bottom: 5px;
-}
-.game-bg { position: absolute; inset: 0; background: linear-gradient(90deg, #000 0%, #1a237e 100%); z-index: 1; }
-.game-bg::after { content: "GAME"; position: absolute; right: 10px; bottom: -10px; font-size: 4rem; font-weight: 900; color: rgba(255,255,255,0.05); }
-.game-content { position: relative; z-index: 2; height: 100%; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; }
-.game-info h4 { margin: 0 0 5px 0; font-size: 1.1rem; color: #fff; text-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
-.game-info p { margin: 0; font-size: 0.75rem; color: #aaa; }
-.play-button { background: var(--color-blue); color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); display: flex; gap: 6px; align-items: center; }
-
-.services-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.glass-panel { background: #111; border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 15px; display: flex; flex-direction: column; gap: 12px; cursor: pointer; transition: background 0.2s; }
-.glass-panel:active { background: #222; }
-
-.srv-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
-.usdt-theme { background: rgba(14, 203, 129, 0.1); color: var(--color-up); }
-.utopia-theme { background: rgba(255, 0, 122, 0.1); color: #FF007A; }
-.live-theme { background: rgba(255, 255, 255, 0.1); color: #fff; }
-.support-theme { background: rgba(240, 185, 11, 0.1); color: var(--gold-primary); }
-
-.srv-text h5 { margin: 0 0 3px 0; font-size: 0.9rem; color: #eee; }
-.srv-text span { font-size: 0.7rem; color: #666; }
-
-.bottom-blur-bar {
-    position: fixed; bottom: 0; left: 0; width: 100%; height: 20px;
-    background: linear-gradient(to top, #000 0%, transparent 100%);
-    pointer-events: none; z-index: 90;
 }

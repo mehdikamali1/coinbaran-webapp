@@ -1,16 +1,20 @@
-﻿/* webapp/kyc.js (v52.0 - Final Production Logic) */
+﻿/* webapp/kyc.js (v71.0 - Hybrid Logic) */
 (function () {
     'use strict';
 
     const tg = window.Telegram.WebApp;
     const API_BASE_URL = window.location.origin;
 
-    // عناصر صفحه
+    // Elements
     const loader = document.getElementById('loader');
-    const formContainer = document.querySelector('.form-container');
+    const formContainer = document.getElementById('kyc-form-container');
     const form = document.getElementById('kyc-form');
+    
+    // Status Cards
+    const cardVerified = document.getElementById('status-verified');
+    const cardPending = document.getElementById('status-pending');
 
-    // لیست تمام ورودی‌ها (برای دسترسی آسان)
+    // Inputs (Matches your original IDs)
     const inputs = {
         fullName: document.getElementById('full_name'),
         nationalId: document.getElementById('national_id'),
@@ -23,77 +27,106 @@
         selfie: document.getElementById('selfie_file')
     };
 
-    // --- تابع اصلی (Entry Point) ---
     window.onload = function() {
         tg.ready();
         tg.expand();
         tg.setHeaderColor('#050505');
         tg.setBackgroundColor('#050505');
 
-        // تنظیم دکمه اصلی تلگرام
-        tg.MainButton.setText("ارسال مدارک برای بررسی");
+        // Setup Main Button
+        tg.MainButton.setText("SUBMIT DOCUMENTS");
         tg.MainButton.setTextColor("#000000");
-        tg.MainButton.setColor("#D4AF37"); // رنگ طلایی
-        tg.MainButton.hide(); // فعلاً مخفی تا فرم پر شود
+        tg.MainButton.setColor("#F0B90B"); // Gold
+        tg.MainButton.hide(); 
 
-        // افزودن لیسنر به دکمه اصلی
         tg.MainButton.onClick(submitForm);
 
-        // راه‌اندازی لیسنرهای فرم
+        // 1. Check User Status First (Improved UX)
+        checkUserStatus();
+
+        // 2. Setup Listeners
         setupFormListeners();
     };
 
-    // --- مدیریت رویدادهای فرم ---
+    // --- New: Status Check Logic ---
+    async function checkUserStatus() {
+        if (!tg.initData) return; // Skip if dev mode without data
+        
+        try {
+            const res = await fetch(`${API_BASE_URL}/webapp/get_user_data`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ initData: tg.initData })
+            });
+            const data = await res.json();
+            
+            // Logic to handle status
+            if (data.kyc_status_code === 'verified') {
+                cardVerified.classList.add('visible');
+                formContainer.style.display = 'none'; // Hide form
+                tg.MainButton.hide();
+            } else if (data.kyc_status_code === 'pending') {
+                cardPending.classList.add('visible');
+                formContainer.innerHTML = '<div style="text-align:center; padding:30px; color:#888;">Your documents are currently under review.</div>';
+                tg.MainButton.hide();
+            } else {
+                // Not verified, show form
+                formContainer.style.opacity = '1';
+            }
+        } catch (e) {
+            console.error("Status Check Error:", e);
+        }
+    }
+
+    // --- Original Form Logic ---
     function setupFormListeners() {
-        // 1. برای فیلدهای متنی: بررسی پر شدن در هر تایپ
         const textInputs = [inputs.fullName, inputs.nationalId, inputs.birthDate, inputs.phoneNumber, inputs.cardNumber];
         textInputs.forEach(input => {
-            input.addEventListener('input', checkFormValidity);
+            if(input) input.addEventListener('input', checkFormValidity);
         });
 
-        // 2. برای فایل‌ها: نمایش نام فایل و تغییر استایل
         const fileInputs = [inputs.idFront, inputs.idBack, inputs.bankCard, inputs.selfie];
         fileInputs.forEach(input => {
-            input.addEventListener('change', function() {
-                const wrapper = this.closest('.file-upload-wrapper');
-                const textEl = wrapper.querySelector('.file-upload-text');
-                const iconEl = wrapper.querySelector('.file-upload-icon');
+            if(input) {
+                input.addEventListener('change', function() {
+                    const wrapper = this.closest('.file-upload-wrapper');
+                    const textEl = wrapper.querySelector('.file-upload-text');
+                    const iconEl = wrapper.querySelector('.file-upload-icon');
 
-                if (this.files && this.files.length > 0) {
-                    // فایل انتخاب شده
-                    wrapper.classList.add('file-selected');
-                    textEl.innerText = this.files[0].name; // نمایش نام فایل
-                    iconEl.classList.remove('fa-cloud-upload-alt'); 
-                    iconEl.classList.add('fa-check-circle'); // تغییر آیکون به تیک
-                } else {
-                    // فایل حذف شده
-                    wrapper.classList.remove('file-selected');
-                    textEl.innerText = "برای انتخاب فایل کلیک کنید";
-                    iconEl.classList.remove('fa-check-circle');
-                }
-                checkFormValidity();
-            });
+                    if (this.files && this.files.length > 0) {
+                        wrapper.classList.add('file-selected');
+                        textEl.innerText = this.files[0].name;
+                        // Use FontAwesome classes compatible with new design
+                        iconEl.className = 'fas fa-check-circle file-upload-icon'; 
+                        tg.HapticFeedback.selectionChanged();
+                    } else {
+                        wrapper.classList.remove('file-selected');
+                        textEl.innerText = "Select File";
+                        // Reset icon based on ID (simple logic)
+                        if(this.id.includes('camera') || this.id.includes('selfie')) iconEl.className = 'fas fa-camera file-upload-icon';
+                        else if(this.id.includes('bank')) iconEl.className = 'fas fa-credit-card file-upload-icon';
+                        else iconEl.className = 'fas fa-id-card file-upload-icon';
+                    }
+                    checkFormValidity();
+                });
+            }
         });
     }
 
-    // --- بررسی اعتبار فرم ---
     function checkFormValidity() {
         let isValid = true;
 
-        // بررسی فیلدهای متنی
         if (!inputs.fullName.value.trim()) isValid = false;
-        if (inputs.nationalId.value.length !== 10) isValid = false;
+        if (inputs.nationalId.value.length < 10) isValid = false;
         if (!inputs.birthDate.value.trim()) isValid = false;
         if (inputs.phoneNumber.value.length < 10) isValid = false;
-        if (inputs.cardNumber.value.length !== 16) isValid = false;
+        if (inputs.cardNumber.value.length < 16) isValid = false;
 
-        // بررسی فایل‌ها
         if (inputs.idFront.files.length === 0) isValid = false;
         if (inputs.idBack.files.length === 0) isValid = false;
         if (inputs.bankCard.files.length === 0) isValid = false;
         if (inputs.selfie.files.length === 0) isValid = false;
 
-        // فعال/غیرفعال کردن دکمه تلگرام
         if (isValid) {
             tg.MainButton.show();
             tg.MainButton.enable();
@@ -102,31 +135,24 @@
         }
     }
 
-    // --- ارسال اطلاعات به سرور ---
     async function submitForm() {
-        // جلوگیری از کلیک تکراری
         tg.MainButton.showProgress();
         tg.MainButton.disable();
         
-        // نمایش لودر داخلی
         if(loader) {
             loader.classList.remove('hidden');
-            formContainer.style.opacity = '0.3'; // کمرنگ کردن فرم
+            loader.style.display = 'flex'; // Ensure flex for centering
+            if(formContainer) formContainer.style.opacity = '0.3';
         }
 
         const formData = new FormData();
-        
-        // افزودن اطلاعات امنیتی
         formData.append("initData", tg.initData || "");
-
-        // افزودن فیلدهای متنی
         formData.append("full_name", inputs.fullName.value.trim());
         formData.append("national_id", inputs.nationalId.value.trim());
         formData.append("birth_date", inputs.birthDate.value.trim());
         formData.append("phone_number", inputs.phoneNumber.value.trim());
         formData.append("card_number", inputs.cardNumber.value.trim());
 
-        // افزودن فایل‌ها
         formData.append("id_front_file", inputs.idFront.files[0]);
         formData.append("id_back_file", inputs.idBack.files[0]);
         formData.append("bank_card_file", inputs.bankCard.files[0]);
@@ -142,24 +168,24 @@
 
             if (response.ok && result.status === 'success') {
                 tg.HapticFeedback.notificationOccurred('success');
-                tg.showAlert("✅ " + result.message, function() {
-                    tg.close(); // بستن مینی‌اپ بعد از موفقیت
+                tg.showAlert("✅ مدارک با موفقیت ارسال شد.\nنتیجه بررسی به شما اطلاع داده می‌شود.", function() {
+                    tg.close();
                 });
             } else {
-                throw new Error(result.message || "خطا در ثبت اطلاعات");
+                throw new Error(result.message || "Upload Failed");
             }
 
         } catch (error) {
-            console.error("KYC Submit Error:", error);
+            console.error("KYC Error:", error);
             tg.HapticFeedback.notificationOccurred('error');
             tg.showAlert("⛔️ " + error.message);
             
-            // بازگرداندن وضعیت به حالت عادی
             tg.MainButton.hideProgress();
             tg.MainButton.enable();
             if(loader) {
                 loader.classList.add('hidden');
-                formContainer.style.opacity = '1';
+                loader.style.display = 'none';
+                if(formContainer) formContainer.style.opacity = '1';
             }
         }
     }

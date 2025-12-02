@@ -3,50 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>کوین باران | داشبورد</title>
+    <meta name="theme-color" content="#050505">
+    <title>Coin Baran | Dashboard</title>
+    
+    <!-- Libraries -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    <link rel="stylesheet" href="webapp/dashboard-style.css?v=45.0">
+    <!-- Styles -->
+    <link rel="stylesheet" href="webapp/dashboard-style.css?v=70.0">
 </head>
 <body class="loading-active">
 
+    <!-- Ambient Background Effects -->
     <div class="ambient-glow glow-top"></div>
     <div class="ambient-glow glow-bottom"></div>
-    <div class="scanlines"></div>
+    <div class="grid-overlay"></div>
 
+    <!-- Premium Loader -->
     <div id="loader">
         <div class="loader-content">
-            <img src="webapp/images/logo-gold.png" alt="Coin Baran Logo" class="main-logo-img">
-            
+            <div class="spinner-premium"></div>
             <div class="brand-text">COIN BARAN</div>
-            <p class="loading-status">در حال برقراری ارتباط امن...</p>
+            <p class="loading-status">Establishing Secure Connection...</p>
         </div>
     </div>
 
     <div id="app-container" class="glass-wrapper hidden-content">
         
+        <!-- Header -->
         <header class="glass-header">
             <div class="profile-section">
-                <div class="avatar-frame">
-                    <div class="avatar-img">👤</div>
+                <div class="avatar-frame ripple-effect">
+                    <img src="webapp/images/logo-gold.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'" alt="User" class="avatar-img">
                     <div class="online-dot"></div>
                 </div>
 
-                <div class="header-logo-container">
-                    <div class="header-glow"></div>
-                    <img src="webapp/images/logo-gold.png" alt="Logo" class="header-logo-img">
-                </div>
                 <div class="user-details">
-                    <h2 id="welcome-name" class="fade-in-text">کاربر مهمان</h2>
+                    <h2 id="welcome-name" class="fade-in-text">Loading User...</h2>
                     <div class="kyc-wrapper">
-                        <span id="kyc-text" class="kyc-tag">سطح برنزی</span>
+                        <span id="kyc-text" class="kyc-tag">VIP MEMBER</span>
                     </div>
                 </div>
             </div>
             
             <div class="header-icons">
-                <button class="icon-btn notif-btn">
+                <button class="icon-btn notif-btn ripple-btn">
                     <i class="fas fa-bell"></i>
                     <span class="badge-point"></span>
                 </button>
@@ -55,163 +57,160 @@
 
         <main class="main-scroll-area">
             
+            <!-- Hero Asset Card (Holographic Style) -->
             <div class="asset-card premium-glass">
                 <div class="card-shine-effect"></div>
-                <div class="card-pattern-overlay"></div>
+                <div class="card-mesh"></div>
                 
                 <div class="card-top-row">
                     <div class="chip-icon">
-                        <i class="fas fa-microchip"></i>
+                        <i class="fas fa-sim-card"></i>
                     </div>
-                    <div class="card-brand-text">COINBARAN</div>
+                    <div class="card-brand-text">PLATINUM ACCESS</div>
                 </div>
 
                 <div class="balance-display">
-                    <span class="label-muted">موجودی کل دارایی‌ها</span>
+                    <span class="label-muted">Total Balance</span>
                     <div class="amount-row">
                         <h1 id="toman-balance" class="main-digit">---</h1>
-                        <span class="currency-symbol">تومان</span>
+                        <span class="currency-symbol">IRT</span>
                     </div>
                 </div>
 
                 <div class="card-footer-row">
                     <div class="stat-item">
-                        <span class="stat-label">موجودی تتر</span>
-                        <span class="stat-value color-usd" id="uusd-balance">0.00 <small>UUSD</small></span>
+                        <span class="stat-label">USDT Balance</span>
+                        <span class="stat-value color-usd" id="uusd-balance">0.00 <small>USD</small></span>
                     </div>
-                    <div class="stat-item align-left">
-                        <span class="stat-label">امتیاز کلاب</span>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <span class="stat-label">Club Points</span>
                         <span class="stat-value color-xp" id="xp-balance">0 <small>XP</small></span>
                     </div>
                 </div>
             </div>
 
+            <!-- Quick Access Grid -->
+            <div class="section-label">Quick Actions</div>
             <div class="quick-access-grid">
-                <div class="action-item" onclick="window.location.href='wallet'">
-                    <div class="action-icon deposit-glow">
+                <div class="action-item ripple-btn" onclick="window.location.href='wallet'">
+                    <div class="action-icon deposit-theme">
                         <i class="fas fa-arrow-down"></i>
                     </div>
-                    <span>واریز</span>
+                    <span>Deposit</span>
                 </div>
-                <div class="action-item" onclick="window.location.href='wallet?tab=withdraw'">
-                    <div class="action-icon withdraw-glow">
+                <div class="action-item ripple-btn" onclick="window.location.href='wallet?tab=withdraw'">
+                    <div class="action-icon withdraw-theme">
                         <i class="fas fa-arrow-up"></i>
                     </div>
-                    <span>برداشت</span>
+                    <span>Withdraw</span>
                 </div>
-                <div class="action-item" onclick="window.location.href='usdt'">
-                    <div class="action-icon trade-glow">
+                <div class="action-item ripple-btn" onclick="window.location.href='usdt'">
+                    <div class="action-icon trade-theme">
                         <i class="fas fa-exchange-alt"></i>
                     </div>
-                    <span>مبادله</span>
+                    <span>Swap</span>
                 </div>
-                <div class="action-item" onclick="window.location.href='kyc'">
-                    <div class="action-icon kyc-glow">
-                        <i class="fas fa-fingerprint"></i>
+                <div class="action-item ripple-btn" onclick="window.location.href='kyc'">
+                    <div class="action-icon kyc-theme">
+                        <i class="fas fa-shield-alt"></i>
                     </div>
-                    <span>احراز</span>
+                    <span>Auth</span>
                 </div>
             </div>
 
-            <div class="services-section">
-                <div class="section-title">
-                    <h3>مارکت و سرگرمی</h3>
-                </div>
-
-                <div class="featured-game-card" onclick="window.location.href='game'">
-                    <div class="game-bg"></div>
-                    <div class="game-content">
-                        <div class="game-info">
-                            <h4>بازی کندل 🚀</h4>
-                            <p>پیش‌بینی کن و دلار ببر!</p>
-                        </div>
-                        <div class="play-button">
-                            شروع <i class="fas fa-play"></i>
-                        </div>
+            <!-- Services Section -->
+            <div class="section-label">Markets & Games</div>
+            
+            <!-- Featured Game Widget -->
+            <div class="featured-game-card ripple-effect" onclick="window.location.href='game'">
+                <div class="game-glow"></div>
+                <div class="game-content">
+                    <div class="game-icon-box">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="game-info">
+                        <h4>Candle Run 🚀</h4>
+                        <p>Predict & Win USDT</p>
+                    </div>
+                    <div class="play-button">
+                        PLAY <i class="fas fa-chevron-left"></i>
                     </div>
                 </div>
+            </div>
 
-                <div class="services-grid">
-                    
-                    <div class="service-box glass-panel" onclick="window.location.href='usdt'">
-                        <div class="srv-icon usdt-theme">
-                            <i class="fas fa-sack-dollar"></i>
-                        </div>
-                        <div class="srv-text">
-                            <h5>خرید و فروش تتر</h5>
-                            <span>معامله آنی و اتوماتیک</span>
-                        </div>
+            <div class="services-grid">
+                
+                <div class="service-box glass-panel ripple-btn" onclick="window.location.href='usdt'">
+                    <div class="srv-icon usdt-icon-theme">
+                        <i class="fas fa-dollar-sign"></i>
                     </div>
-
-                    <div class="service-box glass-panel" onclick="window.location.href='utopia'">
-                        <div class="srv-icon utopia-theme">
-                            <i class="fas fa-ticket-alt"></i>
-                        </div>
-                        <div class="srv-text">
-                            <h5>یوتوپیا</h5>
-                            <span>ووچر بدون کارمزد</span>
-                        </div>
+                    <div class="srv-text">
+                        <h5>Tether/IRT</h5>
+                        <span>Auto Trade</span>
                     </div>
-
-                    <div class="service-box glass-panel" onclick="window.location.href='live'">
-                        <div class="srv-icon live-theme">
-                            <i class="fas fa-futbol"></i>
-                        </div>
-                        <div class="srv-text">
-                            <h5>نتایج زنده</h5>
-                            <span>فوتبال اروپا</span>
-                        </div>
-                    </div>
-
-                    <div class="service-box glass-panel" onclick="Telegram.WebApp.openTelegramLink('https://t.me/CoinBaranSupport')">
-                        <div class="srv-icon support-theme">
-                            <i class="fas fa-headset"></i>
-                        </div>
-                        <div class="srv-text">
-                            <h5>پشتیبانی</h5>
-                            <span>۲۴ ساعته آنلاین</span>
-                        </div>
-                    </div>
-
                 </div>
+
+                <div class="service-box glass-panel ripple-btn" onclick="window.location.href='utopia'">
+                    <div class="srv-icon utopia-icon-theme">
+                        <i class="fas fa-ticket-alt"></i>
+                    </div>
+                    <div class="srv-text">
+                        <h5>Utopia</h5>
+                        <span>Vouchers</span>
+                    </div>
+                </div>
+
+                <div class="service-box glass-panel ripple-btn" onclick="window.location.href='live'">
+                    <div class="srv-icon live-icon-theme">
+                        <i class="fas fa-futbol"></i>
+                    </div>
+                    <div class="srv-text">
+                        <h5>Live Score</h5>
+                        <span>Sports Data</span>
+                    </div>
+                </div>
+
+                <div class="service-box glass-panel ripple-btn" onclick="Telegram.WebApp.openTelegramLink('https://t.me/CoinBaranSupport')">
+                    <div class="srv-icon support-icon-theme">
+                        <i class="fas fa-headset"></i>
+                    </div>
+                    <div class="srv-text">
+                        <h5>Support</h5>
+                        <span>24/7 Online</span>
+                    </div>
+                </div>
+
             </div>
 
             <div style="height: 100px;"></div>
         </main>
-
-        <div class="bottom-blur-bar"></div>
     </div>
     
-    <script src="webapp/script.js?v=20.0"></script>
+    <!-- Script Ref -->
+    <script src="webapp/script.js?v=70.0"></script>
     
+    <!-- Inline visual logic for Loader (Immediate Execution) -->
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            // تنظیمات تلگرام
             if(window.Telegram && window.Telegram.WebApp) {
                 window.Telegram.WebApp.expand();
-                window.Telegram.WebApp.setHeaderColor('#000000');
-                window.Telegram.WebApp.setBackgroundColor('#000000');
+                window.Telegram.WebApp.setHeaderColor('#050505');
+                window.Telegram.WebApp.setBackgroundColor('#050505');
             }
-
-            // تایمر 4 ثانیه‌ای (4000 میلی‌ثانیه) برای نمایش کامل لوگو
+            // Smooth Loader Exit
             setTimeout(function() {
                 const loader = document.getElementById('loader');
                 const app = document.getElementById('app-container');
                 
-                // فید اوت لودر
                 loader.style.opacity = '0';
                 loader.style.pointerEvents = 'none';
                 
-                // نمایش نرم داشبورد
                 app.classList.remove('hidden-content');
                 app.classList.add('fade-in-active');
                 
-                // حذف کامل لودر از صفحه بعد از پایان انیمیشن
-                setTimeout(() => {
-                    loader.style.display = 'none';
-                }, 500);
-                
-            }, 4000);
+                setTimeout(() => loader.style.display = 'none', 500);
+            }, 2500);
         });
     </script>
 </body>

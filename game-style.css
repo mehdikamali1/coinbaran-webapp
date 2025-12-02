@@ -1,34 +1,46 @@
-﻿/* webapp/game-style.css (v33.0 - Final Luxury Theme & Animations) */
+﻿/* webapp/game-style.css (v70.0 - Ultra Luxury Edition) */
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700;800&family=Roboto+Mono:wght@400;500;700&display=swap');
 
 :root {
-    /* --- پالت رنگی اختصاصی بازی --- */
-    --game-bg: #171B26;          
-    --game-card: #1E2329;           
-    --game-panel: #2B3139;          
-    --game-border: rgba(255, 255, 255, 0.1);
+    /* --- پالت رنگی هسته --- */
+    --bg-deep: #050505;       /* مشکی مطلق برای عمق */
+    --bg-surface: #121212;    /* سطح کارت‌ها */
+    --glass-bg: rgba(20, 20, 20, 0.6);
+    --glass-border: rgba(255, 255, 255, 0.08);
     
-    --game-gold: #F0B90B;      
-    --game-green: #0ECB81;          
-    --game-red: #F6465D;          
-    --game-text: #EAECEF;      
-    --game-muted: #848E9C;    
+    --primary-gold: #F0B90B;
+    --accent-green: #0ECB81;
+    --accent-red: #F6465D;
+    
+    --text-main: #FFFFFF;
+    --text-muted: #848E9C;
 
-    --header-height: 60px;
-    --footer-height: 220px;
-    --radius-md: 12px;
+    /* --- افکت‌ها --- */
+    --glow-green: 0 0 20px rgba(14, 203, 129, 0.4);
+    --glow-red: 0 0 20px rgba(246, 70, 93, 0.4);
+    --glow-gold: 0 0 25px rgba(240, 185, 11, 0.25);
+    
+    --radius-xl: 24px;
     --radius-lg: 16px;
+    --radius-md: 12px;
+    
     --safe-area-bottom: env(safe-area-inset-bottom, 20px);
 }
 
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; user-select: none; }
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
+    user-select: none;
+}
 
 body {
     margin: 0; padding: 0;
     font-family: 'Vazirmatn', sans-serif;
-    background-color: var(--game-bg);
-    color: var(--game-text);
-    height: 100dvh; /* ارتفاع دقیق برای موبایل */
+    background-color: var(--bg-deep);
+    color: var(--text-main);
+    height: 100vh;
+    height: 100dvh;
     overflow: hidden;
     direction: rtl;
 }
@@ -38,279 +50,315 @@ body {
     height: 100%; width: 100%;
     max-width: 600px; margin: 0 auto;
     position: relative;
+    z-index: 2;
 }
 
 /* =========================================
-   1. هدر و بج موجودی (Wallet Badge)
+   1. پس‌زمینه و اتمسفر (Ambient)
    ========================================= */
+.ambient-glow {
+    position: fixed;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    filter: blur(100px);
+    z-index: 1; opacity: 0.4;
+    pointer-events: none;
+}
+.glow-top { top: -100px; left: -50px; background: radial-gradient(circle, rgba(240,185,11,0.2) 0%, transparent 70%); }
+.glow-bottom { bottom: -100px; right: -50px; background: radial-gradient(circle, rgba(14,203,129,0.1) 0%, transparent 70%); }
+
+.grid-overlay {
+    position: fixed; inset: 0;
+    background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    z-index: 1; pointer-events: none;
+    mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
+}
+
+/* =========================================
+   2. هدر شیشه‌ای
+   ========================================= */
+.glass-panel {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+}
+
 .game-header {
-    height: var(--header-height);
-    flex-shrink: 0;
+    height: 64px;
     display: flex; align-items: center; justify-content: space-between;
     padding: 0 16px;
-    background-color: var(--game-bg);
-    border-bottom: 1px solid var(--game-border);
-    z-index: 50;
-}
-
-.header-left { display: flex; align-items: center; gap: 10px; }
-
-/* استایل جدید موجودی */
-.wallet-badge {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--game-border);
-    border-radius: 20px;
-    padding: 4px 10px;
-    display: flex; align-items: center; gap: 6px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-.wallet-badge:active { background: rgba(255, 255, 255, 0.1); transform: scale(0.95); }
-
-.wallet-icon { font-size: 1rem; }
-#user-balance-display { 
-    font-family: 'Roboto Mono', monospace; 
-    font-weight: 700; 
-    font-size: 0.9rem; 
-    color: var(--game-text); 
-}
-.wallet-currency { font-size: 0.7rem; color: var(--game-gold); font-weight: bold; }
-.wallet-plus { 
-    background: var(--game-gold); color: black; 
-    border-radius: 50%; width: 16px; height: 16px; 
-    display: flex; align-items: center; justify-content: center; 
-    font-size: 12px; font-weight: bold; margin-right: 2px;
+    border-bottom-left-radius: var(--radius-lg);
+    border-bottom-right-radius: var(--radius-lg);
+    border-top: none;
+    margin: 0 10px;
 }
 
 .icon-btn {
-    background: transparent; border: none; color: var(--game-muted);
-    padding: 8px; border-radius: 8px; cursor: pointer; display: flex;
+    background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
+    color: var(--text-main); width: 40px; height: 40px;
+    border-radius: 12px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.2s;
 }
-.icon-btn:active { background: rgba(255,255,255,0.05); color: var(--game-text); }
+.icon-btn:active { transform: scale(0.92); background: rgba(255,255,255,0.1); }
 
-.header-center { display: flex; flex-direction: column; align-items: center; }
-.pair-name { font-family: 'Roboto Mono', monospace; font-weight: 700; font-size: 1rem; letter-spacing: 0.5px; }
+.wallet-badge {
+    background: rgba(0,0,0,0.3); border: 1px solid var(--primary-gold);
+    border-radius: 20px; padding: 4px 6px 4px 12px;
+    display: flex; align-items: center; gap: 8px;
+    cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+#user-balance-display { font-family: 'Roboto Mono'; font-weight: 700; font-size: 0.95rem; }
+.wallet-currency { font-size: 0.7rem; color: var(--primary-gold); font-weight: 800; }
+.wallet-add-btn {
+    width: 22px; height: 22px; background: var(--primary-gold);
+    color: #000; border-radius: 50%; font-size: 16px; font-weight: bold;
+    display: flex; align-items: center; justify-content: center;
+}
 
-.live-indicator { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
-.blink-dot { width: 6px; height: 6px; background-color: var(--game-green); border-radius: 50%; animation: pulse-live 2s infinite; }
-.status-text { font-size: 0.7rem; color: var(--game-green); font-weight: 700; letter-spacing: 0.5px; }
+.pair-badge {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.05); padding: 6px 12px; border-radius: 12px;
+}
+.pair-icon { color: #F7931A; font-size: 1.1rem; }
+.pair-name { font-family: 'Roboto Mono'; font-weight: 700; letter-spacing: 0.5px; }
 
 /* =========================================
-   2. آمار و چارت (Absolute Positioning)
+   3. مارکت و تایمر (بخش حیاتی)
    ========================================= */
 .market-stats {
-    flex-shrink: 0;
+    padding: 20px 24px;
     display: flex; justify-content: space-between; align-items: center;
-    padding: 10px 20px;
-    background: var(--game-bg);
 }
-.price-container { display: flex; flex-direction: column; }
+
+.price-header { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
+.price-label { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+
+.status-pill {
+    display: flex; align-items: center; gap: 5px;
+    padding: 2px 8px; border-radius: 10px;
+    background: rgba(14, 203, 129, 0.1); border: 1px solid rgba(14, 203, 129, 0.2);
+}
+.status-dot { width: 6px; height: 6px; background: var(--accent-green); border-radius: 50%; box-shadow: 0 0 8px var(--accent-green); animation: blink 2s infinite; }
+.status-text { font-size: 0.65rem; color: var(--accent-green); font-weight: 700; text-transform: uppercase; }
+
 .main-price {
-    margin: 0; font-family: 'Roboto Mono', monospace;
-    font-size: 1.8rem; font-weight: 700; letter-spacing: -1px;
-    color: var(--game-text); transition: color 0.3s ease;
+    font-family: 'Roboto Mono', monospace; font-size: 2.2rem; font-weight: 700;
+    color: var(--text-main); margin: 0; line-height: 1;
+    text-shadow: 0 0 20px rgba(255,255,255,0.05);
 }
-.price-label { font-size: 0.75rem; color: var(--game-muted); margin-top: 4px; }
 
-.timer-container { position: relative; width: 45px; height: 45px; }
-.timer-wrapper { position: relative; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
-.timer-svg { transform: rotate(-90deg); width: 100%; height: 100%; }
-.timer-bg { fill: none; stroke: var(--game-panel); stroke-width: 5; }
+/* تایمر پیشرفته */
+.timer-container { position: relative; width: 60px; height: 60px; }
+.timer-svg { transform: rotate(-90deg); width: 100%; height: 100%; overflow: visible; }
+.timer-bg { fill: none; stroke: rgba(255,255,255,0.05); stroke-width: 4; }
 .timer-progress {
-    fill: none; stroke: var(--game-gold); stroke-width: 5;
+    fill: none; stroke: var(--primary-gold); stroke-width: 4; stroke-linecap: round;
     stroke-dasharray: 283; stroke-dashoffset: 0;
-    transition: stroke-dashoffset 1s linear, stroke 0.3s;
+    transition: stroke-dashoffset 1s linear;
+    filter: drop-shadow(0 0 4px var(--primary-gold));
 }
-.timer-text-box { position: absolute; font-family: 'Roboto Mono', monospace; font-weight: bold; font-size: 1rem; color: var(--game-text); }
+.timer-text-box {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+#timer-text { font-family: 'Roboto Mono'; font-weight: bold; font-size: 1.1rem; line-height: 1; }
+.timer-label { font-size: 0.5rem; color: var(--text-muted); margin-top: 2px; }
 
-/* چارت با پوزیشن ابسولوت (فیکس موبایل) */
+/* =========================================
+   4. چارت
+   ========================================= */
 .chart-section {
-    position: relative; flex: 1; width: 100%;
-    background: var(--game-bg); overflow: hidden;
+    flex: 1; margin: 0 10px; border-radius: var(--radius-lg);
+    position: relative; overflow: hidden;
 }
-.chart-box { 
-    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-    width: 100% !important; height: 100% !important; 
-    direction: ltr; 
-}
+.chart-box { position: absolute; inset: 0; direction: ltr; }
+
 .chart-loader {
-    position: absolute; inset: 0; background: var(--game-bg);
-    display: flex; align-items: center; justify-content: center;
+    position: absolute; inset: 0; background: rgba(5,5,5,0.8); backdrop-filter: blur(5px);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px;
     z-index: 10; transition: opacity 0.5s;
 }
 .chart-loader.fade-out { opacity: 0; pointer-events: none; }
-.spinner-gold {
-    width: 30px; height: 30px; border: 3px solid rgba(240, 185, 11, 0.3);
-    border-top-color: var(--game-gold); border-radius: 50%;
-    animation: spin 1s linear infinite;
+.spinner-premium {
+    width: 40px; height: 40px;
+    border: 3px solid rgba(240, 185, 11, 0.1);
+    border-top-color: var(--primary-gold); border-radius: 50%;
+    animation: spin 0.8s ease-in-out infinite; box-shadow: var(--glow-gold);
 }
+.loader-text { font-size: 0.8rem; color: var(--primary-gold); letter-spacing: 1px; }
 
-/* نوار تاریخچه */
+/* =========================================
+   5. تاریخچه و کنترل‌ها
+   ========================================= */
 .history-section {
-    flex-shrink: 0;
-    height: 36px; background: var(--game-bg);
-    display: flex; align-items: center; padding: 0 16px;
-    border-top: 1px solid var(--game-border);
-    position: relative; z-index: 5;
+    margin: 10px 0; padding: 0 20px;
 }
+.history-header { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.8rem; color: var(--text-muted); }
+.history-more { color: var(--primary-gold); cursor: pointer; }
 .history-scroll {
-    display: flex; gap: 6px; overflow-x: auto; width: 100%;
-    align-items: center; direction: ltr; scrollbar-width: none;
+    display: flex; gap: 6px; overflow-x: auto; padding-bottom: 5px;
+    direction: ltr; scrollbar-width: none;
 }
 .history-scroll::-webkit-scrollbar { display: none; }
 .hist-pill {
-    min-width: 6px; height: 20px; border-radius: 4px;
-    background: var(--game-panel); display: flex; align-items: center; justify-content: center;
-    font-size: 10px; font-weight: bold; color: #000;
-    transition: all 0.3s;
+    min-width: 8px; height: 24px; border-radius: 4px;
+    background: rgba(255,255,255,0.1);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
-.hist-pill.win { min-width: 24px; color: #fff; }
-.hist-pill.up { background: var(--game-green); }
-.hist-pill.down { background: var(--game-red); }
+.hist-pill.up { background: var(--accent-green); box-shadow: 0 0 8px rgba(14,203,129,0.3); }
+.hist-pill.down { background: var(--accent-red); box-shadow: 0 0 8px rgba(246,70,93,0.3); }
+.hist-pill.win { min-width: 28px; display: flex; align-items: center; justify-content: center; color: #000; font-weight: bold; font-size: 10px; }
 
-.spacer-bottom { height: var(--footer-height); width: 100%; flex-shrink: 0; }
-
-/* =========================================
-   3. کنترل پنل (Controls)
-   ========================================= */
-.trading-controls {
-    position: fixed; bottom: 0; left: 0; right: 0;
-    max-width: 600px; margin: 0 auto;
-    height: auto;
-    background: var(--game-card);
-    border-top-left-radius: 20px; border-top-right-radius: 20px;
-    box-shadow: 0 -8px 30px rgba(0,0,0,0.5);
-    padding: 15px 15px var(--safe-area-bottom) 15px;
-    z-index: 100;
-    display: flex; flex-direction: column; gap: 12px;
-    border-top: 1px solid rgba(255,255,255,0.05);
+/* فوتر شناور (Floating Footer) */
+.glass-panel-top {
+    background: rgba(18, 18, 18, 0.85);
+    backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+    border-top: 1px solid var(--glass-border);
+    border-top-left-radius: 24px; border-top-right-radius: 24px;
+    padding: 20px 20px var(--safe-area-bottom) 20px;
+    position: fixed; bottom: 0; left: 0; right: 0; max-width: 600px; margin: 0 auto;
+    z-index: 100; box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
 }
-.round-status-bar { display: flex; justify-content: space-between; align-items: center; font-family: 'Roboto Mono'; font-size: 0.8rem; }
-.round-id { color: var(--game-muted); }
-.round-state { font-weight: bold; color: var(--game-gold); }
 
-.amount-area { display: flex; flex-direction: column; gap: 10px; }
-.quick-chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
-.quick-chips::-webkit-scrollbar { display: none; }
-.chip {
-    background: var(--game-panel); border: 1px solid transparent;
-    color: var(--game-muted); padding: 8px 16px; border-radius: 8px;
-    font-family: 'Roboto Mono'; font-size: 0.85rem; font-weight: 600;
-    white-space: nowrap; cursor: pointer; transition: all 0.2s;
-}
-.chip.active { background: rgba(240, 185, 11, 0.15); color: var(--game-gold); border-color: var(--game-gold); }
+.control-header { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 0.85rem; }
+.round-label { color: var(--text-muted); }
+.round-value { font-family: 'Roboto Mono'; color: var(--text-main); margin-left: 5px; }
 
-.input-wrapper {
-    position: relative; width: 100%;
-    background: var(--game-bg); border: 1px solid var(--game-border);
-    border-radius: var(--radius-md); overflow: hidden;
-    display: flex; align-items: center;
+.amount-selector { margin-bottom: 15px; }
+.input-group {
+    position: relative; background: rgba(0,0,0,0.3);
+    border: 1px solid var(--glass-border); border-radius: 12px;
+    display: flex; align-items: center; margin-bottom: 10px;
 }
-.currency-prefix { padding-left: 16px; color: var(--game-gold); font-weight: bold; font-family: 'Roboto Mono'; }
+.input-currency { padding-left: 15px; color: var(--primary-gold); font-family: 'Roboto Mono'; font-weight: bold; font-size: 1.2rem; }
 #bet-amount {
-    width: 100%; padding: 12px; background: transparent; border: none;
-    color: var(--game-text); font-family: 'Roboto Mono'; font-size: 1.1rem; font-weight: bold;
+    width: 100%; padding: 14px; background: transparent; border: none;
+    color: var(--text-main); font-family: 'Roboto Mono'; font-size: 1.4rem; font-weight: 700;
 }
-
-/* دکمه مثبت (شارژ) */
-.btn-plus {
-    background: var(--game-gold); border: none; border-radius: 8px;
-    width: 36px; height: 36px; margin: 0 4px;
-    font-weight: bold; font-size: 1.4rem;
-    cursor: pointer; color: #000;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
+.chips-scroll { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+.chip {
+    background: rgba(255,255,255,0.05); border: 1px solid transparent;
+    color: var(--text-muted); padding: 8px 16px; border-radius: 8px;
+    font-family: 'Roboto Mono'; font-weight: 600; white-space: nowrap;
+    transition: all 0.2s;
 }
+.chip.active { background: rgba(240, 185, 11, 0.15); border-color: var(--primary-gold); color: var(--primary-gold); box-shadow: 0 0 10px rgba(240,185,11,0.1); }
 
-.action-buttons { display: flex; gap: 10px; height: 50px; }
+/* دکمه‌های ترید (The Stars of the Show) */
+.action-buttons { display: flex; gap: 12px; height: 56px; }
 .trade-btn {
-    flex: 1; border: none; border-radius: var(--radius-md);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    cursor: pointer; position: relative; overflow: hidden;
-    color: white; transition: transform 0.1s;
+    flex: 1; position: relative; overflow: hidden;
+    border: none; border-radius: 14px; cursor: pointer;
+    transition: transform 0.1s;
 }
-.trade-btn:active { transform: scale(0.97); }
-.trade-btn:disabled { opacity: 0.5; filter: grayscale(1); cursor: not-allowed; }
-.btn-long { background: var(--game-green); box-shadow: 0 4px 15px rgba(14, 203, 129, 0.25); }
-.btn-short { background: var(--game-red); box-shadow: 0 4px 15px rgba(246, 70, 93, 0.25); }
-.btn-title { font-weight: 800; font-size: 0.95rem; font-family: 'Roboto Mono'; line-height: 1.1; }
-.btn-subtitle { font-size: 0.65rem; font-weight: 500; opacity: 0.9; }
+.trade-btn:active { transform: scale(0.96); }
+
+.btn-long { background: linear-gradient(135deg, #0ECB81 0%, #0aa769 100%); box-shadow: 0 4px 20px rgba(14, 203, 129, 0.3); }
+.btn-short { background: linear-gradient(135deg, #F6465D 0%, #c92a40 100%); box-shadow: 0 4px 20px rgba(246, 70, 93, 0.3); }
+
+.btn-content {
+    position: relative; z-index: 2; display: flex; align-items: center; justify-content: center; gap: 10px; height: 100%;
+}
+.btn-icon { font-size: 1.2rem; }
+.btn-text { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.1; }
+.btn-title { font-weight: 800; font-size: 1rem; color: #fff; letter-spacing: 0.5px; }
+.btn-rate { font-size: 0.7rem; color: rgba(255,255,255,0.9); font-weight: 600; font-family: 'Roboto Mono'; }
+.btn-glow {
+    position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255,255,255,0.2), transparent);
+    transform: rotate(45deg); animation: shine 3s infinite;
+}
 
 /* =========================================
-   4. مودال نتیجه (Result Modal - Dramatic)
+   6. مودال نتیجه (Result Modal)
    ========================================= */
 .result-overlay {
-    position: fixed; inset: 0; 
-    background: rgba(0,0,0,0.9); backdrop-filter: blur(5px);
-    z-index: 5000; /* بالاترین لایه */
-    display: flex; align-items: center; justify-content: center;
-    visibility: hidden; opacity: 0;
-    transition: all 0.4s ease;
+    position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px);
+    z-index: 2000; display: flex; align-items: center; justify-content: center;
+    opacity: 0; visibility: hidden; transition: all 0.4s ease;
 }
-.result-overlay.active { visibility: visible; opacity: 1; }
+.result-overlay.active { opacity: 1; visibility: visible; }
 
 .result-card {
-    background: #1E2329;
-    border: 1px solid var(--game-border);
-    padding: 30px; border-radius: 20px;
-    text-align: center; width: 80%; max-width: 320px;
-    transform: scale(0.8);
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+    background: #151515; border: 1px solid rgba(255,255,255,0.1);
+    width: 85%; max-width: 340px; border-radius: 24px; padding: 30px;
+    text-align: center; position: relative;
+    transform: scale(0.8) translateY(20px); transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.6);
 }
-.result-overlay.active .result-card { transform: scale(1); }
+.result-overlay.active .result-card { transform: scale(1) translateY(0); }
 
-.result-icon { font-size: 4rem; margin-bottom: 10px; animation: bounce 1s infinite; }
-#res-title { margin: 0; font-size: 1.5rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
-.res-amount {
-    font-family: 'Roboto Mono', monospace; font-size: 2rem; font-weight: 900;
-    margin: 10px 0; text-shadow: 0 0 10px rgba(255,255,255,0.1);
+.result-icon { font-size: 4.5rem; margin-bottom: 10px; position: relative; z-index: 2; text-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+.result-icon-glow {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 80px; height: 80px; border-radius: 50%; filter: blur(30px); z-index: 1;
 }
-.res-win { color: var(--game-green); text-shadow: 0 0 15px rgba(14,203,129,0.3); }
-.res-loss { color: var(--game-red); text-shadow: 0 0 15px rgba(246,70,93,0.3); }
+
+#res-title { margin: 0; font-size: 1.8rem; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; position: relative; z-index: 2; }
+.res-msg { color: var(--text-muted); font-size: 0.9rem; margin: 5px 0 20px 0; }
+
+.result-details { background: rgba(255,255,255,0.03); border-radius: 12px; padding: 15px; margin-bottom: 20px; }
+.detail-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.85rem; color: var(--text-muted); }
+.mono-font { font-family: 'Roboto Mono'; color: var(--text-main); font-weight: 600; }
+
+.res-amount-box { margin-bottom: 20px; }
+.res-label { display: block; font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
+.res-amount { font-family: 'Roboto Mono'; font-size: 2.2rem; font-weight: 800; }
+
+/* Win/Loss Specifics */
+.res-win { color: var(--accent-green); text-shadow: 0 0 20px rgba(14,203,129,0.3); }
+.res-loss { color: var(--accent-red); text-shadow: 0 0 20px rgba(246,70,93,0.3); }
 
 .btn-continue {
-    background: var(--game-panel); color: white;
-    border: none; padding: 12px 24px; border-radius: 10px;
-    font-weight: bold; cursor: pointer; width: 100%;
-    margin-top: 10px; transition: background 0.2s;
+    background: var(--text-main); color: #000; border: none; width: 100%;
+    padding: 14px; border-radius: 14px; font-weight: 800; font-size: 1rem;
+    cursor: pointer; box-shadow: 0 4px 15px rgba(255,255,255,0.1);
 }
-.btn-continue:active { background: #3a424b; }
 
 /* =========================================
-   5. مودال‌های عادی (Swap, History)
+   7. مودال‌های عمومی (Swap, Leaderboard)
    ========================================= */
 .modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px);
+    position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
     z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.3s;
-    display: flex; align-items: center; justify-content: center; padding: 20px;
+    display: flex; align-items: flex-end; /* Bottom sheet on mobile */
+    justify-content: center;
 }
 .modal-overlay.active { opacity: 1; visibility: visible; }
 .modal-content {
-    background: var(--game-card); width: 100%; max-width: 400px;
-    border-radius: var(--radius-lg); border: 1px solid var(--game-border);
-    display: flex; flex-direction: column; max-height: 80vh;
-    transform: translateY(20px); transition: transform 0.3s;
+    background: #181818; width: 100%; max-width: 500px;
+    border-top-left-radius: 24px; border-top-right-radius: 24px;
+    border: 1px solid var(--glass-border); border-bottom: none;
+    transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    max-height: 85vh; display: flex; flex-direction: column;
 }
 .modal-overlay.active .modal-content { transform: translateY(0); }
-.modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid var(--game-border); }
-.modal-header h3 { margin: 0; font-size: 1rem; }
-.close-modal { background: none; border: none; color: var(--game-muted); font-size: 1.2rem; cursor: pointer; }
-.modal-body { padding: 16px; overflow-y: auto; }
-.gold-text { color: var(--game-gold); }
 
-/* توست (Toast) */
-.toast {
-    position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
-    background: rgba(30, 35, 41, 0.95); border: 1px solid var(--game-border);
-    color: var(--game-text); padding: 12px 24px; border-radius: 8px;
-    font-size: 0.9rem; z-index: 2000; box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-    display: flex; align-items: center; gap: 8px;
-    transition: all 0.3s; opacity: 1;
-}
-.toast.hidden { top: 60px; opacity: 0; pointer-events: none; }
+/* Full Height modal for Leaderboard/History */
+.full-height-modal { height: 80vh; }
+.modal-header { padding: 20px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; }
+.modal-header h3 { margin: 0; font-size: 1.1rem; }
+.close-modal { background: none; border: none; color: var(--text-muted); font-size: 1.4rem; padding: 0 10px; }
+.modal-body { padding: 20px; overflow-y: auto; flex: 1; }
+
+/* استایل خاص Swap */
+.swap-body { display: flex; flex-direction: column; gap: 15px; }
+.swap-desc { text-align: center; color: var(--text-muted); font-size: 0.9rem; margin: 0; }
+.swap-input-container { background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; border: 1px solid var(--glass-border); }
+.swap-input-wrapper { display: flex; align-items: center; justify-content: space-between; }
+#swap-input-toman { background: transparent; border: none; color: #fff; font-size: 1.2rem; font-weight: bold; width: 100%; font-family: 'Vazirmatn'; }
+.currency-tag { color: var(--text-muted); font-size: 0.8rem; }
+.swap-arrow { text-align: center; color: var(--primary-gold); font-size: 1.2rem; }
+.swap-preview { display: flex; justify-content: space-between; align-items: center; background: rgba(240, 185, 11, 0.05); padding: 12px; border-radius: 12px; border: 1px dashed rgba(240, 185, 11, 0.3); }
+.swap-final-val { font-family: 'Roboto Mono'; color: var(--primary-gold); font-weight: bold; font-size: 1.1rem; }
+.btn-confirm-swap { background: var(--primary-gold); color: #000; border: none; padding: 15px; border-radius: 12px; font-weight: 800; font-size: 1rem; margin-top: 10px; }
 
 /* انیمیشن‌ها */
-@keyframes pulse-live { 0% { opacity: 1; box-shadow: 0 0 0 0 rgba(14,203,129,0.7); } 70% { opacity: 0.8; box-shadow: 0 0 0 6px rgba(14,203,129,0); } 100% { opacity: 1; } }
+@keyframes shine { 0% { left: -100%; } 20% { left: 100%; } 100% { left: 100%; } }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 @keyframes spin { 100% { transform: rotate(360deg); } }
-@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }

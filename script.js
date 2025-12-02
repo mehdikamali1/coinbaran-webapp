@@ -1,59 +1,57 @@
-﻿/* webapp/script.js (v52.0 - Final Production Logic) */
+﻿/* webapp/script.js (v73.0 - Final Production Logic + Luxury UI) */
 (function () {
     'use strict';
 
     // تنظیمات اولیه تلگرام و آدرس سرور
     const tg = window.Telegram.WebApp;
-    const API_BASE_URL = window.location.origin; // آدرس فعلی (تانل یا سرور)
+    const API_BASE_URL = window.location.origin;
 
-    // کش کردن عناصر صفحه برای سرعت بیشتر
+    // کش کردن عناصر صفحه
     const loader = document.getElementById('loader');
     const appContainer = document.getElementById('app-container');
+    
+    // المان‌های قابل آپدیت در داشبورد
     const els = {
         welcomeName: document.getElementById('welcome-name'),
         tomanBalance: document.getElementById('toman-balance'),
         uusdBalance: document.getElementById('uusd-balance'),
         xpBalance: document.getElementById('xp-balance'),
-        kycText: document.getElementById('kyc-text')
+        kycText: document.getElementById('kyc-text'),
+        avatar: document.querySelector('.avatar-img') // برای نمایش عکس پروفایل
     };
 
-    // تابع اصلی که هنگام لود شدن صفحه اجرا می‌شود
+    // --- نقطه شروع برنامه ---
     window.onload = async function() {
         try {
-            // ۱. راه‌اندازی تلگرام وب‌اپ
+            // ۱. راه‌اندازی تلگرام
             tg.ready();
-            tg.expand(); // تمام صفحه کردن
+            tg.expand();
             
-            // تنظیم رنگ هدر برای زیبایی (هماهنگ با تم مشکی)
+            // تنظیم رنگ هدر برای یکپارچگی با تم مشکی
             tg.setHeaderColor('#050505');
             tg.setBackgroundColor('#050505');
 
-            // ۲. بررسی وجود اطلاعات احراز هویت تلگرام
+            // ۲. بررسی دیتای احراز هویت
             if (!tg.initData) {
-                // اگر خارج از تلگرام باز شود (برای تست لوکال)
-                console.warn("initData not found. Using Test Data.");
-                // خط زیر را در پروداکشن واقعی می‌توانید کامنت کنید، اما برای تست لازم است
-                tg.initData = "query_id=TEST&user=%7B%22id%22%3A111111111%2C%22first_name%22%3A%22Guest%22%7D&auth_date=1700000000&hash=fake";
+                console.warn("initData Missing. Using Test Mode.");
+                tg.initData = "query_id=TEST_DEV_MODE"; 
             }
 
-            // ۳. دریافت اطلاعات از سرور
+            // ۳. تلاش برای دریافت اطلاعات
             await fetchData();
 
         } catch (error) {
-            console.error("Init Error:", error);
-            showError("خطا در راه‌اندازی اولیه.");
+            console.error("Init Critical Error:", error);
+            showError("خطا در راه‌اندازی برنامه.");
         }
     };
 
-    // تابع دریافت اطلاعات از API
+    // --- دریافت اطلاعات از سرور ---
     async function fetchData() {
         try {
             const response = await fetch(`${API_BASE_URL}/webapp/get_user_data`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                // ارسال initData برای امنیت Zero Trust
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ initData: tg.initData })
             });
 
@@ -63,16 +61,15 @@
 
             const data = await response.json();
 
-            // بررسی وضعیت پاسخ سرور
             if (data.status === 'error') {
                 tg.showAlert(data.message || "خطا در دریافت اطلاعات کاربر");
                 return;
             }
 
-            // ۴. نمایش اطلاعات در صفحه
+            // ۴. بروزرسانی رابط کاربری
             updateUI(data);
 
-            // ۵. مخفی کردن لودر و نمایش برنامه
+            // ۵. نمایش داشبورد (حذف لودر)
             hideLoader();
 
         } catch (error) {
@@ -81,58 +78,92 @@
         }
     }
 
-    // تابع بروزرسانی رابط کاربری (UI)
+    // --- بروزرسانی المان‌های داشبورد ---
     function updateUI(data) {
         // نام کاربر
-        if (els.welcomeName) els.welcomeName.innerText = data.first_name;
+        if (els.welcomeName) els.welcomeName.innerText = data.first_name || "کاربر گرامی";
 
-        // موجودی تومانی (با جداکننده هزارگان)
-        if (els.tomanBalance) els.tomanBalance.innerText = data.toman_balance;
+        // موجودی تومان (فرمت سه رقم سه رقم)
+        if (els.tomanBalance) els.tomanBalance.innerText = data.toman_balance; 
 
-        // موجودی دلاری
-        if (els.uusdBalance) els.uusdBalance.innerText = `$ ${data.uusd_balance}`;
+        // موجودی دلاری (با رنگ‌بندی)
+        if (els.uusdBalance) els.uusdBalance.innerHTML = `${data.uusd_balance} <small>USD</small>`;
 
-        // امتیاز XP
-        if (els.xpBalance) els.xpBalance.innerText = data.xp_balance;
+        // امتیاز
+        if (els.xpBalance) els.xpBalance.innerHTML = `${data.xp_balance} <small>XP</small>`;
 
-        // وضعیت احراز هویت
-        if (els.kycText) {
-            els.kycText.innerText = data.kyc_status_text;
-            
-            // تغییر رنگ بر اساس وضعیت
-            if (data.kyc_status_code === 'verified') {
-                els.kycText.style.color = '#10B981'; // سبز
-                els.kycText.style.borderColor = 'rgba(16, 185, 129, 0.3)';
-                els.kycText.style.background = 'rgba(16, 185, 129, 0.1)';
-            } else if (data.kyc_status_code === 'rejected') {
-                els.kycText.style.color = '#EF4444'; // قرمز
-                els.kycText.style.borderColor = 'rgba(239, 68, 68, 0.3)';
-            } else if (data.kyc_status_code === 'pending') {
-                els.kycText.style.color = '#D4AF37'; // طلایی
-                els.kycText.style.borderColor = 'rgba(212, 175, 55, 0.3)';
-            }
+        // عکس پروفایل (اگر تلگرام ارائه داده باشد)
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.photo_url) {
+            if (els.avatar) els.avatar.src = tg.initDataUnsafe.user.photo_url;
         }
+
+        // وضعیت احراز هویت (با استایل‌های جدید)
+        updateKycBadge(data.kyc_status_code);
     }
 
-    // تابع مخفی کردن لودر با انیمیشن نرم
+    function updateKycBadge(status) {
+        if (!els.kycText) return;
+
+        let text = "سطح برنزی";
+        let color = "#848E9C"; // خاکستری
+        let bg = "rgba(255,255,255,0.05)";
+        let border = "rgba(255,255,255,0.1)";
+
+        switch (status) {
+            case 'verified':
+                text = "کاربر تایید شده ✅";
+                color = "#0ECB81"; // سبز
+                bg = "rgba(14, 203, 129, 0.1)";
+                border = "rgba(14, 203, 129, 0.3)";
+                break;
+            case 'pending':
+                text = "در حال بررسی ⏳";
+                color = "#F0B90B"; // طلایی
+                bg = "rgba(240, 185, 11, 0.1)";
+                border = "rgba(240, 185, 11, 0.3)";
+                break;
+            case 'rejected':
+                text = "نیاز به اصلاح ❌";
+                color = "#F6465D"; // قرمز
+                bg = "rgba(246, 70, 93, 0.1)";
+                border = "rgba(246, 70, 93, 0.3)";
+                break;
+        }
+
+        els.kycText.innerText = text;
+        els.kycText.style.color = color;
+        els.kycText.style.background = bg;
+        els.kycText.style.borderColor = border;
+    }
+
+    // --- مدیریت لودر و خطا ---
     function hideLoader() {
         if (loader) {
             loader.style.opacity = '0';
+            loader.style.pointerEvents = 'none'; // جلوگیری از کلیک حین محو شدن
+            
             setTimeout(() => {
                 loader.style.display = 'none';
-                if (appContainer) appContainer.classList.remove('hidden');
+                if (appContainer) {
+                    appContainer.classList.remove('hidden-content');
+                    appContainer.classList.add('fade-in-active');
+                }
             }, 500);
         }
     }
 
-    // نمایش خطای کاربر پسند
     function showError(msg) {
         if (loader) {
+            // نمایش پیام خطا داخل همان لودر مشکی و شیک
+            loader.style.opacity = '1';
+            loader.style.display = 'flex';
+            
             loader.innerHTML = `
-                <div style="text-align:center; padding:20px;">
-                    <p style="color:#EF4444; margin-bottom:15px;">${msg}</p>
+                <div class="loader-content">
+                    <div style="font-size: 3rem; margin-bottom: 20px;">⚠️</div>
+                    <p style="color:#F6465D; margin-bottom:20px; font-weight:bold;">${msg}</p>
                     <button onclick="window.location.reload()" 
-                        style="background:#333; color:white; border:1px solid #555; padding:10px 20px; border-radius:10px; cursor:pointer;">
+                        style="background:rgba(255,255,255,0.1); color:white; border:1px solid rgba(255,255,255,0.2); padding:12px 24px; border-radius:12px; cursor:pointer; font-family:'Vazirmatn';">
                         تلاش مجدد
                     </button>
                 </div>

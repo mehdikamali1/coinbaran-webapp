@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#050505">
-    <title>اتاق بازی زنده | کوین باران</title>
+    <title>استادیوم زنده | کوین باران</title>
     
     <!-- Libraries -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -14,62 +14,64 @@
     <link rel="stylesheet" href="webapp/dashboard-style.css?v=71.0">
 
     <style>
-        /* --- Live Stadium Specific Styles --- */
+        /* --- استایل‌های اختصاصی استادیوم --- */
         
-        /* نشانگر وضعیت اتصال */
+        /* نشانگر وضعیت اتصال (شناور) */
         #connection-status {
-            position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
+            position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
             background: rgba(0,0,0,0.8); border: 1px solid var(--glass-border);
-            padding: 5px 12px; border-radius: 20px;
-            font-size: 0.7rem; display: flex; align-items: center; gap: 6px;
+            padding: 6px 14px; border-radius: 20px;
+            font-size: 0.75rem; display: flex; align-items: center; gap: 8px;
             z-index: 90; transition: all 0.3s; opacity: 0; pointer-events: none;
+            backdrop-filter: blur(5px);
         }
-        #connection-status.visible { opacity: 1; top: 80px; }
-        .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); }
-        .status-dot.active { background: var(--accent-green); box-shadow: 0 0 8px var(--accent-green); }
+        #connection-status.visible { opacity: 1; top: 90px; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); transition: background 0.3s; }
+        .status-dot.active { background: var(--accent-green); box-shadow: 0 0 10px var(--accent-green); }
         
-        /* اسکوربورد اصلی */
+        /* کارت اسکوربورد */
         .scoreboard-card {
-            background: linear-gradient(180deg, rgba(20,20,20,0.8) 0%, rgba(10,10,10,0.9) 100%);
+            background: linear-gradient(180deg, rgba(30,30,30,0.8) 0%, rgba(10,10,10,0.9) 100%);
             border: 1px solid var(--glass-border); border-radius: 24px;
-            padding: 25px 15px; margin: 10px 0 25px 0;
+            padding: 25px 15px; margin: 10px 0 30px 0;
             position: relative; overflow: hidden;
             box-shadow: 0 15px 40px -10px rgba(0,0,0,0.8);
         }
-        /* افکت نور استادیوم */
+        /* نور افکن استادیوم */
         .stadium-light {
-            position: absolute; top: -50%; left: 50%; transform: translateX(-50%);
-            width: 150px; height: 100px; background: var(--accent-green);
-            filter: blur(80px); opacity: 0.15; pointer-events: none;
+            position: absolute; top: -60%; left: 50%; transform: translateX(-50%);
+            width: 80%; height: 150px; background: var(--accent-green);
+            filter: blur(90px); opacity: 0.2; pointer-events: none;
         }
 
         .teams-row { display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 2; }
         
         .team-box { 
-            flex: 1; display: flex; flex-direction: column; align-items: center; gap: 10px; 
+            flex: 1; display: flex; flex-direction: column; align-items: center; gap: 12px; 
             text-align: center;
         }
         .team-avatar {
-            width: 55px; height: 55px; border-radius: 16px;
+            width: 60px; height: 60px; border-radius: 18px;
             background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.5rem; color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            font-size: 1.8rem; color: #fff; box-shadow: 0 8px 20px rgba(0,0,0,0.4);
         }
-        .team-name { font-size: 0.85rem; font-weight: 700; color: #fff; max-width: 80px; line-height: 1.2; }
+        .team-name { font-size: 0.9rem; font-weight: 700; color: #fff; max-width: 90px; line-height: 1.4; }
 
         .score-box { 
             display: flex; flex-direction: column; align-items: center; 
-            width: 100px; 
+            width: 110px; 
         }
         .score-display {
-            font-family: 'Roboto Mono', monospace; font-size: 2.2rem; font-weight: 800;
-            color: var(--primary-gold); text-shadow: 0 0 20px rgba(240, 185, 11, 0.3);
-            letter-spacing: 2px;
+            font-family: 'Roboto Mono', monospace; font-size: 2.4rem; font-weight: 900;
+            color: var(--primary-gold); text-shadow: 0 0 25px rgba(240, 185, 11, 0.4);
+            letter-spacing: 2px; line-height: 1;
         }
         .match-timer {
-            font-size: 0.75rem; color: var(--accent-green); margin-top: 5px;
-            font-family: 'Roboto Mono'; font-weight: 600;
-            background: rgba(14, 203, 129, 0.1); padding: 2px 8px; border-radius: 6px;
+            font-size: 0.8rem; color: var(--accent-green); margin-top: 8px;
+            font-family: 'Vazirmatn'; font-weight: 700;
+            background: rgba(14, 203, 129, 0.1); padding: 4px 10px; border-radius: 8px;
+            border: 1px solid rgba(14, 203, 129, 0.2);
         }
         .match-timer.blink { animation: pulse-green 1.5s infinite; }
 
@@ -77,45 +79,48 @@
         .polls-section { margin-top: 20px; }
         .polls-title {
             display: flex; align-items: center; justify-content: space-between;
-            font-size: 0.95rem; font-weight: 700; color: var(--text-main);
-            margin-bottom: 15px; border-right: 3px solid var(--accent-blue); padding-right: 10px;
+            font-size: 1rem; font-weight: 800; color: var(--text-main);
+            margin-bottom: 15px; border-right: 4px solid var(--accent-blue); padding-right: 12px;
         }
 
+        /* کارت نظرسنجی */
         .poll-card {
             background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
-            border-radius: 16px; padding: 16px; margin-bottom: 15px;
+            border-radius: 16px; padding: 18px; margin-bottom: 15px;
             animation: slideIn 0.4s ease-out; position: relative; overflow: hidden;
         }
         .poll-card::before {
             content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%;
             background: var(--accent-blue);
         }
-        .poll-card.new { border-color: var(--primary-gold); box-shadow: 0 0 15px rgba(240,185,11,0.1); }
+        .poll-card.new { border-color: var(--primary-gold); box-shadow: 0 0 20px rgba(240,185,11,0.15); }
         .poll-card.closed { opacity: 0.6; filter: grayscale(1); pointer-events: none; }
 
         .poll-header {
-            display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;
+            display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;
         }
-        .poll-question { font-size: 0.9rem; color: #fff; font-weight: 600; line-height: 1.4; flex: 1; }
+        .poll-question { font-size: 0.95rem; color: #fff; font-weight: 700; line-height: 1.5; flex: 1; margin-left: 10px; }
         .poll-timer { 
-            font-family: 'Roboto Mono'; font-size: 0.8rem; color: var(--primary-gold); 
-            background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; margin-right: 10px;
+            font-family: 'Roboto Mono'; font-size: 0.9rem; color: var(--primary-gold); 
+            background: rgba(0,0,0,0.4); padding: 4px 8px; border-radius: 6px; 
+            font-weight: bold; border: 1px solid var(--glass-border);
         }
 
-        .poll-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .poll-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .poll-btn {
             background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
-            color: var(--text-muted); padding: 12px; border-radius: 10px;
-            font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
+            color: var(--text-muted); padding: 14px; border-radius: 12px;
+            font-size: 0.9rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
+            font-family: 'Vazirmatn';
         }
         .poll-btn:active { transform: scale(0.96); }
         .poll-btn.selected {
             background: var(--accent-blue); color: #fff; border-color: var(--accent-blue);
-            box-shadow: 0 4px 15px rgba(59,130,246,0.3);
+            box-shadow: 0 4px 20px rgba(59,130,246,0.4);
         }
 
         @keyframes pulse-green { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-        @keyframes slideIn { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
 </head>
 <body>
@@ -124,19 +129,18 @@
     <div class="ambient-glow glow-bottom"></div>
     <div class="grid-overlay"></div>
 
-    <!-- Premium Loader -->
+    <!-- Persian Loader with Logo -->
     <div id="loader">
         <div class="loader-content">
-            <div class="spinner-premium"></div>
-            <div class="brand-text">LIVE MATCH</div>
-            <p class="loading-status">Connecting to Stadium...</p>
+            <img src="webapp/images/logo-gold.png" alt="CB" class="main-logo-img" style="width:100px; height:100px;">
+            <p class="loading-status" style="color:var(--primary-gold); margin-top:15px;">در حال اتصال به استادیوم...</p>
         </div>
     </div>
 
-    <!-- Connection Status Pill -->
+    <!-- Connection Status -->
     <div id="connection-status">
         <div class="status-dot"></div>
-        <span id="conn-text">Connecting...</span>
+        <span id="conn-text">در حال اتصال...</span>
     </div>
 
     <div id="app-container" class="hidden-content" style="padding-bottom: 40px;">
@@ -149,9 +153,9 @@
                 </div>
                 <div style="font-weight:800; font-size:1.1rem; color: #fff;">استادیوم زنده</div>
             </div>
-            <div class="live-badge" style="background:rgba(246,70,93,0.15); color:var(--accent-red); padding:4px 10px; border-radius:20px; font-size:0.75rem; font-weight:800; border:1px solid rgba(246,70,93,0.3); display:flex; align-items:center; gap:5px;">
-                <div style="width:6px; height:6px; background:var(--accent-red); border-radius:50%; animation:pulse-green 1s infinite;"></div>
-                LIVE
+            <div class="live-badge" style="background:rgba(246,70,93,0.15); color:var(--accent-red); padding:6px 12px; border-radius:20px; font-size:0.75rem; font-weight:800; border:1px solid rgba(246,70,93,0.3); display:flex; align-items:center; gap:6px;">
+                <div style="width:8px; height:8px; background:var(--accent-red); border-radius:50%; animation:pulse-green 1s infinite;"></div>
+                ZINDA
             </div>
         </header>
 
@@ -160,14 +164,14 @@
             <!-- Luxury Scoreboard -->
             <div class="scoreboard-card">
                 <div class="stadium-light"></div>
-                <div style="text-align:center; margin-bottom:15px; color:var(--text-muted); font-size:0.8rem; letter-spacing:1px;" id="match-title">
-                    Loading Match...
+                <div style="text-align:center; margin-bottom:20px; color:var(--text-muted); font-size:0.85rem; letter-spacing:0.5px;" id="match-title">
+                    در حال دریافت اطلاعات بازی...
                 </div>
                 
                 <div class="teams-row">
                     <div class="team-box">
                         <div class="team-avatar"><i class="fas fa-shield-alt"></i></div>
-                        <span id="home-team-name" class="team-name">Home</span>
+                        <span id="home-team-name" class="team-name">میزبان</span>
                     </div>
                     
                     <div class="score-box">
@@ -177,7 +181,7 @@
                     
                     <div class="team-box">
                         <div class="team-avatar"><i class="fas fa-tshirt"></i></div>
-                        <span id="away-team-name" class="team-name">Away</span>
+                        <span id="away-team-name" class="team-name">میهمان</span>
                     </div>
                 </div>
             </div>
@@ -185,15 +189,15 @@
             <!-- Polls Section -->
             <div class="polls-section">
                 <div class="polls-title">
-                    <span><i class="fas fa-poll"></i> پیش‌بینی‌های لحظه‌ای</span>
-                    <span style="font-size:0.7rem; color:var(--text-muted); font-weight:400;">Real-time Polls</span>
+                    <span><i class="fas fa-chart-pie"></i> پیش‌بینی‌های لحظه‌ای</span>
+                    <span style="font-size:0.75rem; color:var(--text-muted); font-weight:400;">(Live Polls)</span>
                 </div>
 
                 <div id="polls-container">
-                    <div id="no-polls-message" style="text-align: center; color: var(--text-muted); padding: 40px; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px dashed var(--glass-border);">
-                        <i class="fas fa-chart-pie" style="font-size: 2.5rem; margin-bottom: 15px; opacity: 0.3;"></i>
-                        <p style="margin: 0; font-size: 0.9rem;">هنوز سوالی مطرح نشده است.</p>
-                        <p style="margin: 5px 0 0 0; font-size: 0.7rem; opacity:0.6;">منتظر اتفاقات بازی باشید...</p>
+                    <div id="no-polls-message" style="text-align: center; color: var(--text-muted); padding: 50px 20px; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px dashed var(--glass-border);">
+                        <i class="fas fa-clipboard-list" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.3;"></i>
+                        <p style="margin: 0; font-size: 0.95rem; font-weight:bold;">هنوز سوالی مطرح نشده است.</p>
+                        <p style="margin: 8px 0 0 0; font-size: 0.75rem; opacity:0.6;">منتظر اتفاقات بازی باشید...</p>
                     </div>
                 </div>
             </div>
@@ -201,7 +205,25 @@
         </div>
     </div>
 
-    <!-- Script (Logic from old file + UI adaptations) -->
-    <script src="webapp/live.js?v=71.0"></script>
+    <!-- Script (Logic Updated for Persian UI) -->
+    <script src="webapp/live.js?v=74.0"></script>
+    
+    <!-- Loader Fade Out -->
+    <script>
+        // لودر به صورت دستی توسط live.js مخفی می‌شود وقتی سوکت متصل شد
+        // اما برای اطمینان یک تایم‌اوت طولانی می‌گذاریم
+        setTimeout(() => {
+            const l = document.getElementById('loader');
+            if(l && l.style.display !== 'none') {
+                // اگر بعد از ۱۰ ثانیه هنوز وصل نشد، لودر را بردار تا کاربر صفحه را ببیند
+                l.style.opacity='0'; 
+                setTimeout(()=> {
+                    l.style.display='none'; 
+                    document.getElementById('app-container').classList.remove('hidden-content');
+                    document.getElementById('app-container').classList.add('fade-in-active');
+                }, 500); 
+            }
+        }, 10000);
+    </script>
 </body>
 </html>

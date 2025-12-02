@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#050505">
-    <title>Coin Baran | Dashboard</title>
+    <title>کوین باران | داشبورد</title>
     
     <!-- Libraries -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
     <!-- Styles -->
-    <link rel="stylesheet" href="webapp/dashboard-style.css?v=70.0">
+    <link rel="stylesheet" href="webapp/dashboard-style.css?v=71.0">
 </head>
 <body class="loading-active">
 
@@ -20,12 +20,13 @@
     <div class="ambient-glow glow-bottom"></div>
     <div class="grid-overlay"></div>
 
-    <!-- Premium Loader -->
+    <!-- Persian Loader with Logo -->
     <div id="loader">
         <div class="loader-content">
-            <div class="spinner-premium"></div>
-            <div class="brand-text">COIN BARAN</div>
-            <p class="loading-status">Establishing Secure Connection...</p>
+            <!-- بازگردانی لوگوی اصلی -->
+            <img src="webapp/images/logo-gold.png" alt="Coin Baran" class="main-logo-img">
+            <div class="brand-text">کـویـن بـاران</div>
+            <p class="loading-status">در حال برقراری ارتباط امن...</p>
         </div>
     </div>
 
@@ -35,14 +36,21 @@
         <header class="glass-header">
             <div class="profile-section">
                 <div class="avatar-frame ripple-effect">
+                    <!-- اگر کاربر عکس نداشت، لوگو نشان داده می‌شود -->
                     <img src="webapp/images/logo-gold.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'" alt="User" class="avatar-img">
                     <div class="online-dot"></div>
                 </div>
 
+                <!-- لوگوی شناور هدر (Restored) -->
+                <div class="header-logo-container">
+                    <div class="header-glow"></div>
+                    <img src="webapp/images/logo-gold.png" class="header-logo-img" alt="CB">
+                </div>
+
                 <div class="user-details">
-                    <h2 id="welcome-name" class="fade-in-text">Loading User...</h2>
+                    <h2 id="welcome-name" class="fade-in-text">در حال بارگذاری...</h2>
                     <div class="kyc-wrapper">
-                        <span id="kyc-text" class="kyc-tag">VIP MEMBER</span>
+                        <span id="kyc-text" class="kyc-tag">کاربر مهمان</span>
                     </div>
                 </div>
             </div>
@@ -57,7 +65,7 @@
 
         <main class="main-scroll-area">
             
-            <!-- Hero Asset Card (Holographic Style) -->
+            <!-- Hero Asset Card (Persian) -->
             <div class="asset-card premium-glass">
                 <div class="card-shine-effect"></div>
                 <div class="card-mesh"></div>
@@ -66,61 +74,61 @@
                     <div class="chip-icon">
                         <i class="fas fa-sim-card"></i>
                     </div>
-                    <div class="card-brand-text">PLATINUM ACCESS</div>
+                    <div class="card-brand-text">COIN BARAN VIP</div>
                 </div>
 
                 <div class="balance-display">
-                    <span class="label-muted">Total Balance</span>
+                    <span class="label-muted">موجودی کل دارایی‌ها</span>
                     <div class="amount-row">
                         <h1 id="toman-balance" class="main-digit">---</h1>
-                        <span class="currency-symbol">IRT</span>
+                        <span class="currency-symbol">تومان</span>
                     </div>
                 </div>
 
                 <div class="card-footer-row">
                     <div class="stat-item">
-                        <span class="stat-label">USDT Balance</span>
-                        <span class="stat-value color-usd" id="uusd-balance">0.00 <small>USD</small></span>
+                        <span class="stat-label">موجودی تتر</span>
+                        <span class="stat-value color-usd" id="uusd-balance">0.00 <small>دلار</small></span>
                     </div>
                     <div class="stat-divider"></div>
                     <div class="stat-item">
-                        <span class="stat-label">Club Points</span>
+                        <span class="stat-label">امتیاز کلاب</span>
                         <span class="stat-value color-xp" id="xp-balance">0 <small>XP</small></span>
                     </div>
                 </div>
             </div>
 
-            <!-- Quick Access Grid -->
-            <div class="section-label">Quick Actions</div>
+            <!-- Quick Access Grid (Persian) -->
+            <div class="section-label">دسترسی سریع</div>
             <div class="quick-access-grid">
                 <div class="action-item ripple-btn" onclick="window.location.href='wallet'">
                     <div class="action-icon deposit-theme">
                         <i class="fas fa-arrow-down"></i>
                     </div>
-                    <span>Deposit</span>
+                    <span>واریز</span>
                 </div>
                 <div class="action-item ripple-btn" onclick="window.location.href='wallet?tab=withdraw'">
                     <div class="action-icon withdraw-theme">
                         <i class="fas fa-arrow-up"></i>
                     </div>
-                    <span>Withdraw</span>
+                    <span>برداشت</span>
                 </div>
                 <div class="action-item ripple-btn" onclick="window.location.href='usdt'">
                     <div class="action-icon trade-theme">
                         <i class="fas fa-exchange-alt"></i>
                     </div>
-                    <span>Swap</span>
+                    <span>مبادله</span>
                 </div>
                 <div class="action-item ripple-btn" onclick="window.location.href='kyc'">
                     <div class="action-icon kyc-theme">
                         <i class="fas fa-shield-alt"></i>
                     </div>
-                    <span>Auth</span>
+                    <span>احراز هویت</span>
                 </div>
             </div>
 
             <!-- Services Section -->
-            <div class="section-label">Markets & Games</div>
+            <div class="section-label">مارکت و سرگرمی</div>
             
             <!-- Featured Game Widget -->
             <div class="featured-game-card ripple-effect" onclick="window.location.href='game'">
@@ -130,11 +138,11 @@
                         <i class="fas fa-chart-line"></i>
                     </div>
                     <div class="game-info">
-                        <h4>Candle Run 🚀</h4>
-                        <p>Predict & Win USDT</p>
+                        <h4>بازی کندل 🚀</h4>
+                        <p>پیش‌بینی کن و دلار ببر!</p>
                     </div>
                     <div class="play-button">
-                        PLAY <i class="fas fa-chevron-left"></i>
+                        شروع بازی <i class="fas fa-chevron-left"></i>
                     </div>
                 </div>
             </div>
@@ -146,8 +154,8 @@
                         <i class="fas fa-dollar-sign"></i>
                     </div>
                     <div class="srv-text">
-                        <h5>Tether/IRT</h5>
-                        <span>Auto Trade</span>
+                        <h5>تتر / تومان</h5>
+                        <span>معامله اتوماتیک</span>
                     </div>
                 </div>
 
@@ -156,8 +164,8 @@
                         <i class="fas fa-ticket-alt"></i>
                     </div>
                     <div class="srv-text">
-                        <h5>Utopia</h5>
-                        <span>Vouchers</span>
+                        <h5>یوتوپیا</h5>
+                        <span>خرید و فروش ووچر</span>
                     </div>
                 </div>
 
@@ -166,8 +174,8 @@
                         <i class="fas fa-futbol"></i>
                     </div>
                     <div class="srv-text">
-                        <h5>Live Score</h5>
-                        <span>Sports Data</span>
+                        <h5>نتایج زنده</h5>
+                        <span>اطلاعات ورزشی</span>
                     </div>
                 </div>
 
@@ -176,8 +184,8 @@
                         <i class="fas fa-headset"></i>
                     </div>
                     <div class="srv-text">
-                        <h5>Support</h5>
-                        <span>24/7 Online</span>
+                        <h5>پشتیبانی</h5>
+                        <span>۲۴ ساعته آنلاین</span>
                     </div>
                 </div>
 
@@ -188,9 +196,9 @@
     </div>
     
     <!-- Script Ref -->
-    <script src="webapp/script.js?v=70.0"></script>
+    <script src="webapp/script.js?v=73.0"></script>
     
-    <!-- Inline visual logic for Loader (Immediate Execution) -->
+    <!-- Loader Animation Logic -->
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             if(window.Telegram && window.Telegram.WebApp) {
@@ -198,19 +206,23 @@
                 window.Telegram.WebApp.setHeaderColor('#050505');
                 window.Telegram.WebApp.setBackgroundColor('#050505');
             }
-            // Smooth Loader Exit
+            // انیمیشن خروج لودر (تایمر کمی بیشتر برای دیده شدن لوگو)
             setTimeout(function() {
                 const loader = document.getElementById('loader');
                 const app = document.getElementById('app-container');
                 
-                loader.style.opacity = '0';
-                loader.style.pointerEvents = 'none';
+                if(loader) {
+                    loader.style.opacity = '0';
+                    loader.style.pointerEvents = 'none';
+                }
                 
-                app.classList.remove('hidden-content');
-                app.classList.add('fade-in-active');
+                if(app) {
+                    app.classList.remove('hidden-content');
+                    app.classList.add('fade-in-active');
+                }
                 
-                setTimeout(() => loader.style.display = 'none', 500);
-            }, 2500);
+                setTimeout(() => { if(loader) loader.style.display = 'none'; }, 500);
+            }, 3000);
         });
     </script>
 </body>

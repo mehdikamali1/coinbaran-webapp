@@ -43,7 +43,7 @@
         .tx-container { padding-bottom: 80px; }
         .section-label { 
             font-size: 0.95rem; color: var(--text-main); margin-bottom: 15px; 
-            display: flex; align-items: center; gap: 8px;
+            display: flex; align-items: center; gap: 8px; font-weight: 800;
         }
         .section-label::before { content: ''; width: 4px; height: 16px; background: var(--primary-gold); border-radius: 2px; }
 
@@ -96,18 +96,27 @@
         .glass-field {
             width: 100%; padding: 16px;
             background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
-            border-radius: 12px; color: #fff; font-size: 1.2rem; font-family: 'Roboto Mono';
+            border-radius: 12px; color: #fff; font-size: 1.2rem; font-family: 'Vazirmatn';
             font-weight: bold; text-align: center; outline: none;
         }
         .glass-field:focus { border-color: var(--primary-gold); box-shadow: 0 0 15px rgba(240,185,11,0.1); }
     </style>
 </head>
-<body>
+<body class="loading-active">
 
     <!-- Ambient Background -->
     <div class="ambient-glow glow-top"></div>
     <div class="ambient-glow glow-bottom"></div>
     <div class="grid-overlay"></div>
+
+    <!-- Persian Loader with Logo -->
+    <div id="loader">
+        <div class="loader-content">
+            <img src="webapp/images/logo-gold.png" alt="Coin Baran" class="main-logo-img">
+            <div class="brand-text">کـویـن بـاران</div>
+            <p class="loading-status">در حال دریافت اطلاعات کیف پول...</p>
+        </div>
+    </div>
 
     <!-- Header -->
     <header class="glass-header">
@@ -115,14 +124,14 @@
             <div class="icon-btn ripple-btn" onclick="window.location.href='/'">
                 <i class="fas fa-arrow-right"></i>
             </div>
-            <div style="font-weight:800; font-size:1.1rem; color: #fff;">Asset Management</div>
+            <div style="font-weight:800; font-size:1.1rem; color: #fff;">مدیریت دارایی</div>
         </div>
         <div class="icon-btn ripple-btn">
             <i class="fas fa-history"></i>
         </div>
     </header>
 
-    <div class="main-scroll-area">
+    <div id="app-container" class="main-scroll-area hidden-content">
         
         <!-- Platinum Asset Card -->
         <div class="asset-card">
@@ -131,26 +140,26 @@
             
             <div class="card-top-row">
                 <div class="chip-icon"><i class="fas fa-wallet"></i></div>
-                <div class="card-brand-text">MAIN WALLET</div>
+                <div class="card-brand-text">کیف پول اصلی</div>
             </div>
 
             <div class="balance-display">
-                <span class="label-muted">Available Toman Balance</span>
+                <span class="label-muted">موجودی قابل برداشت</span>
                 <div class="amount-row">
                     <h1 id="balance-toman" class="main-digit">---</h1>
-                    <span class="currency-symbol">IRT</span>
+                    <span class="currency-symbol">تومان</span>
                 </div>
             </div>
 
             <div class="card-footer-row">
                 <div class="stat-item">
-                    <span class="stat-label">Game Balance</span>
-                    <span class="stat-value color-usd" id="balance-uusd">--- UUSD</span>
+                    <span class="stat-label">موجودی بازی</span>
+                    <span class="stat-value color-usd" id="balance-uusd">--- <small>دلار</small></span>
                 </div>
                 <div class="stat-divider"></div>
                 <div class="stat-item">
-                    <span class="stat-label">Status</span>
-                    <span class="stat-value color-xp">Active</span>
+                    <span class="stat-label">وضعیت حساب</span>
+                    <span class="stat-value color-xp">فعال</span>
                 </div>
             </div>
         </div>
@@ -161,22 +170,22 @@
                 <div class="action-icon deposit-theme" style="width:50px; height:50px; background:transparent; border:none;">
                     <i class="fas fa-arrow-down"></i>
                 </div>
-                <span>Deposit IRT</span>
+                <span>واریز تومان</span>
             </div>
             <div class="w-btn btn-withdraw ripple-effect" onclick="window.location.href='wallet?tab=withdraw'">
                 <div class="action-icon withdraw-theme" style="width:50px; height:50px; background:transparent; border:none;">
                     <i class="fas fa-arrow-up"></i>
                 </div>
-                <span>Withdraw</span>
+                <span>برداشت وجه</span>
             </div>
         </div>
 
         <!-- Transaction List -->
         <div class="tx-container">
-            <div class="section-label">Transaction History</div>
+            <div class="section-label">تاریخچه تراکنش‌ها</div>
             <div id="tx-list">
                 <div style="text-align:center; padding:40px; color:var(--text-muted); font-size:0.9rem; opacity: 0.7;">
-                    <i class="fas fa-circle-notch fa-spin"></i> Syncing Blockchain Data...
+                    <i class="fas fa-circle-notch fa-spin"></i> در حال همگام‌سازی اطلاعات...
                 </div>
             </div>
         </div>
@@ -187,29 +196,29 @@
     <div id="deposit-modal" class="modal-overlay">
         <div class="modal-content glass-panel">
             <div class="modal-header">
-                <h3 style="color:var(--accent-green)">Deposit Funds ⚡️</h3>
+                <h3 style="color:var(--accent-green)">شارژ کیف پول ⚡️</h3>
                 <button onclick="closeDepositModal()" class="close-modal">✕</button>
             </div>
             <div class="modal-body">
                 <p style="text-align:center; color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">
-                    Please enter amount and upload receipt.
+                    لطفاً مبلغ مورد نظر و تصویر فیش واریزی را وارد کنید.
                 </p>
 
                 <div style="margin-bottom:20px;">
-                    <label class="label-muted" style="margin-bottom:8px;">Amount (Toman)</label>
-                    <input type="number" id="deposit-amount" class="glass-field" placeholder="e.g. 100,000" inputmode="numeric">
+                    <label class="label-muted" style="margin-bottom:8px;">مبلغ (تومان)</label>
+                    <input type="number" id="deposit-amount" class="glass-field" placeholder="مثلاً ۱۰۰,۰۰۰" inputmode="numeric">
                 </div>
 
                 <div class="upload-area ripple-btn" onclick="document.getElementById('receipt-file').click()">
                     <i class="fas fa-cloud-upload-alt upload-icon" id="up-icon"></i>
-                    <div class="upload-label" id="file-label">Tap to upload receipt image</div>
+                    <div class="upload-label" id="file-label">برای انتخاب تصویر فیش کلیک کنید</div>
                     <input type="file" id="receipt-file" style="display:none" accept="image/*" onchange="updateFileLabel(this)">
                 </div>
 
                 <button id="btn-submit-dep" class="btn-confirm-swap ripple-effect" 
                     style="width:100%; margin-top:25px; background:var(--accent-green);" 
                     onclick="submitDeposit()">
-                    Submit Request
+                    ارسال درخواست
                 </button>
             </div>
         </div>
@@ -219,7 +228,7 @@
     <div id="detail-modal" class="modal-overlay">
         <div class="modal-content glass-panel">
             <div class="modal-header">
-                <h3>Transaction Details</h3>
+                <h3>جزئیات تراکنش</h3>
                 <button onclick="document.getElementById('detail-modal').classList.remove('active')" class="close-modal">✕</button>
             </div>
             <div class="modal-body">
@@ -227,7 +236,7 @@
                 
                 <button class="btn-continue" style="margin-top:20px; background:rgba(255,255,255,0.1); color:#fff;" 
                     onclick="document.getElementById('detail-modal').classList.remove('active')">
-                    Close
+                    بستن
                 </button>
             </div>
         </div>
@@ -237,6 +246,21 @@
         const tg = window.Telegram.WebApp;
         const API_BASE_URL = window.location.origin;
 
+        // --- Loader Logic ---
+        function hideLoader() {
+            const loader = document.getElementById('loader');
+            const app = document.getElementById('app-container');
+            if(loader) {
+                loader.style.opacity = '0';
+                loader.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                    app.classList.remove('hidden-content');
+                    app.classList.add('fade-in-active');
+                }, 500);
+            }
+        }
+
         // --- UI Functions ---
         function openDepositModal() { document.getElementById('deposit-modal').classList.add('active'); }
         function closeDepositModal() { document.getElementById('deposit-modal').classList.remove('active'); }
@@ -245,12 +269,12 @@
             const label = document.getElementById('file-label');
             const icon = document.getElementById('up-icon');
             if (input.files && input.files.length > 0) {
-                label.innerText = "✅ Selected: " + input.files[0].name;
+                label.innerText = "✅ تصویر انتخاب شد: " + input.files[0].name;
                 label.style.color = "var(--accent-green)";
                 icon.style.color = "var(--accent-green)";
                 icon.className = "fas fa-check-circle upload-icon";
             } else {
-                label.innerText = "Tap to upload receipt image";
+                label.innerText = "برای انتخاب تصویر فیش کلیک کنید";
                 label.style.color = "var(--text-muted)";
                 icon.style.color = "var(--text-muted)";
                 icon.className = "fas fa-cloud-upload-alt upload-icon";
@@ -264,10 +288,10 @@
             const btn = document.getElementById('btn-submit-dep');
             const amount = parseInt(amountInput.value);
 
-            if(!amount || amount < 50000) { tg.showAlert("Minimum deposit is 50,000 Toman"); return; }
-            if(fileInput.files.length === 0) { tg.showAlert("Please upload the receipt image."); return; }
+            if(!amount || amount < 50000) { tg.showAlert("حداقل مبلغ واریز ۵۰,۰۰۰ تومان است."); return; }
+            if(fileInput.files.length === 0) { tg.showAlert("لطفاً تصویر فیش واریزی را انتخاب کنید."); return; }
 
-            btn.disabled = true; btn.innerText = "Uploading...";
+            btn.disabled = true; btn.innerText = "در حال آپلود...";
             tg.HapticFeedback.impactOccurred('light');
 
             const formData = new FormData();
@@ -278,7 +302,7 @@
             try {
                 const res = await fetch(`${API_BASE_URL}/webapp/submit_deposit`, { method: 'POST', body: formData });
                 let result;
-                try { result = await res.json(); } catch { throw new Error("Server Error"); }
+                try { result = await res.json(); } catch { throw new Error("خطای سرور"); }
 
                 if (res.ok && result.status === 'success') {
                     tg.showAlert("✅ " + result.message);
@@ -288,11 +312,11 @@
                     fetchWalletData(); 
                     tg.HapticFeedback.notificationOccurred('success');
                 } else {
-                    tg.showAlert(`❌ Error: ${result.message || "Unknown"}`);
+                    tg.showAlert(`❌ خطا: ${result.message || "ناشناخته"}`);
                     tg.HapticFeedback.notificationOccurred('error');
                 }
-            } catch (e) { tg.showAlert("Connection Error: " + e.message); } 
-            finally { btn.disabled = false; btn.innerText = "Submit Request"; }
+            } catch (e) { tg.showAlert("خطای ارتباط: " + e.message); } 
+            finally { btn.disabled = false; btn.innerText = "ارسال درخواست"; }
         }
 
         let transactionsData = [];
@@ -315,18 +339,19 @@
                 const data = await res.json();
                 if (data.status === 'success') {
                     document.getElementById('balance-toman').innerText = parseInt(data.balances.toman.replace(/,/g, '')).toLocaleString();
-                    document.getElementById('balance-uusd').innerText = `${data.balances.uusd} UUSD`;
+                    document.getElementById('balance-uusd').innerText = `${data.balances.uusd} دلار`;
                     transactionsData = data.transactions;
                     renderTx(data.transactions);
+                    hideLoader(); // مخفی کردن لودر بعد از دریافت دیتا
                 }
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error(e); hideLoader(); }
         }
 
         function renderTx(txs) {
             const list = document.getElementById('tx-list');
             list.innerHTML = '';
             if (txs.length === 0) { 
-                list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:0.8rem">No transactions found</div>'; 
+                list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:0.8rem">هنوز تراکنشی ثبت نشده است</div>'; 
                 return; 
             }
 
@@ -373,19 +398,19 @@
 
             let html = `
                 <div style="display:flex; justify-content:space-between; margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:12px;">
-                    <span style="color:var(--text-muted); font-size:0.9rem">Type</span>
+                    <span style="color:var(--text-muted); font-size:0.9rem">نوع تراکنش</span>
                     <span style="color:#fff; font-weight:700">${tx.title}</span>
                 </div>
                 <div style="display:flex; justify-content:space-between; margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:12px;">
-                    <span style="color:var(--text-muted); font-size:0.9rem">Amount</span>
+                    <span style="color:var(--text-muted); font-size:0.9rem">مبلغ</span>
                     <span style="color:#fff; font-weight:700; font-family:'Roboto Mono'; direction:ltr">${tx.display_amount}</span>
                 </div>
                 <div style="display:flex; justify-content:space-between; margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:12px;">
-                    <span style="color:var(--text-muted); font-size:0.9rem">Date</span>
+                    <span style="color:var(--text-muted); font-size:0.9rem">تاریخ</span>
                     <span style="color:#fff; font-size:0.9rem; font-family:'Roboto Mono'">${tx.date}</span>
                 </div>
                 <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
-                    <span style="color:var(--text-muted); font-size:0.9rem">Status</span>
+                    <span style="color:var(--text-muted); font-size:0.9rem">وضعیت</span>
                     <span style="color:${statusColor}; font-weight:bold">${tx.status}</span>
                 </div>
             `;
@@ -393,11 +418,11 @@
             if (tx.type === 'UTOPIA_BUY' && tx.detail) {
                 html += `
                     <div class="voucher-display">
-                        <div style="color:var(--text-muted); font-size:0.8rem; margin-bottom:8px;">Purchased Voucher Code:</div>
+                        <div style="color:var(--text-muted); font-size:0.8rem; margin-bottom:8px;">کد ووچر خریداری شده:</div>
                         <div class="v-code">${tx.detail}</div>
                         <div class="ripple-btn" style="color:var(--accent-blue); font-size:0.85rem; margin-top:12px; cursor:pointer; padding:5px;" 
-                             onclick="navigator.clipboard.writeText('${tx.detail}'); tg.showAlert('Code Copied!'); tg.HapticFeedback.notificationOccurred('success');">
-                            <i class="fas fa-copy"></i> Copy Code
+                             onclick="navigator.clipboard.writeText('${tx.detail}'); tg.showAlert('کد کپی شد!'); tg.HapticFeedback.notificationOccurred('success');">
+                            <i class="fas fa-copy"></i> کپی کردن کد
                         </div>
                     </div>
                 `;

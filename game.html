@@ -3,23 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#0d1117">
-    <title>Coin Baran | Pro Trading</title>
+    <meta name="theme-color" content="#050505">
+    <title>ترید حرفه‌ای | کوین باران</title>
 
     <!-- Libraries -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
-    <!-- Styles -->
-    <link rel="stylesheet" href="webapp/game-style.css?v=70.0">
+    <!-- Styles (Reuse Dashboard V71 for consistency) -->
+    <link rel="stylesheet" href="webapp/game-style.css?v=71.0">
+    
+    <!-- Inline Override for Persian Font Adjustments -->
+    <style>
+        body { font-family: 'Vazirmatn', sans-serif !important; }
+        .main-price { letter-spacing: 0; } 
+        .btn-title { font-size: 1.1rem; }
+        .btn-rate { font-family: 'Roboto Mono'; font-size: 0.8rem; opacity: 0.9; }
+    </style>
 </head>
 <body>
 
-    <!-- Ambient Background Effects (Luxe Feel) -->
+    <!-- Ambient Background Effects -->
     <div class="ambient-glow glow-top"></div>
     <div class="ambient-glow glow-bottom"></div>
     <div class="grid-overlay"></div>
+
+    <!-- Persian Loader -->
+    <div id="game-loader" style="position:fixed; inset:0; background:#000; z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:opacity 0.5s;">
+        <img src="webapp/images/logo-gold.png" alt="CB" class="main-logo-img" style="width:100px; height:100px;">
+        <p class="loading-status" style="color:var(--primary-gold); margin-top:15px;">در حال اتصال به بازار جهانی...</p>
+    </div>
 
     <div id="app-container">
         
@@ -32,7 +46,7 @@
                 <div class="wallet-badge ripple-effect" onclick="window.openSwapModal()">
                     <span class="wallet-icon">💰</span>
                     <span id="user-balance-display">0.00</span>
-                    <span class="wallet-currency">USD</span>
+                    <span class="wallet-currency">دلار</span>
                     <div class="wallet-add-btn">+</div>
                 </div>
             </div>
@@ -55,10 +69,10 @@
         <div class="market-stats">
             <div class="price-wrapper">
                 <div class="price-header">
-                    <span class="price-label">BTC Live Index</span>
+                    <span class="price-label">شاخص لحظه‌ای بیت‌کوین</span>
                     <div id="connection-status" class="status-pill connected">
                         <span class="status-dot"></span>
-                        <span class="status-text">Live</span>
+                        <span class="status-text">متصل</span>
                     </div>
                 </div>
                 <h1 id="btc-price" class="main-price">00,000.00</h1>
@@ -78,7 +92,7 @@
                     </svg>
                     <div class="timer-text-box">
                         <span id="timer-text">--</span>
-                        <span class="timer-label">SEC</span>
+                        <span class="timer-label">ثانیه</span>
                     </div>
                 </div>
             </div>
@@ -89,15 +103,15 @@
             <div id="tv-chart-container" class="chart-box"></div>
             <div id="chart-loader" class="chart-loader">
                 <div class="spinner-premium"></div>
-                <span class="loader-text">Loading Market Data...</span>
+                <span class="loader-text" style="margin-top:15px;">در حال دریافت نمودار...</span>
             </div>
         </div>
 
         <!-- Round History -->
         <div class="history-section">
             <div class="history-header">
-                <span>Recent Rounds</span>
-                <span class="history-more ripple-btn" onclick="window.openHistory()">View All</span>
+                <span>نتایج اخیر</span>
+                <span class="history-more ripple-btn" onclick="window.openHistory()">مشاهده همه</span>
             </div>
             <div id="history-container" class="history-scroll">
                 <!-- Items injected by JS -->
@@ -106,11 +120,11 @@
 
         <div class="spacer-bottom"></div>
 
-        <!-- Bottom Controls (Floating) -->
+        <!-- Bottom Controls -->
         <footer class="trading-controls glass-panel-top">
             <div class="control-header">
                 <div class="round-info">
-                    <span class="round-label">Round ID:</span>
+                    <span class="round-label">شماره راند:</span>
                     <span id="round-id" class="round-value">#...</span>
                 </div>
                 <div id="entry-display" class="entry-display hidden">
@@ -138,8 +152,8 @@
                         <div class="btn-content">
                             <span class="btn-icon">▲</span>
                             <div class="btn-text">
-                                <span class="btn-title">UP</span>
-                                <span class="btn-rate">x1.95</span>
+                                <span class="btn-title">خرید (صعود)</span>
+                                <span class="btn-rate">سود 1.95x</span>
                             </div>
                         </div>
                         <div class="btn-glow"></div>
@@ -149,8 +163,8 @@
                         <div class="btn-content">
                             <span class="btn-icon">▼</span>
                             <div class="btn-text">
-                                <span class="btn-title">DOWN</span>
-                                <span class="btn-rate">x1.95</span>
+                                <span class="btn-title">فروش (نزول)</span>
+                                <span class="btn-rate">سود 1.95x</span>
                             </div>
                         </div>
                         <div class="btn-glow"></div>
@@ -162,7 +176,7 @@
 
     <!-- MODALS -->
 
-    <!-- Result Modal (Dramatic Win/Loss) -->
+    <!-- Result Modal (Persian) -->
     <div id="result-modal" class="result-overlay">
         <div class="result-card glass-panel">
             <div class="result-confetti-origin"></div>
@@ -171,56 +185,56 @@
                     <div class="result-icon" id="res-icon">🏆</div>
                     <div class="result-icon-glow"></div>
                 </div>
-                <h2 id="res-title">YOU WON!</h2>
-                <p id="res-message" class="res-msg">Target hit successfully</p>
+                <h2 id="res-title">پیروزی!</h2>
+                <p id="res-message" class="res-msg">پیش‌بینی شما صحیح بود</p>
             </div>
             
             <div class="result-details">
                 <div class="detail-row">
-                    <span>Entry Price</span>
+                    <span>قیمت ورود</span>
                     <span id="res-entry" class="mono-font">00000.00</span>
                 </div>
                 <div class="detail-row">
-                    <span>Close Price</span>
+                    <span>قیمت بسته شدن</span>
                     <span id="res-close" class="mono-font">00000.00</span>
                 </div>
             </div>
 
             <div class="res-amount-box">
-                <span class="res-label">Profit</span>
+                <span class="res-label">میزان سود</span>
                 <div class="res-amount" id="res-amount">+$0.00</div>
             </div>
             
-            <button onclick="window.closeResultModal()" class="btn-continue ripple-effect">Continue Trading</button>
+            <button onclick="window.closeResultModal()" class="btn-continue ripple-effect">ادامه معامله</button>
         </div>
     </div>
 
-    <!-- Swap Modal -->
+    <!-- Swap Modal (Persian) -->
     <div id="swap-modal" class="modal-overlay">
         <div class="modal-content glass-panel">
             <div class="modal-header">
-                <h3>Quick Deposit ⚡️</h3>
+                <h3>شارژ سریع حساب ⚡️</h3>
                 <button onclick="window.closeSwapModal()" class="close-modal">✕</button>
             </div>
             <div class="modal-body swap-body">
-                <p class="swap-desc">Convert Toman to Game USD instantly.</p>
+                <p class="swap-desc">تبدیل آنی موجودی تومان به دلار بازی</p>
                 
                 <div class="swap-input-container">
-                    <label>Amount (Toman)</label>
+                    <label style="color:#888; font-size:0.8rem;">مبلغ به تومان</label>
                     <div class="swap-input-wrapper">
-                        <input type="text" id="swap-input-toman" placeholder="e.g. 100,000" inputmode="numeric">
-                        <span class="currency-tag">IRT</span>
+                        <input type="text" id="swap-input-toman" placeholder="مثلاً 100,000" inputmode="numeric">
+                        <span class="currency-tag">تومان</span>
                     </div>
                 </div>
 
                 <div class="swap-arrow">↓</div>
 
                 <div class="swap-preview">
-                    <span>≈ Estimate Receive:</span>
+                    <span>≈ دریافتی تقریبی:</span>
                     <span id="swap-calc-usd" class="swap-final-val">0.00 USD</span>
                 </div>
 
-                <button onclick="window.performSwap()" class="btn-confirm-swap ripple-effect">Confirm & Start</button>
+                <button onclick="window.performSwap()" class="btn-confirm-swap ripple-effect">تایید و شروع بازی</button>
             </div>
         </div>
     </div>
@@ -229,7 +243,7 @@
     <div id="leaderboard-modal" class="modal-overlay">
         <div class="modal-content glass-panel full-height-modal">
             <div class="modal-header">
-                <h3>🏆 Top Traders</h3>
+                <h3>🏆 برترین معامله‌گران</h3>
                 <button onclick="window.closeLeaderboard()" class="close-modal">✕</button>
             </div>
             <div id="leaderboard-list" class="modal-body list-body">
@@ -242,7 +256,7 @@
     <div id="history-modal" class="modal-overlay">
         <div class="modal-content glass-panel full-height-modal">
             <div class="modal-header">
-                <h3>📜 Round History</h3>
+                <h3>📜 تاریخچه نتایج</h3>
                 <button onclick="window.closeHistory()" class="close-modal">✕</button>
             </div>
             <div id="history-list" class="modal-body list-body"></div>
@@ -252,10 +266,20 @@
     <!-- Toast Notification -->
     <div id="toast" class="toast hidden">
         <div class="toast-icon">ℹ️</div>
-        <div class="toast-message">Notification</div>
+        <div class="toast-message">پیام سیستم</div>
     </div>
 
-    <!-- Main Logic -->
-    <script src="webapp/game.js?v=70.0"></script>
+    <!-- Main Logic (Updated for Persian) -->
+    <script src="webapp/game.js?v=74.0"></script>
+    
+    <!-- Loader Fade Out -->
+    <script>
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const l = document.getElementById('game-loader');
+                if(l) { l.style.opacity='0'; setTimeout(()=>l.style.display='none', 500); }
+            }, 1000);
+        });
+    </script>
 </body>
 </html>

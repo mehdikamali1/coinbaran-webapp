@@ -16,7 +16,7 @@
     <style>
         /* --- KYC Specific Styles --- */
         
-        /* کارت وضعیت (Status Card) - برای نمایش وضعیت تایید */
+        /* کارت وضعیت (Status Card) */
         .status-card {
             background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0.2) 100%);
             border: 1px solid var(--glass-border);
@@ -34,7 +34,7 @@
             font-size: 1.5rem; flex-shrink: 0;
             background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border);
         }
-        .status-info h3 { margin: 0 0 5px 0; font-size: 1rem; color: #fff; }
+        .status-info h3 { margin: 0 0 5px 0; font-size: 1rem; color: #fff; font-weight: 800; }
         .status-info p { margin: 0; font-size: 0.8rem; color: var(--text-muted); }
 
         /* فرم‌ها */
@@ -88,7 +88,7 @@
         .file-upload-icon { font-size: 1.8rem; color: var(--text-muted); transition: color 0.3s; }
         .file-selected .file-upload-icon { color: var(--accent-green); }
         
-        .file-upload-text { font-size: 0.75rem; color: var(--text-muted); pointer-events: none; }
+        .file-upload-text { font-size: 0.75rem; color: var(--text-muted); pointer-events: none; font-weight: 500; }
         .file-selected .file-upload-text { color: var(--accent-green); font-weight: bold; }
 
         @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
@@ -100,10 +100,10 @@
     <div class="ambient-glow glow-bottom"></div>
     <div class="grid-overlay"></div>
 
-    <!-- Loader (Hidden by default, shown by JS) -->
+    <!-- Persian Loader -->
     <div id="loader" class="hidden" style="position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:9999; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:20px;">
-        <div class="spinner-premium"></div>
-        <p class="loading-status" style="color:var(--primary-gold);">Uploading Documents...</p>
+        <img src="webapp/images/logo-gold.png" alt="CB" class="main-logo-img" style="width:80px; height:80px;">
+        <p class="loading-status" style="color:var(--primary-gold);">در حال ارسال مدارک...</p>
     </div>
 
     <header class="glass-header">
@@ -111,7 +111,7 @@
             <div class="icon-btn ripple-btn" onclick="window.location.href='/'">
                 <i class="fas fa-arrow-right"></i>
             </div>
-            <div style="font-weight:800; font-size:1.1rem; color: #fff;">Identity Verification</div>
+            <div style="font-weight:800; font-size:1.1rem; color: #fff;">احراز هویت</div>
         </div>
         <div class="icon-btn ripple-btn">
             <i class="fas fa-user-shield"></i>
@@ -126,8 +126,8 @@
                 <i class="fas fa-check-circle"></i>
             </div>
             <div class="status-info">
-                <h3>Verified ✅</h3>
-                <p>Your account is fully verified. Restrictions lifted.</p>
+                <h3>تایید شده ✅</h3>
+                <p>حساب کاربری شما کاملاً تایید شده است. تمام محدودیت‌ها برداشته شد.</p>
             </div>
         </div>
 
@@ -136,8 +136,8 @@
                 <i class="fas fa-clock"></i>
             </div>
             <div class="status-info">
-                <h3>Under Review ⏳</h3>
-                <p>We are reviewing your documents. Please wait.</p>
+                <h3>در حال بررسی ⏳</h3>
+                <p>کارشناسان در حال بررسی مدارک شما هستند. لطفاً شکیبا باشید.</p>
             </div>
         </div>
 
@@ -151,61 +151,61 @@
 
             <form id="kyc-form">
                 
-                <div class="form-section-label">Personal Info</div>
+                <div class="form-section-label">اطلاعات هویتی</div>
 
                 <div class="input-group">
-                    <label class="input-label">Full Name (According to National ID)</label>
-                    <input type="text" id="full_name" class="glass-input" placeholder="e.g. Ali Mohammadi">
+                    <label class="input-label">نام و نام خانوادگی (طبق کارت ملی)</label>
+                    <input type="text" id="full_name" class="glass-input" placeholder="مثلاً: علی محمدی">
                 </div>
 
                 <div class="input-group">
-                    <label class="input-label">National ID (10 Digits)</label>
+                    <label class="input-label">کد ملی (۱۰ رقم)</label>
                     <input type="tel" id="national_id" class="glass-input" maxlength="10" placeholder="0012345678" style="letter-spacing:1px; font-family:'Roboto Mono';">
                 </div>
 
                 <div class="file-grid">
                     <div class="input-group">
-                        <label class="input-label">Birth Date</label>
+                        <label class="input-label">تاریخ تولد</label>
                         <input type="text" id="birth_date" class="glass-input" placeholder="1370/01/01" style="text-align:center">
                     </div>
                     <div class="input-group">
-                        <label class="input-label">Phone Number</label>
+                        <label class="input-label">شماره موبایل</label>
                         <input type="tel" id="phone_number" class="glass-input" maxlength="11" placeholder="0912..." style="text-align:center; font-family:'Roboto Mono';">
                     </div>
                 </div>
 
-                <div class="form-section-label">Financial Info</div>
+                <div class="form-section-label">اطلاعات مالی</div>
 
                 <div class="input-group">
-                    <label class="input-label">Bank Card Number</label>
+                    <label class="input-label">شماره کارت بانکی (به نام خودتان)</label>
                     <input type="tel" id="card_number" class="glass-input" maxlength="16" placeholder="6037..." style="text-align:center; letter-spacing:2px; font-family:'Roboto Mono'; font-weight:bold;">
                 </div>
 
-                <div class="form-section-label">Documents</div>
+                <div class="form-section-label">بارگذاری مدارک</div>
 
                 <div class="file-grid">
                     <div class="file-upload-wrapper ripple-effect">
                         <input type="file" id="id_front_file" accept="image/*">
                         <i class="fas fa-id-card file-upload-icon"></i>
-                        <p class="file-upload-text">National ID (Front)</p>
+                        <p class="file-upload-text">روی کارت ملی</p>
                     </div>
 
                     <div class="file-upload-wrapper ripple-effect">
                         <input type="file" id="id_back_file" accept="image/*">
                         <i class="fas fa-id-card file-upload-icon"></i>
-                        <p class="file-upload-text">National ID (Back)</p>
+                        <p class="file-upload-text">پشت کارت ملی</p>
                     </div>
 
                     <div class="file-upload-wrapper ripple-effect">
                         <input type="file" id="bank_card_file" accept="image/*">
                         <i class="fas fa-credit-card file-upload-icon"></i>
-                        <p class="file-upload-text">Bank Card</p>
+                        <p class="file-upload-text">کارت بانکی</p>
                     </div>
 
                     <div class="file-upload-wrapper ripple-effect">
                         <input type="file" id="selfie_file" accept="image/*">
                         <i class="fas fa-camera file-upload-icon"></i>
-                        <p class="file-upload-text">Selfie with ID</p>
+                        <p class="file-upload-text">سلفی با مدارک</p>
                     </div>
                 </div>
 

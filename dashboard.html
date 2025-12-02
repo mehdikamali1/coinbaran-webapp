@@ -10,8 +10,8 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    <!-- Royal Styles -->
-    <link rel="stylesheet" href="webapp/dashboard-style.css?v=76.0">
+    <!-- Solar Pulse Styles -->
+    <link rel="stylesheet" href="webapp/dashboard-style.css?v=80.0">
 </head>
 <body class="loading-active">
 
@@ -20,25 +20,29 @@
     <div class="ambient-glow glow-bottom"></div>
     <div class="grid-overlay"></div>
 
-    <!-- The Royal Loader (Splash Screen) -->
+    <!-- The Solar Pulse Loader (Splash Screen) -->
     <div id="loader">
-        <!-- ذرات معلق طلا -->
-        <div class="gold-dust d1"></div>
-        <div class="gold-dust d2"></div>
-        <div class="gold-dust d3"></div>
-        <div class="gold-dust d4"></div>
-
-        <div class="loader-content">
-            <!-- حلقه چرخان دور لوگو -->
-            <div class="logo-ring"></div>
+        <div class="radar-container">
+            <!-- امواج انرژی (تپش) -->
+            <div class="pulse-wave wave-1"></div>
+            <div class="pulse-wave wave-2"></div>
+            <div class="pulse-wave wave-3"></div>
             
-            <!-- لوگوی اصلی -->
+            <!-- اسکنر چرخان -->
+            <div class="radar-ring"></div>
+            
+            <!-- لوگوی مرکزی -->
             <img src="webapp/images/logo-gold.png" alt="Coin Baran" class="loader-logo-img">
+        </div>
+
+        <div class="loader-text-wrapper">
+            <!-- متن با افکت تکنولوژیک -->
+            <div class="tech-text">COIN BARAN</div>
             
-            <!-- متن سینمایی انگلیسی -->
-            <div class="cinematic-text">COIN BARAN</div>
+            <!-- خط لودینگ لیزری -->
+            <div class="status-line"></div>
             
-            <p class="loader-status">ESTABLISHING SECURE CONNECTION...</p>
+            <p class="sub-status">INITIALIZING SYSTEM...</p>
         </div>
     </div>
 
@@ -218,7 +222,7 @@
                 window.Telegram.WebApp.setHeaderColor('#000000'); // مشکی مطلق برای لودر
             }
             
-            // افزایش زمان به ۱۲ ثانیه برای لذت بردن از انیمیشن
+            // تایمر ۱۰ ثانیه‌ای برای لذت بردن از انیمیشن رادار
             setTimeout(function() {
                 const loader = document.getElementById('loader');
                 const app = document.getElementById('app-container');
@@ -232,15 +236,15 @@
                     app.classList.remove('hidden-content');
                     app.classList.add('fade-in-active');
                     
-                    // برگرداندن رنگ هدر به رنگ تم
+                    // برگرداندن رنگ هدر
                     if(window.Telegram && window.Telegram.WebApp) {
-                        window.Telegram.WebApp.setHeaderColor('#050505');
+                        window.Telegram.WebApp.setHeaderColor('#050505'); // رنگ داشبورد
                         window.Telegram.WebApp.setBackgroundColor('#050505');
                     }
                 }
                 
-                setTimeout(() => { if(loader) loader.style.display = 'none'; }, 1000);
-            }, 12000); // 12000ms = 12 Seconds
+                setTimeout(() => { if(loader) loader.style.display = 'none'; }, 1500);
+            }, 10000); 
         });
     </script>
 </body>

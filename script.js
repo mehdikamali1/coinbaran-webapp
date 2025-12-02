@@ -1,12 +1,13 @@
-﻿/* webapp/script.js (v86.0 - Logic with Enforced Splash Time) */
+﻿/* webapp/script.js (v88.0 - 9s Smart Timer) */
 (function () {
     'use strict';
 
     const tg = window.Telegram.WebApp;
     const API_BASE_URL = window.location.origin;
     
-    // حداقل زمان نمایش لودینگ (۲۰ ثانیه)
-    const MIN_SPLASH_TIME = 20000; 
+    // حداقل زمان نمایش لودینگ (۹ ثانیه)
+    // این زمان باید با انیمیشن CSS هماهنگ باشد
+    const MIN_SPLASH_TIME = 9000; 
 
     const loader = document.getElementById('loader');
     const appContainer = document.getElementById('app-container');
@@ -22,12 +23,12 @@
 
     window.onload = async function() {
         try {
-            // شروع تایمر انیمیشن
+            // شروع تایمر انیمیشن (وعده ۹ ثانیه‌ای)
             const splashTimer = new Promise(resolve => setTimeout(resolve, MIN_SPLASH_TIME));
 
             tg.ready();
             tg.expand();
-            tg.setHeaderColor('#000000'); // مشکی برای زمان لودینگ
+            tg.setHeaderColor('#000000'); // مشکی مطلق برای زمان لودینگ
             tg.setBackgroundColor('#000000');
 
             if (!tg.initData) {
@@ -38,15 +39,15 @@
             // درخواست اطلاعات از سرور (همزمان با تایمر)
             const dataFetch = fetchData();
 
-            // صبر کن تا **هم** تایمر ۲۰ ثانیه تمام شود **و هم** اطلاعات بیاید
+            // صبر کن تا **هم** تایمر ۹ ثانیه تمام شود **و هم** اطلاعات بیاید
             const [dataResult] = await Promise.all([dataFetch, splashTimer]);
 
-            // بعد از ۲۰ ثانیه، اگر اطلاعات آمده بود، نمایش بده
+            // بعد از اتمام هر دو، اگر اطلاعات معتبر بود، نمایش بده
             if (dataResult) {
                 updateUI(dataResult);
                 hideLoader();
                 
-                // برگرداندن رنگ هدر به رنگ اصلی برنامه
+                // برگرداندن رنگ هدر به رنگ اصلی برنامه (کمی روشن‌تر)
                 tg.setHeaderColor('#050505');
                 tg.setBackgroundColor('#050505');
             }
@@ -120,7 +121,7 @@
                     appContainer.classList.remove('hidden-content');
                     appContainer.classList.add('fade-in-active');
                 }
-            }, 1000); // 1 ثانیه زمان محو شدن
+            }, 1000); // 1 ثانیه زمان محو شدن نرم
         }
     }
 

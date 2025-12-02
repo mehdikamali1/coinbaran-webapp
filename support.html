@@ -6,145 +6,142 @@
     <meta name="theme-color" content="#000000">
     <title>پشتیبانی | کوین باران</title>
     
-    <!-- Libraries -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    <!-- Core Styles -->
+    <!-- استفاده از فونت‌های داشبورد -->
     <link rel="stylesheet" href="webapp/dashboard-style.css?v=88.0">
 
     <style>
-        /* --- Chat Specific Styles --- */
-        body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        /* --- Chat Specific Overrides --- */
+        body, html { height: 100%; overflow: hidden; background-color: #050505; }
         
         #app-container { 
             height: 100%; display: flex; flex-direction: column; 
-            padding-bottom: 0; /* Override generic padding */
+            padding: 0; max-width: 600px; margin: 0 auto;
+            background: #050505;
         }
 
-        /* ناحیه چت */
+        /* هدر چت */
+        .chat-header {
+            flex-shrink: 0; height: 60px;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 15px;
+            background: rgba(20, 20, 20, 0.95);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px); z-index: 10;
+        }
+        .support-info { display: flex; align-items: center; gap: 10px; }
+        .support-avatar {
+            width: 38px; height: 38px; border-radius: 50%;
+            background: linear-gradient(135deg, #F0B90B, #B8860B);
+            display: flex; align-items: center; justify-content: center;
+            color: #000; font-size: 1.2rem; box-shadow: 0 0 10px rgba(240,185,11,0.3);
+        }
+        .support-text h3 { margin: 0; font-size: 0.95rem; color: #fff; }
+        .support-text span { font-size: 0.7rem; color: #0ECB81; }
+
+        /* ناحیه پیام‌ها */
         .chat-area {
-            flex: 1; overflow-y: auto; padding: 20px;
-            display: flex; flex-direction: column; gap: 15px;
+            flex: 1; overflow-y: auto; padding: 15px;
+            display: flex; flex-direction: column; gap: 10px;
+            background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
             scroll-behavior: smooth;
-            padding-bottom: 80px; /* فضا برای اینپوت پایین */
         }
 
-        /* حباب پیام کاربر (طلایی) */
-        .msg-bubble.user {
+        /* حباب‌های پیام */
+        .message {
+            max-width: 80%; padding: 10px 14px; border-radius: 16px;
+            font-size: 0.9rem; line-height: 1.4; position: relative;
+            word-wrap: break-word; animation: fadeIn 0.3s ease;
+        }
+        
+        .message.user {
             align-self: flex-end;
-            background: linear-gradient(135deg, rgba(240, 185, 11, 0.2) 0%, rgba(240, 185, 11, 0.1) 100%);
-            border: 1px solid rgba(240, 185, 11, 0.3);
-            border-radius: 18px 18px 4px 18px;
-            color: #fff;
+            background: linear-gradient(135deg, #F0B90B 0%, #d4a007 100%);
+            color: #000;
+            border-radius: 16px 16px 4px 16px;
+            box-shadow: 0 2px 10px rgba(240,185,11,0.1);
         }
-
-        /* حباب پیام پشتیبان (شیشه‌ای تیره) */
-        .msg-bubble.admin {
+        
+        .message.admin {
             align-self: flex-start;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--glass-border);
-            border-radius: 18px 18px 18px 4px;
-            color: #eee;
-        }
-
-        .msg-bubble {
-            max-width: 80%; padding: 12px 16px;
-            font-size: 0.9rem; line-height: 1.5;
-            position: relative; animation: msgPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            word-wrap: break-word;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px 16px 16px 4px;
         }
 
         .msg-time {
-            font-size: 0.65rem; color: rgba(255,255,255,0.5);
-            text-align: left; margin-top: 4px; font-family: 'Roboto Mono';
+            font-size: 0.65rem; margin-top: 4px; text-align: right; opacity: 0.7;
+            font-family: 'Roboto Mono', monospace;
         }
 
-        /* نوار ورودی پایین (Input Bar) */
-        .chat-input-container {
-            position: fixed; bottom: 0; left: 0; right: 0;
-            background: rgba(10, 10, 10, 0.9);
-            backdrop-filter: blur(20px);
-            border-top: 1px solid var(--glass-border);
-            padding: 15px;
+        /* نوار ورودی (Input Bar) */
+        .input-area {
+            flex-shrink: 0; padding: 10px 15px 20px 15px; /* فضای پایین برای آیفون */
+            background: #111; border-top: 1px solid rgba(255, 255, 255, 0.1);
             display: flex; align-items: center; gap: 10px;
-            z-index: 100; max-width: 600px; margin: 0 auto;
         }
-
+        
         .chat-input {
             flex: 1; background: rgba(255,255,255,0.05);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px; padding: 12px 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 24px; padding: 12px 16px;
             color: #fff; font-family: 'Vazirmatn'; font-size: 0.95rem;
-            outline: none; transition: border-color 0.3s;
+            outline: none; transition: border-color 0.2s;
         }
-        .chat-input:focus { border-color: var(--gold-primary); }
+        .chat-input:focus { border-color: #F0B90B; }
 
         .send-btn {
-            width: 45px; height: 45px; border-radius: 50%;
-            background: var(--gold-primary); color: #000;
-            border: none; display: flex; align-items: center; justify-content: center;
-            font-size: 1.2rem; cursor: pointer; box-shadow: 0 0 15px rgba(240,185,11,0.3);
-            transition: transform 0.2s;
+            width: 46px; height: 46px; border-radius: 50%;
+            background: #F0B90B; color: #000; border: none;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; cursor: pointer; transition: transform 0.1s;
+            box-shadow: 0 0 15px rgba(240,185,11,0.2);
         }
         .send-btn:active { transform: scale(0.9); }
         .send-btn:disabled { background: #333; color: #666; box-shadow: none; }
 
-        /* وضعیت خالی */
-        .empty-state {
-            text-align: center; color: var(--text-muted); margin-top: 50px;
-            opacity: 0.7;
-        }
-
-        @keyframes msgPop { from { opacity: 0; transform: translateY(10px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body class="loading-active">
+<body>
 
-    <!-- Ambient Background -->
-    <div class="ambient-glow glow-top"></div>
-    <div class="ambient-glow glow-bottom"></div>
-    <div class="grid-overlay"></div>
-
-    <!-- Loader -->
-    <div id="loader">
-        <div class="loader-content">
-            <div class="spinner-premium"></div>
-            <p class="loading-status" style="color:var(--gold-primary); margin-top:20px;">در حال اتصال به پشتیبانی...</p>
-        </div>
-    </div>
-
-    <!-- Header -->
-    <header class="glass-header">
-        <div class="profile-section">
-            <div class="icon-btn ripple-btn" onclick="window.location.href='/'">
-                <i class="fas fa-arrow-right"></i>
+    <div id="app-container">
+        <!-- Header -->
+        <div class="chat-header">
+            <div class="support-info">
+                <div class="icon-btn" onclick="window.location.href='/'" style="width:35px; height:35px; background:rgba(255,255,255,0.1);">
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+                <div class="support-avatar"><i class="fas fa-headset"></i></div>
+                <div class="support-text">
+                    <h3>پشتیبانی آنلاین</h3>
+                    <span>پاسخگویی سریع</span>
+                </div>
             </div>
-            <div style="display:flex; flex-direction:column; justify-content:center;">
-                <div style="font-weight:800; font-size:1rem; color: #fff;">پشتیبانی آنلاین</div>
-                <div style="font-size:0.7rem; color:var(--accent-green);">● پاسخگوی آنلاین</div>
+            <div class="icon-btn" onclick="fetchHistory()" style="width:35px; height:35px; background:rgba(255,255,255,0.1);">
+                <i class="fas fa-sync-alt"></i>
             </div>
         </div>
-        <div class="icon-btn ripple-btn" onclick="fetchHistory()">
-            <i class="fas fa-sync-alt"></i>
-        </div>
-    </header>
 
-    <div id="app-container" class="hidden-content">
-        
-        <!-- Chat Messages -->
+        <!-- Chat Box -->
         <div class="chat-area" id="chat-box">
-            <!-- Messages injected here -->
+            <div style="text-align:center; margin-top:50px; color:#666;">
+                <div class="spinner-premium" style="width:30px; height:30px; margin:0 auto 10px auto;"></div>
+                <p style="font-size:0.8rem;">در حال بارگذاری پیام‌ها...</p>
+            </div>
         </div>
 
-        <!-- Input Area -->
-        <div class="chat-input-container">
+        <!-- Input Bar -->
+        <div class="input-area">
             <input type="text" id="msg-input" class="chat-input" placeholder="پیام خود را بنویسید..." autocomplete="off">
             <button id="send-btn" class="send-btn" onclick="sendMessage()">
                 <i class="fas fa-paper-plane"></i>
             </button>
         </div>
-
     </div>
 
     <script>
@@ -153,70 +150,60 @@
         
         const chatBox = document.getElementById('chat-box');
         const msgInput = document.getElementById('msg-input');
-        const sendBtn = document.getElementById('send-btn');
         let lastMsgCount = 0;
 
-        // --- Init ---
         window.onload = function() {
             tg.ready(); tg.expand();
-            tg.setHeaderColor('#050505'); tg.setBackgroundColor('#050505');
+            tg.setHeaderColor('#141414'); 
+            tg.setBackgroundColor('#111111');
             
-            if (!tg.initData) tg.initData = "query_id=TEST_DEV"; // Test Mode
+            if (!tg.initData) tg.initData = "query_id=TEST_DEV";
             
-            // دریافت تاریخچه اولیه
-            fetchHistory(true);
-            
-            // شروع پولینگ (دریافت پیام جدید هر 5 ثانیه)
-            setInterval(() => fetchHistory(false), 5000);
+            fetchHistory(true); // لود اولیه
+            setInterval(() => fetchHistory(false), 4000); // رفرش خودکار هر 4 ثانیه
         };
 
-        // --- Logic ---
-        async function fetchHistory(firstLoad = false) {
+        async function fetchHistory(firstLoad) {
             try {
                 const res = await fetch(`${API_BASE_URL}/webapp/support/history`, {
                     method: 'POST', headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ initData: tg.initData })
                 });
                 const data = await res.json();
-                
+
                 if (data.status === 'success') {
                     const msgs = data.messages;
-                    // فقط اگر پیام جدیدی آمده رندر کن
+                    // فقط اگر پیام جدیدی هست رندر کن
                     if (msgs.length !== lastMsgCount) {
                         renderMessages(msgs);
                         lastMsgCount = msgs.length;
                         scrollToBottom();
                     }
-                    if (firstLoad) hideLoader();
                 }
-            } catch (e) { console.error(e); if(firstLoad) hideLoader(); }
+            } catch (e) { console.error(e); }
         }
 
         function renderMessages(messages) {
             chatBox.innerHTML = '';
+            
+            // پیام خوش‌آمدگویی سیستم
+            const intro = document.createElement('div');
+            intro.style.textAlign = 'center'; intro.style.margin = '20px 0'; intro.style.opacity = '0.5';
+            intro.innerHTML = '<span style="font-size:0.75rem; background:rgba(255,255,255,0.1); padding:4px 10px; border-radius:10px;">گفتگو با پشتیبانی آغاز شد</span>';
+            chatBox.appendChild(intro);
+
             if (messages.length === 0) {
-                chatBox.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-comments" style="font-size:3rem; margin-bottom:15px;"></i>
-                        <p>هنوز پیامی ارسال نشده است.<br>سوال خود را بپرسید.</p>
-                    </div>
-                `;
+                const empty = document.createElement('div');
+                empty.style.textAlign = 'center'; empty.style.color = '#444'; empty.style.marginTop = '40px';
+                empty.innerHTML = '<i class="fas fa-comments" style="font-size:3rem; margin-bottom:10px;"></i><br>سوال خود را بپرسید...';
+                chatBox.appendChild(empty);
                 return;
             }
-            
-            // تاریخ خوش‌آمدگویی فیک برای زیبایی
-            const intro = document.createElement('div');
-            intro.style.textAlign = 'center'; intro.style.fontSize='0.7rem'; intro.style.color='#666'; intro.style.marginBottom='10px';
-            intro.innerText = 'گفتگوی امن شما با پشتیبانی آغاز شد';
-            chatBox.appendChild(intro);
 
             messages.forEach(msg => {
                 const div = document.createElement('div');
-                div.className = `msg-bubble ${msg.is_admin ? 'admin' : 'user'}`;
-                div.innerHTML = `
-                    ${msg.text.replace(/\n/g, '<br>')}
-                    <div class="msg-time">${msg.time}</div>
-                `;
+                div.className = `message ${msg.is_admin ? 'admin' : 'user'}`;
+                div.innerHTML = `${msg.text.replace(/\n/g, '<br>')}<div class="msg-time">${msg.time}</div>`;
                 chatBox.appendChild(div);
             });
         }
@@ -225,13 +212,15 @@
             const text = msgInput.value.trim();
             if (!text) return;
 
-            // Optimistic UI: نمایش پیام قبل از ارسال به سرور
-            const tempMsg = { text: text, is_admin: false, time: 'ارسال...' };
-            appendTempMessage(tempMsg);
+            // نمایش آنی پیام (Optimistic UI)
+            const tempDiv = document.createElement('div');
+            tempDiv.className = 'message user';
+            tempDiv.style.opacity = '0.6';
+            tempDiv.innerHTML = `${text}<div class="msg-time"><i class="fas fa-clock"></i></div>`;
+            chatBox.appendChild(tempDiv);
+            scrollToBottom();
             
             msgInput.value = '';
-            msgInput.focus();
-            scrollToBottom();
             tg.HapticFeedback.impactOccurred('light');
 
             try {
@@ -240,54 +229,22 @@
                     body: JSON.stringify({ initData: tg.initData, message: text })
                 });
                 const result = await res.json();
+                
                 if (result.status === 'success') {
-                    // رفرش واقعی برای گرفتن زمان دقیق
-                    fetchHistory();
+                    fetchHistory(false); // آپدیت واقعی از سرور
                 } else {
-                    tg.showAlert("خطا در ارسال: " + result.message);
+                    tg.showAlert("خطا: " + result.message);
+                    tempDiv.style.background = '#F6465D'; // قرمز شدن در صورت خطا
                 }
             } catch (e) { tg.showAlert("خطای شبکه"); }
-        }
-
-        function appendTempMessage(msg) {
-            // حذف پیام خالی اگر هست
-            const empty = document.querySelector('.empty-state');
-            if(empty) empty.remove();
-
-            const div = document.createElement('div');
-            div.className = `msg-bubble user`;
-            div.style.opacity = '0.7'; // کمی کمرنگ تا وقتی تایید شود
-            div.innerHTML = `
-                ${msg.text.replace(/\n/g, '<br>')}
-                <div class="msg-time"><i class="fas fa-clock"></i></div>
-            `;
-            chatBox.appendChild(div);
         }
 
         function scrollToBottom() {
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
-        function hideLoader() {
-            const l = document.getElementById('loader');
-            const app = document.getElementById('app-container');
-            if(l) {
-                l.style.opacity = '0';
-                setTimeout(() => {
-                    l.style.display = 'none';
-                    app.classList.remove('hidden-content');
-                    app.classList.add('fade-in-active');
-                    scrollToBottom();
-                }, 500);
-            }
-        }
-
-        // ارسال با Enter
         msgInput.addEventListener("keypress", function(event) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                sendMessage();
-            }
+            if (event.key === "Enter") { event.preventDefault(); sendMessage(); }
         });
     </script>
 </body>

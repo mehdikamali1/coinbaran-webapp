@@ -1,4 +1,4 @@
-﻿/* webapp/dashboard-style.css (v86.0 - Thick Golden Infinity) */
+﻿/* webapp/dashboard-style.css (v87.0 - 12s Perfect Timing) */
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;300;400;500;700;800;900&family=Cinzel:wght@400;700;900&display=swap');
 
 :root {
@@ -28,7 +28,7 @@ body {
 }
 
 /* =========================================
-   1. انیمیشن ورودی (The Thick Infinity)
+   1. انیمیشن ورودی (The Golden Infinity)
    ========================================= */
 #loader {
     position: fixed; inset: 0;
@@ -37,7 +37,7 @@ body {
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
     overflow: hidden;
-    transition: opacity 1.5s ease-in-out;
+    transition: opacity 1s ease-in-out; /* سرعت محو شدن لودر */
 }
 
 /* کانتینر مرکزی */
@@ -57,26 +57,25 @@ body {
 /* مسیر پس‌زمینه (ضخیم‌تر) */
 .infinity-bg {
     stroke: rgba(255, 255, 255, 0.08);
-    stroke-width: 10; /* ضخامت بیشتر برای زمینه */
+    stroke-width: 10;
     stroke-linecap: round;
 }
 
 /* مسیر اصلی متحرک (خیلی ضخیم و طلایی) */
 .infinity-path {
     stroke: url(#goldGradient);
-    stroke-width: 12; /* ضخامت اصلی بسیار بالا */
+    stroke-width: 12;
     stroke-linecap: round;
     stroke-dasharray: 900; 
     stroke-dashoffset: 900; 
-    /* انیمیشن رسم شدن (۴ ثانیه) + جریان نور (تکرار بی‌پایان) */
     animation: draw-infinity 4s ease-out forwards, flow-light 2.5s linear infinite 4s;
-    filter: drop-shadow(0 0 15px rgba(240, 185, 11, 0.6)); /* درخشش بیشتر */
+    filter: drop-shadow(0 0 15px rgba(240, 185, 11, 0.6));
 }
 
 /* لوگوی شناور در مرکز */
 .center-logo {
     position: absolute;
-    width: 90px; height: 90px; /* کمی بزرگتر */
+    width: 90px; height: 90px;
     border-radius: 50%;
     z-index: 10;
     box-shadow: 0 0 60px rgba(240, 185, 11, 0.4);
@@ -107,9 +106,9 @@ body {
     text-shadow: 0 10px 40px rgba(240, 185, 11, 0.2);
 }
 
-/* نوار لودینگ */
+/* نوار لودینگ (تنظیم شده برای ۱۲ ثانیه) */
 .loading-bar-container {
-    width: 220px; height: 4px; /* کمی ضخیم‌تر */
+    width: 220px; height: 4px;
     background: rgba(255,255,255,0.1);
     margin: 20px auto;
     position: relative;
@@ -123,8 +122,8 @@ body {
     position: absolute; top: 0; left: 0; height: 100%; width: 100%;
     background: var(--gold-primary);
     transform: translateX(-100%);
-    /* پر شدن در طول ۱۷ ثانیه (با احتساب ۳ ثانیه تاخیر اولیه = ۲۰ ثانیه کل) */
-    animation: load-progress 17s linear forwards 3s; 
+    /* کل پروسه ۱۲ ثانیه است. ۳ ثانیه اول تاخیر است، پس انیمیشن باید ۹ ثانیه طول بکشد */
+    animation: load-progress 9s linear forwards 3s; 
     box-shadow: 0 0 15px var(--gold-primary);
 }
 
@@ -138,40 +137,20 @@ body {
 }
 
 /* --- انیمیشن‌ها --- */
-@keyframes draw-infinity {
-    to { stroke-dashoffset: 0; }
-}
-
-@keyframes flow-light {
+@keyframes draw-infinity { to { stroke-dashoffset: 0; } }
+@keyframes flow-light { 
     0% { filter: drop-shadow(0 0 5px var(--gold-dark)); stroke-opacity: 0.8; }
-    50% { filter: drop-shadow(0 0 25px var(--gold-pure)); stroke-opacity: 1; stroke-width: 14; } /* تپش ضخامت */
+    50% { filter: drop-shadow(0 0 25px var(--gold-pure)); stroke-opacity: 1; stroke-width: 14; }
     100% { filter: drop-shadow(0 0 5px var(--gold-dark)); stroke-opacity: 0.8; }
 }
-
-@keyframes logo-appear {
-    from { opacity: 0; transform: scale(0.5) rotate(-90deg); }
-    to { opacity: 1; transform: scale(1) rotate(0deg); }
-}
-
-@keyframes logo-pulse {
-    0%, 100% { transform: scale(1); box-shadow: 0 0 40px rgba(240, 185, 11, 0.3); }
-    50% { transform: scale(1.08); box-shadow: 0 0 70px rgba(240, 185, 11, 0.6); }
-}
-
-@keyframes text-fade-up {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
+@keyframes logo-appear { from { opacity: 0; transform: scale(0.5) rotate(-90deg); } to { opacity: 1; transform: scale(1) rotate(0deg); } }
+@keyframes logo-pulse { 0%, 100% { transform: scale(1); box-shadow: 0 0 40px rgba(240, 185, 11, 0.3); } 50% { transform: scale(1.08); box-shadow: 0 0 70px rgba(240, 185, 11, 0.6); } }
+@keyframes text-fade-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes fade-in { to { opacity: 1; } }
-
-@keyframes load-progress {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(0%); }
-}
+@keyframes load-progress { 0% { transform: translateX(-100%); } 100% { transform: translateX(0%); } }
 
 /* =========================================
-   2. استایل‌های اصلی داشبورد (ثابت)
+   2. استایل‌های اصلی داشبورد
    ========================================= */
 #app-container { max-width: 600px; margin: 0 auto; position: relative; z-index: 2; min-height: 100vh; display: flex; flex-direction: column; }
 .ambient-glow { position: fixed; width: 300px; height: 300px; border-radius: 50%; filter: blur(120px); z-index: 1; opacity: 0.35; pointer-events: none; }

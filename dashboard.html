@@ -10,8 +10,8 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    <!-- Solar Pulse Styles -->
-    <link rel="stylesheet" href="webapp/dashboard-style.css?v=80.0">
+    <!-- Golden Infinity Styles -->
+    <link rel="stylesheet" href="webapp/dashboard-style.css?v=85.0">
 </head>
 <body class="loading-active">
 
@@ -20,29 +20,39 @@
     <div class="ambient-glow glow-bottom"></div>
     <div class="grid-overlay"></div>
 
-    <!-- The Solar Pulse Loader (Splash Screen) -->
+    <!-- The Golden Infinity Loader (Splash Screen) -->
     <div id="loader">
-        <div class="radar-container">
-            <!-- امواج انرژی (تپش) -->
-            <div class="pulse-wave wave-1"></div>
-            <div class="pulse-wave wave-2"></div>
-            <div class="pulse-wave wave-3"></div>
+        <div class="infinity-container">
+            <!-- لوگوی شناور در مرکز -->
+            <img src="webapp/images/logo-gold.png" alt="Coin Baran" class="center-logo">
             
-            <!-- اسکنر چرخان -->
-            <div class="radar-ring"></div>
-            
-            <!-- لوگوی مرکزی -->
-            <img src="webapp/images/logo-gold.png" alt="Coin Baran" class="loader-logo-img">
+            <!-- ترسیم نماد بی‌نهایت -->
+            <svg class="infinity-svg" viewBox="0 0 320 160">
+                <defs>
+                    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" style="stop-color:#B8860B;stop-opacity:1" />
+                        <stop offset="50%" style="stop-color:#FFD700;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#B8860B;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+                
+                <!-- مسیر پس‌زمینه (تاریک) -->
+                <path class="infinity-bg" d="M160,80 C 220,140 300,140 300,80 C 300,20 220,20 160,80 C 100,140 20,140 20,80 C 20,20 100,20 160,80" />
+                
+                <!-- مسیر متحرک (طلایی) -->
+                <path class="infinity-path" d="M160,80 C 220,140 300,140 300,80 C 300,20 220,20 160,80 C 100,140 20,140 20,80 C 20,20 100,20 160,80" />
+            </svg>
         </div>
 
         <div class="loader-text-wrapper">
-            <!-- متن با افکت تکنولوژیک -->
-            <div class="tech-text">COIN BARAN</div>
+            <div class="luxury-title">COIN BARAN</div>
             
-            <!-- خط لودینگ لیزری -->
-            <div class="status-line"></div>
+            <!-- نوار لودینگ -->
+            <div class="loading-bar-container">
+                <div class="loading-bar-fill"></div>
+            </div>
             
-            <p class="sub-status">INITIALIZING SYSTEM...</p>
+            <p class="status-msg">CONNECTING TO BLOCKCHAIN...</p>
         </div>
     </div>
 
@@ -222,7 +232,7 @@
                 window.Telegram.WebApp.setHeaderColor('#000000'); // مشکی مطلق برای لودر
             }
             
-            // تایمر ۱۰ ثانیه‌ای برای لذت بردن از انیمیشن رادار
+            // تایمر ۱۵ ثانیه‌ای برای نمایش کامل انیمیشن بی‌نهایت
             setTimeout(function() {
                 const loader = document.getElementById('loader');
                 const app = document.getElementById('app-container');
@@ -244,7 +254,7 @@
                 }
                 
                 setTimeout(() => { if(loader) loader.style.display = 'none'; }, 1500);
-            }, 10000); 
+            }, 15000); // 15000ms = 15 Seconds
         });
     </script>
 </body>

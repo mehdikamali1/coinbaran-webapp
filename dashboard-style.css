@@ -1,10 +1,11 @@
-﻿/* webapp/dashboard-style.css (v80.0 - Solar Pulse Edition) */
-@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;300;400;500;700;800;900&family=Orbitron:wght@400;700;900&display=swap');
+﻿/* webapp/dashboard-style.css (v85.0 - Golden Infinity Edition) */
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;300;400;500;700;800;900&family=Cinzel:wght@400;700;900&display=swap');
 
 :root {
     --bg-deep: #000000;
-    --gold-primary: #F0B90B;
-    --gold-glow: rgba(240, 185, 11, 0.6);
+    --gold-primary: #FFD700;
+    --gold-rich: #F0B90B;
+    --gold-dark: #B8860B;
     --text-white: #ffffff;
     --glass-border: rgba(255, 255, 255, 0.1);
     
@@ -27,114 +28,147 @@ body {
 }
 
 /* =========================================
-   1. انیمیشن‌های ورودی (The Solar Pulse)
+   1. انیمیشن ورودی (The Golden Infinity)
    ========================================= */
 #loader {
     position: fixed; inset: 0;
-    background: #000;
+    background: radial-gradient(circle at center, #0a0a0a 0%, #000000 90%);
     z-index: 99999;
-    display: flex; align-items: center; justify-content: center;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
     overflow: hidden;
     transition: opacity 1.5s ease-in-out;
 }
 
-/* کانتینر رادار */
-.radar-container {
+/* کانتینر مرکزی برای بی‌نهایت و لوگو */
+.infinity-container {
     position: relative;
-    width: 250px; height: 250px;
+    width: 320px; height: 160px;
     display: flex; align-items: center; justify-content: center;
 }
 
-/* حلقه چرخان (اسکنر) */
-.radar-ring {
-    position: absolute; inset: 0;
-    border-radius: 50%;
-    background: conic-gradient(from 0deg, transparent 0%, transparent 80%, var(--gold-primary) 100%);
-    animation: radar-spin 2s linear infinite;
-    /* ماسک برای توخالی کردن وسط */
-    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #fff calc(100% - 2px));
-    mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #fff calc(100% - 2px));
-}
-
-/* امواج انرژی (Ripples) */
-.pulse-wave {
-    position: absolute;
+/* SVG نماد بی‌نهایت */
+.infinity-svg {
+    position: absolute; top: 0; left: 0;
     width: 100%; height: 100%;
+    fill: none;
+    overflow: visible;
+}
+
+/* مسیر پس‌زمینه (کم‌رنگ) */
+.infinity-bg {
+    stroke: rgba(255, 255, 255, 0.05);
+    stroke-width: 2;
+}
+
+/* مسیر اصلی (رسم شدن) */
+.infinity-path {
+    stroke: url(#goldGradient); /* گرادیانت طلایی تعریف شده در HTML */
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-dasharray: 800; /* طول تقریبی مسیر */
+    stroke-dashoffset: 800; /* شروع از حالت مخفی */
+    animation: draw-infinity 4s ease-out forwards, flow-light 3s linear infinite 4s;
+    filter: drop-shadow(0 0 8px var(--gold-primary));
+}
+
+/* لوگوی شناور در مرکز */
+.center-logo {
+    position: absolute;
+    width: 80px; height: 80px;
     border-radius: 50%;
-    border: 1px solid var(--gold-primary);
-    opacity: 0;
-    animation: wave-expand 4s cubic-bezier(0.1, 0.6, 0.2, 1) infinite;
-}
-.wave-1 { animation-delay: 0s; }
-.wave-2 { animation-delay: 1.3s; }
-.wave-3 { animation-delay: 2.6s; }
-
-/* لوگوی مرکزی */
-.loader-logo-img {
-    width: 130px; height: 130px;
-    object-fit: cover; border-radius: 50%;
     z-index: 10;
-    box-shadow: 0 0 60px rgba(240, 185, 11, 0.4);
-    animation: heartbeat 2s ease-in-out infinite;
-    border: 2px solid rgba(255,255,255,0.1);
+    box-shadow: 0 0 50px rgba(240, 185, 11, 0.3);
+    animation: logo-float 4s ease-in-out infinite;
+    opacity: 0; /* ابتدا مخفی */
+    animation: logo-appear 1.5s ease-out forwards 1s, logo-float 4s ease-in-out infinite 1.5s;
+    border: 2px solid rgba(240, 185, 11, 0.2);
 }
 
-/* متن مدرن */
+/* متن سینمایی پایین */
 .loader-text-wrapper {
-    position: absolute; top: 75%;
+    margin-top: 40px;
     text-align: center;
+    position: relative;
     z-index: 20;
 }
 
-.tech-text {
-    font-family: 'Orbitron', sans-serif; /* فونت فضایی/تکنولوژی */
-    font-size: 2rem;
-    font-weight: 900;
+.luxury-title {
+    font-family: 'Cinzel', serif;
+    font-size: 2.2rem;
+    font-weight: 700;
     letter-spacing: 5px;
-    color: #fff;
-    text-transform: uppercase;
-    text-shadow: 0 0 20px var(--gold-primary);
-    background: linear-gradient(to right, #fff 20%, var(--gold-primary) 50%, #fff 80%);
-    background-size: 200% auto;
+    color: transparent;
+    background: linear-gradient(to bottom, #FFD700, #B8860B);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    animation: shine-text 3s linear infinite;
+    opacity: 0;
+    animation: text-fade-up 1.5s ease-out forwards 2s;
+    text-shadow: 0 10px 30px rgba(0,0,0,0.8);
 }
 
-.status-line {
-    margin-top: 10px;
-    height: 2px; width: 0;
+.loading-bar-container {
+    width: 200px; height: 2px;
+    background: rgba(255,255,255,0.1);
+    margin: 15px auto;
+    position: relative;
+    overflow: hidden;
+    border-radius: 2px;
+    opacity: 0;
+    animation: fade-in 1s ease forwards 3s;
+}
+
+.loading-bar-fill {
+    position: absolute; top: 0; left: 0; height: 100%; width: 100%;
     background: var(--gold-primary);
-    animation: line-grow 2s ease-out forwards 0.5s;
-    margin: 10px auto;
+    transform: translateX(-100%);
+    animation: load-progress 12s linear forwards 3s; /* پر شدن در طول زمان باقی‌مانده */
     box-shadow: 0 0 10px var(--gold-primary);
 }
 
-.sub-status {
+.status-msg {
     font-family: 'Roboto Mono', monospace;
-    font-size: 0.75rem; color: #888;
-    letter-spacing: 3px;
+    font-size: 0.7rem; color: #666;
+    letter-spacing: 2px;
+    opacity: 0;
+    animation: text-fade-up 1s ease forwards 3.5s;
 }
 
-/* انیمیشن‌ها */
-@keyframes radar-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-@keyframes wave-expand { 
-    0% { transform: scale(0.5); opacity: 0; border-width: 4px; } 
-    50% { opacity: 0.5; } 
-    100% { transform: scale(2.5); opacity: 0; border-width: 0px; } 
+/* --- انیمیشن‌ها --- */
+@keyframes draw-infinity {
+    to { stroke-dashoffset: 0; }
 }
-@keyframes heartbeat { 
-    0% { transform: scale(1); box-shadow: 0 0 40px rgba(240, 185, 11, 0.2); } 
-    15% { transform: scale(1.08); box-shadow: 0 0 80px rgba(240, 185, 11, 0.6); } 
-    30% { transform: scale(1); box-shadow: 0 0 40px rgba(240, 185, 11, 0.2); } 
-    45% { transform: scale(1.03); box-shadow: 0 0 60px rgba(240, 185, 11, 0.4); } 
-    100% { transform: scale(1); box-shadow: 0 0 40px rgba(240, 185, 11, 0.2); } 
+
+@keyframes flow-light {
+    0% { filter: drop-shadow(0 0 5px var(--gold-dark)); stroke-width: 4; }
+    50% { filter: drop-shadow(0 0 15px var(--gold-primary)); stroke-width: 5; }
+    100% { filter: drop-shadow(0 0 5px var(--gold-dark)); stroke-width: 4; }
 }
-@keyframes shine-text { to { background-position: 200% center; } }
-@keyframes line-grow { to { width: 150px; } }
+
+@keyframes logo-appear {
+    from { opacity: 0; transform: scale(0.5); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes logo-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+@keyframes text-fade-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in { to { opacity: 1; } }
+
+@keyframes load-progress {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(0%); }
+}
 
 /* =========================================
-   2. استایل‌های اصلی داشبورد (Original Luxury)
+   2. استایل‌های اصلی داشبورد (ثابت)
    ========================================= */
 #app-container { max-width: 600px; margin: 0 auto; position: relative; z-index: 2; min-height: 100vh; display: flex; flex-direction: column; }
 .ambient-glow { position: fixed; width: 300px; height: 300px; border-radius: 50%; filter: blur(120px); z-index: 1; opacity: 0.35; pointer-events: none; }
@@ -145,8 +179,8 @@ body {
 .glass-header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background: rgba(10, 10, 10, 0.6); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid var(--glass-border); position: sticky; top: 0; z-index: 100; }
 .profile-section { display: flex; align-items: center; gap: 12px; }
 .header-logo-container { position: relative; display: flex; align-items: center; justify-content: center; margin-left: 8px; }
-.header-logo-img { width: 44px; height: 44px; object-fit: cover; border-radius: 50%; border: 2px solid var(--gold-primary); box-shadow: 0 0 15px rgba(240, 185, 11, 0.4); }
-.header-glow { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 50px; height: 50px; background: var(--gold-primary); filter: blur(25px); opacity: 0.3; z-index: -1; }
+.header-logo-img { width: 44px; height: 44px; object-fit: cover; border-radius: 50%; border: 2px solid var(--gold-rich); box-shadow: 0 0 15px rgba(240, 185, 11, 0.4); }
+.header-glow { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 50px; height: 50px; background: var(--gold-rich); filter: blur(25px); opacity: 0.3; z-index: -1; }
 .avatar-frame { width: 48px; height: 48px; border-radius: 14px; background: linear-gradient(135deg, #222, #111); padding: 2px; position: relative; border: 1px solid rgba(240, 185, 11, 0.3); box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
 .avatar-img { width: 100%; height: 100%; border-radius: 12px; object-fit: cover; }
 .online-dot { position: absolute; bottom: -2px; right: -2px; width: 12px; height: 12px; background: #0ECB81; border: 2px solid #000; border-radius: 50%; box-shadow: 0 0 8px #0ECB81; }

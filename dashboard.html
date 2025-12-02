@@ -4,14 +4,56 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#050505">
-    <title>کوین باران | داشبورد</title>
+    <title>Coin Baran | Dashboard</title>
     
     <!-- Libraries -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
     <!-- Styles -->
-    <link rel="stylesheet" href="webapp/dashboard-style.css?v=71.0">
+    <link rel="stylesheet" href="webapp/dashboard-style.css?v=75.0">
+
+    <style>
+        /* --- Extra Luxury Tweaks for Loader --- */
+        .brand-text-en {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 1.8rem;
+            font-weight: 900;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: #fff;
+            position: relative;
+            display: inline-block;
+            margin-top: 15px;
+            
+            /* افکت طلایی ثابت */
+            background: linear-gradient(to bottom, #fff 0%, #F0B90B 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* افکت عبور نور از روی متن (Shimmer) */
+        .shimmer-effect {
+            position: relative;
+            overflow: hidden;
+        }
+        .shimmer-effect::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+            animation: textShine 3s infinite;
+        }
+
+        @keyframes textShine {
+            0% { left: -100%; }
+            50% { left: 100%; }
+            100% { left: 100%; }
+        }
+    </style>
 </head>
 <body class="loading-active">
 
@@ -20,13 +62,16 @@
     <div class="ambient-glow glow-bottom"></div>
     <div class="grid-overlay"></div>
 
-    <!-- Persian Loader with Logo -->
+    <!-- Loader Screen -->
     <div id="loader">
         <div class="loader-content">
-            <!-- بازگردانی لوگوی اصلی -->
+            <!-- لوگوی اصلی با افکت تپش -->
             <img src="webapp/images/logo-gold.png" alt="Coin Baran" class="main-logo-img">
-            <div class="brand-text">کـویـن بـاران</div>
-            <p class="loading-status">در حال برقراری ارتباط امن...</p>
+            
+            <!-- نام برند به انگلیسی با افکت نوری -->
+            <div class="brand-text-en shimmer-effect">COIN BARAN</div>
+            
+            <p class="loading-status" style="margin-top:10px; opacity:0.7;">ESTABLISHING SECURE CONNECTION...</p>
         </div>
     </div>
 
@@ -36,12 +81,11 @@
         <header class="glass-header">
             <div class="profile-section">
                 <div class="avatar-frame ripple-effect">
-                    <!-- اگر کاربر عکس نداشت، لوگو نشان داده می‌شود -->
                     <img src="webapp/images/logo-gold.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'" alt="User" class="avatar-img">
                     <div class="online-dot"></div>
                 </div>
 
-                <!-- لوگوی شناور هدر (Restored) -->
+                <!-- لوگوی شناور هدر -->
                 <div class="header-logo-container">
                     <div class="header-glow"></div>
                     <img src="webapp/images/logo-gold.png" class="header-logo-img" alt="CB">
@@ -65,7 +109,7 @@
 
         <main class="main-scroll-area">
             
-            <!-- Hero Asset Card (Persian) -->
+            <!-- Hero Asset Card -->
             <div class="asset-card premium-glass">
                 <div class="card-shine-effect"></div>
                 <div class="card-mesh"></div>
@@ -98,7 +142,7 @@
                 </div>
             </div>
 
-            <!-- Quick Access Grid (Persian) -->
+            <!-- Quick Access Grid -->
             <div class="section-label">دسترسی سریع</div>
             <div class="quick-access-grid">
                 <div class="action-item ripple-btn" onclick="window.location.href='wallet'">
@@ -206,7 +250,8 @@
                 window.Telegram.WebApp.setHeaderColor('#050505');
                 window.Telegram.WebApp.setBackgroundColor('#050505');
             }
-            // انیمیشن خروج لودر (تایمر کمی بیشتر برای دیده شدن لوگو)
+            
+            // تایمر ۵ ثانیه‌ای برای نمایش باشکوه برند
             setTimeout(function() {
                 const loader = document.getElementById('loader');
                 const app = document.getElementById('app-container');
@@ -221,8 +266,8 @@
                     app.classList.add('fade-in-active');
                 }
                 
-                setTimeout(() => { if(loader) loader.style.display = 'none'; }, 500);
-            }, 3000);
+                setTimeout(() => { if(loader) loader.style.display = 'none'; }, 800);
+            }, 5000); // 5000ms = 5 Seconds
         });
     </script>
 </body>

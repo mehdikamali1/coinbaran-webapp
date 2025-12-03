@@ -6,7 +6,7 @@
     <title>احراز هویت | کوین باران</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="webapp/dashboard-style.css?v=85.0">
+    <link rel="stylesheet" href="webapp/dashboard-style.css?v=90.0">
     <style>
         /* --- استایل‌های اختصاصی صفحه KYC --- */
         body { padding-bottom: 100px; /* فضای خالی برای دکمه شناور */ }
@@ -155,7 +155,7 @@
     <div class="ambient-glow glow-top"></div>
     <div class="ambient-glow glow-bottom"></div>
 
-    <div id="loader" style="position:fixed; inset:0; background:#000; z-index:999; display:flex; align-items:center; justify-content:center;">
+    <div id="loader" style="position:fixed; inset:0; background:#000; z-index:9999; display:flex; align-items:center; justify-content:center;">
         <img src="webapp/images/logo-gold.png" width="70">
     </div>
 
@@ -251,20 +251,20 @@
                 
                 <div class="input-group">
                     <label class="input-label">نام و نام خانوادگی</label>
-                    <input type="text" id="full_name" class="glass-input" placeholder="طبق کارت ملی">
+                    <input type="text" id="full_name" class="glass-input" placeholder="طبق کارت ملی" oninput="updateFooterState()">
                 </div>
                 <div class="input-group">
                     <label class="input-label">کد ملی</label>
-                    <input type="tel" id="national_id" class="glass-input" placeholder="**********" maxlength="10">
+                    <input type="tel" id="national_id" class="glass-input" placeholder="**********" maxlength="10" oninput="updateFooterState()">
                 </div>
                 <div style="display:flex; gap:10px;">
                     <div class="input-group" style="flex:1;">
                         <label class="input-label">تاریخ تولد</label>
-                        <input type="text" id="birth_date" class="glass-input" placeholder="1370/01/01">
+                        <input type="text" id="birth_date" class="glass-input" placeholder="1370/01/01" oninput="updateFooterState()">
                     </div>
                     <div class="input-group" style="flex:1;">
                         <label class="input-label">شماره موبایل</label>
-                        <input type="tel" id="phone_number" class="glass-input" placeholder="0912..." maxlength="11">
+                        <input type="tel" id="phone_number" class="glass-input" placeholder="0912..." maxlength="11" oninput="updateFooterState()">
                     </div>
                 </div>
 
@@ -272,22 +272,22 @@
                     <div class="mini-upload" onclick="document.getElementById('id_front').click()">
                         <i class="fas fa-id-card mini-icon" id="icon-front"></i>
                         <div class="mini-label" id="label-front">روی کارت ملی</div>
-                        <input type="file" id="id_front" accept="image/*" style="display:none" onchange="handleFileSelect(this, 'front', 2)">
+                        <input type="file" id="id_front" accept="image/*" style="display:none" onchange="handleFileSelect2(this, 'front')">
                     </div>
                     <div class="mini-upload" onclick="document.getElementById('id_back').click()">
                         <i class="fas fa-id-card mini-icon" id="icon-back"></i>
                         <div class="mini-label" id="label-back">پشت کارت ملی</div>
-                        <input type="file" id="id_back" accept="image/*" style="display:none" onchange="handleFileSelect(this, 'back', 2)">
+                        <input type="file" id="id_back" accept="image/*" style="display:none" onchange="handleFileSelect2(this, 'back')">
                     </div>
                     <div class="mini-upload" onclick="document.getElementById('bank_card_2').click()">
                         <i class="fas fa-credit-card mini-icon" id="icon-bank"></i>
                         <div class="mini-label" id="label-bank">کارت بانکی</div>
-                        <input type="file" id="bank_card_2" accept="image/*" style="display:none" onchange="handleFileSelect(this, 'bank', 2)">
+                        <input type="file" id="bank_card_2" accept="image/*" style="display:none" onchange="handleFileSelect2(this, 'bank')">
                     </div>
                     <div class="mini-upload" onclick="document.getElementById('selfie_2').click()">
                         <i class="fas fa-camera mini-icon" id="icon-selfie"></i>
                         <div class="mini-label" id="label-selfie">سلفی با مدارک</div>
-                        <input type="file" id="selfie_2" accept="image/*" style="display:none" onchange="handleFileSelect(this, 'selfie', 2)">
+                        <input type="file" id="selfie_2" accept="image/*" style="display:none" onchange="handleFileSelect2(this, 'selfie')">
                     </div>
                 </div>
             </div>
@@ -306,6 +306,6 @@
         </button>
     </div>
 
-    <script src="webapp/kyc.js?v=85.0"></script>
+    <script src="webapp/kyc.js?v=90.0"></script>
 </body>
 </html>

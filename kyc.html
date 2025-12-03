@@ -6,125 +6,111 @@
     <title>احراز هویت | کوین باران</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="webapp/dashboard-style.css?v=76.0">
+    <link rel="stylesheet" href="webapp/dashboard-style.css?v=77.0">
     <style>
-        /* --- استایل‌های اختصاصی و لوکس صفحه احراز هویت --- */
+        /* --- استایل‌های جدید --- */
         
+        .level-container {
+            padding-bottom: 100px; /* فضای خالی برای دکمه شناور */
+        }
+
         .level-badge {
             background: rgba(240, 185, 11, 0.1); color: var(--primary-gold);
             padding: 5px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 800;
             border: 1px solid var(--primary-gold); display: inline-block; margin-bottom: 12px;
-            box-shadow: 0 0 10px rgba(240, 185, 11, 0.1);
         }
         
         .script-box {
             background: rgba(255, 255, 255, 0.03);
             border: 1px dashed rgba(255, 255, 255, 0.2);
-            border-radius: 16px; padding: 18px; margin: 20px 0;
+            border-radius: 16px; padding: 15px; margin: 15px 0;
             text-align: center; line-height: 1.8;
-            position: relative;
         }
         .script-text {
-            color: #fff; font-weight: 700; font-size: 0.95rem;
+            color: #fff; font-weight: 700; font-size: 0.9rem;
             font-family: 'Vazirmatn', sans-serif;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
         
-        /* باکس‌های آپلود با افکت جدید */
         .upload-area {
             border: 2px dashed var(--glass-border); border-radius: 18px;
-            padding: 22px; text-align: center; background: rgba(0,0,0,0.25);
-            cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); margin-bottom: 15px;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            position: relative; overflow: hidden;
+            padding: 20px; text-align: center; background: rgba(0,0,0,0.25);
+            cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); margin-bottom: 12px;
+            display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 15px;
         }
         .upload-area:active { transform: scale(0.98); }
         .upload-area.active { 
             border-color: var(--accent-green); 
-            background: rgba(14,203,129,0.08); 
+            background: rgba(14,203,129,0.1); 
         }
         .upload-icon { 
-            font-size: 2.2rem; color: var(--text-muted); margin-bottom: 10px; 
-            transition: color 0.3s, transform 0.3s; 
+            font-size: 1.8rem; color: var(--text-muted); 
+            width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;
+            background: rgba(255,255,255,0.05); border-radius: 12px;
+            transition: all 0.3s;
         }
         .upload-area.active .upload-icon { 
-            color: var(--accent-green); 
-            transform: scale(1.1);
+            color: #fff; background: var(--accent-green);
+        }
+        .upload-texts { text-align: right; }
+        .upload-title { font-size: 0.95rem; color: #fff; font-weight: bold; margin-bottom: 2px; }
+        .upload-desc { font-size: 0.75rem; color: var(--text-muted); }
+        
+        /* --- پنل دکمه شناور (Sticky Footer) --- */
+        .fixed-footer {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            padding: 15px 20px 25px 20px; /* پایین گوشی فاصله بیشتر */
+            background: rgba(10, 10, 10, 0.85);
+            backdrop-filter: blur(15px);
+            border-top: 1px solid rgba(255,255,255,0.1);
+            z-index: 1000;
+            display: flex; flex-direction: column; gap: 10px;
+            transform: translateY(0); transition: transform 0.3s;
         }
         
-        .level-container {
-            background: rgba(20, 20, 20, 0.8); border: 1px solid var(--glass-border);
-            border-radius: 24px; padding: 24px; margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            animation: fadeIn 0.5s ease-out;
-            backdrop-filter: blur(10px);
-        }
-        
-        /* دکمه لوکس و شیک ارسال */
+        /* دکمه لوکس نهایی */
         .btn-luxury-submit {
             background: linear-gradient(135deg, #F0B90B 0%, #d49e00 100%);
-            color: #000;
-            border: none;
-            border-radius: 16px;
-            padding: 18px;
-            width: 100%;
-            font-size: 1.1rem;
-            font-weight: 800;
+            color: #000; border: none; border-radius: 16px; padding: 16px;
+            width: 100%; font-size: 1.1rem; font-weight: 800;
             cursor: pointer;
-            box-shadow: 0 4px 20px rgba(240, 185, 11, 0.25);
+            box-shadow: 0 4px 20px rgba(240, 185, 11, 0.3);
             transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 20px;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            opacity: 0.5; pointer-events: none; /* پیش‌فرض غیرفعال */
+            filter: grayscale(1);
         }
         
-        .btn-luxury-submit i { font-size: 1.2rem; }
-
-        /* افکت براق روی دکمه */
-        .btn-luxury-submit::after {
-            content: '';
-            position: absolute;
-            top: 0; left: -100%;
-            width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-            transition: 0.5s;
+        /* حالت فعال دکمه (وقتی مدارک کامل شد) */
+        .btn-luxury-submit.ready {
+            opacity: 1; pointer-events: all; filter: grayscale(0);
+            animation: pulse-gold 2s infinite;
         }
-        .btn-luxury-submit:hover::after { left: 100%; }
         
-        .btn-luxury-submit:active { 
-            transform: scale(0.96); 
-            box-shadow: 0 2px 10px rgba(240, 185, 11, 0.2);
-        }
-        .btn-luxury-submit:disabled {
-            background: #333; color: #666; box-shadow: none; cursor: not-allowed;
+        @keyframes pulse-gold {
+            0% { box-shadow: 0 0 0 0 rgba(240, 185, 11, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(240, 185, 11, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(240, 185, 11, 0); }
         }
 
         /* تب‌ها */
-        .tabs { display: flex; gap: 10px; margin-bottom: 25px; background: rgba(0,0,0,0.3); padding: 5px; border-radius: 16px; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; background: rgba(255,255,255,0.05); padding: 5px; border-radius: 14px; }
         .tab-btn {
-            flex: 1; padding: 12px; border-radius: 12px; 
+            flex: 1; padding: 10px; border-radius: 10px; 
             color: var(--text-muted); border: none; cursor: pointer; transition: all 0.3s;
-            font-size: 0.9rem; text-align: center; font-weight: 700;
+            font-size: 0.85rem; text-align: center; font-weight: 700;
         }
         .tab-btn.active {
-            background: rgba(255,255,255,0.1); color: #fff; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            background: var(--primary-gold); color: #000; 
+            box-shadow: 0 2px 10px rgba(240, 185, 11, 0.2);
         }
-
+        
         .input-group { margin-bottom: 15px; text-align: right; }
         .input-label { display: block; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 8px; }
         .glass-input {
             width: 100%; padding: 14px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
             border-radius: 14px; color: #fff; font-size: 1rem; outline: none; text-align: center;
-            font-family: 'Vazirmatn'; transition: border-color 0.3s;
+            font-family: 'Vazirmatn';
         }
-        .glass-input:focus { border-color: var(--primary-gold); background: rgba(255,255,255,0.08); }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -132,98 +118,82 @@
     <div class="ambient-glow glow-bottom"></div>
 
     <div id="loader" style="position:fixed; inset:0; background:#000; z-index:999; display:flex; align-items:center; justify-content:center; flex-direction:column;">
-        <img src="webapp/images/logo-gold.png" width="70" style="margin-bottom:20px; filter: drop-shadow(0 0 10px rgba(240,185,11,0.3));">
-        <p style="color:#888; font-size:0.9rem; letter-spacing: 1px;">در حال آماده‌سازی...</p>
+        <img src="webapp/images/logo-gold.png" width="70" style="margin-bottom:20px;">
+        <p style="color:#888; font-size:0.9rem;">در حال آماده‌سازی...</p>
     </div>
 
     <header class="glass-header">
         <div class="profile-section">
             <div class="icon-btn ripple-btn" onclick="window.location.href='/'"><i class="fas fa-arrow-right"></i></div>
-            <div style="font-weight:800; font-size:1.15rem; color: #fff;">سطح کاربری</div>
+            <div style="font-weight:800; font-size:1.15rem; color: #fff;">احراز هویت</div>
         </div>
     </header>
 
-    <div class="main-scroll-area" style="padding-bottom: 100px;">
+    <div class="main-scroll-area" style="padding: 20px 20px 120px 20px;">
         
         <div class="tabs">
             <div class="tab-btn active" onclick="switchTab('lvl1')">⚡️ سطح ۱ (فوری)</div>
             <div class="tab-btn" onclick="switchTab('lvl2')">💎 سطح ۲ (کامل)</div>
         </div>
 
-        <div id="lvl1-content" class="level-container">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <div class="level-badge">تایید در ۵ دقیقه</div>
-                <i class="fas fa-bolt" style="color:var(--primary-gold); font-size:1.2rem;"></i>
-            </div>
-            
-            <h2 style="color:#fff; margin:10px 0; font-size:1.3rem;">احراز هویت ویدیویی</h2>
-            <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:25px; line-height:1.6;">
-                برای شروع سریع و خرید روزانه تا <strong>۱۰ ووچر</strong>، فقط کافیست یک ویدیو کوتاه ارسال کنید.
+        <div id="lvl1-content">
+            <div class="level-badge">پیشنهاد سیستم</div>
+            <h2 style="color:#fff; margin:5px 0 15px 0; font-size:1.2rem;">احراز هویت ویدیویی</h2>
+            <p style="color:var(--text-muted); font-size:0.9rem; line-height:1.6;">
+                برای دسترسی سریع به خرید روزانه ۱۰ ووچر، مدارک زیر را بارگذاری کنید.
             </p>
 
             <div class="script-box">
-                <p style="color:var(--accent-blue); font-size:0.8rem; margin-bottom:8px; opacity:0.8;">این جمله را در ویدیو بخوانید:</p>
+                <p style="color:var(--accent-blue); font-size:0.75rem; margin-bottom:8px;">این جمله را در ویدیو بخوانید:</p>
                 <div class="script-text">
                     "من صاحب این حساب کاربری هستم و آن را در اختیار شخص دیگری قرار نمی‌دهم."
                 </div>
             </div>
 
             <div class="upload-area ripple-btn" onclick="document.getElementById('video-file').click()">
-                <i class="fas fa-video upload-icon" id="vid-icon"></i>
-                <div style="font-size:1rem; color:#fff; font-weight:bold;" id="vid-label">ضبط ویدیو سلفی</div>
-                <div style="font-size:0.8rem; color:var(--text-muted); margin-top:5px;">حداکثر ۱۰ ثانیه</div>
+                <div class="upload-icon" id="vid-icon"><i class="fas fa-video"></i></div>
+                <div class="upload-texts">
+                    <div class="upload-title" id="vid-label">ضبط ویدیو سلفی</div>
+                    <div class="upload-desc">حداکثر ۱۰ ثانیه • چهره مشخص باشد</div>
+                </div>
                 <input type="file" id="video-file" accept="video/*" capture="user" style="display:none" onchange="handleFileSelect(this, 'vid')">
             </div>
 
             <div class="upload-area ripple-btn" onclick="document.getElementById('card-file').click()">
-                <i class="fas fa-credit-card upload-icon" id="card-icon"></i>
-                <div style="font-size:1rem; color:#fff; font-weight:bold;" id="card-label">تصویر کارت بانکی</div>
-                <div style="font-size:0.8rem; color:var(--text-muted); margin-top:5px;">نام صاحب حساب خوانا باشد</div>
+                <div class="upload-icon" id="card-icon"><i class="fas fa-credit-card"></i></div>
+                <div class="upload-texts">
+                    <div class="upload-title" id="card-label">تصویر کارت بانکی</div>
+                    <div class="upload-desc">نام صاحب حساب خوانا باشد</div>
+                </div>
                 <input type="file" id="card-file" accept="image/*" style="display:none" onchange="handleFileSelect(this, 'card')">
             </div>
-
-            <button id="btn-submit-lvl1" class="btn-luxury-submit" onclick="submitLevel1()">
-                <span>ارسال و فعال‌سازی آنی</span>
-                <i class="fas fa-paper-plane"></i>
-            </button>
         </div>
 
-        <div id="lvl2-content" class="level-container" style="display:none;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <div class="level-badge" style="border-color:var(--accent-blue); color:var(--accent-blue); background:rgba(59,130,246,0.1);">نامحدود</div>
-                <i class="fas fa-gem" style="color:var(--accent-blue); font-size:1.2rem;"></i>
-            </div>
-
-            <h2 style="color:#fff; margin:10px 0; font-size:1.3rem;">احراز هویت کامل</h2>
-            <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:25px;">
-                برای رفع تمامی محدودیت‌های خرید و فروش و فعال‌سازی برداشت، این بخش را تکمیل کنید.
+        <div id="lvl2-content" style="display:none;">
+            <div class="level-badge" style="border-color:var(--accent-blue); color:var(--accent-blue);">نامحدود</div>
+            <h2 style="color:#fff; margin:5px 0 15px 0; font-size:1.2rem;">تکمیل پروفایل</h2>
+            <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">
+                این بخش پس از تایید سطح ۱ فعال می‌شود.
             </p>
-            
-            <form id="kyc-full-form">
-                <div class="input-group">
-                    <label class="input-label">نام و نام خانوادگی</label>
-                    <input type="text" id="full_name" class="glass-input" placeholder="طبق کارت ملی">
-                </div>
+            <div style="opacity:0.5; pointer-events:none;">
                 <div class="input-group">
                     <label class="input-label">کد ملی</label>
-                    <input type="tel" id="national_id" class="glass-input" maxlength="10" placeholder="**********">
+                    <input type="tel" class="glass-input" placeholder="**********">
                 </div>
-                <div class="input-group">
-                    <label class="input-label">تاریخ تولد</label>
-                    <input type="text" id="birth_date" class="glass-input" placeholder="1370/01/01">
-                </div>
-                <div class="input-group">
-                    <label class="input-label">شماره موبایل</label>
-                    <input type="tel" id="phone_number" class="glass-input" maxlength="11" placeholder="0912...">
-                </div>
-                
-                <button type="button" id="btn-submit-lvl2" class="btn-luxury-submit" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);" onclick="submitLevel2()">
-                    <span>ادامه مراحل</span>
-                    <i class="fas fa-arrow-left"></i>
-                </button>
-            </form>
+            </div>
         </div>
 
+    </div>
+
+    <div class="fixed-footer">
+        <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+            <span style="color:var(--text-muted); font-size:0.8rem;">وضعیت مدارک:</span>
+            <span id="status-text" style="color:var(--text-muted); font-size:0.8rem; font-weight:bold;">ناقص ⚠️</span>
+        </div>
+        <button id="btn-submit-lvl1" class="btn-luxury-submit" onclick="submitLevel1()">
+            <span>ارسال مدارک برای بررسی</span>
+            <i class="fas fa-arrow-up"></i>
+        </button>
     </div>
 
     <script>
@@ -232,48 +202,64 @@
 
         window.onload = () => {
             tg.ready(); tg.expand();
-            tg.setHeaderColor('#050505');
-            tg.setBackgroundColor('#050505');
-            
-            if (!tg.initData) tg.initData = "query_id=TEST_DEV"; 
-            setTimeout(() => document.getElementById('loader').style.display = 'none', 500);
+            setTimeout(() => document.getElementById('loader').style.display = 'none', 300);
         };
 
         function switchTab(tab) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.level-container').forEach(c => c.style.display = 'none');
-            
             if(tab === 'lvl1') {
                 document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
                 document.getElementById('lvl1-content').style.display = 'block';
-                tg.HapticFeedback.selectionChanged();
+                document.getElementById('lvl2-content').style.display = 'none';
+                document.querySelector('.fixed-footer').style.display = 'flex'; // نمایش دکمه در سطح ۱
             } else {
                 document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
+                document.getElementById('lvl1-content').style.display = 'none';
                 document.getElementById('lvl2-content').style.display = 'block';
-                tg.HapticFeedback.selectionChanged();
+                document.querySelector('.fixed-footer').style.display = 'none'; // مخفی کردن دکمه در سطح ۲ (فعلا)
+            }
+        }
+
+        // بررسی وضعیت فرم برای فعال کردن دکمه
+        function checkFormStatus() {
+            const vid = document.getElementById('video-file').files.length > 0;
+            const card = document.getElementById('card-file').files.length > 0;
+            const btn = document.getElementById('btn-submit-lvl1');
+            const statusText = document.getElementById('status-text');
+
+            if (vid && card) {
+                btn.classList.add('ready'); // سبز و فعال شدن
+                statusText.innerText = "آماده ارسال ✅";
+                statusText.style.color = "var(--accent-green)";
+            } else {
+                btn.classList.remove('ready');
+                statusText.innerText = "ناقص ⚠️";
+                statusText.style.color = "var(--text-muted)";
             }
         }
 
         function handleFileSelect(input, type) {
-            const label = document.getElementById(type + '-label');
-            const icon = document.getElementById(type + '-icon');
             const area = input.parentElement;
+            const iconBox = area.querySelector('.upload-icon');
+            const title = area.querySelector('.upload-title');
             
             if(input.files && input.files[0]) {
                 const file = input.files[0];
                 
+                // چک حجم
                 if(type === 'vid' && file.size > 25 * 1024 * 1024) {
-                    tg.showAlert("حجم ویدیو زیاد است (حداکثر ۲۵ مگابایت). لطفاً ویدیو کوتاه‌تری بگیرید.");
-                    input.value = ""; 
-                    return;
+                    tg.showAlert("حجم ویدیو زیاد است. لطفاً کمتر از ۲۵ مگابایت باشد.");
+                    input.value = ""; return;
                 }
-                
-                label.innerText = "✅ فایل آماده: " + (file.name.length > 20 ? file.name.substring(0,15)+'...' : file.name);
-                label.style.color = "var(--accent-green)";
-                icon.className = "fas fa-check-circle upload-icon";
+
                 area.classList.add('active');
+                iconBox.innerHTML = '<i class="fas fa-check"></i>';
+                title.innerText = file.name.length > 15 ? file.name.substring(0,12)+'...' : file.name;
+                title.style.color = "var(--accent-green)";
+                
                 tg.HapticFeedback.notificationOccurred('success');
             }
+            checkFormStatus();
         }
 
         async function submitLevel1() {
@@ -281,15 +267,18 @@
             const cardInput = document.getElementById('card-file');
             const btn = document.getElementById('btn-submit-lvl1');
             const btnText = btn.querySelector('span');
-            const btnIcon = btn.querySelector('i');
 
-            if(!vidInput.files[0]) { tg.showAlert("لطفاً ویدیو سلفی را ضبط کنید."); return; }
-            if(!cardInput.files[0]) { tg.showAlert("لطفاً تصویر کارت بانکی را انتخاب کنید."); return; }
+            // چک نهایی (اگر کاربر زرنگی کرد و دکمه را فعال کرد)
+            if(!vidInput.files[0] || !cardInput.files[0]) {
+                tg.showAlert("لطفاً هر دو مدرک (ویدیو و کارت بانکی) را بارگذاری کنید.");
+                return;
+            }
 
             btn.disabled = true; 
             btnText.innerText = "در حال آپلود (شکیبا باشید)...";
-            btnIcon.className = "fas fa-spinner fa-spin";
-            btn.style.opacity = "0.8";
+            btn.classList.remove('ready'); // غیرفعال کردن افکت
+            btn.style.background = "#333";
+            btn.style.color = "#888";
             
             tg.HapticFeedback.impactOccurred('heavy');
 
@@ -299,7 +288,6 @@
             formData.append('bank_card', cardInput.files[0]);
 
             try {
-                // ارسال درخواست با هدر Ngrok
                 const res = await fetch(`${API_BASE_URL}/webapp/submit_kyc_lite`, {
                     method: 'POST',
                     body: formData,
@@ -309,26 +297,22 @@
                 const result = await res.json();
                 
                 if(res.ok && result.status === 'success') {
-                    tg.showAlert("✅ " + result.message);
+                    tg.showAlert("✅ مدارک شما با موفقیت ارسال شد!\nنتیجه بررسی به زودی از طریق ربات اعلام می‌شود.");
                     tg.HapticFeedback.notificationOccurred('success');
-                    setTimeout(() => window.location.href = '/', 2000);
+                    setTimeout(() => tg.close(), 2000);
                 } else {
                     tg.showAlert("❌ خطا: " + (result.message || "مشکل در ارسال"));
-                    tg.HapticFeedback.notificationOccurred('error');
+                    // ریست دکمه
+                    btn.disabled = false;
+                    btnText.innerText = "ارسال مدارک برای بررسی";
+                    checkFormStatus();
                 }
             } catch(e) {
-                tg.showAlert("خطای شبکه یا قطع ارتباط با سرور.");
-                console.error(e);
-            } finally {
-                btn.disabled = false; 
-                btnText.innerText = "ارسال و فعال‌سازی آنی";
-                btnIcon.className = "fas fa-paper-plane";
-                btn.style.opacity = "1";
+                tg.showAlert("خطای شبکه. لطفاً اینترنت خود را بررسی کنید.");
+                btn.disabled = false;
+                btnText.innerText = "ارسال مدارک برای بررسی";
+                checkFormStatus();
             }
-        }
-
-        async function submitLevel2() {
-            tg.showAlert("لطفاً ابتدا احراز هویت سطح ۱ (ویدیویی) را تکمیل کنید.");
         }
     </script>
 </body>

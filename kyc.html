@@ -3,10 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <!-- Anti-Caching Meta Tags (حیاتی برای حل مشکل روتینگ موبایل) -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+
     <title>احراز هویت | کوین باران</title>
+    
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="webapp/dashboard-style.css?v=101.0">
+    
+    <!-- ارتقای ورژن به 102.0 برای اطمینان از لود شدن استایل جدید -->
+    <link rel="stylesheet" href="webapp/dashboard-style.css?v=102.0">
+    
     <style>
         /* --- استایل‌های اختصاصی صفحه KYC --- */
         body { padding-bottom: 110px; background-color: #050505; color: #fff; font-family: 'Vazirmatn', sans-serif; }
@@ -122,7 +132,8 @@
 </head>
 <body>
     <div id="loader" style="position:fixed; inset:0; background:#000; z-index:9999; display:flex; align-items:center; justify-content:center;">
-        <img src="webapp/images/logo-gold.png" width="70">
+        <!-- آیکون لودینگ -->
+        <i class="fas fa-circle-notch fa-spin" style="font-size: 3rem; color: #F0B90B;"></i>
     </div>
 
     <header class="glass-header">
@@ -236,6 +247,7 @@
         </button>
     </div>
 
-    <script src="webapp/kyc.js?v=101.0"></script>
+    <!-- ارتقای ورژن اسکریپت به 102.0 -->
+    <script src="webapp/kyc.js?v=102.0"></script>
 </body>
 </html>

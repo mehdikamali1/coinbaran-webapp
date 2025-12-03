@@ -1,4 +1,4 @@
-﻿/* webapp/kyc.js (v101.0 - Final Production Logic) */
+﻿/* webapp/kyc.js (v102.0) */
 (function () {
     'use strict';
 
@@ -18,10 +18,14 @@
 
     // --- شروع برنامه ---
     window.onload = async function() {
-        tg.ready(); 
-        tg.expand();
-        tg.setHeaderColor('#050505'); 
-        tg.setBackgroundColor('#050505');
+        try {
+            tg.ready(); 
+            tg.expand();
+            tg.setHeaderColor('#050505'); 
+            tg.setBackgroundColor('#050505'); // تنظیم رنگ پس‌زمینه تلگرام
+        } catch (e) {
+            console.log("Not inside Telegram WebApp");
+        }
         
         // 1. دریافت وضعیت کاربر از سرور
         await fetchUserStatus();
@@ -32,10 +36,14 @@
 
     // --- دریافت وضعیت از سرور ---
     async function fetchUserStatus() {
-        if (!tg.initData) return;
+        if (!tg.initData) {
+            console.warn("No InitData found (Dev Mode?)");
+            // برای تست در مرورگر معمولی (بدون تلگرام) می‌توانید اینجا خط زیر را فعال کنید:
+            // return; 
+        }
         
         try {
-            // اضافه کردن پارامتر زمان برای جلوگیری از کش شدن توسط مرورگر تلگرام
+            // اضافه کردن پارامتر زمان برای جلوگیری از کش شدن توسط مرورگر تلگرام (Fix Mobile Caching)
             const timestamp = new Date().getTime();
             const res = await fetch(`${API_BASE_URL}/webapp/get_user_data?t=${timestamp}`, {
                 method: 'POST',
@@ -48,14 +56,16 @@
             
             const data = await res.json();
             
-            // تبدیل وضعیت‌ها به فرمت استاندارد
-            userKycLevel = parseInt(data.kyc_level) || 1;
-            kycStatus = data.kyc_status_code || 'none';
+            if (data.status === 'success') {
+                // تبدیل وضعیت‌ها به فرمت استاندارد
+                userKycLevel = parseInt(data.kyc_level) || 1;
+                kycStatus = data.kyc_status_code || 'none';
 
-            console.log("User Status Loaded:", userKycLevel, kycStatus);
+                console.log("User Status Loaded:", userKycLevel, kycStatus);
 
-            // رندر کردن صفحه بر اساس وضعیت
-            renderPageBasedOnStatus();
+                // رندر کردن صفحه بر اساس وضعیت
+                renderPageBasedOnStatus();
+            }
 
         } catch (e) {
             console.error("Error fetching user status:", e);
@@ -172,7 +182,7 @@
             }
         }
         
-        tg.HapticFeedback.selectionChanged();
+        try { tg.HapticFeedback.selectionChanged(); } catch(e){}
     }
 
     // --- آپدیت متن و رنگ دکمه شناور (Global Function) ---
@@ -253,7 +263,7 @@
                 title.style.color = "#10b981";
             }
             
-            tg.HapticFeedback.notificationOccurred('success');
+            try { tg.HapticFeedback.notificationOccurred('success'); } catch(e){}
         }
         updateFooterState();
     }
@@ -291,7 +301,7 @@
             const result = await res.json();
             
             if (res.ok && result.status === 'success') {
-                tg.HapticFeedback.notificationOccurred('success');
+                try { tg.HapticFeedback.notificationOccurred('success'); } catch(e){}
                 // تغییر وضعیت محلی برای آپدیت سریع UI
                 kycStatus = 'pending_lite'; 
                 renderPageBasedOnStatus(); 
@@ -337,7 +347,7 @@
             const result = await res.json();
             
             if (res.ok && result.status === 'success') {
-                tg.HapticFeedback.notificationOccurred('success');
+                try { tg.HapticFeedback.notificationOccurred('success'); } catch(e){}
                 kycStatus = 'pending_full';
                 renderPageBasedOnStatus(); // آپدیت فوری برای نمایش کارت انتظار سطح ۲
                 tg.showAlert("✅ مدارک کامل ارسال شد.");

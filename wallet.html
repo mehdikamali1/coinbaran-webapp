@@ -9,12 +9,11 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    <link rel="stylesheet" href="webapp/dashboard-style.css?v=71.0">
+    <link rel="stylesheet" href="webapp/dashboard-style.css?v=76.0">
 
     <style>
         /* --- Wallet Specific Styles --- */
         
-        /* دکمه‌های بزرگ عملیات */
         .wallet-actions {
             display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
             margin-bottom: 30px;
@@ -37,7 +36,6 @@
         .btn-withdraw i { color: var(--accent-red); font-size: 1.8rem; filter: drop-shadow(0 0 5px rgba(246,70,93,0.5)); }
         .btn-withdraw span { color: #fff; font-weight: 700; font-size: 0.95rem; }
 
-        /* لیست تراکنش‌ها */
         .tx-container { padding-bottom: 80px; }
         .section-label { 
             font-size: 0.95rem; color: var(--text-main); margin-bottom: 15px; 
@@ -68,7 +66,6 @@
         
         .tx-amount { font-family: 'Roboto Mono'; font-weight: 700; font-size: 1rem; direction: ltr; }
 
-        /* باکس آپلود فایل */
         .upload-area {
             border: 2px dashed var(--glass-border);
             border-radius: var(--radius-lg);
@@ -82,7 +79,6 @@
         .upload-icon { font-size: 2.5rem; color: var(--text-muted); margin-bottom: 15px; transition: color 0.3s; }
         .upload-label { font-size: 0.85rem; color: var(--text-muted); }
 
-        /* ووچر باکس */
         .voucher-display {
             background: rgba(0,0,0,0.5); padding: 15px; border-radius: 12px;
             border: 1px dashed var(--primary-gold);
@@ -90,7 +86,6 @@
         }
         .v-code { font-family: 'Roboto Mono'; font-size: 1.1rem; color: var(--primary-gold); letter-spacing: 1px; word-break: break-all; font-weight: bold; }
 
-        /* فیلدهای ورودی مودال */
         .glass-field {
             width: 100%; padding: 16px;
             background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
@@ -121,8 +116,8 @@
             </div>
             <div style="font-weight:800; font-size:1.1rem; color: #fff;">مدیریت دارایی</div>
         </div>
-        <div class="icon-btn ripple-btn">
-            <i class="fas fa-history"></i>
+        <div class="icon-btn ripple-btn" onclick="fetchWalletData()">
+            <i class="fas fa-sync-alt"></i>
         </div>
     </header>
 
@@ -147,8 +142,8 @@
 
             <div class="card-footer-row">
                 <div class="stat-item">
-                    <span class="stat-label">موجودی بازی</span>
-                    <span class="stat-value color-usd" id="balance-uusd">--- <small>دلار</small></span>
+                    <span class="stat-label">موجودی دلاری</span>
+                    <span class="stat-value color-usd" id="balance-uusd">--- <small>$</small></span>
                 </div>
                 <div class="stat-divider"></div>
                 <div class="stat-item">
@@ -236,7 +231,6 @@
         const tg = window.Telegram.WebApp;
         const API_BASE_URL = window.location.origin;
 
-        // --- Loader Logic ---
         function hideLoader() {
             const loader = document.getElementById('loader');
             const app = document.getElementById('app-container');
@@ -251,7 +245,6 @@
             }
         }
 
-        // --- UI Functions ---
         function openDepositModal() { document.getElementById('deposit-modal').classList.add('active'); }
         function closeDepositModal() { document.getElementById('deposit-modal').classList.remove('active'); }
         
@@ -271,7 +264,6 @@
             }
         }
 
-        // --- Logic ---
         async function submitDeposit() {
             const amountInput = document.getElementById('deposit-amount');
             const fileInput = document.getElementById('receipt-file');
@@ -295,12 +287,12 @@
                     method: 'POST', 
                     body: formData,
                     headers: {
-                        'ngrok-skip-browser-warning': 'true' // <--- کلید حل مشکل اینجاست
+                        'ngrok-skip-browser-warning': 'true'
                     }
                 });
                 
                 let result;
-                try { result = await res.json(); } catch { throw new Error("پاسخ سرور نامعتبر است (Ngrok Error)"); }
+                try { result = await res.json(); } catch { throw new Error("پاسخ سرور نامعتبر است"); }
 
                 if (res.ok && result.status === 'success') {
                     tg.showAlert("✅ " + result.message);
@@ -335,14 +327,14 @@
                     method: 'POST', 
                     headers: {
                         'Content-Type': 'application/json',
-                        'ngrok-skip-browser-warning': 'true' // <--- کلید حل مشکل اینجاست
+                        'ngrok-skip-browser-warning': 'true'
                     },
                     body: JSON.stringify({ initData: tg.initData })
                 });
                 const data = await res.json();
                 if (data.status === 'success') {
                     document.getElementById('balance-toman').innerText = parseInt(data.balances.toman.replace(/,/g, '')).toLocaleString();
-                    document.getElementById('balance-uusd').innerText = `${data.balances.uusd} دلار`;
+                    document.getElementById('balance-uusd').innerText = `${data.balances.uusd} $`;
                     transactionsData = data.transactions;
                     renderTx(data.transactions);
                     hideLoader(); 

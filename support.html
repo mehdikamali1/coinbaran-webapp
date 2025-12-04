@@ -4,248 +4,125 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#000000">
-    <title>پشتیبانی | کوین باران</title>
+    <title>Coin Baran | Support VIP</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    <!-- استفاده از فونت‌های داشبورد -->
-    <link rel="stylesheet" href="webapp/dashboard-style.css?v=88.0">
-
-    <style>
-        /* --- Chat Specific Overrides --- */
-        body, html { height: 100%; overflow: hidden; background-color: #050505; }
-        
-        #app-container { 
-            height: 100%; display: flex; flex-direction: column; 
-            padding: 0; max-width: 600px; margin: 0 auto;
-            background: #050505;
-        }
-
-        /* هدر چت */
-        .chat-header {
-            flex-shrink: 0; height: 60px;
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 0 15px;
-            background: rgba(20, 20, 20, 0.95);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px); z-index: 10;
-        }
-        .support-info { display: flex; align-items: center; gap: 10px; }
-        .support-avatar {
-            width: 38px; height: 38px; border-radius: 50%;
-            background: linear-gradient(135deg, #F0B90B, #B8860B);
-            display: flex; align-items: center; justify-content: center;
-            color: #000; font-size: 1.2rem; box-shadow: 0 0 10px rgba(240,185,11,0.3);
-        }
-        .support-text h3 { margin: 0; font-size: 0.95rem; color: #fff; }
-        .support-text span { font-size: 0.7rem; color: #0ECB81; }
-
-        /* ناحیه پیام‌ها */
-        .chat-area {
-            flex: 1; overflow-y: auto; padding: 15px;
-            display: flex; flex-direction: column; gap: 10px;
-            background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px);
-            background-size: 20px 20px;
-            scroll-behavior: smooth;
-        }
-
-        /* حباب‌های پیام */
-        .message {
-            max-width: 80%; padding: 10px 14px; border-radius: 16px;
-            font-size: 0.9rem; line-height: 1.4; position: relative;
-            word-wrap: break-word; animation: fadeIn 0.3s ease;
-        }
-        
-        .message.user {
-            align-self: flex-end;
-            background: linear-gradient(135deg, #F0B90B 0%, #d4a007 100%);
-            color: #000;
-            border-radius: 16px 16px 4px 16px;
-            box-shadow: 0 2px 10px rgba(240,185,11,0.1);
-        }
-        
-        .message.admin {
-            align-self: flex-start;
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 16px 16px 16px 4px;
-        }
-
-        .msg-time {
-            font-size: 0.65rem; margin-top: 4px; text-align: right; opacity: 0.7;
-            font-family: 'Roboto Mono', monospace;
-        }
-
-        /* نوار ورودی (Input Bar) */
-        .input-area {
-            flex-shrink: 0; padding: 10px 15px 20px 15px; /* فضای پایین برای آیفون */
-            background: #111; border-top: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex; align-items: center; gap: 10px;
-        }
-        
-        .chat-input {
-            flex: 1; background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 24px; padding: 12px 16px;
-            color: #fff; font-family: 'Vazirmatn'; font-size: 0.95rem;
-            outline: none; transition: border-color 0.2s;
-        }
-        .chat-input:focus { border-color: #F0B90B; }
-
-        .send-btn {
-            width: 46px; height: 46px; border-radius: 50%;
-            background: #F0B90B; color: #000; border: none;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.2rem; cursor: pointer; transition: transform 0.1s;
-            box-shadow: 0 0 15px rgba(240,185,11,0.2);
-        }
-        .send-btn:active { transform: scale(0.9); }
-        .send-btn:disabled { background: #333; color: #666; box-shadow: none; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    </style>
+    <link rel="stylesheet" href="webapp/dashboard-style.css?v=88.1">
 </head>
-<body>
+<body class="loading-active">
 
-    <div id="app-container">
-        <!-- Header -->
-        <div class="chat-header">
-            <div class="support-info">
-                <div class="icon-btn" onclick="window.location.href='/'" style="width:35px; height:35px; background:rgba(255,255,255,0.1);">
-                    <i class="fas fa-arrow-right"></i>
-                </div>
-                <div class="support-avatar"><i class="fas fa-headset"></i></div>
-                <div class="support-text">
-                    <h3>پشتیبانی آنلاین</h3>
-                    <span>پاسخگویی سریع</span>
-                </div>
-            </div>
-            <div class="icon-btn" onclick="fetchHistory()" style="width:35px; height:35px; background:rgba(255,255,255,0.1);">
-                <i class="fas fa-sync-alt"></i>
-            </div>
+    <div class="ambient-glow glow-top"></div>
+    <div class="ambient-glow glow-bottom"></div>
+    <div class="grid-overlay"></div>
+
+    <div id="loader">
+        <div class="infinity-container">
+            <img src="webapp/images/logo-gold.png" alt="Coin Baran" class="center-logo">
+            <svg class="infinity-svg" viewBox="0 0 340 170">
+                <defs>
+                    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" style="stop-color:#B8860B;stop-opacity:1" />
+                        <stop offset="50%" style="stop-color:#FFD700;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#B8860B;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+                <path class="infinity-bg" d="M170,85 C 230,145 310,145 310,85 C 310,25 230,25 170,85 C 110,145 30,145 30,85 C 30,25 110,25 170,85" />
+                <path class="infinity-path" d="M170,85 C 230,145 310,145 310,85 C 310,25 230,25 170,85 C 110,145 30,145 30,85 C 30,25 110,25 170,85" />
+            </svg>
         </div>
-
-        <!-- Chat Box -->
-        <div class="chat-area" id="chat-box">
-            <div style="text-align:center; margin-top:50px; color:#666;">
-                <div class="spinner-premium" style="width:30px; height:30px; margin:0 auto 10px auto;"></div>
-                <p style="font-size:0.8rem;">در حال بارگذاری پیام‌ها...</p>
-            </div>
-        </div>
-
-        <!-- Input Bar -->
-        <div class="input-area">
-            <input type="text" id="msg-input" class="chat-input" placeholder="پیام خود را بنویسید..." autocomplete="off">
-            <button id="send-btn" class="send-btn" onclick="sendMessage()">
-                <i class="fas fa-paper-plane"></i>
-            </button>
+        <div class="loader-text-wrapper">
+            <p class="status-msg">CONNECTING TO SECURE LINE...</p>
         </div>
     </div>
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        const API_BASE_URL = window.location.origin;
+    <div id="app-container" class="hidden-content">
         
-        const chatBox = document.getElementById('chat-box');
-        const msgInput = document.getElementById('msg-input');
-        let lastMsgCount = 0;
+        <header class="glass-header">
+            <div class="profile-section">
+                <button class="icon-btn ripple-btn" onclick="window.location.href='index.html'" style="border: none; background: transparent; width: auto; padding-right: 0;">
+                    <i class="fas fa-arrow-right" style="font-size: 1.2rem; color: #fff;"></i>
+                </button>
 
-        window.onload = function() {
-            tg.ready(); tg.expand();
-            tg.setHeaderColor('#141414'); 
-            tg.setBackgroundColor('#111111');
+                <div class="avatar-frame" style="width: 40px; height: 40px; margin-right: 10px;">
+                    <img src="https://cdn-icons-png.flaticon.com/512/4712/4712035.png" alt="Support" class="avatar-img">
+                    <div class="online-dot"></div>
+                </div>
+
+                <div class="user-details">
+                    <h2 style="font-size: 0.95rem; margin: 0; color: #fff;">پشتیبانی VIP</h2>
+                    <span style="font-size: 0.7rem; color: #0ECB81;">آنلاین | پاسخگویی سریع</span>
+                </div>
+            </div>
             
-            if (!tg.initData) tg.initData = "query_id=TEST_DEV";
+            <div class="header-icons">
+                <button class="icon-btn ripple-btn" id="chat-options-btn">
+                    <i class="fas fa-ellipsis-v"></i>
+                </button>
+            </div>
+        </header>
+
+        <div class="chat-layout">
             
-            fetchHistory(true); // لود اولیه
-            setInterval(() => fetchHistory(false), 4000); // رفرش خودکار هر 4 ثانیه
-        };
-
-        async function fetchHistory(firstLoad) {
-            try {
-                const res = await fetch(`${API_BASE_URL}/webapp/support/history`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ initData: tg.initData })
-                });
-                const data = await res.json();
-
-                if (data.status === 'success') {
-                    const msgs = data.messages;
-                    // فقط اگر پیام جدیدی هست رندر کن
-                    if (msgs.length !== lastMsgCount) {
-                        renderMessages(msgs);
-                        lastMsgCount = msgs.length;
-                        scrollToBottom();
-                    }
-                }
-            } catch (e) { console.error(e); }
-        }
-
-        function renderMessages(messages) {
-            chatBox.innerHTML = '';
-            
-            // پیام خوش‌آمدگویی سیستم
-            const intro = document.createElement('div');
-            intro.style.textAlign = 'center'; intro.style.margin = '20px 0'; intro.style.opacity = '0.5';
-            intro.innerHTML = '<span style="font-size:0.75rem; background:rgba(255,255,255,0.1); padding:4px 10px; border-radius:10px;">گفتگو با پشتیبانی آغاز شد</span>';
-            chatBox.appendChild(intro);
-
-            if (messages.length === 0) {
-                const empty = document.createElement('div');
-                empty.style.textAlign = 'center'; empty.style.color = '#444'; empty.style.marginTop = '40px';
-                empty.innerHTML = '<i class="fas fa-comments" style="font-size:3rem; margin-bottom:10px;"></i><br>سوال خود را بپرسید...';
-                chatBox.appendChild(empty);
-                return;
-            }
-
-            messages.forEach(msg => {
-                const div = document.createElement('div');
-                div.className = `message ${msg.is_admin ? 'admin' : 'user'}`;
-                div.innerHTML = `${msg.text.replace(/\n/g, '<br>')}<div class="msg-time">${msg.time}</div>`;
-                chatBox.appendChild(div);
-            });
-        }
-
-        async function sendMessage() {
-            const text = msgInput.value.trim();
-            if (!text) return;
-
-            // نمایش آنی پیام (Optimistic UI)
-            const tempDiv = document.createElement('div');
-            tempDiv.className = 'message user';
-            tempDiv.style.opacity = '0.6';
-            tempDiv.innerHTML = `${text}<div class="msg-time"><i class="fas fa-clock"></i></div>`;
-            chatBox.appendChild(tempDiv);
-            scrollToBottom();
-            
-            msgInput.value = '';
-            tg.HapticFeedback.impactOccurred('light');
-
-            try {
-                const res = await fetch(`${API_BASE_URL}/webapp/support/send`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ initData: tg.initData, message: text })
-                });
-                const result = await res.json();
+            <div class="chat-messages-area" id="messages-container">
                 
-                if (result.status === 'success') {
-                    fetchHistory(false); // آپدیت واقعی از سرور
-                } else {
-                    tg.showAlert("خطا: " + result.message);
-                    tempDiv.style.background = '#F6465D'; // قرمز شدن در صورت خطا
-                }
-            } catch (e) { tg.showAlert("خطای شبکه"); }
-        }
+                <div class="date-separator">امروز</div>
 
-        function scrollToBottom() {
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
+                <div class="message-wrapper msg-admin">
+                    <div class="bubble">
+                        سلام مهدی عزیز! 👋<br>
+                        به بخش پشتیبانی VIP خوش آمدید.<br>
+                        چطور می‌توانم امروز کمکتان کنم؟
+                    </div>
+                    <div class="msg-meta">
+                        <span>12:30</span>
+                    </div>
+                </div>
 
-        msgInput.addEventListener("keypress", function(event) {
-            if (event.key === "Enter") { event.preventDefault(); sendMessage(); }
-        });
+                <div class="message-wrapper msg-user">
+                    <div class="bubble">
+                        سلام، یک سوال در مورد برداشت تتر داشتم.
+                    </div>
+                    <div class="msg-meta">
+                        <span>12:32</span>
+                        <i class="fas fa-check-double msg-status-icon msg-status-read"></i>
+                    </div>
+                </div>
+
+                </div>
+
+            <div class="chat-input-bar">
+                <button class="attach-btn ripple-effect">
+                    <i class="fas fa-paperclip"></i>
+                </button>
+                
+                <input type="text" class="chat-input-field" id="message-input" placeholder="پیام خود را بنویسید..." autocomplete="off">
+                
+                <button class="send-btn ripple-effect" id="send-btn">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+
+        </div>
+    </div>
+    
+    <script src="webapp/script.js?v=88.0"></script> 
+    
+    <script>
+        window.onload = function() {
+            setTimeout(() => {
+                document.getElementById('loader').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('loader').style.display = 'none';
+                    document.getElementById('app-container').classList.remove('hidden-content');
+                    document.getElementById('app-container').classList.add('fade-in-active');
+                    // اسکرول به پایین چت
+                    const msgContainer = document.getElementById('messages-container');
+                    msgContainer.scrollTop = msgContainer.scrollHeight;
+                }, 800);
+            }, 1500); // 1.5 ثانیه لودر نمایشی
+        };
     </script>
 </body>
 </html>

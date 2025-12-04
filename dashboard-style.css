@@ -1,4 +1,4 @@
-﻿/* webapp/dashboard-style.css (v88.0 - 9s Optimal Timing) */
+﻿/* webapp/dashboard-style.css (v88.1 - Luxury Support Edition) */
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;300;400;500;700;800;900&family=Cinzel:wght@400;700;900&display=swap');
 
 :root {
@@ -7,6 +7,7 @@
     --gold-rich: #F0B90B;
     --gold-dark: #B8860B;
     --text-white: #ffffff;
+    --text-muted: #aaaaaa;
     --glass-border: rgba(255, 255, 255, 0.1);
     
     --radius-xl: 24px;
@@ -37,10 +38,9 @@ body {
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
     overflow: hidden;
-    transition: opacity 0.8s ease-in-out; /* کمی سریع‌تر محو شود */
+    transition: opacity 0.8s ease-in-out;
 }
 
-/* کانتینر مرکزی */
 .infinity-container {
     position: relative;
     width: 340px; height: 170px;
@@ -54,26 +54,22 @@ body {
     overflow: visible;
 }
 
-/* مسیر پس‌زمینه (ضخیم‌تر) */
 .infinity-bg {
     stroke: rgba(255, 255, 255, 0.08);
     stroke-width: 10;
     stroke-linecap: round;
 }
 
-/* مسیر اصلی متحرک (خیلی ضخیم و طلایی) */
 .infinity-path {
     stroke: url(#goldGradient);
     stroke-width: 12;
     stroke-linecap: round;
     stroke-dasharray: 900; 
     stroke-dashoffset: 900; 
-    /* انیمیشن رسم شدن (۳ ثانیه) + جریان نور */
     animation: draw-infinity 3s ease-out forwards, flow-light 2s linear infinite 3s;
     filter: drop-shadow(0 0 15px rgba(240, 185, 11, 0.6));
 }
 
-/* لوگوی شناور در مرکز */
 .center-logo {
     position: absolute;
     width: 90px; height: 90px;
@@ -82,11 +78,9 @@ body {
     box-shadow: 0 0 60px rgba(240, 185, 11, 0.4);
     opacity: 0;
     border: 3px solid rgba(240, 185, 11, 0.3);
-    /* ظاهر شدن سریع‌تر */
     animation: logo-appear 1.5s ease-out forwards 1s, logo-pulse 3s ease-in-out infinite 2.5s;
 }
 
-/* متن سینمایی پایین */
 .loader-text-wrapper {
     margin-top: 50px;
     text-align: center;
@@ -108,7 +102,6 @@ body {
     text-shadow: 0 10px 40px rgba(240, 185, 11, 0.2);
 }
 
-/* نوار لودینگ (تنظیم شده برای ۹ ثانیه) */
 .loading-bar-container {
     width: 220px; height: 4px;
     background: rgba(255,255,255,0.1);
@@ -124,7 +117,6 @@ body {
     position: absolute; top: 0; left: 0; height: 100%; width: 100%;
     background: var(--gold-primary);
     transform: translateX(-100%);
-    /* کل پروسه ۹ ثانیه است. ۲.۵ ثانیه تاخیر، پس ۶.۵ ثانیه پر شدن */
     animation: load-progress 6.5s linear forwards 2.5s; 
     box-shadow: 0 0 15px var(--gold-primary);
 }
@@ -173,6 +165,24 @@ body {
 .kyc-tag { font-size: 0.65rem; color: var(--gold-primary); background: rgba(240, 185, 11, 0.1); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(240, 185, 11, 0.2); display: inline-block; margin-top: 4px; font-weight: 700; letter-spacing: 0.5px; }
 .icon-btn { width: 42px; height: 42px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: var(--text-white); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; position: relative; }
 .badge-point { position: absolute; top: 10px; right: 12px; width: 8px; height: 8px; background: #F6465D; border-radius: 50%; border: 1px solid #000; }
+
+/* --- Notification Dot (استایل اضافه شده برای پشتیبانی) --- */
+.notif-dot-support {
+    position: absolute; top: -2px; right: -2px;
+    width: 10px; height: 10px;
+    background-color: #ff3b30;
+    border-radius: 50%;
+    border: 2px solid #1c1c1e;
+    display: none; /* پیش فرض مخفی است */
+    box-shadow: 0 0 8px rgba(255, 59, 48, 0.6);
+    animation: pulse-red 2s infinite;
+    z-index: 10;
+}
+@keyframes pulse-red {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 4px rgba(255, 59, 48, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); }
+}
 
 .main-scroll-area { padding: 20px; overflow-y: auto; overflow-x: hidden; }
 .asset-card { background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%); border-radius: var(--radius-xl); padding: 24px; margin-bottom: 30px; position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 15px 40px -10px rgba(0,0,0,0.8); }
@@ -226,3 +236,140 @@ body {
 .fade-in-active { opacity: 1; transform: translateY(0); transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .ripple-btn:active, .ripple-effect:active { transform: scale(0.96); opacity: 0.8; }
 @keyframes shine { 0% { left: -150%; } 10% { left: 150%; } 100% { left: 150%; } }
+
+/* =========================================
+   3. استایل‌های صفحه چت پشتیبانی (NEW)
+   ========================================= */
+.chat-layout {
+    display: flex; flex-direction: column;
+    height: 100vh;
+    padding-top: 70px; /* فضای هدر */
+}
+
+.chat-messages-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding-bottom: 90px; /* فضای ورودی متن */
+    scroll-behavior: smooth;
+}
+
+.date-separator {
+    text-align: center;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin: 10px 0;
+    opacity: 0.7;
+    position: relative;
+}
+.date-separator::before, .date-separator::after {
+    content: ''; position: absolute; top: 50%; width: 30%; height: 1px; background: rgba(255,255,255,0.1);
+}
+.date-separator::before { left: 0; }
+.date-separator::after { right: 0; }
+
+.message-wrapper {
+    display: flex;
+    flex-direction: column;
+    max-width: 80%;
+    opacity: 0;
+    animation: msg-appear 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+@keyframes msg-appear { from { opacity: 0; transform: translateY(20px) scale(0.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+.msg-user { align-self: flex-end; align-items: flex-end; }
+.msg-admin { align-self: flex-start; align-items: flex-start; }
+
+.bubble {
+    padding: 12px 16px;
+    border-radius: 18px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    position: relative;
+    word-wrap: break-word;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+/* حباب کاربر: طلایی */
+.msg-user .bubble {
+    background: linear-gradient(135deg, var(--gold-primary), var(--gold-dark));
+    color: #000;
+    border-bottom-left-radius: 18px;
+    border-bottom-right-radius: 4px;
+    font-weight: 500;
+}
+
+/* حباب ادمین: تیره و شیشه‌ای */
+.msg-admin .bubble {
+    background: #2c2c2e;
+    color: #fff;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 18px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.msg-meta {
+    font-size: 0.65rem;
+    margin-top: 4px;
+    opacity: 0.7;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 4px;
+}
+.msg-user .msg-meta { color: rgba(255,255,255,0.7); } /* تاریخ بیرون حباب */
+.msg-status-icon { font-size: 0.7rem; }
+.msg-status-read { color: #64d2ff; } /* رنگ آبی برای خوانده شده */
+
+.chat-input-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(20, 20, 20, 0.85);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    padding: 10px 15px;
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+    border-top: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 200;
+}
+
+.attach-btn {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--gold-primary);
+    font-size: 1.2rem;
+    display: flex; align-items: center; justify-content: center;
+}
+
+.chat-input-field {
+    flex: 1;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    padding: 10px 15px;
+    color: #fff;
+    font-family: inherit;
+    font-size: 0.95rem;
+    transition: all 0.3s;
+}
+.chat-input-field:focus { background: rgba(255,255,255,0.12); border-color: var(--gold-primary); }
+
+.send-btn {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: var(--gold-primary);
+    color: #000;
+    border: none;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+    box-shadow: 0 0 15px rgba(240, 185, 11, 0.3);
+    transition: transform 0.2s;
+}
+.send-btn:active { transform: scale(0.9); }

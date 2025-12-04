@@ -6,27 +6,37 @@
     <meta name="theme-color" content="#000000">
     <title>Coin Baran | Dashboard</title>
     
-    <!-- Libraries -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    <!-- Styles (9s Infinity Edition) -->
     <link rel="stylesheet" href="webapp/dashboard-style.css?v=88.0">
+
+    <style>
+        .notif-dot-support {
+            position: absolute;
+            top: -3px;
+            right: -3px;
+            width: 9px;
+            height: 9px;
+            background-color: #ff3b30; /* رنگ قرمز اپل */
+            border-radius: 50%;
+            border: 1.5px solid #1c1c1e; /* حاشیه همرنگ پس‌زمینه برای تفکیک */
+            display: none; /* پیش‌فرض مخفی است */
+            z-index: 10;
+            box-shadow: 0 0 4px rgba(255, 59, 48, 0.6);
+        }
+    </style>
 </head>
 <body class="loading-active">
 
-    <!-- Ambient Background Effects -->
     <div class="ambient-glow glow-top"></div>
     <div class="ambient-glow glow-bottom"></div>
     <div class="grid-overlay"></div>
 
-    <!-- The 9s Golden Infinity Loader -->
     <div id="loader">
         <div class="infinity-container">
-            <!-- لوگوی شناور در مرکز -->
             <img src="webapp/images/logo-gold.png" alt="Coin Baran" class="center-logo">
             
-            <!-- ترسیم نماد بی‌نهایت ضخیم -->
             <svg class="infinity-svg" viewBox="0 0 340 170">
                 <defs>
                     <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -36,10 +46,8 @@
                     </linearGradient>
                 </defs>
                 
-                <!-- مسیر پس‌زمینه (تاریک و ضخیم) -->
                 <path class="infinity-bg" d="M170,85 C 230,145 310,145 310,85 C 310,25 230,25 170,85 C 110,145 30,145 30,85 C 30,25 110,25 170,85" />
                 
-                <!-- مسیر متحرک (طلایی و بسیار ضخیم) -->
                 <path class="infinity-path" d="M170,85 C 230,145 310,145 310,85 C 310,25 230,25 170,85 C 110,145 30,145 30,85 C 30,25 110,25 170,85" />
             </svg>
         </div>
@@ -47,7 +55,6 @@
         <div class="loader-text-wrapper">
             <div class="luxury-title">COIN BARAN</div>
             
-            <!-- نوار لودینگ -->
             <div class="loading-bar-container">
                 <div class="loading-bar-fill"></div>
             </div>
@@ -56,10 +63,8 @@
         </div>
     </div>
 
-    <!-- Main Application (Hidden initially) -->
     <div id="app-container" class="glass-wrapper hidden-content">
         
-        <!-- Header -->
         <header class="glass-header">
             <div class="profile-section">
                 <div class="avatar-frame ripple-effect">
@@ -67,7 +72,6 @@
                     <div class="online-dot"></div>
                 </div>
 
-                <!-- لوگوی شناور هدر -->
                 <div class="header-logo-container">
                     <div class="header-glow"></div>
                     <img src="webapp/images/logo-gold.png" class="header-logo-img" alt="CB">
@@ -91,7 +95,6 @@
 
         <main class="main-scroll-area">
             
-            <!-- Hero Asset Card -->
             <div class="asset-card">
                 <div class="card-shine-effect"></div>
                 <div class="card-mesh"></div>
@@ -124,7 +127,6 @@
                 </div>
             </div>
 
-            <!-- Quick Access Grid -->
             <div class="section-label">دسترسی سریع</div>
             <div class="quick-access-grid">
                 <div class="action-item ripple-btn" onclick="window.location.href='wallet'">
@@ -153,10 +155,8 @@
                 </div>
             </div>
 
-            <!-- Services Section -->
             <div class="section-label">مارکت و سرگرمی</div>
             
-            <!-- Featured Game Widget -->
             <div class="featured-game-card ripple-effect" onclick="window.location.href='game'">
                 <div class="game-glow"></div>
                 <div class="game-content">
@@ -205,13 +205,14 @@
                     </div>
                 </div>
 
-                <div class="service-box ripple-btn" onclick="Telegram.WebApp.openTelegramLink('https://t.me/CoinBaranSupport')">
-                    <div class="srv-icon support-icon-theme">
+                <div class="service-box ripple-btn" onclick="window.location.href='support.html'">
+                    <div class="srv-icon support-icon-theme" style="position: relative;">
                         <i class="fas fa-headset"></i>
+                        <span class="notif-dot-support" id="support-notif"></span>
                     </div>
                     <div class="srv-text">
                         <h5>پشتیبانی</h5>
-                        <span>۲۴ ساعته آنلاین</span>
+                        <span>چت آنلاین VIP</span>
                     </div>
                 </div>
 
@@ -221,7 +222,6 @@
         </main>
     </div>
     
-    <!-- Core Logic (Handles 9s Timer Automatically via script.js) -->
     <script src="webapp/script.js?v=88.0"></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-﻿/* webapp/script.js (v88.2 - Fixed Support Logic) */
+﻿/* webapp/script.js (v89.0 - Auto-Sync & Robust Chat) */
 (function () {
     'use strict';
 
@@ -14,6 +14,11 @@
     // تشخیص اینکه در کدام صفحه هستیم
     const isDashboard = !!document.getElementById('toman-balance');
     const isSupportPage = !!document.getElementById('messages-container');
+
+    // متغیرهای چت
+    let chatPollInterval = null;
+    let lastMessageCount = 0;
+    let isSending = false;
 
     // عناصر صفحه داشبورد
     const els = {
@@ -66,9 +71,13 @@
             else if (isSupportPage) {
                 tg.setHeaderColor('#1a1a1a');
                 
-                // لودینگ سریع‌تر برای چت
-                await loadChatHistory();
                 setupChatListeners();
+                
+                // اولین دریافت پیام‌ها
+                await loadChatHistory(true); 
+                
+                // شروع رفرش خودکار (هر 3 ثانیه)
+                startChatPolling();
                 
                 hideLoader();
             }
@@ -132,11 +141,15 @@
     // ==========================================
     // بخش توابع چت پشتیبانی (Logic اصلی تیکتینگ)
     // ==========================================
-    async function loadChatHistory() {
+    
+    function startChatPolling() {
+        if (chatPollInterval) clearInterval(chatPollInterval);
+        // هر 3 ثانیه پیام‌های جدید را چک کن
+        chatPollInterval = setInterval(() => loadChatHistory(false), 3000);
+    }
+
+    async function loadChatHistory(isFirstLoad = false) {
         if (!chatEls.container) return;
-        
-        // پاک کردن کامل کانتینر برای شروع تمیز
-        chatEls.container.innerHTML = '<div class="date-separator">گفتگوی امن</div>';
 
         try {
             const response = await fetch(`${API_BASE_URL}/webapp/support/get_history`, {
@@ -147,22 +160,37 @@
             
             if (response.ok) {
                 const data = await response.json();
-                if (data.messages && data.messages.length > 0) {
-                    data.messages.forEach(msg => renderMessage(msg));
-                } else {
+                
+                // اگر اولین بار است، تاریخچه را خالی کن
+                if (isFirstLoad) {
+                    chatEls.container.innerHTML = '<div class="date-separator">گفتگوی امن</div>';
+                    lastMessageCount = 0;
+                }
+
+                const messages = data.messages || [];
+                
+                // فقط اگر پیام جدیدی اضافه شده بود، رندر کن
+                if (messages.length > lastMessageCount) {
+                    // فقط پیام‌های جدید را بگیر
+                    const newMessages = messages.slice(lastMessageCount);
+                    newMessages.forEach(msg => renderMessage(msg));
+                    
+                    lastMessageCount = messages.length;
+                    scrollToBottom();
+                } else if (messages.length === 0 && isFirstLoad) {
                     renderSystemMessage("هنوز پیامی ندارید. اولین پیام را ارسال کنید.");
                 }
-                scrollToBottom();
             }
         } catch (e) {
-            renderSystemMessage("خطا در بارگذاری تاریخچه.");
+            console.error("Polling error:", e);
+            if (isFirstLoad) renderSystemMessage("خطا در بارگذاری تاریخچه.");
         }
     }
 
     function setupChatListeners() {
         if (!chatEls.sendBtn || !chatEls.input) return;
 
-        // حذف لیسنرهای قبلی (برای جلوگیری از تداخل)
+        // کلون کردن دکمه برای حذف ایونت‌های قبلی
         const newSendBtn = chatEls.sendBtn.cloneNode(true);
         chatEls.sendBtn.parentNode.replaceChild(newSendBtn, chatEls.sendBtn);
         chatEls.sendBtn = newSendBtn;
@@ -187,19 +215,23 @@
     }
 
     async function sendMessage() {
+        if (isSending) return; // جلوگیری از ارسال رگباری
+
         const text = chatEls.input.value.trim();
         if (!text) return;
 
-        // غیرفعال کردن موقت دکمه تا زمان ارسال
-        chatEls.sendBtn.disabled = true;
+        isSending = true;
+        chatEls.sendBtn.style.opacity = '0.5'; // گرافیک دکمه غیرفعال
 
-        // نمایش پیام در صفحه به صورت آنی
+        // 1. نمایش آنی (Optimistic UI)
+        // ما پیام را دستی اضافه میکنیم و کانتر را یکی بالا میبریم تا در پولینگ بعدی تکراری نیاید
         renderMessage({
             sender: 'user',
             text: text,
-            timestamp: '...',
+            timestamp: '...', // تایم سرور بعدا میاد
             is_me: true
         });
+        lastMessageCount++; // افزایش دستی کانتر
         
         chatEls.input.value = '';
         scrollToBottom();
@@ -217,17 +249,24 @@
 
             const result = await response.json();
             
-            if (response.ok && result.status === 'success') {
-                // موفقیت آمیز بود، لازم نیست کاری کنیم چون پیام نمایش داده شده
-            } else {
-                tg.showAlert("خطا در ارسال پیام: " + (result.message || "نامشخص"));
-                chatEls.input.value = text; // برگرداندن متن در صورت خطا
+            if (!response.ok || result.status !== 'success') {
+                throw new Error(result.message || "خطا");
             }
+            
+            // موفقیت: فورس رفرش برای گرفتن ساعت دقیق و وضعیت
+            await loadChatHistory(false);
+
         } catch (e) {
-            tg.showAlert("عدم اتصال به سرور");
-            chatEls.input.value = text;
+            tg.showAlert("خطا در ارسال پیام. اینترنت خود را چک کنید.");
+            chatEls.input.value = text; // برگرداندن متن به اینپوت
+            lastMessageCount--; // کاهش کانتر چون پیام نرفت
+            // حذف حباب پیام (آخرین پیام)
+            const bubbles = document.querySelectorAll('.message-wrapper');
+            if(bubbles.length > 0) bubbles[bubbles.length - 1].remove();
         } finally {
-            chatEls.sendBtn.disabled = false;
+            isSending = false;
+            chatEls.sendBtn.style.opacity = '1';
+            chatEls.input.focus();
         }
     }
 

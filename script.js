@@ -1,26 +1,22 @@
-﻿/* webapp/script.js (v90.0 - 3D Gyroscope & Full Features) */
+﻿/* webapp/script.js (v90.1 - Smart Live Chart & 3D Card) */
 (function () {
     'use strict';
 
     const tg = window.Telegram.WebApp;
     const API_BASE_URL = window.location.origin;
     
-    // زمان لودینگ 3.5 ثانیه (هماهنگ با CSS جدید)
     const MIN_SPLASH_TIME = 3500; 
 
     const loader = document.getElementById('loader');
     const appContainer = document.getElementById('app-container');
     
-    // تشخیص صفحه
     const isDashboard = !!document.getElementById('toman-balance');
     const isSupportPage = !!document.getElementById('messages-container');
 
-    // متغیرهای چت
     let chatPollInterval = null;
     let lastMessageCount = 0;
     let isSending = false;
 
-    // عناصر داشبورد
     const els = {
         welcomeName: document.getElementById('welcome-name'),
         tomanBalance: document.getElementById('toman-balance'),
@@ -32,7 +28,6 @@
         ticker: document.getElementById('price-ticker')
     };
 
-    // عناصر چت
     const chatEls = {
         container: document.getElementById('messages-container'),
         input: document.getElementById('message-input'),
@@ -46,7 +41,6 @@
         try {
             tg.ready();
             tg.expand();
-            
             tg.setHeaderColor('#000000'); 
             tg.setBackgroundColor('#000000');
 
@@ -55,7 +49,6 @@
                 tg.initData = "query_id=TEST_DEV_MODE"; 
             }
 
-            // --- سناریوی ۱: داشبورد ---
             if (isDashboard) {
                 const splashTimer = new Promise(resolve => setTimeout(resolve, MIN_SPLASH_TIME));
                 
@@ -70,20 +63,20 @@
                     
                     if (ratesResult && ratesResult.status === 'success') {
                         updateTickerUI(ratesResult.rates);
+                        // پیدا کردن دیتای تتر برای رسم نمودار
+                        const usdtData = ratesResult.rates.find(r => r.symbol === 'USDT');
+                        if (usdtData) renderSmartChart(usdtData.change);
+                    } else {
+                        // رسم نمودار پیش‌فرض خنثی در صورت نبود دیتا
+                        renderSmartChart(0);
                     }
                     
                     hideLoader();
-                    
-                    // فعال‌سازی افکت ۳بعدی کارت بعد از لود شدن
-                    setTimeout(init3DCardEffect, 100);
-
+                    setTimeout(init3DCardEffect, 100); // شروع افکت سه بعدی
                     tg.setHeaderColor('#050505');
                     tg.setBackgroundColor('#050505');
                 }
-            }
-            
-            // --- سناریوی ۲: پشتیبانی ---
-            else if (isSupportPage) {
+            } else if (isSupportPage) {
                 tg.setHeaderColor('#1a1a1a');
                 setupChatListeners();
                 await loadChatHistory(true); 
@@ -98,7 +91,7 @@
     };
 
     // ==========================================
-    // بخش توابع داشبورد + مارکت + 3D Effect
+    // Core Functions
     // ==========================================
     async function fetchDashboardData() {
         try {
@@ -120,19 +113,16 @@
             if (!response.ok) return null;
             return await response.json();
         } catch (e) {
-            console.error("Market rates error:", e);
             return null;
         }
     }
 
     function updateDashboardUI(data) {
         if (data.status === 'error') return;
-
         if (els.welcomeName) els.welcomeName.innerText = data.first_name || "کاربر گرامی";
         if (els.tomanBalance) els.tomanBalance.innerText = data.toman_balance; 
         if (els.uusdBalance) els.uusdBalance.innerHTML = `${data.uusd_balance} <small>$</small>`;
         if (els.xpBalance) els.xpBalance.innerHTML = `${data.xp_balance} <small>XP</small>`;
-
         if (tg.initDataUnsafe?.user?.photo_url && els.avatar) {
             els.avatar.src = tg.initDataUnsafe.user.photo_url;
         }
@@ -147,70 +137,137 @@
             const changeClass = rate.change >= 0 ? 'up' : 'down';
             const arrow = rate.change > 0 ? '▲' : (rate.change < 0 ? '▼' : '');
             const colorClass = rate.change === 0 ? '' : changeClass;
-            html += `
-                <div class="ticker-item">
-                    ${rate.symbol} 
-                    <span class="${colorClass}">
-                        ${rate.price} ${arrow} <small>(${rate.change}%)</small>
-                    </span>
-                </div>
-            `;
+            html += `<div class="ticker-item">${rate.symbol} <span class="${colorClass}">${rate.price} ${arrow} <small>(${rate.change}%)</small></span></div>`;
         });
         els.ticker.innerHTML = html;
     }
 
-    // --- تابع جدید: افکت ۳بعدی کارت ---
+    // --- تابع جدید: رسم نمودار هوشمند (Smart Sparkline) ---
+    function renderSmartChart(changePercent) {
+        const svg = document.getElementById('sparkline-svg');
+        if (!svg) return;
+
+        // پاک کردن محتوای قبلی (به جز defs)
+        const defs = svg.querySelector('defs');
+        svg.innerHTML = ''; 
+        if(defs) svg.appendChild(defs);
+
+        const width = 300;
+        const height = 50;
+        const pointsCount = 20; // تعداد نقاط نمودار
+        const points = [];
+
+        // تعیین روند بر اساس تغییرات بازار
+        // اگر تغییرات مثبت است، انتها بالاتر از ابتدا باشد
+        const trendFactor = changePercent * 2; // ضریب شیب
+        
+        let currentY = height / 2; // شروع از وسط
+
+        for (let i = 0; i <= pointsCount; i++) {
+            const x = (i / pointsCount) * width;
+            
+            // تولید نوسان تصادفی (Random Noise) برای طبیعی شدن
+            const noise = (Math.random() - 0.5) * 15;
+            
+            // اعمال روند بازار (شیب)
+            const trend = (i / pointsCount) * -trendFactor; // منفی چون Y در SVG برعکس است
+            
+            let y = (height / 2) + trend + noise;
+            
+            // محدود کردن نمودار داخل کادر
+            y = Math.max(5, Math.min(height - 5, y));
+            
+            points.push({x, y});
+        }
+
+        // ساخت مسیر منحنی (Smooth Path)
+        let d = `M ${points[0].x},${points[0].y}`;
+        for (let i = 1; i < points.length; i++) {
+            // استفاده از منحنی ساده
+            d += ` L ${points[i].x},${points[i].y}`;
+        }
+
+        // انتخاب رنگ بر اساس روند
+        let strokeColor = '#FFD700'; // طلایی (خنثی)
+        let fillUrl = 'url(#gradNeutral)';
+        
+        if (changePercent > 0) {
+            strokeColor = '#0ECB81'; // سبز
+            fillUrl = 'url(#gradUp)';
+        } else if (changePercent < 0) {
+            strokeColor = '#F6465D'; // قرمز
+            fillUrl = 'url(#gradDown)';
+        }
+
+        // 1. رسم خط اصلی
+        const pathLine = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        pathLine.setAttribute("d", d);
+        pathLine.setAttribute("fill", "none");
+        pathLine.setAttribute("stroke", strokeColor);
+        pathLine.setAttribute("stroke-width", "2");
+        pathLine.setAttribute("stroke-linecap", "round");
+        pathLine.setAttribute("stroke-linejoin", "round");
+        
+        // انیمیشن رسم شدن خط
+        const length = pathLine.getTotalLength ? 1000 : 1000; // تخمینی اگر تابع نبود
+        pathLine.style.strokeDasharray = length;
+        pathLine.style.strokeDashoffset = length;
+        pathLine.style.animation = "dash 2s ease-out forwards";
+        
+        // تعریف انیمیشن در JS (یا استفاده از CSS)
+        const style = document.createElement('style');
+        style.innerHTML = `@keyframes dash { to { stroke-dashoffset: 0; } }`;
+        svg.appendChild(style);
+
+        // 2. رسم سایه زیر نمودار (Fill Area)
+        const dFill = d + ` V ${height} H 0 Z`;
+        const pathFill = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        pathFill.setAttribute("d", dFill);
+        pathFill.setAttribute("fill", fillUrl);
+        pathFill.setAttribute("stroke", "none");
+        pathFill.style.opacity = "0";
+        pathFill.style.animation = "fadeIn 1s ease-out forwards 0.5s";
+        
+        const styleFade = document.createElement('style');
+        styleFade.innerHTML = `@keyframes fadeIn { to { opacity: 1; } }`;
+        svg.appendChild(styleFade);
+
+        svg.appendChild(pathFill);
+        svg.appendChild(pathLine);
+    }
+
+    // --- افکت ۳بعدی کارت ---
     function init3DCardEffect() {
         const card = document.querySelector('.premium-card');
-        const container = document.querySelector('.main-content'); // کانتینر اسکرول
+        const container = document.querySelector('.main-content');
         if (!card) return;
 
-        // 1. افکت موس (دسکتاپ)
+        // دسکتاپ (موس)
         if (container) {
             container.addEventListener('mousemove', (e) => {
                 const rect = card.getBoundingClientRect();
-                // مرکز کارت نسبت به صفحه
                 const cardCenterX = rect.left + rect.width / 2;
                 const cardCenterY = rect.top + rect.height / 2;
-
                 const mouseX = e.clientX - cardCenterX;
                 const mouseY = e.clientY - cardCenterY;
-
-                // محاسبه زاویه چرخش (حساسیت کم برای نرمی)
-                const rotateX = (mouseY / rect.height) * -15; // بالا/پایین
-                const rotateY = (mouseX / rect.width) * 15;   // چپ/راست
-
+                const rotateX = (mouseY / rect.height) * -15;
+                const rotateY = (mouseX / rect.width) * 15;
                 card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
             });
-
-            // بازگشت به حالت اولیه وقتی موس خارج شد
             container.addEventListener('mouseleave', () => {
                 card.style.transform = `rotateX(0deg) rotateY(0deg)`;
             });
         }
 
-        // 2. افکت ژیروسکوپ (موبایل)
+        // موبایل (ژیروسکوپ)
         if (window.DeviceOrientationEvent) {
             window.addEventListener("deviceorientation", (event) => {
-                // اگر سنسور دیتا نداد، بیخیال شو
                 if (!event.gamma && !event.beta) return;
-
-                // گاما: چپ/راست (-90 تا 90)
-                // بتا: جلو/عقب (-180 تا 180)
                 let rotateY = event.gamma; 
                 let rotateX = event.beta;  
-
-                // محدود کردن زوایا برای جلوگیری از چرخش بیش از حد
-                if (rotateY > 20) rotateY = 20;
-                if (rotateY < -20) rotateY = -20;
-                if (rotateX > 40) rotateX = 40;
-                if (rotateX < -40) rotateX = -40;
-
-                // آفست دادن برای زاویه دید طبیعی (چون گوشی معمولاً کج گرفته میشه)
-                // حدود 30 تا 40 درجه کج فرض می‌کنیم
-                rotateX = rotateX - 30; 
-
-                // اعمال چرخش معکوس برای حس تعادل
+                if (rotateY > 20) rotateY = 20; if (rotateY < -20) rotateY = -20;
+                if (rotateX > 40) rotateX = 40; if (rotateX < -40) rotateX = -40;
+                rotateX = rotateX - 30; // Tilt offset
                 card.style.transform = `rotateX(${-rotateX}deg) rotateY(${rotateY}deg)`;
             });
         }
@@ -238,14 +295,11 @@
         } catch (e) {}
     }
 
-    // ==========================================
-    // بخش پشتیبانی (Logic)
-    // ==========================================
+    // --- Support Logic (کپی شده از قبل) ---
     function startChatPolling() {
         if (chatPollInterval) clearInterval(chatPollInterval);
         chatPollInterval = setInterval(() => loadChatHistory(false), 3000);
     }
-
     async function loadChatHistory(isFirstLoad = false) {
         if (!chatEls.container) return;
         try {
@@ -274,7 +328,6 @@
             if (isFirstLoad) renderSystemMessage("خطا در بارگذاری تاریخچه.");
         }
     }
-
     function setupChatListeners() {
         if (!chatEls.sendBtn || !chatEls.input) return;
         const newSendBtn = chatEls.sendBtn.cloneNode(true);
@@ -292,7 +345,6 @@
             });
         }
     }
-
     async function handleFileUpload(e) {
         const file = e.target.files[0];
         if (!file) return;
@@ -321,7 +373,6 @@
             chatEls.fileInput.value = '';
         }
     }
-
     async function sendMessage() {
         if (isSending) return;
         const text = chatEls.input.value.trim();
@@ -353,7 +404,6 @@
             chatEls.input.focus();
         }
     }
-
     function renderMessage(msg) {
         const isUser = msg.sender === 'user' || msg.is_me; 
         const wrapperClass = isUser ? 'msg-user' : 'msg-admin';
@@ -368,7 +418,6 @@
         const html = `<div class="message-wrapper ${wrapperClass}"><div class="bubble">${contentHtml}</div><div class="msg-meta"><span>${msg.timestamp || ''}</span>${checkIcon}</div></div>`;
         chatEls.container.insertAdjacentHTML('beforeend', html);
     }
-
     function renderSystemMessage(text) {
         const html = `<div style="text-align:center; font-size:0.75rem; color:#666; margin:15px 0; background:rgba(255,255,255,0.05); padding:5px; border-radius:10px; display:inline-block; margin-left:auto; margin-right:auto;">${text}</div>`;
         const wrapper = document.createElement('div');
@@ -376,10 +425,8 @@
         wrapper.innerHTML = html;
         chatEls.container.appendChild(wrapper);
     }
-
     function scrollToBottom() { if (chatEls.container) chatEls.container.scrollTop = chatEls.container.scrollHeight; }
     function escapeHtml(text) { if (!text) return ""; return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
-
     function hideLoader() {
         if (loader) {
             loader.style.opacity = '0';
@@ -393,7 +440,6 @@
             }, 800); 
         }
     }
-
     function showError(msg) {
         if (loader) {
             loader.style.opacity = '1'; loader.style.display = 'flex';

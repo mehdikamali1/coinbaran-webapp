@@ -9,7 +9,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    <link rel="stylesheet" href="webapp/dashboard-style.css?v=90.0">
+    <link rel="stylesheet" href="webapp/dashboard-style.css?v=91.0">
 </head>
 <body class="loading-active">
 
@@ -47,9 +47,17 @@
                 </div>
                 <div class="user-info">
                     <h2 id="welcome-name">Loading...</h2>
-                    <div class="kyc-badge-wrapper">
-                        <span id="kyc-text" class="kyc-pill">Guest</span>
+                    
+                    <div class="xp-container">
+                        <div class="xp-meta">
+                            <span id="level-badge" class="level-badge">LVL 1</span>
+                            <span id="next-level-text" class="next-level">Guest</span>
+                        </div>
+                        <div class="xp-bar-bg">
+                            <div class="xp-bar-fill" id="xp-progress-fill" style="width: 0%"></div>
+                        </div>
                     </div>
+
                 </div>
             </div>
             <div class="header-actions">
@@ -102,7 +110,7 @@
                                 <stop offset="100%" stop-color="#F6465D" stop-opacity="0"/>
                             </linearGradient>
                         </defs>
-                        </svg>
+                    </svg>
                 </div>
 
                 <div class="card-footer">
@@ -196,6 +204,6 @@
         </main>
     </div>
     
-    <script src="webapp/script.js?v=90.1"></script>
+    <script src="webapp/script.js?v=91.0"></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-﻿/* webapp/script.js (v90.1 - Smart Live Chart & 3D Card) */
+﻿/* webapp/script.js (v91.0 - XP System Integrated & Full Features) */
 (function () {
     'use strict';
 
@@ -25,7 +25,11 @@
         kycText: document.getElementById('kyc-text'),
         avatar: document.querySelector('.avatar-img'),
         supportNotif: document.getElementById('support-notif'),
-        ticker: document.getElementById('price-ticker')
+        ticker: document.getElementById('price-ticker'),
+        // عناصر جدید XP
+        xpFill: document.getElementById('xp-progress-fill'),
+        levelBadge: document.getElementById('level-badge'),
+        nextLevelText: document.getElementById('next-level-text')
     };
 
     const chatEls = {
@@ -63,16 +67,14 @@
                     
                     if (ratesResult && ratesResult.status === 'success') {
                         updateTickerUI(ratesResult.rates);
-                        // پیدا کردن دیتای تتر برای رسم نمودار
                         const usdtData = ratesResult.rates.find(r => r.symbol === 'USDT');
                         if (usdtData) renderSmartChart(usdtData.change);
                     } else {
-                        // رسم نمودار پیش‌فرض خنثی در صورت نبود دیتا
                         renderSmartChart(0);
                     }
                     
                     hideLoader();
-                    setTimeout(init3DCardEffect, 100); // شروع افکت سه بعدی
+                    setTimeout(init3DCardEffect, 100);
                     tg.setHeaderColor('#050505');
                     tg.setBackgroundColor('#050505');
                 }
@@ -119,14 +121,65 @@
 
     function updateDashboardUI(data) {
         if (data.status === 'error') return;
+
         if (els.welcomeName) els.welcomeName.innerText = data.first_name || "کاربر گرامی";
         if (els.tomanBalance) els.tomanBalance.innerText = data.toman_balance; 
         if (els.uusdBalance) els.uusdBalance.innerHTML = `${data.uusd_balance} <small>$</small>`;
+        
+        // آپدیت متن XP در کارت
         if (els.xpBalance) els.xpBalance.innerHTML = `${data.xp_balance} <small>XP</small>`;
+
+        // --- آپدیت نوار پیشرفت XP ---
+        updateLevelProgress(parseInt(data.xp_balance.replace(/,/g, '')) || 0);
+
         if (tg.initDataUnsafe?.user?.photo_url && els.avatar) {
             els.avatar.src = tg.initDataUnsafe.user.photo_url;
         }
         updateKycBadge(data.kyc_status_code);
+    }
+
+    // --- تابع جدید: محاسبه و نمایش سطح ---
+    function updateLevelProgress(xp) {
+        if (!els.xpFill || !els.levelBadge) return;
+
+        // تعریف پله‌های سطح (Level Thresholds)
+        const levels = [0, 500, 1500, 3500, 7000, 15000, 30000]; 
+        
+        let currentLevel = 1;
+        let prevThreshold = 0;
+        let nextThreshold = 500;
+
+        // پیدا کردن سطح فعلی
+        for (let i = 0; i < levels.length; i++) {
+            if (xp >= levels[i]) {
+                currentLevel = i + 1;
+                prevThreshold = levels[i];
+                nextThreshold = levels[i+1] || (levels[i] * 2); // اگر به ته لیست رسیدیم
+            } else {
+                break;
+            }
+        }
+
+        // محاسبه درصد پیشرفت
+        let percentage = 0;
+        if (nextThreshold > prevThreshold) {
+            percentage = ((xp - prevThreshold) / (nextThreshold - prevThreshold)) * 100;
+        }
+        
+        // محدود کردن درصد بین ۰ تا ۱۰۰
+        percentage = Math.min(100, Math.max(0, percentage));
+
+        // اعمال به UI
+        els.xpFill.style.width = `${percentage}%`;
+        els.levelBadge.innerText = `LVL ${currentLevel}`;
+        
+        if (els.nextLevelText) {
+            els.nextLevelText.innerText = `${formatNumber(xp)} / ${formatNumber(nextThreshold)} XP`;
+        }
+    }
+
+    function formatNumber(num) {
+        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     }
 
     function updateTickerUI(rates) {
@@ -142,64 +195,41 @@
         els.ticker.innerHTML = html;
     }
 
-    // --- تابع جدید: رسم نمودار هوشمند (Smart Sparkline) ---
     function renderSmartChart(changePercent) {
         const svg = document.getElementById('sparkline-svg');
         if (!svg) return;
-
-        // پاک کردن محتوای قبلی (به جز defs)
-        const defs = svg.querySelector('defs');
-        svg.innerHTML = ''; 
-        if(defs) svg.appendChild(defs);
+        
+        // فقط مسیر را پاک کن، نه defs را
+        const existingPaths = svg.querySelectorAll('path');
+        existingPaths.forEach(p => p.remove());
 
         const width = 300;
         const height = 50;
-        const pointsCount = 20; // تعداد نقاط نمودار
+        const pointsCount = 20; 
         const points = [];
-
-        // تعیین روند بر اساس تغییرات بازار
-        // اگر تغییرات مثبت است، انتها بالاتر از ابتدا باشد
-        const trendFactor = changePercent * 2; // ضریب شیب
+        const trendFactor = changePercent * 2; 
         
-        let currentY = height / 2; // شروع از وسط
-
         for (let i = 0; i <= pointsCount; i++) {
             const x = (i / pointsCount) * width;
-            
-            // تولید نوسان تصادفی (Random Noise) برای طبیعی شدن
             const noise = (Math.random() - 0.5) * 15;
-            
-            // اعمال روند بازار (شیب)
-            const trend = (i / pointsCount) * -trendFactor; // منفی چون Y در SVG برعکس است
-            
+            const trend = (i / pointsCount) * -trendFactor; 
             let y = (height / 2) + trend + noise;
-            
-            // محدود کردن نمودار داخل کادر
             y = Math.max(5, Math.min(height - 5, y));
-            
             points.push({x, y});
         }
 
-        // ساخت مسیر منحنی (Smooth Path)
         let d = `M ${points[0].x},${points[0].y}`;
         for (let i = 1; i < points.length; i++) {
-            // استفاده از منحنی ساده
             d += ` L ${points[i].x},${points[i].y}`;
         }
 
-        // انتخاب رنگ بر اساس روند
-        let strokeColor = '#FFD700'; // طلایی (خنثی)
+        let strokeColor = '#FFD700'; 
         let fillUrl = 'url(#gradNeutral)';
         
-        if (changePercent > 0) {
-            strokeColor = '#0ECB81'; // سبز
-            fillUrl = 'url(#gradUp)';
-        } else if (changePercent < 0) {
-            strokeColor = '#F6465D'; // قرمز
-            fillUrl = 'url(#gradDown)';
-        }
+        if (changePercent > 0) { strokeColor = '#0ECB81'; fillUrl = 'url(#gradUp)'; } 
+        else if (changePercent < 0) { strokeColor = '#F6465D'; fillUrl = 'url(#gradDown)'; }
 
-        // 1. رسم خط اصلی
+        // Path Line
         const pathLine = document.createElementNS("http://www.w3.org/2000/svg", "path");
         pathLine.setAttribute("d", d);
         pathLine.setAttribute("fill", "none");
@@ -208,41 +238,23 @@
         pathLine.setAttribute("stroke-linecap", "round");
         pathLine.setAttribute("stroke-linejoin", "round");
         
-        // انیمیشن رسم شدن خط
-        const length = pathLine.getTotalLength ? 1000 : 1000; // تخمینی اگر تابع نبود
-        pathLine.style.strokeDasharray = length;
-        pathLine.style.strokeDashoffset = length;
-        pathLine.style.animation = "dash 2s ease-out forwards";
-        
-        // تعریف انیمیشن در JS (یا استفاده از CSS)
-        const style = document.createElement('style');
-        style.innerHTML = `@keyframes dash { to { stroke-dashoffset: 0; } }`;
-        svg.appendChild(style);
-
-        // 2. رسم سایه زیر نمودار (Fill Area)
+        // Path Fill
         const dFill = d + ` V ${height} H 0 Z`;
         const pathFill = document.createElementNS("http://www.w3.org/2000/svg", "path");
         pathFill.setAttribute("d", dFill);
         pathFill.setAttribute("fill", fillUrl);
         pathFill.setAttribute("stroke", "none");
-        pathFill.style.opacity = "0";
-        pathFill.style.animation = "fadeIn 1s ease-out forwards 0.5s";
-        
-        const styleFade = document.createElement('style');
-        styleFade.innerHTML = `@keyframes fadeIn { to { opacity: 1; } }`;
-        svg.appendChild(styleFade);
+        pathFill.style.opacity = "0.5";
 
         svg.appendChild(pathFill);
         svg.appendChild(pathLine);
     }
 
-    // --- افکت ۳بعدی کارت ---
     function init3DCardEffect() {
         const card = document.querySelector('.premium-card');
         const container = document.querySelector('.main-content');
         if (!card) return;
 
-        // دسکتاپ (موس)
         if (container) {
             container.addEventListener('mousemove', (e) => {
                 const rect = card.getBoundingClientRect();
@@ -259,7 +271,6 @@
             });
         }
 
-        // موبایل (ژیروسکوپ)
         if (window.DeviceOrientationEvent) {
             window.addEventListener("deviceorientation", (event) => {
                 if (!event.gamma && !event.beta) return;
@@ -267,7 +278,7 @@
                 let rotateX = event.beta;  
                 if (rotateY > 20) rotateY = 20; if (rotateY < -20) rotateY = -20;
                 if (rotateX > 40) rotateX = 40; if (rotateX < -40) rotateX = -40;
-                rotateX = rotateX - 30; // Tilt offset
+                rotateX = rotateX - 30; 
                 card.style.transform = `rotateX(${-rotateX}deg) rotateY(${rotateY}deg)`;
             });
         }
@@ -295,7 +306,7 @@
         } catch (e) {}
     }
 
-    // --- Support Logic (کپی شده از قبل) ---
+    // --- Support Logic ---
     function startChatPolling() {
         if (chatPollInterval) clearInterval(chatPollInterval);
         chatPollInterval = setInterval(() => loadChatHistory(false), 3000);

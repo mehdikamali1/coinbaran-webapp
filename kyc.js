@@ -2,13 +2,22 @@
 (function () {
     'use strict';
 
+    // --- GLOBAL ERROR TRAP (برای کشف باگ موبایل) ---
+    // اگر خطایی رخ دهد، به جای کرش کردن و ریست شدن صفحه، یک آلرت با جزئیات نمایش می‌دهد
+    window.onerror = function(msg, url, line, col, error) {
+        var extra = !col ? '' : '\ncolumn: ' + col;
+        extra += !error ? '' : '\nerror: ' + error;
+        alert("⚠️ CRITICAL ERROR:\n" + msg + "\nurl: " + url + "\nline: " + line + extra);
+        return false;
+    };
+
     const tg = window.Telegram.WebApp;
     const API_BASE_URL = window.location.origin;
     
     // متغیرهای وضعیت سراسری
     let currentTab = 'lvl1'; 
     let userKycLevel = 1;     // 1: مهمان, 2: ویدیو تایید شده, 3: کامل
-    let kycStatus = 'none';   // وضعیت دقیق (pending_lite, approved_lite, pending_full, etc)
+    let kycStatus = 'none';   // وضعیت دقیق
 
     // المان‌های اصلی رابط کاربری
     const btnSubmit = document.getElementById('main-submit-btn');
@@ -22,9 +31,9 @@
             tg.ready(); 
             tg.expand();
             tg.setHeaderColor('#050505'); 
-            tg.setBackgroundColor('#050505'); // تنظیم رنگ پس‌زمینه تلگرام
+            tg.setBackgroundColor('#050505'); 
         } catch (e) {
-            console.log("Not inside Telegram WebApp");
+            console.log("Not inside Telegram WebApp (or Ready Error):", e);
         }
         
         // 1. دریافت وضعیت کاربر از سرور
@@ -38,12 +47,10 @@
     async function fetchUserStatus() {
         if (!tg.initData) {
             console.warn("No InitData found (Dev Mode?)");
-            // برای تست در مرورگر معمولی (بدون تلگرام) می‌توانید اینجا خط زیر را فعال کنید:
-            // return; 
         }
         
         try {
-            // اضافه کردن پارامتر زمان برای جلوگیری از کش شدن توسط مرورگر تلگرام (Fix Mobile Caching)
+            // استفاده از پارامتر زمان برای جلوگیری از کش شدن درخواست
             const timestamp = new Date().getTime();
             const res = await fetch(`${API_BASE_URL}/webapp/get_user_data?t=${timestamp}`, {
                 method: 'POST',
@@ -57,7 +64,7 @@
             const data = await res.json();
             
             if (data.status === 'success') {
-                // تبدیل وضعیت‌ها به فرمت استاندارد
+                // اطمینان از اینکه مقادیر null نیستند
                 userKycLevel = parseInt(data.kyc_level) || 1;
                 kycStatus = data.kyc_status_code || 'none';
 
@@ -65,95 +72,106 @@
 
                 // رندر کردن صفحه بر اساس وضعیت
                 renderPageBasedOnStatus();
+            } else {
+                console.error("API Error:", data.message);
+                tg.showAlert("خطا در دریافت اطلاعات: " + data.message);
             }
 
         } catch (e) {
             console.error("Error fetching user status:", e);
-            tg.showAlert("خطا در ارتباط با سرور. لطفاً اینترنت خود را بررسی کنید.");
+            tg.showAlert("خطا در ارتباط با سرور. لطفاً اینترنت خود را چک کنید.");
         }
     }
 
     // --- لاجیک اصلی نمایش کارت‌ها و فرم‌ها ---
     function renderPageBasedOnStatus() {
-        const f1 = document.getElementById('lvl1-form');
-        const p1 = document.getElementById('lvl1-pending');
-        const s1 = document.getElementById('lvl1-success');
-        
-        const lock2 = document.getElementById('lvl2-lock');
-        const f2 = document.getElementById('lvl2-form');
+        try {
+            const f1 = document.getElementById('lvl1-form');
+            const p1 = document.getElementById('lvl1-pending');
+            const s1 = document.getElementById('lvl1-success');
+            
+            const lock2 = document.getElementById('lvl2-lock');
+            const f2 = document.getElementById('lvl2-form');
 
-        // سناریو ۱: کاربر سطح ۱ را پاس کرده است (سطح ۲ یا ۳)
-        if (userKycLevel >= 2) {
-            // --- وضعیت تب ۱ ---
-            f1.style.display = 'none';
-            p1.classList.remove('show');
-            s1.classList.add('show'); // نمایش کارت سبز تایید
-            
-            // --- وضعیت تب ۲ ---
-            lock2.style.display = 'none'; // قفل باز است
-            
-            if (userKycLevel === 3) {
-                // سطح ۳ کامل شده
-                f2.innerHTML = `
-                    <div class="status-card card-success show">
-                        <i class="fas fa-gem success-icon"></i>
-                        <h2 style="color:#fff; margin-bottom:10px;">تایید نهایی شد 💎</h2>
-                        <p style="color:#eee; font-size:0.9rem;">تبریک! حساب شما کاملاً وریفای شده است.</p>
-                    </div>`;
-                footer.style.display = 'none';
-            } 
-            else if (kycStatus === 'pending_full') {
-                // سطح ۲ ارسال شده و منتظر تایید است
-                f2.innerHTML = `
-                    <div class="status-card card-pending show">
-                        <i class="fas fa-hourglass-half pending-icon"></i>
-                        <h2 style="color:#fff; margin-bottom:10px;">مدارک در حال بررسی...</h2>
-                        <p style="color:#ddd; font-size:0.9rem;">مدارک کامل شما دریافت شد. لطفاً منتظر تایید ادمین باشید.</p>
-                    </div>`;
-                footer.style.display = 'none';
-            } 
-            else {
-                // سطح ۲ باز است و باید پر شود
-                f2.style.display = 'block';
-                // اگر تب ۲ فعال است، فوتر را نشان بده
-                if(currentTab === 'lvl2') {
-                    footer.style.display = 'flex';
-                    updateFooterState();
-                } else {
-                    footer.style.display = 'none';
+            // اگر المان‌ها در صفحه نباشند (مثلاً فایل HTML کش شده باشد) ارور ندهد
+            if(!f1 || !p1 || !s1 || !lock2 || !f2) {
+                console.error("DOM Elements missing! Check HTML version.");
+                return;
+            }
+
+            // سناریو ۱: کاربر سطح ۱ را پاس کرده است
+            if (userKycLevel >= 2) {
+                // --- وضعیت تب ۱ ---
+                f1.style.display = 'none';
+                p1.classList.remove('show');
+                s1.classList.add('show'); 
+                
+                // --- وضعیت تب ۲ ---
+                lock2.style.display = 'none'; // قفل باز است
+                
+                if (userKycLevel === 3) {
+                    // سطح ۳ کامل شده
+                    f2.innerHTML = `
+                        <div class="status-card card-success show">
+                            <i class="fas fa-gem success-icon"></i>
+                            <h2 style="color:#fff; margin-bottom:10px;">تایید نهایی شد 💎</h2>
+                            <p style="color:#eee; font-size:0.9rem;">تبریک! حساب شما کاملاً وریفای شده است.</p>
+                        </div>`;
+                    if(footer) footer.style.display = 'none';
+                } 
+                else if (kycStatus === 'pending_full') {
+                    // سطح ۲ ارسال شده و منتظر تایید است
+                    f2.innerHTML = `
+                        <div class="status-card card-pending show">
+                            <i class="fas fa-hourglass-half pending-icon"></i>
+                            <h2 style="color:#fff; margin-bottom:10px;">مدارک در حال بررسی...</h2>
+                            <p style="color:#ddd; font-size:0.9rem;">مدارک کامل شما دریافت شد.</p>
+                        </div>`;
+                    if(footer) footer.style.display = 'none';
+                } 
+                else {
+                    // سطح ۲ باز است و باید پر شود
+                    f2.style.display = 'block';
+                    if(currentTab === 'lvl2') {
+                        if(footer) footer.style.display = 'flex';
+                        updateFooterState();
+                    } else {
+                        if(footer) footer.style.display = 'none';
+                    }
                 }
             }
-        }
-        
-        // سناریو ۲: کاربر ویدیو فرستاده و منتظر تایید سطح ۱ است
-        else if (kycStatus === 'pending_lite' || kycStatus === 'pending') {
-            f1.style.display = 'none';
-            s1.classList.remove('show');
-            p1.classList.add('show'); // کارت طلایی انتظار
             
-            lock2.style.display = 'flex'; // سطح ۲ قفل است
-            footer.style.display = 'none'; // دکمه مخفی
-        }
-        
-        // سناریو ۳: حالت اولیه (مهمان)
-        else {
-            f1.style.display = 'block';
-            p1.classList.remove('show');
-            s1.classList.remove('show');
+            // سناریو ۲: کاربر منتظر تایید سطح ۱ است
+            else if (kycStatus === 'pending_lite' || kycStatus === 'pending') {
+                f1.style.display = 'none';
+                s1.classList.remove('show');
+                p1.classList.add('show'); 
+                lock2.style.display = 'flex'; 
+                if(footer) footer.style.display = 'none'; 
+            }
             
-            lock2.style.display = 'flex';
-            
-            // اگر تب ۱ فعال است، دکمه را نشان بده
-            if (currentTab === 'lvl1') footer.style.display = 'flex';
-            else footer.style.display = 'none';
+            // سناریو ۳: حالت اولیه
+            else {
+                f1.style.display = 'block';
+                p1.classList.remove('show');
+                s1.classList.remove('show');
+                lock2.style.display = 'flex';
+                
+                if (currentTab === 'lvl1') {
+                    if(footer) footer.style.display = 'flex';
+                } else {
+                    if(footer) footer.style.display = 'none';
+                }
+            }
+        } catch(e) {
+            console.error("Render Error:", e);
+            alert("Render Error: " + e.message);
         }
     }
 
     // --- مدیریت تب‌ها ---
     window.switchTab = function(tab) {
         currentTab = tab;
-        
-        // تغییر استایل دکمه‌های تب
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         
         if (tab === 'lvl1') {
@@ -161,35 +179,38 @@
             document.getElementById('lvl1-content').style.display = 'block';
             document.getElementById('lvl2-content').style.display = 'none';
             
-            // آیا دکمه پایین باید نمایش داده شود؟
             if (userKycLevel < 2 && kycStatus !== 'pending_lite') {
-                footer.style.display = 'flex';
+                if(footer) footer.style.display = 'flex';
                 updateFooterState();
             } else {
-                footer.style.display = 'none';
+                if(footer) footer.style.display = 'none';
             }
         } else {
             document.getElementById('tab-lvl2').classList.add('active');
             document.getElementById('lvl1-content').style.display = 'none';
             document.getElementById('lvl2-content').style.display = 'block';
             
-            // آیا دکمه پایین باید نمایش داده شود؟ (فقط اگر سطح ۲ باز باشد و پندینگ نباشد)
             if (userKycLevel >= 2 && kycStatus !== 'pending_full' && userKycLevel < 3) {
-                footer.style.display = 'flex';
+                if(footer) footer.style.display = 'flex';
                 updateFooterState();
             } else {
-                footer.style.display = 'none';
+                if(footer) footer.style.display = 'none';
             }
         }
         
         try { tg.HapticFeedback.selectionChanged(); } catch(e){}
     }
 
-    // --- آپدیت متن و رنگ دکمه شناور (Global Function) ---
+    // --- آپدیت متن و رنگ دکمه شناور ---
     window.updateFooterState = function() {
+        if(!btnSubmit || !statusText) return;
+
         if (currentTab === 'lvl1') {
-            const vid = document.getElementById('video-file').files.length > 0;
-            const card = document.getElementById('card-file').files.length > 0;
+            const vidInput = document.getElementById('video-file');
+            const cardInput = document.getElementById('card-file');
+            
+            const vid = vidInput && vidInput.files.length > 0;
+            const card = cardInput && cardInput.files.length > 0;
             
             if (vid && card) {
                 enableBtn('ارسال و فعال‌سازی آنی 🚀', 'آماده ارسال');
@@ -198,11 +219,18 @@
             }
         } 
         else if (currentTab === 'lvl2') {
-            // بررسی تمام فیلدها برای سطح ۲
-            const name = document.getElementById('full_name').value.trim();
-            const nid = document.getElementById('national_id').value.trim();
-            const birth = document.getElementById('birth_date').value.trim();
-            const phone = document.getElementById('phone_number').value.trim();
+            const nameEl = document.getElementById('full_name');
+            const nidEl = document.getElementById('national_id');
+            const birthEl = document.getElementById('birth_date');
+            const phoneEl = document.getElementById('phone_number');
+            
+            // جلوگیری از خطا اگر المان‌ها وجود نداشتند
+            if(!nameEl || !nidEl || !birthEl || !phoneEl) return;
+
+            const name = nameEl.value.trim();
+            const nid = nidEl.value.trim();
+            const birth = birthEl.value.trim();
+            const phone = phoneEl.value.trim();
             
             const f1 = document.getElementById('id_front').files.length > 0;
             const f2 = document.getElementById('id_back').files.length > 0;
@@ -222,7 +250,7 @@
         btnSubmit.disabled = false;
         btnSubmit.innerHTML = `<span>${text}</span><i class="fas fa-paper-plane"></i>`;
         statusText.innerText = statusMsg; 
-        statusText.style.color = "#10b981"; // Green
+        statusText.style.color = "#10b981"; 
     }
 
     function disableBtn(statusMsg, text) {
@@ -230,7 +258,7 @@
         btnSubmit.disabled = true;
         btnSubmit.innerHTML = `<span>${text}</span><i class="fas fa-arrow-up"></i>`;
         statusText.innerText = statusMsg; 
-        statusText.style.color = "#888"; // Grey
+        statusText.style.color = "#888"; 
     }
 
     // --- هندلر انتخاب فایل ---
@@ -238,29 +266,23 @@
         if (input.files && input.files[0]) {
             const file = input.files[0];
             
-            // چک حجم برای ویدیو
             if (type === 'vid' && file.size > 25 * 1024 * 1024) {
                 tg.showAlert("حجم ویدیو زیاد است (حداکثر ۲۵ مگابایت).");
                 input.value = ""; return;
             }
             
-            // افکت انتخاب شدن باکس
             const area = input.parentElement;
             area.classList.add('active');
             
-            // تغییر آیکون و متن
             const icon = area.querySelector(lvl === 1 ? '.upload-icon' : '.mini-icon');
             const title = area.querySelector(lvl === 1 ? '.upload-title' : '.mini-label');
             
-            if(icon) {
-                icon.style.color = "#fff"; 
-                icon.innerHTML = '<i class="fas fa-check"></i>';
-            }
-            if(title) {
+            if(icon) { icon.style.color = "#fff"; icon.innerHTML = '<i class="fas fa-check"></i>'; }
+            if(title) { 
                 let name = file.name;
                 if (name.length > 12) name = name.substring(0, 12) + '...';
-                title.innerText = "آماده: " + name;
-                title.style.color = "#10b981";
+                title.innerText = "آماده: " + name; 
+                title.style.color = "#10b981"; 
             }
             
             try { tg.HapticFeedback.notificationOccurred('success'); } catch(e){}
@@ -278,7 +300,7 @@
         else submitLevel2();
     }
 
-    // --- ارسال سطح ۱ (ویدیو) ---
+    // --- ارسال سطح ۱ ---
     async function submitLevel1() {
         const vidInput = document.getElementById('video-file');
         const cardInput = document.getElementById('card-file');
@@ -302,7 +324,6 @@
             
             if (res.ok && result.status === 'success') {
                 try { tg.HapticFeedback.notificationOccurred('success'); } catch(e){}
-                // تغییر وضعیت محلی برای آپدیت سریع UI
                 kycStatus = 'pending_lite'; 
                 renderPageBasedOnStatus(); 
                 tg.showAlert("✅ مدارک ارسال شد. منتظر بررسی ادمین باشید.");
@@ -312,13 +333,12 @@
 
         } catch (e) {
             tg.showAlert("❌ خطا: " + e.message);
-            // ریست دکمه
             btnSubmit.disabled = false;
             updateFooterState();
         }
     }
 
-    // --- ارسال سطح ۲ (کامل) ---
+    // --- ارسال سطح ۲ ---
     async function submitLevel2() {
         btnSubmit.disabled = true;
         btnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin"></i> آپلود سنگین...';
@@ -331,7 +351,6 @@
         formData.append('phone_number', document.getElementById('phone_number').value || '-');
         formData.append('card_number', 'Pending');
         
-        // فایل‌ها
         formData.append('id_front_file', document.getElementById('id_front').files[0]);
         formData.append('id_back_file', document.getElementById('id_back').files[0]);
         formData.append('bank_card_file', document.getElementById('bank_card_2').files[0]);
@@ -349,7 +368,7 @@
             if (res.ok && result.status === 'success') {
                 try { tg.HapticFeedback.notificationOccurred('success'); } catch(e){}
                 kycStatus = 'pending_full';
-                renderPageBasedOnStatus(); // آپدیت فوری برای نمایش کارت انتظار سطح ۲
+                renderPageBasedOnStatus();
                 tg.showAlert("✅ مدارک کامل ارسال شد.");
             } else {
                 throw new Error(result.message);

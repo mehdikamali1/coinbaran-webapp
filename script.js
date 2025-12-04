@@ -1,26 +1,22 @@
-﻿/* webapp/script.js (v89.0 - Auto-Sync & Robust Chat) */
+﻿/* webapp/script.js (v88.3 - Photo Upload Support) */
 (function () {
     'use strict';
 
     const tg = window.Telegram.WebApp;
     const API_BASE_URL = window.location.origin;
     
-    // حداقل زمان نمایش لودینگ فقط برای داشبورد
     const MIN_SPLASH_TIME = 9000; 
 
     const loader = document.getElementById('loader');
     const appContainer = document.getElementById('app-container');
     
-    // تشخیص اینکه در کدام صفحه هستیم
     const isDashboard = !!document.getElementById('toman-balance');
     const isSupportPage = !!document.getElementById('messages-container');
 
-    // متغیرهای چت
     let chatPollInterval = null;
     let lastMessageCount = 0;
     let isSending = false;
 
-    // عناصر صفحه داشبورد
     const els = {
         welcomeName: document.getElementById('welcome-name'),
         tomanBalance: document.getElementById('toman-balance'),
@@ -31,12 +27,13 @@
         supportNotif: document.getElementById('support-notif')
     };
 
-    // عناصر صفحه پشتیبانی
     const chatEls = {
         container: document.getElementById('messages-container'),
         input: document.getElementById('message-input'),
         sendBtn: document.getElementById('send-btn'),
-        optionsBtn: document.getElementById('chat-options-btn')
+        optionsBtn: document.getElementById('chat-options-btn'),
+        fileInput: document.getElementById('file-input'), // ورودی فایل
+        attachBtn: document.getElementById('attach-btn')  // دکمه گیره
     };
 
     window.onload = async function() {
@@ -52,7 +49,6 @@
                 tg.initData = "query_id=TEST_DEV_MODE"; 
             }
 
-            // --- سناریوی ۱: صفحه داشبورد ---
             if (isDashboard) {
                 const splashTimer = new Promise(resolve => setTimeout(resolve, MIN_SPLASH_TIME));
                 const dataFetch = fetchDashboardData();
@@ -65,20 +61,11 @@
                     tg.setHeaderColor('#050505');
                     tg.setBackgroundColor('#050505');
                 }
-            }
-            
-            // --- سناریوی ۲: صفحه پشتیبانی ---
-            else if (isSupportPage) {
+            } else if (isSupportPage) {
                 tg.setHeaderColor('#1a1a1a');
-                
                 setupChatListeners();
-                
-                // اولین دریافت پیام‌ها
                 await loadChatHistory(true); 
-                
-                // شروع رفرش خودکار (هر 3 ثانیه)
                 startChatPolling();
-                
                 hideLoader();
             }
 
@@ -89,7 +76,7 @@
     };
 
     // ==========================================
-    // بخش توابع داشبورد
+    // Dashboard Functions
     // ==========================================
     async function fetchDashboardData() {
         try {
@@ -139,12 +126,11 @@
     }
 
     // ==========================================
-    // بخش توابع چت پشتیبانی (Logic اصلی تیکتینگ)
+    // Support Chat Logic
     // ==========================================
     
     function startChatPolling() {
         if (chatPollInterval) clearInterval(chatPollInterval);
-        // هر 3 ثانیه پیام‌های جدید را چک کن
         chatPollInterval = setInterval(() => loadChatHistory(false), 3000);
     }
 
@@ -161,7 +147,6 @@
             if (response.ok) {
                 const data = await response.json();
                 
-                // اگر اولین بار است، تاریخچه را خالی کن
                 if (isFirstLoad) {
                     chatEls.container.innerHTML = '<div class="date-separator">گفتگوی امن</div>';
                     lastMessageCount = 0;
@@ -169,12 +154,9 @@
 
                 const messages = data.messages || [];
                 
-                // فقط اگر پیام جدیدی اضافه شده بود، رندر کن
                 if (messages.length > lastMessageCount) {
-                    // فقط پیام‌های جدید را بگیر
                     const newMessages = messages.slice(lastMessageCount);
                     newMessages.forEach(msg => renderMessage(msg));
-                    
                     lastMessageCount = messages.length;
                     scrollToBottom();
                 } else if (messages.length === 0 && isFirstLoad) {
@@ -190,16 +172,26 @@
     function setupChatListeners() {
         if (!chatEls.sendBtn || !chatEls.input) return;
 
-        // کلون کردن دکمه برای حذف ایونت‌های قبلی
+        // Clone to remove old listeners
         const newSendBtn = chatEls.sendBtn.cloneNode(true);
         chatEls.sendBtn.parentNode.replaceChild(newSendBtn, chatEls.sendBtn);
         chatEls.sendBtn = newSendBtn;
 
         chatEls.sendBtn.addEventListener('click', sendMessage);
-
         chatEls.input.addEventListener('keypress', function (e) {
             if (e.key === 'Enter') sendMessage();
         });
+
+        // --- هندل کردن دکمه گیره کاغذ ---
+        if (chatEls.attachBtn && chatEls.fileInput) {
+            // کلیک روی گیره -> باز شدن انتخاب فایل
+            chatEls.attachBtn.addEventListener('click', () => {
+                chatEls.fileInput.click();
+            });
+
+            // انتخاب فایل -> شروع آپلود
+            chatEls.fileInput.addEventListener('change', handleFileUpload);
+        }
 
         if (chatEls.optionsBtn) {
             chatEls.optionsBtn.addEventListener('click', () => {
@@ -214,24 +206,69 @@
         }
     }
 
+    // تابع جدید برای آپلود فایل
+    async function handleFileUpload(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // چک کردن سایز (مثلاً محدودیت 5 مگابایت)
+        if (file.size > 5 * 1024 * 1024) {
+            tg.showAlert("حجم فایل نباید بیشتر از ۵ مگابایت باشد.");
+            chatEls.fileInput.value = '';
+            return;
+        }
+
+        // نمایش پیام موقت
+        renderMessage({
+            sender: 'user',
+            text: '📷 در حال ارسال عکس...',
+            is_me: true,
+            type: 'text' // موقت
+        });
+        scrollToBottom();
+
+        const formData = new FormData();
+        formData.append('initData', tg.initData);
+        formData.append('file', file);
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/webapp/support/upload_file`, {
+                method: 'POST',
+                body: formData // ارسال به صورت Multipart
+            });
+
+            const result = await response.json();
+            if (response.ok && result.status === 'success') {
+                chatEls.fileInput.value = '';
+                // رفرش فوری برای دیدن عکس واقعی
+                await loadChatHistory(false);
+            } else {
+                tg.showAlert("خطا در آپلود: " + (result.message || "نامشخص"));
+                // حذف پیام موقت (ساده‌سازی: رفرش می‌کنیم)
+                chatEls.fileInput.value = '';
+            }
+        } catch (e) {
+            tg.showAlert("عدم اتصال به سرور برای آپلود.");
+            chatEls.fileInput.value = '';
+        }
+    }
+
     async function sendMessage() {
-        if (isSending) return; // جلوگیری از ارسال رگباری
+        if (isSending) return; 
 
         const text = chatEls.input.value.trim();
         if (!text) return;
 
         isSending = true;
-        chatEls.sendBtn.style.opacity = '0.5'; // گرافیک دکمه غیرفعال
+        chatEls.sendBtn.style.opacity = '0.5';
 
-        // 1. نمایش آنی (Optimistic UI)
-        // ما پیام را دستی اضافه میکنیم و کانتر را یکی بالا میبریم تا در پولینگ بعدی تکراری نیاید
         renderMessage({
             sender: 'user',
             text: text,
-            timestamp: '...', // تایم سرور بعدا میاد
+            timestamp: '...',
             is_me: true
         });
-        lastMessageCount++; // افزایش دستی کانتر
+        lastMessageCount++; 
         
         chatEls.input.value = '';
         scrollToBottom();
@@ -252,15 +289,12 @@
             if (!response.ok || result.status !== 'success') {
                 throw new Error(result.message || "خطا");
             }
-            
-            // موفقیت: فورس رفرش برای گرفتن ساعت دقیق و وضعیت
             await loadChatHistory(false);
 
         } catch (e) {
             tg.showAlert("خطا در ارسال پیام. اینترنت خود را چک کنید.");
-            chatEls.input.value = text; // برگرداندن متن به اینپوت
-            lastMessageCount--; // کاهش کانتر چون پیام نرفت
-            // حذف حباب پیام (آخرین پیام)
+            chatEls.input.value = text;
+            lastMessageCount--;
             const bubbles = document.querySelectorAll('.message-wrapper');
             if(bubbles.length > 0) bubbles[bubbles.length - 1].remove();
         } finally {
@@ -275,10 +309,19 @@
         const wrapperClass = isUser ? 'msg-user' : 'msg-admin';
         const checkIcon = isUser ? '<i class="fas fa-check msg-status-icon"></i>' : '';
 
+        // تشخیص عکس
+        let contentHtml = '';
+        if (msg.type === 'photo' && msg.file_url) {
+            contentHtml = `<img src="${msg.file_url}" style="max-width: 100%; border-radius: 12px; margin-bottom: 5px; display: block;" alt="Photo">`;
+            if (msg.text) contentHtml += `<span>${escapeHtml(msg.text)}</span>`;
+        } else {
+            contentHtml = escapeHtml(msg.text);
+        }
+
         const html = `
             <div class="message-wrapper ${wrapperClass}">
                 <div class="bubble">
-                    ${escapeHtml(msg.text)}
+                    ${contentHtml}
                 </div>
                 <div class="msg-meta">
                     <span>${msg.timestamp || ''}</span>

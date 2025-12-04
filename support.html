@@ -9,7 +9,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    <link rel="stylesheet" href="webapp/dashboard-style.css?v=88.1">
+    <link rel="stylesheet" href="webapp/dashboard-style.css?v=88.2">
 </head>
 <body class="loading-active">
 
@@ -66,31 +66,7 @@
         <div class="chat-layout">
             
             <div class="chat-messages-area" id="messages-container">
-                
-                <div class="date-separator">امروز</div>
-
-                <div class="message-wrapper msg-admin">
-                    <div class="bubble">
-                        سلام مهدی عزیز! 👋<br>
-                        به بخش پشتیبانی VIP خوش آمدید.<br>
-                        چطور می‌توانم امروز کمکتان کنم؟
-                    </div>
-                    <div class="msg-meta">
-                        <span>12:30</span>
-                    </div>
-                </div>
-
-                <div class="message-wrapper msg-user">
-                    <div class="bubble">
-                        سلام، یک سوال در مورد برداشت تتر داشتم.
-                    </div>
-                    <div class="msg-meta">
-                        <span>12:32</span>
-                        <i class="fas fa-check-double msg-status-icon msg-status-read"></i>
-                    </div>
-                </div>
-
-                </div>
+            </div>
 
             <div class="chat-input-bar">
                 <button class="attach-btn ripple-effect">
@@ -107,22 +83,6 @@
         </div>
     </div>
     
-    <script src="webapp/script.js?v=88.0"></script> 
-    
-    <script>
-        window.onload = function() {
-            setTimeout(() => {
-                document.getElementById('loader').style.opacity = '0';
-                setTimeout(() => {
-                    document.getElementById('loader').style.display = 'none';
-                    document.getElementById('app-container').classList.remove('hidden-content');
-                    document.getElementById('app-container').classList.add('fade-in-active');
-                    // اسکرول به پایین چت
-                    const msgContainer = document.getElementById('messages-container');
-                    msgContainer.scrollTop = msgContainer.scrollHeight;
-                }, 800);
-            }, 1500); // 1.5 ثانیه لودر نمایشی
-        };
-    </script>
+    <script src="webapp/script.js?v=88.2"></script> 
 </body>
 </html>

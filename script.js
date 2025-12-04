@@ -1,22 +1,26 @@
-﻿/* webapp/script.js (v88.3 - Photo Upload Support) */
+﻿/* webapp/script.js (v89.0 - Fast Luxury Loading & Full Features) */
 (function () {
     'use strict';
 
     const tg = window.Telegram.WebApp;
     const API_BASE_URL = window.location.origin;
     
-    const MIN_SPLASH_TIME = 9000; 
+    // کاهش زمان لودینگ به 3.5 ثانیه (هماهنگ با CSS جدید)
+    const MIN_SPLASH_TIME = 3500; 
 
     const loader = document.getElementById('loader');
     const appContainer = document.getElementById('app-container');
     
+    // تشخیص اینکه در کدام صفحه هستیم
     const isDashboard = !!document.getElementById('toman-balance');
     const isSupportPage = !!document.getElementById('messages-container');
 
+    // متغیرهای چت
     let chatPollInterval = null;
     let lastMessageCount = 0;
     let isSending = false;
 
+    // عناصر صفحه داشبورد
     const els = {
         welcomeName: document.getElementById('welcome-name'),
         tomanBalance: document.getElementById('toman-balance'),
@@ -27,6 +31,7 @@
         supportNotif: document.getElementById('support-notif')
     };
 
+    // عناصر صفحه پشتیبانی
     const chatEls = {
         container: document.getElementById('messages-container'),
         input: document.getElementById('message-input'),
@@ -41,6 +46,7 @@
             tg.ready();
             tg.expand();
             
+            // رنگ مشکی برای شروع
             tg.setHeaderColor('#000000'); 
             tg.setBackgroundColor('#000000');
 
@@ -49,22 +55,34 @@
                 tg.initData = "query_id=TEST_DEV_MODE"; 
             }
 
+            // --- سناریوی ۱: صفحه داشبورد ---
             if (isDashboard) {
+                // شروع تایمر 3.5 ثانیه‌ای
                 const splashTimer = new Promise(resolve => setTimeout(resolve, MIN_SPLASH_TIME));
                 const dataFetch = fetchDashboardData();
+                
+                // منتظر ماندن برای هر دو (تایمر و دیتا)
                 const [dataResult] = await Promise.all([dataFetch, splashTimer]);
 
                 if (dataResult) {
                     updateDashboardUI(dataResult);
                     checkUnreadSupportMessages(); 
                     hideLoader();
+                    // رنگ نهایی هدر (کمی روشن‌تر)
                     tg.setHeaderColor('#050505');
                     tg.setBackgroundColor('#050505');
                 }
-            } else if (isSupportPage) {
+            }
+            
+            // --- سناریوی ۲: صفحه پشتیبانی ---
+            else if (isSupportPage) {
                 tg.setHeaderColor('#1a1a1a');
+                
                 setupChatListeners();
+                
+                // در صفحه چت نیاز به صبر کردن برای تایمر اسپلش نیست
                 await loadChatHistory(true); 
+                
                 startChatPolling();
                 hideLoader();
             }
@@ -76,7 +94,7 @@
     };
 
     // ==========================================
-    // Dashboard Functions
+    // بخش توابع داشبورد
     // ==========================================
     async function fetchDashboardData() {
         try {
@@ -96,19 +114,33 @@
 
     function updateDashboardUI(data) {
         if (els.welcomeName) els.welcomeName.innerText = data.first_name || "کاربر گرامی";
+        
+        // فرمت بندی اعداد
         if (els.tomanBalance) els.tomanBalance.innerText = data.toman_balance; 
-        if (els.uusdBalance) els.uusdBalance.innerHTML = `${data.uusd_balance} <small>دلار</small>`;
+        if (els.uusdBalance) els.uusdBalance.innerHTML = `${data.uusd_balance} <small>$</small>`; // دلار ساده‌تر
         if (els.xpBalance) els.xpBalance.innerHTML = `${data.xp_balance} <small>XP</small>`;
-        if (tg.initDataUnsafe?.user?.photo_url && els.avatar) els.avatar.src = tg.initDataUnsafe.user.photo_url;
+
+        if (tg.initDataUnsafe?.user?.photo_url && els.avatar) {
+            els.avatar.src = tg.initDataUnsafe.user.photo_url;
+        }
         updateKycBadge(data.kyc_status_code);
     }
 
     function updateKycBadge(status) {
         if (!els.kycText) return;
-        let text = "سطح برنزی", color = "#848E9C", bg = "rgba(255,255,255,0.05)", border = "rgba(255,255,255,0.1)";
-        if (status === 'verified') { text = "کاربر تایید شده ✅"; color = "#0ECB81"; bg = "rgba(14, 203, 129, 0.1)"; border = "rgba(14, 203, 129, 0.3)"; }
-        else if (status === 'pending') { text = "در حال بررسی ⏳"; color = "#F0B90B"; bg = "rgba(240, 185, 11, 0.1)"; border = "rgba(240, 185, 11, 0.3)"; }
-        else if (status === 'rejected') { text = "نیاز به اصلاح ❌"; color = "#F6465D"; bg = "rgba(246, 70, 93, 0.1)"; border = "rgba(246, 70, 93, 0.3)"; }
+        let text = "Guest";
+        let color = "#848E9C";
+        let bg = "rgba(255,255,255,0.05)";
+        let border = "rgba(255,255,255,0.1)";
+
+        switch (status) {
+            case 'verified':
+                text = "Verified ✅"; color = "#0ECB81"; bg = "rgba(14, 203, 129, 0.1)"; border = "rgba(14, 203, 129, 0.3)"; break;
+            case 'pending':
+                text = "Pending ⏳"; color = "#F0B90B"; bg = "rgba(240, 185, 11, 0.1)"; border = "rgba(240, 185, 11, 0.3)"; break;
+            case 'rejected':
+                text = "Action Req ❌"; color = "#F6465D"; bg = "rgba(246, 70, 93, 0.1)"; border = "rgba(246, 70, 93, 0.3)"; break;
+        }
         els.kycText.innerText = text; els.kycText.style.color = color; els.kycText.style.background = bg; els.kycText.style.borderColor = border;
     }
 
@@ -126,7 +158,7 @@
     }
 
     // ==========================================
-    // Support Chat Logic
+    // بخش توابع چت پشتیبانی
     // ==========================================
     
     function startChatPolling() {
@@ -172,24 +204,22 @@
     function setupChatListeners() {
         if (!chatEls.sendBtn || !chatEls.input) return;
 
-        // Clone to remove old listeners
+        // حذف لیسنرهای قبلی
         const newSendBtn = chatEls.sendBtn.cloneNode(true);
         chatEls.sendBtn.parentNode.replaceChild(newSendBtn, chatEls.sendBtn);
         chatEls.sendBtn = newSendBtn;
 
         chatEls.sendBtn.addEventListener('click', sendMessage);
+
         chatEls.input.addEventListener('keypress', function (e) {
             if (e.key === 'Enter') sendMessage();
         });
 
-        // --- هندل کردن دکمه گیره کاغذ ---
+        // هندل کردن دکمه آپلود
         if (chatEls.attachBtn && chatEls.fileInput) {
-            // کلیک روی گیره -> باز شدن انتخاب فایل
             chatEls.attachBtn.addEventListener('click', () => {
                 chatEls.fileInput.click();
             });
-
-            // انتخاب فایل -> شروع آپلود
             chatEls.fileInput.addEventListener('change', handleFileUpload);
         }
 
@@ -206,12 +236,10 @@
         }
     }
 
-    // تابع جدید برای آپلود فایل
     async function handleFileUpload(e) {
         const file = e.target.files[0];
         if (!file) return;
 
-        // چک کردن سایز (مثلاً محدودیت 5 مگابایت)
         if (file.size > 5 * 1024 * 1024) {
             tg.showAlert("حجم فایل نباید بیشتر از ۵ مگابایت باشد.");
             chatEls.fileInput.value = '';
@@ -221,9 +249,9 @@
         // نمایش پیام موقت
         renderMessage({
             sender: 'user',
-            text: '📷 در حال ارسال عکس...',
+            text: '📷 در حال آپلود تصویر...',
             is_me: true,
-            type: 'text' // موقت
+            type: 'text'
         });
         scrollToBottom();
 
@@ -234,27 +262,25 @@
         try {
             const response = await fetch(`${API_BASE_URL}/webapp/support/upload_file`, {
                 method: 'POST',
-                body: formData // ارسال به صورت Multipart
+                body: formData
             });
 
             const result = await response.json();
             if (response.ok && result.status === 'success') {
                 chatEls.fileInput.value = '';
-                // رفرش فوری برای دیدن عکس واقعی
-                await loadChatHistory(false);
+                await loadChatHistory(false); // رفرش برای دیدن عکس
             } else {
                 tg.showAlert("خطا در آپلود: " + (result.message || "نامشخص"));
-                // حذف پیام موقت (ساده‌سازی: رفرش می‌کنیم)
                 chatEls.fileInput.value = '';
             }
         } catch (e) {
-            tg.showAlert("عدم اتصال به سرور برای آپلود.");
+            tg.showAlert("عدم اتصال به سرور.");
             chatEls.fileInput.value = '';
         }
     }
 
     async function sendMessage() {
-        if (isSending) return; 
+        if (isSending) return;
 
         const text = chatEls.input.value.trim();
         if (!text) return;
@@ -268,7 +294,7 @@
             timestamp: '...',
             is_me: true
         });
-        lastMessageCount++; 
+        lastMessageCount++;
         
         chatEls.input.value = '';
         scrollToBottom();
@@ -292,7 +318,7 @@
             await loadChatHistory(false);
 
         } catch (e) {
-            tg.showAlert("خطا در ارسال پیام. اینترنت خود را چک کنید.");
+            tg.showAlert("خطا در ارسال پیام.");
             chatEls.input.value = text;
             lastMessageCount--;
             const bubbles = document.querySelectorAll('.message-wrapper');
@@ -309,7 +335,6 @@
         const wrapperClass = isUser ? 'msg-user' : 'msg-admin';
         const checkIcon = isUser ? '<i class="fas fa-check msg-status-icon"></i>' : '';
 
-        // تشخیص عکس
         let contentHtml = '';
         if (msg.type === 'photo' && msg.file_url) {
             contentHtml = `<img src="${msg.file_url}" style="max-width: 100%; border-radius: 12px; margin-bottom: 5px; display: block;" alt="Photo">`;

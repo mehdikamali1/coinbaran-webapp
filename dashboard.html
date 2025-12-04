@@ -4,224 +4,218 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#000000">
-    <title>Coin Baran | Dashboard</title>
+    <title>Coin Baran | Premium Dashboard</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    <link rel="stylesheet" href="webapp/dashboard-style.css?v=88.0">
-
+    <link rel="stylesheet" href="webapp/dashboard-style.css?v=89.0">
+    
     <style>
+        /* استایل‌های موقت برای نوار قیمت (تا وقتی فایل CSS اصلی را آپدیت کنیم) */
+        .ticker-wrap {
+            width: 100%; overflow: hidden; background: rgba(255,255,255,0.03);
+            border-bottom: 1px solid rgba(255,255,255,0.05); padding: 8px 0;
+            white-space: nowrap; box-sizing: border-box;
+        }
+        .ticker-move { display: inline-block; animation: ticker 20s linear infinite; }
+        .ticker-item { display: inline-block; padding: 0 20px; font-size: 0.75rem; color: #aaa; }
+        .up { color: #0ECB81; } .down { color: #F6465D; }
+        @keyframes ticker { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(100%, 0, 0); } } /* جهت راست به چپ برای فارسی */
+        
+        /* استایل موقت نقطه قرمز */
         .notif-dot-support {
-            position: absolute;
-            top: -3px;
-            right: -3px;
-            width: 9px;
-            height: 9px;
-            background-color: #ff3b30; /* رنگ قرمز اپل */
-            border-radius: 50%;
-            border: 1.5px solid #1c1c1e; /* حاشیه همرنگ پس‌زمینه برای تفکیک */
-            display: none; /* پیش‌فرض مخفی است */
-            z-index: 10;
-            box-shadow: 0 0 4px rgba(255, 59, 48, 0.6);
+            position: absolute; top: -2px; right: -2px; width: 9px; height: 9px;
+            background-color: #ff3b30; border-radius: 50%; border: 1.5px solid #1c1c1e;
+            display: none; box-shadow: 0 0 5px #ff3b30; z-index: 5;
         }
     </style>
 </head>
 <body class="loading-active">
 
-    <div class="ambient-glow glow-top"></div>
-    <div class="ambient-glow glow-bottom"></div>
-    <div class="grid-overlay"></div>
+    <div class="ambient-light"></div>
+    <div class="grid-pattern"></div>
 
     <div id="loader">
-        <div class="infinity-container">
-            <img src="webapp/images/logo-gold.png" alt="Coin Baran" class="center-logo">
-            
+        <div class="infinity-wrapper">
             <svg class="infinity-svg" viewBox="0 0 340 170">
                 <defs>
-                    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" style="stop-color:#B8860B;stop-opacity:1" />
-                        <stop offset="50%" style="stop-color:#FFD700;stop-opacity:1" />
-                        <stop offset="100%" style="stop-color:#B8860B;stop-opacity:1" />
+                    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" style="stop-color:#BF953F;stop-opacity:1" />
+                        <stop offset="50%" style="stop-color:#FCF6BA;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#B38728;stop-opacity:1" />
                     </linearGradient>
                 </defs>
-                
-                <path class="infinity-bg" d="M170,85 C 230,145 310,145 310,85 C 310,25 230,25 170,85 C 110,145 30,145 30,85 C 30,25 110,25 170,85" />
-                
                 <path class="infinity-path" d="M170,85 C 230,145 310,145 310,85 C 310,25 230,25 170,85 C 110,145 30,145 30,85 C 30,25 110,25 170,85" />
             </svg>
+            <img src="webapp/images/logo-gold.png" class="loader-logo" alt="CB">
         </div>
-
-        <div class="loader-text-wrapper">
-            <div class="luxury-title">COIN BARAN</div>
-            
-            <div class="loading-bar-container">
-                <div class="loading-bar-fill"></div>
-            </div>
-            
-            <p class="status-msg">INITIALIZING SECURE ASSETS...</p>
+        <div class="loader-text">
+            <span class="loading-title">COIN BARAN</span>
+            <div class="loading-line"></div>
+            <span class="loading-status">SECURING CONNECTION...</span>
         </div>
     </div>
 
-    <div id="app-container" class="glass-wrapper hidden-content">
+    <div id="app-container" class="hidden-content">
         
         <header class="glass-header">
             <div class="profile-section">
-                <div class="avatar-frame ripple-effect">
+                <div class="avatar-container ripple-effect">
                     <img src="webapp/images/logo-gold.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'" alt="User" class="avatar-img">
-                    <div class="online-dot"></div>
+                    <div class="status-indicator"></div>
                 </div>
-
-                <div class="header-logo-container">
-                    <div class="header-glow"></div>
-                    <img src="webapp/images/logo-gold.png" class="header-logo-img" alt="CB">
-                </div>
-
-                <div class="user-details">
-                    <h2 id="welcome-name" class="fade-in-text">در حال بارگذاری...</h2>
-                    <div class="kyc-wrapper">
-                        <span id="kyc-text" class="kyc-tag">کاربر مهمان</span>
+                <div class="user-info">
+                    <h2 id="welcome-name">Loading...</h2>
+                    <div class="kyc-badge-wrapper">
+                        <span id="kyc-text" class="kyc-pill">Guest</span>
                     </div>
                 </div>
             </div>
-            
-            <div class="header-icons">
-                <button class="icon-btn notif-btn ripple-btn">
+            <div class="header-actions">
+                <button class="action-icon-btn ripple-btn">
                     <i class="fas fa-bell"></i>
-                    <span class="badge-point"></span>
                 </button>
             </div>
         </header>
 
-        <main class="main-scroll-area">
+        <div class="ticker-wrap">
+            <div class="ticker-move">
+                <div class="ticker-item">BTC <span class="up">96,540$ ▲</span></div>
+                <div class="ticker-item">ETH <span class="down">3,420$ ▼</span></div>
+                <div class="ticker-item">USDT <span class="up">1.00$</span></div>
+                <div class="ticker-item">TON <span class="up">5.40$ ▲</span></div>
+                <div class="ticker-item">NOT <span class="down">0.008$ ▼</span></div>
+                <div class="ticker-item">BTC <span class="up">96,540$ ▲</span></div>
+                <div class="ticker-item">ETH <span class="down">3,420$ ▼</span></div>
+            </div>
+        </div>
+
+        <main class="main-content">
             
-            <div class="asset-card">
-                <div class="card-shine-effect"></div>
-                <div class="card-mesh"></div>
+            <div class="premium-card">
+                <div class="card-bg-texture"></div>
+                <div class="card-shine"></div>
                 
-                <div class="card-top-row">
-                    <div class="chip-icon">
-                        <i class="fas fa-sim-card"></i>
+                <div class="card-header">
+                    <div class="chip-sim">
+                        <i class="fas fa-microchip"></i>
                     </div>
-                    <div class="card-brand-text">COIN BARAN VIP</div>
+                    <span class="card-type">VIP MEMBER</span>
                 </div>
 
-                <div class="balance-display">
-                    <span class="label-muted">موجودی کل دارایی‌ها</span>
-                    <div class="amount-row">
-                        <h1 id="toman-balance" class="main-digit">---</h1>
-                        <span class="currency-symbol">تومان</span>
+                <div class="card-balance">
+                    <span class="balance-label">موجودی کل دارایی</span>
+                    <div class="balance-amount">
+                        <span class="currency-symbol">T</span>
+                        <h1 id="toman-balance">---</h1>
                     </div>
                 </div>
 
-                <div class="card-footer-row">
-                    <div class="stat-item">
-                        <span class="stat-label">موجودی تتر</span>
-                        <span class="stat-value color-usd" id="uusd-balance">0.00 <small>دلار</small></span>
-                    </div>
-                    <div class="stat-divider"></div>
-                    <div class="stat-item">
-                        <span class="stat-label">امتیاز کلاب</span>
-                        <span class="stat-value color-xp" id="xp-balance">0 <small>XP</small></span>
+                <div class="mini-chart-container">
+                    <svg viewBox="0 0 300 50" class="chart-svg">
+                        <path d="M0,50 Q20,40 40,45 T80,30 T120,40 T160,20 T200,35 T240,10 T300,25" fill="none" stroke="rgba(255,215,0,0.3)" stroke-width="2" />
+                        <path d="M0,50 Q20,40 40,45 T80,30 T120,40 T160,20 T200,35 T240,10 T300,25 V50 H0Z" fill="url(#chartGradient)" opacity="0.2" />
+                        <defs>
+                            <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#FFD700"/>
+                                <stop offset="100%" stop-color="transparent"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+
+                <div class="card-footer">
+                    <div class="asset-row">
+                        <div class="asset-col">
+                            <span class="asset-title">USDT</span>
+                            <span class="asset-val usd-color" id="uusd-balance">0.00 $</span>
+                        </div>
+                        <div class="vertical-divider"></div>
+                        <div class="asset-col">
+                            <span class="asset-title">CLUB XP</span>
+                            <span class="asset-val xp-color" id="xp-balance">0 XP</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="section-label">دسترسی سریع</div>
-            <div class="quick-access-grid">
-                <div class="action-item ripple-btn" onclick="window.location.href='wallet'">
-                    <div class="action-icon deposit-theme">
-                        <i class="fas fa-arrow-down"></i>
-                    </div>
+            <div class="section-title">دسترسی سریع</div>
+            <div class="quick-actions">
+                <button class="glass-btn ripple-btn" onclick="window.location.href='wallet'">
+                    <div class="btn-icon deposit-color"><i class="fas fa-arrow-down"></i></div>
                     <span>واریز</span>
-                </div>
-                <div class="action-item ripple-btn" onclick="window.location.href='wallet?tab=withdraw'">
-                    <div class="action-icon withdraw-theme">
-                        <i class="fas fa-arrow-up"></i>
-                    </div>
+                </button>
+                <button class="glass-btn ripple-btn" onclick="window.location.href='wallet?tab=withdraw'">
+                    <div class="btn-icon withdraw-color"><i class="fas fa-arrow-up"></i></div>
                     <span>برداشت</span>
-                </div>
-                <div class="action-item ripple-btn" onclick="window.location.href='usdt'">
-                    <div class="action-icon trade-theme">
-                        <i class="fas fa-exchange-alt"></i>
-                    </div>
+                </button>
+                <button class="glass-btn ripple-btn" onclick="window.location.href='usdt'">
+                    <div class="btn-icon trade-color"><i class="fas fa-sync-alt"></i></div>
                     <span>مبادله</span>
-                </div>
-                <div class="action-item ripple-btn" onclick="window.location.href='kyc'">
-                    <div class="action-icon kyc-theme">
-                        <i class="fas fa-shield-alt"></i>
-                    </div>
-                    <span>احراز هویت</span>
-                </div>
+                </button>
+                <button class="glass-btn ripple-btn" onclick="window.location.href='kyc'">
+                    <div class="btn-icon kyc-color"><i class="fas fa-fingerprint"></i></div>
+                    <span>احراز</span>
+                </button>
             </div>
 
-            <div class="section-label">مارکت و سرگرمی</div>
+            <div class="section-title">خدمات ویژه</div>
             
-            <div class="featured-game-card ripple-effect" onclick="window.location.href='game'">
-                <div class="game-glow"></div>
-                <div class="game-content">
-                    <div class="game-icon-box">
-                        <i class="fas fa-chart-line"></i>
-                    </div>
+            <div class="game-banner ripple-effect" onclick="window.location.href='game'">
+                <div class="banner-glow"></div>
+                <div class="banner-content">
                     <div class="game-info">
-                        <h4>بازی کندل 🚀</h4>
+                        <h3>بازی کندل 🚀</h3>
                         <p>پیش‌بینی کن و دلار ببر!</p>
                     </div>
-                    <div class="play-button">
-                        شروع بازی <i class="fas fa-chevron-left"></i>
+                    <div class="play-icon">
+                        <i class="fas fa-play"></i>
                     </div>
                 </div>
             </div>
 
-            <div class="services-grid">
-                
-                <div class="service-box ripple-btn" onclick="window.location.href='usdt'">
-                    <div class="srv-icon usdt-icon-theme">
-                        <i class="fas fa-dollar-sign"></i>
-                    </div>
-                    <div class="srv-text">
-                        <h5>تتر / تومان</h5>
-                        <span>معامله اتوماتیک</span>
+            <div class="services-grid-modern">
+                <div class="service-card ripple-btn" onclick="window.location.href='usdt'">
+                    <i class="fas fa-coins service-icon gold-glow"></i>
+                    <div class="service-meta">
+                        <h4>تتر / تومان</h4>
+                        <span>نرخ لحظه‌ای</span>
                     </div>
                 </div>
 
-                <div class="service-box ripple-btn" onclick="window.location.href='utopia'">
-                    <div class="srv-icon utopia-icon-theme">
-                        <i class="fas fa-ticket-alt"></i>
-                    </div>
-                    <div class="srv-text">
-                        <h5>یوتوپیا</h5>
-                        <span>خرید و فروش ووچر</span>
+                <div class="service-card ripple-btn" onclick="window.location.href='utopia'">
+                    <i class="fas fa-ticket-alt service-icon pink-glow"></i>
+                    <div class="service-meta">
+                        <h4>یوتوپیا</h4>
+                        <span>خرید و فروش</span>
                     </div>
                 </div>
 
-                <div class="service-box ripple-btn" onclick="window.location.href='live'">
-                    <div class="srv-icon live-icon-theme">
-                        <i class="fas fa-futbol"></i>
-                    </div>
-                    <div class="srv-text">
-                        <h5>نتایج زنده</h5>
-                        <span>اطلاعات ورزشی</span>
+                <div class="service-card ripple-btn" onclick="window.location.href='live'">
+                    <i class="fas fa-futbol service-icon green-glow"></i>
+                    <div class="service-meta">
+                        <h4>نتایج زنده</h4>
+                        <span>پیش‌بینی فوتبال</span>
                     </div>
                 </div>
 
-                <div class="service-box ripple-btn" onclick="window.location.href='support.html'">
-                    <div class="srv-icon support-icon-theme" style="position: relative;">
-                        <i class="fas fa-headset"></i>
+                <div class="service-card ripple-btn" onclick="window.location.href='support.html'">
+                    <div style="position: relative;">
+                        <i class="fas fa-headset service-icon blue-glow"></i>
                         <span class="notif-dot-support" id="support-notif"></span>
                     </div>
-                    <div class="srv-text">
-                        <h5>پشتیبانی</h5>
+                    <div class="service-meta">
+                        <h4>پشتیبانی</h4>
                         <span>چت آنلاین VIP</span>
                     </div>
                 </div>
-
             </div>
 
             <div style="height: 100px;"></div>
         </main>
     </div>
     
-    <script src="webapp/script.js?v=88.0"></script>
+    <script src="webapp/script.js?v=89.0"></script>
 </body>
 </html>

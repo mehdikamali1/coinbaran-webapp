@@ -1,4 +1,4 @@
-﻿/* webapp/script.js (v91.0 - XP System Integrated & Full Features) */
+﻿/* webapp/script.js (v92.0 - Haptic Feedback & Minimal XP) */
 (function () {
     'use strict';
 
@@ -26,7 +26,6 @@
         avatar: document.querySelector('.avatar-img'),
         supportNotif: document.getElementById('support-notif'),
         ticker: document.getElementById('price-ticker'),
-        // عناصر جدید XP
         xpFill: document.getElementById('xp-progress-fill'),
         levelBadge: document.getElementById('level-badge'),
         nextLevelText: document.getElementById('next-level-text')
@@ -74,7 +73,13 @@
                     }
                     
                     hideLoader();
-                    setTimeout(init3DCardEffect, 100);
+                    
+                    // فعال‌سازی افکت‌های تعاملی
+                    setTimeout(() => {
+                        init3DCardEffect();
+                        initHapticFeedback(); // <--- قابلیت جدید
+                    }, 100);
+
                     tg.setHeaderColor('#050505');
                     tg.setBackgroundColor('#050505');
                 }
@@ -84,6 +89,7 @@
                 await loadChatHistory(true); 
                 startChatPolling();
                 hideLoader();
+                initHapticFeedback(); // فعال‌سازی ویبره در چت
             }
 
         } catch (error) {
@@ -91,6 +97,32 @@
             showError("خطا در راه‌اندازی برنامه.");
         }
     };
+
+    // ==========================================
+    // Haptic & UX Logic (NEW)
+    // ==========================================
+    function initHapticFeedback() {
+        // انتخاب تمام دکمه‌ها و المان‌های قابل کلیک
+        const interactives = document.querySelectorAll(
+            '.ripple-btn, .glass-btn, .service-card, .game-banner, .action-icon-btn, .attach-btn, .send-btn'
+        );
+
+        interactives.forEach(el => {
+            // استفاده از touchstart برای واکنش سریع‌تر در موبایل
+            el.addEventListener('touchstart', () => {
+                // لرزش سبک (Light Impact) مناسب برای دکمه‌ها
+                tg.HapticFeedback.impactOccurred('light');
+            }, {passive: true});
+            
+            // برای دسکتاپ هم کلیک رو نگه می‌داریم (هرچند ویبره نداره ولی برای اطمینان)
+            el.addEventListener('click', () => {
+                // اگر پلتفرم موبایل نبود، اینجا چیزی اجرا نمیشه که ارور بده، سیف هست
+                if(tg.platform !== 'tdesktop' && tg.platform !== 'macos') {
+                     tg.HapticFeedback.impactOccurred('light');
+                }
+            });
+        });
+    }
 
     // ==========================================
     // Core Functions
@@ -125,11 +157,9 @@
         if (els.welcomeName) els.welcomeName.innerText = data.first_name || "کاربر گرامی";
         if (els.tomanBalance) els.tomanBalance.innerText = data.toman_balance; 
         if (els.uusdBalance) els.uusdBalance.innerHTML = `${data.uusd_balance} <small>$</small>`;
-        
-        // آپدیت متن XP در کارت
         if (els.xpBalance) els.xpBalance.innerHTML = `${data.xp_balance} <small>XP</small>`;
 
-        // --- آپدیت نوار پیشرفت XP ---
+        // آپدیت نوار پیشرفت (نسخه مینیمال)
         updateLevelProgress(parseInt(data.xp_balance.replace(/,/g, '')) || 0);
 
         if (tg.initDataUnsafe?.user?.photo_url && els.avatar) {
@@ -138,48 +168,38 @@
         updateKycBadge(data.kyc_status_code);
     }
 
-    // --- تابع جدید: محاسبه و نمایش سطح ---
     function updateLevelProgress(xp) {
         if (!els.xpFill || !els.levelBadge) return;
 
-        // تعریف پله‌های سطح (Level Thresholds)
         const levels = [0, 500, 1500, 3500, 7000, 15000, 30000]; 
         
         let currentLevel = 1;
         let prevThreshold = 0;
         let nextThreshold = 500;
 
-        // پیدا کردن سطح فعلی
         for (let i = 0; i < levels.length; i++) {
             if (xp >= levels[i]) {
                 currentLevel = i + 1;
                 prevThreshold = levels[i];
-                nextThreshold = levels[i+1] || (levels[i] * 2); // اگر به ته لیست رسیدیم
+                nextThreshold = levels[i+1] || (levels[i] * 2);
             } else {
                 break;
             }
         }
 
-        // محاسبه درصد پیشرفت
         let percentage = 0;
         if (nextThreshold > prevThreshold) {
             percentage = ((xp - prevThreshold) / (nextThreshold - prevThreshold)) * 100;
         }
-        
-        // محدود کردن درصد بین ۰ تا ۱۰۰
         percentage = Math.min(100, Math.max(0, percentage));
 
-        // اعمال به UI
         els.xpFill.style.width = `${percentage}%`;
-        els.levelBadge.innerText = `LVL ${currentLevel}`;
+        els.levelBadge.innerText = `VIP ${currentLevel}`;
         
+        // تغییر: نمایش مینیمال فقط درصد (به جای متن طولانی)
         if (els.nextLevelText) {
-            els.nextLevelText.innerText = `${formatNumber(xp)} / ${formatNumber(nextThreshold)} XP`;
+            els.nextLevelText.innerText = `${Math.floor(percentage)}%`;
         }
-    }
-
-    function formatNumber(num) {
-        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     }
 
     function updateTickerUI(rates) {
@@ -199,7 +219,6 @@
         const svg = document.getElementById('sparkline-svg');
         if (!svg) return;
         
-        // فقط مسیر را پاک کن، نه defs را
         const existingPaths = svg.querySelectorAll('path');
         existingPaths.forEach(p => p.remove());
 
@@ -229,7 +248,6 @@
         if (changePercent > 0) { strokeColor = '#0ECB81'; fillUrl = 'url(#gradUp)'; } 
         else if (changePercent < 0) { strokeColor = '#F6465D'; fillUrl = 'url(#gradDown)'; }
 
-        // Path Line
         const pathLine = document.createElementNS("http://www.w3.org/2000/svg", "path");
         pathLine.setAttribute("d", d);
         pathLine.setAttribute("fill", "none");
@@ -238,7 +256,6 @@
         pathLine.setAttribute("stroke-linecap", "round");
         pathLine.setAttribute("stroke-linejoin", "round");
         
-        // Path Fill
         const dFill = d + ` V ${height} H 0 Z`;
         const pathFill = document.createElementNS("http://www.w3.org/2000/svg", "path");
         pathFill.setAttribute("d", dFill);
@@ -306,7 +323,6 @@
         } catch (e) {}
     }
 
-    // --- Support Logic ---
     function startChatPolling() {
         if (chatPollInterval) clearInterval(chatPollInterval);
         chatPollInterval = setInterval(() => loadChatHistory(false), 3000);

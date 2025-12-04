@@ -4,32 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#000000">
-    <title>Coin Baran | Premium Dashboard</title>
+    <title>Coin Baran | Dashboard</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
     <link rel="stylesheet" href="webapp/dashboard-style.css?v=89.0">
-    
-    <style>
-        /* استایل‌های موقت برای نوار قیمت (تا وقتی فایل CSS اصلی را آپدیت کنیم) */
-        .ticker-wrap {
-            width: 100%; overflow: hidden; background: rgba(255,255,255,0.03);
-            border-bottom: 1px solid rgba(255,255,255,0.05); padding: 8px 0;
-            white-space: nowrap; box-sizing: border-box;
-        }
-        .ticker-move { display: inline-block; animation: ticker 20s linear infinite; }
-        .ticker-item { display: inline-block; padding: 0 20px; font-size: 0.75rem; color: #aaa; }
-        .up { color: #0ECB81; } .down { color: #F6465D; }
-        @keyframes ticker { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(100%, 0, 0); } } /* جهت راست به چپ برای فارسی */
-        
-        /* استایل موقت نقطه قرمز */
-        .notif-dot-support {
-            position: absolute; top: -2px; right: -2px; width: 9px; height: 9px;
-            background-color: #ff3b30; border-radius: 50%; border: 1.5px solid #1c1c1e;
-            display: none; box-shadow: 0 0 5px #ff3b30; z-index: 5;
-        }
-    </style>
 </head>
 <body class="loading-active">
 
@@ -80,14 +60,8 @@
         </header>
 
         <div class="ticker-wrap">
-            <div class="ticker-move">
-                <div class="ticker-item">BTC <span class="up">96,540$ ▲</span></div>
-                <div class="ticker-item">ETH <span class="down">3,420$ ▼</span></div>
-                <div class="ticker-item">USDT <span class="up">1.00$</span></div>
-                <div class="ticker-item">TON <span class="up">5.40$ ▲</span></div>
-                <div class="ticker-item">NOT <span class="down">0.008$ ▼</span></div>
-                <div class="ticker-item">BTC <span class="up">96,540$ ▲</span></div>
-                <div class="ticker-item">ETH <span class="down">3,420$ ▼</span></div>
+            <div class="ticker-move" id="price-ticker">
+                <div class="ticker-item">در حال دریافت نرخ‌های لحظه‌ای...</div>
             </div>
         </div>
 

@@ -1,11 +1,11 @@
-﻿/* webapp/script.js (v89.1 - Ticker Integrated) */
+﻿/* webapp/script.js (v90.0 - 3D Gyroscope & Full Features) */
 (function () {
     'use strict';
 
     const tg = window.Telegram.WebApp;
     const API_BASE_URL = window.location.origin;
     
-    // زمان لودینگ 3.5 ثانیه (هماهنگ با CSS)
+    // زمان لودینگ 3.5 ثانیه (هماهنگ با CSS جدید)
     const MIN_SPLASH_TIME = 3500; 
 
     const loader = document.getElementById('loader');
@@ -29,7 +29,7 @@
         kycText: document.getElementById('kyc-text'),
         avatar: document.querySelector('.avatar-img'),
         supportNotif: document.getElementById('support-notif'),
-        ticker: document.getElementById('price-ticker') // عنصر جدید نوار قیمت
+        ticker: document.getElementById('price-ticker')
     };
 
     // عناصر چت
@@ -59,23 +59,24 @@
             if (isDashboard) {
                 const splashTimer = new Promise(resolve => setTimeout(resolve, MIN_SPLASH_TIME));
                 
-                // دریافت همزمان اطلاعات کاربر + نرخ‌های بازار
                 const dataFetch = fetchDashboardData();
                 const ratesFetch = fetchMarketRates(); 
 
-                // منتظر ماندن برای همه
                 const [dataResult, ratesResult] = await Promise.all([dataFetch, ratesFetch, splashTimer]);
 
                 if (dataResult) {
                     updateDashboardUI(dataResult);
                     checkUnreadSupportMessages();
                     
-                    // آپدیت نوار قیمت
                     if (ratesResult && ratesResult.status === 'success') {
                         updateTickerUI(ratesResult.rates);
                     }
                     
                     hideLoader();
+                    
+                    // فعال‌سازی افکت ۳بعدی کارت بعد از لود شدن
+                    setTimeout(init3DCardEffect, 100);
+
                     tg.setHeaderColor('#050505');
                     tg.setBackgroundColor('#050505');
                 }
@@ -97,7 +98,7 @@
     };
 
     // ==========================================
-    // بخش توابع داشبورد + مارکت
+    // بخش توابع داشبورد + مارکت + 3D Effect
     // ==========================================
     async function fetchDashboardData() {
         try {
@@ -113,7 +114,6 @@
         }
     }
 
-    // تابع جدید: دریافت نرخ‌ها از سرور
     async function fetchMarketRates() {
         try {
             const response = await fetch(`${API_BASE_URL}/webapp/market/rates`);
@@ -126,7 +126,7 @@
     }
 
     function updateDashboardUI(data) {
-        if (data.status === 'error') return; // هندل ارور ساده
+        if (data.status === 'error') return;
 
         if (els.welcomeName) els.welcomeName.innerText = data.first_name || "کاربر گرامی";
         if (els.tomanBalance) els.tomanBalance.innerText = data.toman_balance; 
@@ -139,20 +139,14 @@
         updateKycBadge(data.kyc_status_code);
     }
 
-    // تابع جدید: ساخت نوار قیمت متحرک
     function updateTickerUI(rates) {
         if (!els.ticker || !rates || rates.length === 0) return;
-        
         let html = '';
-        // برای اینکه نوار خالی نماند، لیست را چند بار تکرار می‌کنیم تا انیمیشن روان باشد
         const loopRates = [...rates, ...rates, ...rates]; 
-        
         loopRates.forEach(rate => {
             const changeClass = rate.change >= 0 ? 'up' : 'down';
             const arrow = rate.change > 0 ? '▲' : (rate.change < 0 ? '▼' : '');
-            // اگر تغییرات 0 بود، رنگ خنثی باشد
             const colorClass = rate.change === 0 ? '' : changeClass;
-            
             html += `
                 <div class="ticker-item">
                     ${rate.symbol} 
@@ -162,8 +156,64 @@
                 </div>
             `;
         });
-        
         els.ticker.innerHTML = html;
+    }
+
+    // --- تابع جدید: افکت ۳بعدی کارت ---
+    function init3DCardEffect() {
+        const card = document.querySelector('.premium-card');
+        const container = document.querySelector('.main-content'); // کانتینر اسکرول
+        if (!card) return;
+
+        // 1. افکت موس (دسکتاپ)
+        if (container) {
+            container.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                // مرکز کارت نسبت به صفحه
+                const cardCenterX = rect.left + rect.width / 2;
+                const cardCenterY = rect.top + rect.height / 2;
+
+                const mouseX = e.clientX - cardCenterX;
+                const mouseY = e.clientY - cardCenterY;
+
+                // محاسبه زاویه چرخش (حساسیت کم برای نرمی)
+                const rotateX = (mouseY / rect.height) * -15; // بالا/پایین
+                const rotateY = (mouseX / rect.width) * 15;   // چپ/راست
+
+                card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+            });
+
+            // بازگشت به حالت اولیه وقتی موس خارج شد
+            container.addEventListener('mouseleave', () => {
+                card.style.transform = `rotateX(0deg) rotateY(0deg)`;
+            });
+        }
+
+        // 2. افکت ژیروسکوپ (موبایل)
+        if (window.DeviceOrientationEvent) {
+            window.addEventListener("deviceorientation", (event) => {
+                // اگر سنسور دیتا نداد، بیخیال شو
+                if (!event.gamma && !event.beta) return;
+
+                // گاما: چپ/راست (-90 تا 90)
+                // بتا: جلو/عقب (-180 تا 180)
+                let rotateY = event.gamma; 
+                let rotateX = event.beta;  
+
+                // محدود کردن زوایا برای جلوگیری از چرخش بیش از حد
+                if (rotateY > 20) rotateY = 20;
+                if (rotateY < -20) rotateY = -20;
+                if (rotateX > 40) rotateX = 40;
+                if (rotateX < -40) rotateX = -40;
+
+                // آفست دادن برای زاویه دید طبیعی (چون گوشی معمولاً کج گرفته میشه)
+                // حدود 30 تا 40 درجه کج فرض می‌کنیم
+                rotateX = rotateX - 30; 
+
+                // اعمال چرخش معکوس برای حس تعادل
+                card.style.transform = `rotateX(${-rotateX}deg) rotateY(${rotateY}deg)`;
+            });
+        }
     }
 
     function updateKycBadge(status) {
@@ -189,7 +239,7 @@
     }
 
     // ==========================================
-    // بخش پشتیبانی (بدون تغییر منطق، فقط کپی شده)
+    // بخش پشتیبانی (Logic)
     // ==========================================
     function startChatPolling() {
         if (chatPollInterval) clearInterval(chatPollInterval);

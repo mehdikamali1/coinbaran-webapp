@@ -1,4 +1,4 @@
-﻿/* webapp/dashboard-style.css (v89.0 - Luxury Metal & Gold Edition) */
+﻿/* webapp/dashboard-style.css (v90.0 - 3D Parallax & Gyroscope Ready) */
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;300;400;500;700;800;900&family=Cinzel:wght@400;700;900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap');
 
@@ -10,7 +10,7 @@
     --text-white: #ffffff;
     --text-muted: #888888;
     --glass-border: rgba(255, 255, 255, 0.08);
-    --card-gradient: linear-gradient(145deg, #1c1c1e 0%, #000000 100%);
+    --card-gradient: linear-gradient(135deg, #1c1c1e 0%, #000000 100%);
     
     --radius-xl: 24px;
     --radius-lg: 18px;
@@ -48,7 +48,7 @@ body {
 .infinity-path {
     stroke: url(#goldGrad); stroke-width: 8; stroke-linecap: round;
     stroke-dasharray: 900; stroke-dashoffset: 900;
-    animation: draw-line 2.5s ease-out forwards; /* کاهش زمان به 2.5 ثانیه */
+    animation: draw-line 2.5s ease-out forwards;
     filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.5));
 }
 
@@ -70,7 +70,7 @@ body {
 .loading-line::after {
     content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     background: var(--gold-primary); transform: translateX(-100%);
-    animation: load-bar 2.5s ease-in-out forwards 0.5s; /* پر شدن سریع‌تر */
+    animation: load-bar 2.5s ease-in-out forwards 0.5s;
 }
 .loading-status { font-family: 'Roboto Mono'; font-size: 0.65rem; color: #666; letter-spacing: 2px; }
 
@@ -107,38 +107,67 @@ body {
 .up { color: #0ECB81; } .down { color: #F6465D; }
 @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(100%); } }
 
-.main-content { padding: 20px; overflow-y: auto; }
+/* اضافه شدن پرسپکتیو به کانتینر اصلی */
+.main-content { 
+    padding: 20px; 
+    overflow-y: auto; 
+    perspective: 1000px; /* حیاتی برای افکت سه بعدی */
+}
 
-/* Premium Asset Card (فلزی و لوکس) */
+/* Premium Asset Card (با قابلیت 3D) */
 .premium-card {
-    background: linear-gradient(135deg, #1c1c1e 0%, #000000 100%);
+    background: var(--card-gradient);
     border-radius: var(--radius-xl); padding: 24px; position: relative;
     border: 1px solid rgba(255, 255, 255, 0.08); overflow: hidden;
     box-shadow: 0 20px 50px -10px rgba(0,0,0,0.8);
     margin-bottom: 30px;
+    
+    /* تنظیمات جدید برای چرخش سه بعدی */
+    transform-style: preserve-3d;
+    transform: rotateX(0deg) rotateY(0deg);
+    transition: transform 0.1s ease-out; /* حرکت نرم */
+    will-change: transform;
 }
-.card-bg-texture { position: absolute; inset: 0; background: url('https://www.transparenttextures.com/patterns/carbon-fibre.png'); opacity: 0.05; pointer-events: none; }
+
+.card-bg-texture { position: absolute; inset: 0; background: url('https://www.transparenttextures.com/patterns/carbon-fibre.png'); opacity: 0.05; pointer-events: none; transform: translateZ(0); }
 .card-shine {
     position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-    background: radial-gradient(circle, rgba(255, 215, 0, 0.03) 0%, transparent 60%);
+    background: radial-gradient(circle, rgba(255, 215, 0, 0.05) 0%, transparent 60%); /* کمی شفاف‌تر */
     pointer-events: none;
+    mix-blend-mode: overlay;
+    transform: translateZ(1px);
 }
 
-.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; position: relative; z-index: 2; }
-.chip-sim { font-size: 2.2rem; color: rgba(255,255,255,0.1); transform: rotate(90deg); }
+/* عناصر داخلی کارت با عمق (translateZ) */
+.card-header { 
+    display: flex; justify-content: space-between; align-items: center; 
+    margin-bottom: 25px; position: relative; z-index: 2; 
+    transform: translateZ(25px); /* شناور بودن چیپ */
+}
+.chip-sim { font-size: 2.2rem; color: rgba(255,255,255,0.1); transform: rotate(90deg); text-shadow: 2px 4px 6px rgba(0,0,0,0.5); }
 .card-type { font-family: 'Cinzel'; font-size: 0.7rem; color: var(--gold-dark); letter-spacing: 2px; font-weight: 700; }
 
-.card-balance { text-align: right; margin-bottom: 15px; position: relative; z-index: 2; }
+.card-balance { 
+    text-align: right; margin-bottom: 15px; position: relative; z-index: 2; 
+    transform: translateZ(35px); /* شناور بودن موجودی */
+}
 .balance-label { font-size: 0.8rem; color: #666; display: block; margin-bottom: 5px; }
 .balance-amount { display: flex; align-items: baseline; justify-content: flex-end; gap: 8px; }
-.balance-amount h1 { font-family: 'Roboto Mono'; font-size: 2.2rem; margin: 0; color: #fff; letter-spacing: -1px; text-shadow: 0 0 20px rgba(255,255,255,0.1); }
+.balance-amount h1 { font-family: 'Roboto Mono'; font-size: 2.2rem; margin: 0; color: #fff; letter-spacing: -1px; text-shadow: 0 5px 15px rgba(0,0,0,0.5); }
 .currency-symbol { color: var(--gold-primary); font-size: 1.2rem; }
 
 /* Mini Chart */
-.mini-chart-container { height: 50px; width: 100%; margin-bottom: 20px; opacity: 0.8; position: relative; z-index: 2; }
-.chart-svg { width: 100%; height: 100%; }
+.mini-chart-container { 
+    height: 50px; width: 100%; margin-bottom: 20px; opacity: 0.8; position: relative; z-index: 2; 
+    transform: translateZ(15px);
+}
+.chart-svg { width: 100%; height: 100%; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); }
 
-.card-footer { background: rgba(255,255,255,0.03); border-radius: 12px; padding: 12px; display: flex; border: 1px solid rgba(255,255,255,0.05); position: relative; z-index: 2; }
+.card-footer { 
+    background: rgba(255,255,255,0.03); border-radius: 12px; padding: 12px; 
+    display: flex; border: 1px solid rgba(255,255,255,0.05); position: relative; z-index: 2; 
+    transform: translateZ(20px);
+}
 .asset-row { display: flex; width: 100%; justify-content: space-around; align-items: center; }
 .asset-col { text-align: center; }
 .asset-title { display: block; font-size: 0.6rem; color: #555; letter-spacing: 1px; margin-bottom: 2px; }

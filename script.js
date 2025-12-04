@@ -1,26 +1,22 @@
-﻿/* webapp/script.js (v93.0 - Smart Navigation & Instant Back) */
+﻿/* webapp/script.js (v94.0 - Instant Back & Local Cache) */
 (function () {
     'use strict';
 
     const tg = window.Telegram.WebApp;
     const API_BASE_URL = window.location.origin;
     
-    // متغیر زمان لودینگ (داینامیک می‌شود)
     let MIN_SPLASH_TIME = 3500; 
 
     const loader = document.getElementById('loader');
     const appContainer = document.getElementById('app-container');
     
-    // تشخیص صفحه
     const isDashboard = !!document.getElementById('toman-balance');
     const isSupportPage = !!document.getElementById('messages-container');
 
-    // متغیرهای چت
     let chatPollInterval = null;
     let lastMessageCount = 0;
     let isSending = false;
 
-    // عناصر داشبورد
     const els = {
         welcomeName: document.getElementById('welcome-name'),
         tomanBalance: document.getElementById('toman-balance'),
@@ -35,7 +31,6 @@
         nextLevelText: document.getElementById('next-level-text')
     };
 
-    // عناصر چت
     const chatEls = {
         container: document.getElementById('messages-container'),
         input: document.getElementById('message-input'),
@@ -57,114 +52,138 @@
                 tg.initData = "query_id=TEST_DEV_MODE"; 
             }
 
-            // --- سناریوی ۱: داشبورد ---
+            // --- بررسی وضعیت بازگشت کاربر ---
+            const hasSeenSplash = sessionStorage.getItem('splash_shown');
+
             if (isDashboard) {
-                // بررسی اینکه آیا قبلاً اسپلش اسکرین نمایش داده شده؟
-                const hasSeenSplash = sessionStorage.getItem('splash_shown');
-                
                 if (hasSeenSplash) {
-                    // اگر قبلاً دیده، زمان انتظار را صفر کن (بازگشت سریع)
-                    MIN_SPLASH_TIME = 0;
-                    // لودر را سریع مخفی کن
-                    if(loader) loader.style.display = 'none';
-                } else {
-                    // اگر بار اول است، ثبت کن که دیده شد
-                    sessionStorage.setItem('splash_shown', 'true');
-                }
-
-                // تایمر (اگر MIN_SPLASH_TIME صفر باشد، فوری ریزالو می‌شود)
-                const splashTimer = new Promise(resolve => setTimeout(resolve, MIN_SPLASH_TIME));
-                
-                const dataFetch = fetchDashboardData();
-                const ratesFetch = fetchMarketRates(); 
-
-                const [dataResult, ratesResult] = await Promise.all([dataFetch, ratesFetch, splashTimer]);
-
-                if (dataResult) {
-                    updateDashboardUI(dataResult);
-                    checkUnreadSupportMessages();
+                    // *** حالت بازگشت (سریع) ***
+                    // 1. نمایش آنی صفحه با دیتای کش شده (اگر باشد)
+                    loadFromCache();
                     
-                    if (ratesResult && ratesResult.status === 'success') {
-                        updateTickerUI(ratesResult.rates);
-                        const usdtData = ratesResult.rates.find(r => r.symbol === 'USDT');
-                        if (usdtData) renderSmartChart(usdtData.change);
-                    } else {
-                        renderSmartChart(0);
-                    }
+                    // 2. حذف فوری لودر
+                    forceHideLoader();
                     
-                    // اگر بار اول بود، با انیمیشن مخفی کن، اگر نه که قبلا مخفی شده
-                    if (!hasSeenSplash) hideLoader();
-                    else if (appContainer) {
-                        appContainer.classList.remove('hidden-content');
-                        appContainer.classList.add('fade-in-active');
-                    }
-                    
+                    // 3. فعال‌سازی افکت‌ها
                     setTimeout(() => {
                         init3DCardEffect();
                         initHapticFeedback();
-                    }, 100);
+                    }, 50);
 
-                    tg.setHeaderColor('#050505');
-                    tg.setBackgroundColor('#050505');
+                    // 4. آپدیت دیتا در پس‌زمینه (بدون اینکه کاربر منتظر بماند)
+                    fetchDashboardData().then(data => {
+                        if(data) updateDashboardUI(data);
+                    });
+                    fetchMarketRates().then(res => {
+                        if(res && res.status === 'success') {
+                            updateTickerUI(res.rates);
+                            const usdt = res.rates.find(r => r.symbol === 'USDT');
+                            if(usdt) renderSmartChart(usdt.change);
+                        }
+                    });
+                    checkUnreadSupportMessages();
+
+                } else {
+                    // *** حالت ورود اول (با انیمیشن) ***
+                    sessionStorage.setItem('splash_shown', 'true');
+                    
+                    const splashTimer = new Promise(resolve => setTimeout(resolve, MIN_SPLASH_TIME));
+                    const dataFetch = fetchDashboardData();
+                    const ratesFetch = fetchMarketRates(); 
+
+                    const [dataResult, ratesResult] = await Promise.all([dataFetch, ratesFetch, splashTimer]);
+
+                    if (dataResult) {
+                        updateDashboardUI(dataResult);
+                        checkUnreadSupportMessages();
+                        if (ratesResult && ratesResult.status === 'success') {
+                            updateTickerUI(ratesResult.rates);
+                            const usdt = ratesResult.rates.find(r => r.symbol === 'USDT');
+                            if(usdt) renderSmartChart(usdt.change);
+                        } else {
+                            renderSmartChart(0);
+                        }
+                        
+                        hideLoaderWithAnimation();
+                        
+                        setTimeout(() => {
+                            init3DCardEffect();
+                            initHapticFeedback();
+                        }, 100);
+                    }
                 }
-            } 
-            
-            // --- سناریوی ۲: پشتیبانی ---
-            else if (isSupportPage) {
+                
+                // تنظیم رنگ هدر نهایی
+                tg.setHeaderColor('#050505');
+                tg.setBackgroundColor('#050505');
+
+            } else if (isSupportPage) {
+                // صفحه پشتیبانی
                 tg.setHeaderColor('#1a1a1a');
+                forceHideLoader(); // حذف فوری لودر
+                
                 setupChatListeners();
                 await loadChatHistory(true); 
                 startChatPolling();
-                
-                // در صفحات داخلی هم لودر را سریع برمی‌داریم
-                if(loader) loader.style.display = 'none';
-                if(appContainer) {
-                    appContainer.classList.remove('hidden-content');
-                    appContainer.classList.add('fade-in-active');
-                }
-                
                 initHapticFeedback();
-            }
-            // --- سناریوی ۳: سایر صفحات (مثل کیف پول و یوتوپیا) ---
-            else {
-                // برای اطمینان در سایر صفحات هم لودر برداشته شود
-                if(loader) loader.style.display = 'none';
-                if(appContainer) {
-                    appContainer.classList.remove('hidden-content');
-                    appContainer.classList.add('fade-in-active');
-                }
+            } else {
+                // سایر صفحات
+                forceHideLoader();
             }
 
         } catch (error) {
             console.error("Critical Init Error:", error);
-            // در صورت خطا هم لودر را بردار تا کاربر گیر نکند
-            if(loader) loader.style.display = 'none';
+            forceHideLoader(); // در صورت خطا هم صفحه باز شود
         }
     };
 
     // ==========================================
-    // Haptic & UX Logic
+    // Caching Logic (برای سرعت بالا)
     // ==========================================
-    function initHapticFeedback() {
-        const interactives = document.querySelectorAll(
-            '.ripple-btn, .glass-btn, .service-card, .game-banner, .action-icon-btn, .attach-btn, .send-btn'
-        );
+    function saveToCache(data) {
+        try {
+            localStorage.setItem('dashboard_cache', JSON.stringify(data));
+        } catch (e) {}
+    }
 
-        interactives.forEach(el => {
-            el.addEventListener('touchstart', () => {
-                tg.HapticFeedback.impactOccurred('light');
-            }, {passive: true});
-            
-            el.addEventListener('click', () => {
-                if(tg.platform !== 'tdesktop' && tg.platform !== 'macos') {
-                     tg.HapticFeedback.impactOccurred('light');
-                }
-            });
-        });
+    function loadFromCache() {
+        try {
+            const cached = localStorage.getItem('dashboard_cache');
+            if (cached) {
+                const data = JSON.parse(cached);
+                updateDashboardUI(data, false); // false = کش را دوباره ذخیره نکن
+            }
+        } catch (e) {}
     }
 
     // ==========================================
-    // Core Functions
+    // Loader Functions
+    // ==========================================
+    function forceHideLoader() {
+        if (loader) loader.style.display = 'none';
+        if (appContainer) {
+            appContainer.classList.remove('hidden-content');
+            appContainer.style.opacity = '1';
+            appContainer.style.transform = 'translateY(0)';
+        }
+    }
+
+    function hideLoaderWithAnimation() {
+        if (loader) {
+            loader.style.opacity = '0';
+            loader.style.pointerEvents = 'none';
+            setTimeout(() => {
+                loader.style.display = 'none';
+                if (appContainer) {
+                    appContainer.classList.remove('hidden-content');
+                    appContainer.classList.add('fade-in-active');
+                }
+            }, 800); 
+        }
+    }
+
+    // ==========================================
+    // Core Logic
     // ==========================================
     async function fetchDashboardData() {
         try {
@@ -174,24 +193,32 @@
                 body: JSON.stringify({ initData: tg.initData })
             });
             if (!response.ok) throw new Error("Server Error");
-            return await response.json();
+            const data = await response.json();
+            
+            // ذخیره در کش برای دفعه بعد
+            if(data.status === 'success') saveToCache(data);
+            
+            return data;
         } catch (error) {
             return null;
         }
     }
+
+    // ... (توابع مارکت، تیکر، چارت، 3D و Haptic بدون تغییر باقی می‌مانند) ...
+    // برای جلوگیری از طولانی شدن، کدهای تکراری پایین را حفظ کن 
+    // اما برای اطمینان من کل فایل را کامل می‌گذارم:
 
     async function fetchMarketRates() {
         try {
             const response = await fetch(`${API_BASE_URL}/webapp/market/rates`);
             if (!response.ok) return null;
             return await response.json();
-        } catch (e) {
-            return null;
-        }
+        } catch (e) { return null; }
     }
 
-    function updateDashboardUI(data) {
+    function updateDashboardUI(data, saveCache = true) {
         if (data.status === 'error') return;
+        if(saveCache) saveToCache(data);
 
         if (els.welcomeName) els.welcomeName.innerText = data.first_name || "کاربر گرامی";
         if (els.tomanBalance) els.tomanBalance.innerText = data.toman_balance; 
@@ -208,34 +235,17 @@
 
     function updateLevelProgress(xp) {
         if (!els.xpFill || !els.levelBadge) return;
-
         const levels = [0, 500, 1500, 3500, 7000, 15000, 30000]; 
-        let currentLevel = 1;
-        let prevThreshold = 0;
-        let nextThreshold = 500;
-
+        let currentLevel = 1; let prevThreshold = 0; let nextThreshold = 500;
         for (let i = 0; i < levels.length; i++) {
-            if (xp >= levels[i]) {
-                currentLevel = i + 1;
-                prevThreshold = levels[i];
-                nextThreshold = levels[i+1] || (levels[i] * 2);
-            } else {
-                break;
-            }
+            if (xp >= levels[i]) { currentLevel = i + 1; prevThreshold = levels[i]; nextThreshold = levels[i+1] || (levels[i] * 2); } else { break; }
         }
-
         let percentage = 0;
-        if (nextThreshold > prevThreshold) {
-            percentage = ((xp - prevThreshold) / (nextThreshold - prevThreshold)) * 100;
-        }
+        if (nextThreshold > prevThreshold) percentage = ((xp - prevThreshold) / (nextThreshold - prevThreshold)) * 100;
         percentage = Math.min(100, Math.max(0, percentage));
-
         els.xpFill.style.width = `${percentage}%`;
         els.levelBadge.innerText = `VIP ${currentLevel}`;
-        
-        if (els.nextLevelText) {
-            els.nextLevelText.innerText = `${Math.floor(percentage)}%`;
-        }
+        if (els.nextLevelText) els.nextLevelText.innerText = `${Math.floor(percentage)}%`;
     }
 
     function updateTickerUI(rates) {
@@ -254,16 +264,10 @@
     function renderSmartChart(changePercent) {
         const svg = document.getElementById('sparkline-svg');
         if (!svg) return;
-        
         const existingPaths = svg.querySelectorAll('path');
         existingPaths.forEach(p => p.remove());
-
-        const width = 300;
-        const height = 50;
-        const pointsCount = 20; 
-        const points = [];
-        const trendFactor = changePercent * 2; 
-        
+        const width = 300; const height = 50; const pointsCount = 20; 
+        const points = []; const trendFactor = changePercent * 2; 
         for (let i = 0; i <= pointsCount; i++) {
             const x = (i / pointsCount) * width;
             const noise = (Math.random() - 0.5) * 15;
@@ -272,42 +276,23 @@
             y = Math.max(5, Math.min(height - 5, y));
             points.push({x, y});
         }
-
         let d = `M ${points[0].x},${points[0].y}`;
-        for (let i = 1; i < points.length; i++) {
-            d += ` L ${points[i].x},${points[i].y}`;
-        }
-
-        let strokeColor = '#FFD700'; 
-        let fillUrl = 'url(#gradNeutral)';
-        
+        for (let i = 1; i < points.length; i++) { d += ` L ${points[i].x},${points[i].y}`; }
+        let strokeColor = '#FFD700'; let fillUrl = 'url(#gradNeutral)';
         if (changePercent > 0) { strokeColor = '#0ECB81'; fillUrl = 'url(#gradUp)'; } 
         else if (changePercent < 0) { strokeColor = '#F6465D'; fillUrl = 'url(#gradDown)'; }
-
         const pathLine = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        pathLine.setAttribute("d", d);
-        pathLine.setAttribute("fill", "none");
-        pathLine.setAttribute("stroke", strokeColor);
-        pathLine.setAttribute("stroke-width", "2");
-        pathLine.setAttribute("stroke-linecap", "round");
-        pathLine.setAttribute("stroke-linejoin", "round");
-        
+        pathLine.setAttribute("d", d); pathLine.setAttribute("fill", "none"); pathLine.setAttribute("stroke", strokeColor); pathLine.setAttribute("stroke-width", "2"); pathLine.setAttribute("stroke-linecap", "round"); pathLine.setAttribute("stroke-linejoin", "round");
         const dFill = d + ` V ${height} H 0 Z`;
         const pathFill = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        pathFill.setAttribute("d", dFill);
-        pathFill.setAttribute("fill", fillUrl);
-        pathFill.setAttribute("stroke", "none");
-        pathFill.style.opacity = "0.5";
-
-        svg.appendChild(pathFill);
-        svg.appendChild(pathLine);
+        pathFill.setAttribute("d", dFill); pathFill.setAttribute("fill", fillUrl); pathFill.setAttribute("stroke", "none"); pathFill.style.opacity = "0.5";
+        svg.appendChild(pathFill); svg.appendChild(pathLine);
     }
 
     function init3DCardEffect() {
         const card = document.querySelector('.premium-card');
         const container = document.querySelector('.main-content');
         if (!card) return;
-
         if (container) {
             container.addEventListener('mousemove', (e) => {
                 const rect = card.getBoundingClientRect();
@@ -319,22 +304,26 @@
                 const rotateY = (mouseX / rect.width) * 15;
                 card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
             });
-            container.addEventListener('mouseleave', () => {
-                card.style.transform = `rotateX(0deg) rotateY(0deg)`;
-            });
+            container.addEventListener('mouseleave', () => { card.style.transform = `rotateX(0deg) rotateY(0deg)`; });
         }
-
         if (window.DeviceOrientationEvent) {
             window.addEventListener("deviceorientation", (event) => {
                 if (!event.gamma && !event.beta) return;
-                let rotateY = event.gamma; 
-                let rotateX = event.beta;  
+                let rotateY = event.gamma; let rotateX = event.beta;  
                 if (rotateY > 20) rotateY = 20; if (rotateY < -20) rotateY = -20;
                 if (rotateX > 40) rotateX = 40; if (rotateX < -40) rotateX = -40;
                 rotateX = rotateX - 30; 
                 card.style.transform = `rotateX(${-rotateX}deg) rotateY(${rotateY}deg)`;
             });
         }
+    }
+
+    function initHapticFeedback() {
+        const interactives = document.querySelectorAll('.ripple-btn, .glass-btn, .service-card, .game-banner, .action-icon-btn, .attach-btn, .send-btn');
+        interactives.forEach(el => {
+            el.addEventListener('touchstart', () => { tg.HapticFeedback.impactOccurred('light'); }, {passive: true});
+            el.addEventListener('click', () => { if(tg.platform !== 'tdesktop' && tg.platform !== 'macos') { tg.HapticFeedback.impactOccurred('light'); } });
+        });
     }
 
     function updateKycBadge(status) {
@@ -411,11 +400,7 @@
     async function handleFileUpload(e) {
         const file = e.target.files[0];
         if (!file) return;
-        if (file.size > 5 * 1024 * 1024) {
-            tg.showAlert("حجم فایل نباید بیشتر از ۵ مگابایت باشد.");
-            chatEls.fileInput.value = '';
-            return;
-        }
+        if (file.size > 5 * 1024 * 1024) { tg.showAlert("حجم فایل نباید بیشتر از ۵ مگابایت باشد."); chatEls.fileInput.value = ''; return; }
         renderMessage({ sender: 'user', text: '📷 در حال آپلود تصویر...', is_me: true, type: 'text' });
         scrollToBottom();
         const formData = new FormData();
@@ -424,17 +409,9 @@
         try {
             const response = await fetch(`${API_BASE_URL}/webapp/support/upload_file`, { method: 'POST', body: formData });
             const result = await response.json();
-            if (response.ok && result.status === 'success') {
-                chatEls.fileInput.value = '';
-                await loadChatHistory(false);
-            } else {
-                tg.showAlert("خطا در آپلود: " + (result.message || "نامشخص"));
-                chatEls.fileInput.value = '';
-            }
-        } catch (e) {
-            tg.showAlert("عدم اتصال به سرور.");
-            chatEls.fileInput.value = '';
-        }
+            if (response.ok && result.status === 'success') { chatEls.fileInput.value = ''; await loadChatHistory(false); } 
+            else { tg.showAlert("خطا در آپلود: " + (result.message || "نامشخص")); chatEls.fileInput.value = ''; }
+        } catch (e) { tg.showAlert("عدم اتصال به سرور."); chatEls.fileInput.value = ''; }
     }
     async function sendMessage() {
         if (isSending) return;
@@ -472,12 +449,8 @@
         const wrapperClass = isUser ? 'msg-user' : 'msg-admin';
         const checkIcon = isUser ? '<i class="fas fa-check msg-status-icon"></i>' : '';
         let contentHtml = '';
-        if (msg.type === 'photo' && msg.file_url) {
-            contentHtml = `<img src="${msg.file_url}" style="max-width: 100%; border-radius: 12px; margin-bottom: 5px; display: block;" alt="Photo">`;
-            if (msg.text) contentHtml += `<span>${escapeHtml(msg.text)}</span>`;
-        } else {
-            contentHtml = escapeHtml(msg.text);
-        }
+        if (msg.type === 'photo' && msg.file_url) { contentHtml = `<img src="${msg.file_url}" style="max-width: 100%; border-radius: 12px; margin-bottom: 5px; display: block;" alt="Photo">`; if (msg.text) contentHtml += `<span>${escapeHtml(msg.text)}</span>`; } 
+        else { contentHtml = escapeHtml(msg.text); }
         const html = `<div class="message-wrapper ${wrapperClass}"><div class="bubble">${contentHtml}</div><div class="msg-meta"><span>${msg.timestamp || ''}</span>${checkIcon}</div></div>`;
         chatEls.container.insertAdjacentHTML('beforeend', html);
     }
@@ -490,23 +463,5 @@
     }
     function scrollToBottom() { if (chatEls.container) chatEls.container.scrollTop = chatEls.container.scrollHeight; }
     function escapeHtml(text) { if (!text) return ""; return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
-    function hideLoader() {
-        if (loader) {
-            loader.style.opacity = '0';
-            loader.style.pointerEvents = 'none';
-            setTimeout(() => {
-                loader.style.display = 'none';
-                if (appContainer) {
-                    appContainer.classList.remove('hidden-content');
-                    appContainer.classList.add('fade-in-active');
-                }
-            }, 800); 
-        }
-    }
-    function showError(msg) {
-        if (loader) {
-            loader.style.opacity = '1'; loader.style.display = 'flex';
-            loader.innerHTML = `<div class="loader-content"><p style="color:#F6465D;">${msg}</p><button onclick="window.location.reload()">تلاش مجدد</button></div>`;
-        }
-    }
+    function showError(msg) { if (loader) { loader.style.opacity = '1'; loader.style.display = 'flex'; loader.innerHTML = `<div class="loader-content"><p style="color:#F6465D;">${msg}</p><button onclick="window.location.reload()">تلاش مجدد</button></div>`; } }
 })();

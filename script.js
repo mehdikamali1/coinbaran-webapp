@@ -1,22 +1,26 @@
-﻿/* webapp/script.js (v92.0 - Haptic Feedback & Minimal XP) */
+﻿/* webapp/script.js (v93.0 - Smart Navigation & Instant Back) */
 (function () {
     'use strict';
 
     const tg = window.Telegram.WebApp;
     const API_BASE_URL = window.location.origin;
     
-    const MIN_SPLASH_TIME = 3500; 
+    // متغیر زمان لودینگ (داینامیک می‌شود)
+    let MIN_SPLASH_TIME = 3500; 
 
     const loader = document.getElementById('loader');
     const appContainer = document.getElementById('app-container');
     
+    // تشخیص صفحه
     const isDashboard = !!document.getElementById('toman-balance');
     const isSupportPage = !!document.getElementById('messages-container');
 
+    // متغیرهای چت
     let chatPollInterval = null;
     let lastMessageCount = 0;
     let isSending = false;
 
+    // عناصر داشبورد
     const els = {
         welcomeName: document.getElementById('welcome-name'),
         tomanBalance: document.getElementById('toman-balance'),
@@ -31,6 +35,7 @@
         nextLevelText: document.getElementById('next-level-text')
     };
 
+    // عناصر چت
     const chatEls = {
         container: document.getElementById('messages-container'),
         input: document.getElementById('message-input'),
@@ -52,7 +57,22 @@
                 tg.initData = "query_id=TEST_DEV_MODE"; 
             }
 
+            // --- سناریوی ۱: داشبورد ---
             if (isDashboard) {
+                // بررسی اینکه آیا قبلاً اسپلش اسکرین نمایش داده شده؟
+                const hasSeenSplash = sessionStorage.getItem('splash_shown');
+                
+                if (hasSeenSplash) {
+                    // اگر قبلاً دیده، زمان انتظار را صفر کن (بازگشت سریع)
+                    MIN_SPLASH_TIME = 0;
+                    // لودر را سریع مخفی کن
+                    if(loader) loader.style.display = 'none';
+                } else {
+                    // اگر بار اول است، ثبت کن که دیده شد
+                    sessionStorage.setItem('splash_shown', 'true');
+                }
+
+                // تایمر (اگر MIN_SPLASH_TIME صفر باشد، فوری ریزالو می‌شود)
                 const splashTimer = new Promise(resolve => setTimeout(resolve, MIN_SPLASH_TIME));
                 
                 const dataFetch = fetchDashboardData();
@@ -72,51 +92,70 @@
                         renderSmartChart(0);
                     }
                     
-                    hideLoader();
+                    // اگر بار اول بود، با انیمیشن مخفی کن، اگر نه که قبلا مخفی شده
+                    if (!hasSeenSplash) hideLoader();
+                    else if (appContainer) {
+                        appContainer.classList.remove('hidden-content');
+                        appContainer.classList.add('fade-in-active');
+                    }
                     
-                    // فعال‌سازی افکت‌های تعاملی
                     setTimeout(() => {
                         init3DCardEffect();
-                        initHapticFeedback(); // <--- قابلیت جدید
+                        initHapticFeedback();
                     }, 100);
 
                     tg.setHeaderColor('#050505');
                     tg.setBackgroundColor('#050505');
                 }
-            } else if (isSupportPage) {
+            } 
+            
+            // --- سناریوی ۲: پشتیبانی ---
+            else if (isSupportPage) {
                 tg.setHeaderColor('#1a1a1a');
                 setupChatListeners();
                 await loadChatHistory(true); 
                 startChatPolling();
-                hideLoader();
-                initHapticFeedback(); // فعال‌سازی ویبره در چت
+                
+                // در صفحات داخلی هم لودر را سریع برمی‌داریم
+                if(loader) loader.style.display = 'none';
+                if(appContainer) {
+                    appContainer.classList.remove('hidden-content');
+                    appContainer.classList.add('fade-in-active');
+                }
+                
+                initHapticFeedback();
+            }
+            // --- سناریوی ۳: سایر صفحات (مثل کیف پول و یوتوپیا) ---
+            else {
+                // برای اطمینان در سایر صفحات هم لودر برداشته شود
+                if(loader) loader.style.display = 'none';
+                if(appContainer) {
+                    appContainer.classList.remove('hidden-content');
+                    appContainer.classList.add('fade-in-active');
+                }
             }
 
         } catch (error) {
             console.error("Critical Init Error:", error);
-            showError("خطا در راه‌اندازی برنامه.");
+            // در صورت خطا هم لودر را بردار تا کاربر گیر نکند
+            if(loader) loader.style.display = 'none';
         }
     };
 
     // ==========================================
-    // Haptic & UX Logic (NEW)
+    // Haptic & UX Logic
     // ==========================================
     function initHapticFeedback() {
-        // انتخاب تمام دکمه‌ها و المان‌های قابل کلیک
         const interactives = document.querySelectorAll(
             '.ripple-btn, .glass-btn, .service-card, .game-banner, .action-icon-btn, .attach-btn, .send-btn'
         );
 
         interactives.forEach(el => {
-            // استفاده از touchstart برای واکنش سریع‌تر در موبایل
             el.addEventListener('touchstart', () => {
-                // لرزش سبک (Light Impact) مناسب برای دکمه‌ها
                 tg.HapticFeedback.impactOccurred('light');
             }, {passive: true});
             
-            // برای دسکتاپ هم کلیک رو نگه می‌داریم (هرچند ویبره نداره ولی برای اطمینان)
             el.addEventListener('click', () => {
-                // اگر پلتفرم موبایل نبود، اینجا چیزی اجرا نمیشه که ارور بده، سیف هست
                 if(tg.platform !== 'tdesktop' && tg.platform !== 'macos') {
                      tg.HapticFeedback.impactOccurred('light');
                 }
@@ -159,7 +198,6 @@
         if (els.uusdBalance) els.uusdBalance.innerHTML = `${data.uusd_balance} <small>$</small>`;
         if (els.xpBalance) els.xpBalance.innerHTML = `${data.xp_balance} <small>XP</small>`;
 
-        // آپدیت نوار پیشرفت (نسخه مینیمال)
         updateLevelProgress(parseInt(data.xp_balance.replace(/,/g, '')) || 0);
 
         if (tg.initDataUnsafe?.user?.photo_url && els.avatar) {
@@ -172,7 +210,6 @@
         if (!els.xpFill || !els.levelBadge) return;
 
         const levels = [0, 500, 1500, 3500, 7000, 15000, 30000]; 
-        
         let currentLevel = 1;
         let prevThreshold = 0;
         let nextThreshold = 500;
@@ -196,7 +233,6 @@
         els.xpFill.style.width = `${percentage}%`;
         els.levelBadge.innerText = `VIP ${currentLevel}`;
         
-        // تغییر: نمایش مینیمال فقط درصد (به جای متن طولانی)
         if (els.nextLevelText) {
             els.nextLevelText.innerText = `${Math.floor(percentage)}%`;
         }

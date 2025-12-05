@@ -1,4 +1,4 @@
-﻿/* webapp/script.js (v95.0 - Final Fix: BFCache & Navigation) */
+﻿/* webapp/script.js (v96.0 - Skeleton UI & Performance) */
 (function () {
     'use strict';
 
@@ -44,15 +44,12 @@
     };
 
     // ==========================================
-    // 1. GLOBAL FIX: BFCache Handler (The Magic Fix)
+    // 1. GLOBAL FIX: BFCache Handler
     // ==========================================
-    // این رویداد همیشه اجرا می‌شود، حتی اگر دکمه برگشت زده شود و صفحه از کش بیاید
     window.addEventListener('pageshow', function(event) {
-        // اگر صفحه از کش لود شده باشد (Back زدن کاربر)
         if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
             console.log("Restored from cache - Forcing loader hide");
             forceHideLoader();
-            // بازگرداندن اسکرول به حالت طبیعی
             document.body.style.overflow = 'auto';
         }
     });
@@ -65,15 +62,13 @@
             tg.ready();
             tg.expand();
             
-            // تنظیمات ظاهری تلگرام
             if (isDashboard) {
                 tg.setHeaderColor('#000000'); 
                 tg.setBackgroundColor('#000000');
-                tg.BackButton.hide(); // مخفی کردن دکمه بک در خانه
+                tg.BackButton.hide();
             } else {
                 tg.setHeaderColor('#1a1a1a');
                 tg.setBackgroundColor('#000000');
-                // نمایش دکمه بک و مدیریت بازگشت
                 tg.BackButton.show();
                 tg.BackButton.onClick(function() {
                     window.location.href = 'dashboard.html';
@@ -87,12 +82,11 @@
 
             const hasSeenSplash = sessionStorage.getItem('splash_shown');
 
-            // --- منطق لودینگ داشبورد ---
             if (isDashboard) {
                 if (hasSeenSplash) {
-                    // *** بازگشت مجدد به داشبورد (سریع) ***
-                    loadFromCache();
-                    forceHideLoader(); // حذف فوری لودر
+                    // *** بازگشت مجدد (Fast Load) ***
+                    loadFromCache(); // لود سریع دیتا (اگر باشد)
+                    forceHideLoader();
                     
                     setTimeout(() => {
                         init3DCardEffect();
@@ -111,7 +105,7 @@
                     checkUnreadSupportMessages();
 
                 } else {
-                    // *** ورود اول (با انیمیشن) ***
+                    // *** ورود اول (Splash Screen) ***
                     sessionStorage.setItem('splash_shown', 'true');
                     
                     const splashTimer = new Promise(resolve => setTimeout(resolve, MIN_SPLASH_TIME));
@@ -139,24 +133,20 @@
                             initHapticFeedback();
                         }, 100);
                     } else {
-                        // اگر دیتا فچ نشد، باز هم باز شود
                         forceHideLoader();
                     }
                 }
                 
-                // تثبیت رنگ هدر نهایی
                 tg.setHeaderColor('#050505');
                 tg.setBackgroundColor('#050505');
 
             } else if (isSupportPage) {
-                // --- منطق صفحه پشتیبانی ---
-                forceHideLoader(); // در صفحات داخلی لودر نیاز نیست
+                forceHideLoader();
                 setupChatListeners();
                 await loadChatHistory(true); 
                 startChatPolling();
                 initHapticFeedback();
             } else {
-                // --- سایر صفحات ---
                 forceHideLoader();
                 tg.BackButton.show();
                 tg.BackButton.onClick(() => window.location.href = 'dashboard.html');
@@ -164,7 +154,7 @@
 
         } catch (error) {
             console.error("Critical Init Error:", error);
-            forceHideLoader(); // fail-safe
+            forceHideLoader();
         }
     };
 
@@ -186,10 +176,10 @@
     }
 
     // ==========================================
-    // Loader Functions (Optimized)
+    // Loader Functions
     // ==========================================
     function forceHideLoader() {
-        document.body.classList.remove('loading-active'); // حذف کلاس از بادی
+        document.body.classList.remove('loading-active');
         if (loader) {
             loader.style.display = 'none';
             loader.style.opacity = '0';
@@ -242,16 +232,35 @@
     }
 
     // ==========================================
-    // UI Updaters
+    // UI Updaters (Updated for Skeleton)
     // ==========================================
     function updateDashboardUI(data, saveCache = true) {
         if (!data || data.status === 'error') return;
         if(saveCache) saveToCache(data);
 
-        if (els.welcomeName) els.welcomeName.innerText = data.first_name || "کاربر گرامی";
-        if (els.tomanBalance) els.tomanBalance.innerText = data.toman_balance; 
-        if (els.uusdBalance) els.uusdBalance.innerHTML = `${data.uusd_balance} <small>$</small>`;
-        if (els.xpBalance) els.xpBalance.innerHTML = `${data.xp_balance} <small>XP</small>`;
+        // 1. Update Name & Remove Skeleton
+        if (els.welcomeName) {
+            els.welcomeName.innerText = data.first_name || "کاربر گرامی";
+            els.welcomeName.classList.remove('skeleton');
+        }
+
+        // 2. Update Toman Balance & Remove Skeleton
+        if (els.tomanBalance) {
+            els.tomanBalance.innerText = data.toman_balance; 
+            els.tomanBalance.classList.remove('skeleton');
+        }
+
+        // 3. Update UUSD Balance & Remove Skeleton
+        if (els.uusdBalance) {
+            els.uusdBalance.innerHTML = `${data.uusd_balance} <small>$</small>`;
+            els.uusdBalance.classList.remove('skeleton');
+        }
+
+        // 4. Update XP Balance & Remove Skeleton
+        if (els.xpBalance) {
+            els.xpBalance.innerHTML = `${data.xp_balance} <small>XP</small>`;
+            els.xpBalance.classList.remove('skeleton');
+        }
 
         updateLevelProgress(parseInt((data.xp_balance || "0").replace(/,/g, '')) || 0);
 
@@ -287,6 +296,8 @@
             html += `<div class="ticker-item">${rate.symbol} <span class="${colorClass}">${rate.price} ${arrow} <small>(${rate.change}%)</small></span></div>`;
         });
         els.ticker.innerHTML = html;
+        // حذف کلاس اسکلتون از والد تیکر (اگر نیاز بود)
+        // در اینجا چون اینر اچ‌تی‌ام‌ال کلش عوض میشه، نیازی به ریمو دستی نیست
     }
 
     function renderSmartChart(changePercent) {

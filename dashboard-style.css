@@ -1,4 +1,4 @@
-﻿/* webapp/dashboard-style.css (v91.0 - XP System & Luxury UI) */
+﻿/* webapp/dashboard-style.css (v96.0 - Added Skeleton Loading) */
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;300;400;500;700;800;900&family=Cinzel:wght@400;700;900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap');
 
@@ -42,7 +42,7 @@ body {
     transition: opacity 0.6s ease-in-out;
 }
 
-.infinity-wrapper { position: relative; width: 300px; height: 150px; display: flex; justify-content: center; align-items: center; }
+.infinity-wrapper, .infinity-container { position: relative; width: 300px; height: 150px; display: flex; justify-content: center; align-items: center; }
 
 .infinity-svg { position: absolute; width: 100%; height: 100%; fill: none; }
 .infinity-path {
@@ -51,14 +51,16 @@ body {
     animation: draw-line 2.5s ease-out forwards;
     filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.5));
 }
+/* پشتیبانی از گرادینت در SVG های مختلف */
+.infinity-bg { fill: none; stroke: rgba(255,255,255,0.05); stroke-width: 8; stroke-linecap: round; }
 
-.loader-logo {
+.loader-logo, .center-logo {
     width: 70px; height: 70px; border-radius: 50%; position: absolute; z-index: 10;
     box-shadow: 0 0 40px rgba(255, 215, 0, 0.2);
     animation: logo-pop 1s ease-out forwards 0.5s; opacity: 0;
 }
 
-.loader-text { margin-top: 40px; text-align: center; }
+.loader-text, .loader-text-wrapper { margin-top: 40px; text-align: center; }
 .loading-title {
     font-family: 'Cinzel', serif; font-size: 1.8rem; letter-spacing: 4px; color: var(--gold-primary);
     opacity: 0; animation: fade-up 0.8s ease forwards 1s;
@@ -72,7 +74,7 @@ body {
     background: var(--gold-primary); transform: translateX(-100%);
     animation: load-bar 2.5s ease-in-out forwards 0.5s;
 }
-.loading-status { font-family: 'Roboto Mono'; font-size: 0.65rem; color: #666; letter-spacing: 2px; }
+.loading-status, .status-msg { font-family: 'Roboto Mono'; font-size: 0.65rem; color: #666; letter-spacing: 2px; }
 
 @keyframes draw-line { to { stroke-dashoffset: 0; } }
 @keyframes logo-pop { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -83,8 +85,9 @@ body {
    2. استایل‌های اصلی داشبورد
    ========================================= */
 #app-container { max-width: 600px; margin: 0 auto; min-height: 100vh; position: relative; z-index: 2; display: flex; flex-direction: column; }
-.ambient-light { position: fixed; top: -100px; left: 50%; transform: translateX(-50%); width: 80%; height: 300px; background: radial-gradient(ellipse at center, rgba(255, 215, 0, 0.08), transparent 70%); z-index: 1; pointer-events: none; }
-.grid-pattern { position: fixed; inset: 0; background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 20px 20px; z-index: 0; pointer-events: none; }
+.ambient-light, .ambient-glow { position: fixed; top: -100px; left: 50%; transform: translateX(-50%); width: 80%; height: 300px; background: radial-gradient(ellipse at center, rgba(255, 215, 0, 0.08), transparent 70%); z-index: 1; pointer-events: none; }
+.glow-bottom { top: auto; bottom: -100px; opacity: 0.5; }
+.grid-pattern, .grid-overlay { position: fixed; inset: 0; background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 20px 20px; z-index: 0; pointer-events: none; }
 
 /* Header */
 .glass-header {
@@ -93,11 +96,11 @@ body {
     border-bottom: 1px solid var(--glass-border); position: sticky; top: 0; z-index: 100;
 }
 .profile-section { display: flex; align-items: center; gap: 12px; }
-.avatar-container { position: relative; width: 48px; height: 48px; padding: 2px; border: 1px solid rgba(255,215,0,0.3); border-radius: 14px; background: #111; }
+.avatar-container, .avatar-frame { position: relative; width: 48px; height: 48px; padding: 2px; border: 1px solid rgba(255,215,0,0.3); border-radius: 14px; background: #111; }
 .avatar-img { width: 100%; height: 100%; border-radius: 11px; object-fit: cover; }
-.status-indicator { position: absolute; bottom: -2px; right: -2px; width: 10px; height: 10px; background: #0ECB81; border: 2px solid #000; border-radius: 50%; }
+.status-indicator, .online-dot { position: absolute; bottom: -2px; right: -2px; width: 10px; height: 10px; background: #0ECB81; border: 2px solid #000; border-radius: 50%; }
 
-.user-info { display: flex; flex-direction: column; justify-content: center; }
+.user-info, .user-details { display: flex; flex-direction: column; justify-content: center; }
 .user-info h2 { font-size: 0.95rem; margin: 0; color: #fff; font-weight: 700; line-height: 1.2; }
 
 /* --- استایل‌های جدید نوار XP --- */
@@ -118,7 +121,7 @@ body {
     box-shadow: 0 0 10px var(--gold-primary);
 }
 
-.action-icon-btn { width: 40px; height: 40px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 12px; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+.action-icon-btn, .icon-btn { width: 40px; height: 40px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 12px; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
 
 /* Ticker (نوار قیمت) */
 .ticker-wrap { width: 100%; background: #080808; border-bottom: 1px solid var(--glass-border); overflow: hidden; padding: 8px 0; }
@@ -207,7 +210,7 @@ body {
 .game-info p { margin: 0; font-size: 0.8rem; color: #888; }
 .play-icon { width: 45px; height: 45px; border-radius: 50%; background: #3B82F6; display: flex; align-items: center; justify-content: center; color: #fff; box-shadow: 0 0 15px rgba(59,130,246,0.5); }
 
-/* --- استایل‌های پشتیبانی (حفظ شده) --- */
+/* --- استایل‌های پشتیبانی --- */
 .notif-dot-support {
     position: absolute; top: -3px; right: -3px; width: 9px; height: 9px;
     background-color: #ff3b30; border-radius: 50%; border: 1.5px solid #1c1c1e;
@@ -231,3 +234,38 @@ body {
 .hidden-content { opacity: 0; transform: translateY(20px); }
 .fade-in-active { opacity: 1; transform: translateY(0); transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .ripple-btn:active { transform: scale(0.96); opacity: 0.8; }
+
+/* =========================================
+   3. SKELETON LOADING ANIMATIONS (New Feature)
+   ========================================= */
+.skeleton {
+    background: linear-gradient(90deg, #1f1f1f 25%, #2a2a2a 50%, #1f1f1f 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    color: transparent !important;
+    border-radius: 6px;
+    pointer-events: none;
+    display: inline-block;
+    min-width: 40px; /* حداقل عرض برای اینکه دیده شود */
+}
+
+.skeleton * { opacity: 0; visibility: hidden; } /* مخفی کردن محتوای داخلی */
+
+/* تنظیمات خاص برای المان‌های مختلف */
+h1.skeleton { min-width: 150px; min-height: 40px; border-radius: 8px; }
+h2.skeleton { min-width: 100px; min-height: 20px; }
+span.skeleton { min-height: 16px; vertical-align: middle; }
+
+/* اسکلتون برای تیکر قیمت */
+.ticker-item.skeleton { 
+    margin: 0 10px; 
+    width: 120px; 
+    height: 20px; 
+    background: rgba(255,255,255,0.05); 
+    border-radius: 4px;
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}

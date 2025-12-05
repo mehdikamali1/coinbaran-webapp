@@ -9,7 +9,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    <link rel="stylesheet" href="webapp/dashboard-style.css?v=91.0">
+    <link rel="stylesheet" href="webapp/dashboard-style.css?v=96.0">
 </head>
 <body class="loading-active">
 
@@ -46,7 +46,7 @@
                     <div class="status-indicator"></div>
                 </div>
                 <div class="user-info">
-                    <h2 id="welcome-name">Loading...</h2>
+                    <h2 id="welcome-name" class="skeleton">User Name Loading</h2>
                     
                     <div class="xp-container">
                         <div class="xp-meta">
@@ -90,7 +90,7 @@
                     <span class="balance-label">موجودی کل دارایی</span>
                     <div class="balance-amount">
                         <span class="currency-symbol">T</span>
-                        <h1 id="toman-balance">---</h1>
+                        <h1 id="toman-balance" class="skeleton">50,000,000</h1>
                     </div>
                 </div>
 
@@ -117,12 +117,12 @@
                     <div class="asset-row">
                         <div class="asset-col">
                             <span class="asset-title">USDT</span>
-                            <span class="asset-val usd-color" id="uusd-balance">0.00 $</span>
+                            <span class="asset-val usd-color skeleton" id="uusd-balance">000.00 $</span>
                         </div>
                         <div class="vertical-divider"></div>
                         <div class="asset-col">
                             <span class="asset-title">CLUB XP</span>
-                            <span class="asset-val xp-color" id="xp-balance">0 XP</span>
+                            <span class="asset-val xp-color skeleton" id="xp-balance">0000 XP</span>
                         </div>
                     </div>
                 </div>
@@ -130,19 +130,19 @@
 
             <div class="section-title">دسترسی سریع</div>
             <div class="quick-actions">
-                <button class="glass-btn ripple-btn" onclick="window.location.href='wallet'">
+                <button class="glass-btn ripple-btn" onclick="window.location.href='wallet.html'">
                     <div class="btn-icon deposit-color"><i class="fas fa-arrow-down"></i></div>
                     <span>واریز</span>
                 </button>
-                <button class="glass-btn ripple-btn" onclick="window.location.href='wallet?tab=withdraw'">
+                <button class="glass-btn ripple-btn" onclick="window.location.href='wallet.html?tab=withdraw'">
                     <div class="btn-icon withdraw-color"><i class="fas fa-arrow-up"></i></div>
                     <span>برداشت</span>
                 </button>
-                <button class="glass-btn ripple-btn" onclick="window.location.href='usdt'">
+                <button class="glass-btn ripple-btn" onclick="window.location.href='usdt.html'">
                     <div class="btn-icon trade-color"><i class="fas fa-sync-alt"></i></div>
                     <span>مبادله</span>
                 </button>
-                <button class="glass-btn ripple-btn" onclick="window.location.href='kyc'">
+                <button class="glass-btn ripple-btn" onclick="window.location.href='kyc.html'">
                     <div class="btn-icon kyc-color"><i class="fas fa-fingerprint"></i></div>
                     <span>احراز</span>
                 </button>
@@ -150,7 +150,7 @@
 
             <div class="section-title">خدمات ویژه</div>
             
-            <div class="game-banner ripple-effect" onclick="window.location.href='game'">
+            <div class="game-banner ripple-effect" onclick="window.location.href='game.html'">
                 <div class="banner-glow"></div>
                 <div class="banner-content">
                     <div class="game-info">
@@ -164,7 +164,7 @@
             </div>
 
             <div class="services-grid-modern">
-                <div class="service-card ripple-btn" onclick="window.location.href='usdt'">
+                <div class="service-card ripple-btn" onclick="window.location.href='usdt.html'">
                     <i class="fas fa-coins service-icon gold-glow"></i>
                     <div class="service-meta">
                         <h4>تتر / تومان</h4>
@@ -172,7 +172,7 @@
                     </div>
                 </div>
 
-                <div class="service-card ripple-btn" onclick="window.location.href='utopia'">
+                <div class="service-card ripple-btn" onclick="window.location.href='utopia.html'">
                     <i class="fas fa-ticket-alt service-icon pink-glow"></i>
                     <div class="service-meta">
                         <h4>یوتوپیا</h4>
@@ -180,7 +180,7 @@
                     </div>
                 </div>
 
-                <div class="service-card ripple-btn" onclick="window.location.href='live'">
+                <div class="service-card ripple-btn" onclick="window.location.href='live.html'">
                     <i class="fas fa-futbol service-icon green-glow"></i>
                     <div class="service-meta">
                         <h4>نتایج زنده</h4>
@@ -204,6 +204,6 @@
         </main>
     </div>
     
-    <script src="webapp/script.js?v=91.0"></script>
+    <script src="webapp/script.js?v=96.0"></script>
 </body>
 </html>

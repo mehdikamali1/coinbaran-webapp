@@ -3,27 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>صرافی یوتوپیا</title>
+    <title>صرافی یوتوپیا | Coin Baran</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    <link rel="stylesheet" href="webapp/dashboard-style.css?v=97.0">
+    <link rel="stylesheet" href="webapp/dashboard-style.css?v=98.0">
 </head>
 <body>
 
-    <div class="ambient-glow glow-top" style="background:var(--utopia-pink)"></div>
+    <div class="ambient-glow glow-top" style="background:var(--utopia-primary)"></div>
     <div class="scanlines"></div>
 
     <header class="glass-header">
         <div class="profile-section">
             <div class="icon-btn" onclick="window.location.href='dashboard.html'"><i class="fas fa-arrow-right"></i></div>
-            <div style="font-weight:800; font-size:1.1rem">صرافی <span style="color:var(--utopia-pink)">یوتوپیا</span></div>
+            <div style="font-weight:800; font-size:1.1rem">صرافی <span style="color:var(--utopia-primary)">یوتوپیا</span></div>
         </div>
         <div style="width:40px"></div>
     </header>
 
     <div class="glass-wrapper main-scroll-area">
         
+        <div class="floating-logo-container">
+            <img src="webapp/images/utopia.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/6001/6001368.png'" class="floating-logo" alt="Utopia">
+        </div>
+
         <div class="utopia-ticker">
             <div class="tick-item">
                 <span class="tick-label">خرید (از شما)</span>
@@ -51,14 +55,14 @@
                 <span id="buy-total" style="color:var(--gold-primary); font-weight:bold; font-family:monospace;">0</span>
             </div>
 
-            <button id="btn-do-buy" class="btn-pink" onclick="doBuy()">
+            <button id="btn-do-buy" class="btn-utopia" onclick="doBuy()">
                 <i class="fas fa-shopping-cart"></i> خرید آنی
             </button>
             
-            <div id="buy-result" style="display:none; background:#000; border:1px dashed var(--utopia-pink); padding:20px; border-radius:16px; margin-top:20px; text-align:center;">
+            <div id="buy-result" style="display:none; background:#000; border:1px dashed var(--utopia-primary); padding:20px; border-radius:16px; margin-top:20px; text-align:center;">
                 <div style="color:var(--color-up); font-weight:800; margin-bottom:10px">✅ خرید موفق!</div>
                 <div style="font-size:0.8rem; color:#aaa">کد ووچر شما:</div>
-                <div id="new-voucher-code" style="font-family:monospace; font-size:1.1rem; color:#fff; background:rgba(255,0,122,0.1); padding:10px; border-radius:8px; margin:10px 0; word-break:break-all;">...</div>
+                <div id="new-voucher-code" style="font-family:monospace; font-size:1.1rem; color:#fff; background:rgba(0, 180, 219, 0.1); padding:10px; border-radius:8px; margin:10px 0; word-break:break-all;">...</div>
                 <button onclick="copyCode()" style="background:transparent; border:1px solid #fff; color:#fff; padding:5px 15px; border-radius:15px;">کپی</button>
             </div>
         </div>
@@ -88,7 +92,7 @@
         window.onload = function() {
             tg.ready(); tg.expand(); tg.setHeaderColor('#000000');
             
-            // مدیریت دکمه بازگشت فیزیکی اندروید
+            // Back Button Logic
             tg.BackButton.show();
             tg.BackButton.onClick(function() {
                 window.location.href = 'dashboard.html';

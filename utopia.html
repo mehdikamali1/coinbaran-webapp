@@ -7,60 +7,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    <link rel="stylesheet" href="webapp/dashboard-style.css?v=30.0">
-
-    <style>
-        :root { --utopia-pink: #FF007A; }
-
-        .utopia-ticker {
-            background: linear-gradient(135deg, rgba(255, 0, 122, 0.1) 0%, rgba(0,0,0,0) 100%);
-            border: 1px solid rgba(255, 0, 122, 0.3);
-            border-radius: var(--radius-lg);
-            padding: 20px; display: flex; justify-content: space-between;
-            margin-bottom: 25px;
-        }
-        
-        .tick-item { display: flex; flex-direction: column; gap: 5px; }
-        .tick-label { font-size: 0.75rem; color: var(--text-muted); }
-        .tick-val { font-family: monospace; font-size: 1.2rem; font-weight: 800; }
-        .c-buy { color: var(--color-up); }
-        .c-sell { color: var(--utopia-pink); }
-
-        .u-tabs {
-            background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
-            border-radius: 16px; padding: 5px; display: flex; margin-bottom: 25px;
-        }
-        .u-tab {
-            flex: 1; padding: 12px; text-align: center; border-radius: 12px;
-            font-weight: 700; font-size: 0.9rem; color: var(--text-muted);
-            cursor: pointer; transition: all 0.3s;
-        }
-        .u-tab.active { color: #fff; background: var(--utopia-pink); box-shadow: 0 0 15px rgba(255,0,122,0.3); }
-        
-        .section-box { display: none; animation: fadeIn 0.4s ease; }
-        .section-box.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .glass-inp {
-            width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border);
-            color: #fff; padding: 16px; border-radius: 16px;
-            font-size: 1.1rem; font-weight: 700; font-family: monospace; text-align: center;
-        }
-        
-        .btn-pink { 
-            width: 100%; padding: 18px; border-radius: 18px; border: none;
-            font-size: 1.1rem; font-weight: 800; cursor: pointer; color: #fff;
-            background: var(--utopia-pink); box-shadow: 0 5px 20px rgba(255, 0, 122, 0.3);
-            margin-top: 20px;
-        }
-        
-        .btn-green {
-            width: 100%; padding: 18px; border-radius: 18px; border: none;
-            font-size: 1.1rem; font-weight: 800; cursor: pointer; color: #000;
-            background: var(--color-up); box-shadow: 0 5px 20px rgba(14, 203, 129, 0.3);
-            margin-top: 20px;
-        }
-    </style>
+    <link rel="stylesheet" href="webapp/dashboard-style.css?v=97.0">
 </head>
 <body>
 
@@ -69,7 +16,7 @@
 
     <header class="glass-header">
         <div class="profile-section">
-            <div class="icon-btn" onclick="window.location.href='/'"><i class="fas fa-arrow-right"></i></div>
+            <div class="icon-btn" onclick="window.location.href='dashboard.html'"><i class="fas fa-arrow-right"></i></div>
             <div style="font-weight:800; font-size:1.1rem">صرافی <span style="color:var(--utopia-pink)">یوتوپیا</span></div>
         </div>
         <div style="width:40px"></div>
@@ -140,6 +87,13 @@
 
         window.onload = function() {
             tg.ready(); tg.expand(); tg.setHeaderColor('#000000');
+            
+            // مدیریت دکمه بازگشت فیزیکی اندروید
+            tg.BackButton.show();
+            tg.BackButton.onClick(function() {
+                window.location.href = 'dashboard.html';
+            });
+
             if (!tg.initData) tg.initData = "query_id=TEST&user=%7B%22id%22%3A111111111%7D&auth_date=1700000000&hash=fake";
             fetchRates();
         };

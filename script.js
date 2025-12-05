@@ -1,10 +1,11 @@
-﻿/* webapp/script.js (v94.0 - Instant Back & Local Cache) */
+﻿/* webapp/script.js (v95.0 - Final Fix: BFCache & Navigation) */
 (function () {
     'use strict';
 
     const tg = window.Telegram.WebApp;
     const API_BASE_URL = window.location.origin;
     
+    // تنظیم زمان اسپلش اسکرین
     let MIN_SPLASH_TIME = 3500; 
 
     const loader = document.getElementById('loader');
@@ -17,6 +18,7 @@
     let lastMessageCount = 0;
     let isSending = false;
 
+    // المنت‌های اصلی داشبورد
     const els = {
         welcomeName: document.getElementById('welcome-name'),
         tomanBalance: document.getElementById('toman-balance'),
@@ -31,6 +33,7 @@
         nextLevelText: document.getElementById('next-level-text')
     };
 
+    // المنت‌های صفحه چت
     const chatEls = {
         container: document.getElementById('messages-container'),
         input: document.getElementById('message-input'),
@@ -40,40 +43,64 @@
         attachBtn: document.getElementById('attach-btn')
     };
 
+    // ==========================================
+    // 1. GLOBAL FIX: BFCache Handler (The Magic Fix)
+    // ==========================================
+    // این رویداد همیشه اجرا می‌شود، حتی اگر دکمه برگشت زده شود و صفحه از کش بیاید
+    window.addEventListener('pageshow', function(event) {
+        // اگر صفحه از کش لود شده باشد (Back زدن کاربر)
+        if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+            console.log("Restored from cache - Forcing loader hide");
+            forceHideLoader();
+            // بازگرداندن اسکرول به حالت طبیعی
+            document.body.style.overflow = 'auto';
+        }
+    });
+
+    // ==========================================
+    // 2. MAIN INITIALIZATION
+    // ==========================================
     window.onload = async function() {
         try {
             tg.ready();
             tg.expand();
-            tg.setHeaderColor('#000000'); 
-            tg.setBackgroundColor('#000000');
+            
+            // تنظیمات ظاهری تلگرام
+            if (isDashboard) {
+                tg.setHeaderColor('#000000'); 
+                tg.setBackgroundColor('#000000');
+                tg.BackButton.hide(); // مخفی کردن دکمه بک در خانه
+            } else {
+                tg.setHeaderColor('#1a1a1a');
+                tg.setBackgroundColor('#000000');
+                // نمایش دکمه بک و مدیریت بازگشت
+                tg.BackButton.show();
+                tg.BackButton.onClick(function() {
+                    window.location.href = 'dashboard.html';
+                });
+            }
 
             if (!tg.initData) {
                 console.warn("Using Test Data");
                 tg.initData = "query_id=TEST_DEV_MODE"; 
             }
 
-            // --- بررسی وضعیت بازگشت کاربر ---
             const hasSeenSplash = sessionStorage.getItem('splash_shown');
 
+            // --- منطق لودینگ داشبورد ---
             if (isDashboard) {
                 if (hasSeenSplash) {
-                    // *** حالت بازگشت (سریع) ***
-                    // 1. نمایش آنی صفحه با دیتای کش شده (اگر باشد)
+                    // *** بازگشت مجدد به داشبورد (سریع) ***
                     loadFromCache();
+                    forceHideLoader(); // حذف فوری لودر
                     
-                    // 2. حذف فوری لودر
-                    forceHideLoader();
-                    
-                    // 3. فعال‌سازی افکت‌ها
                     setTimeout(() => {
                         init3DCardEffect();
                         initHapticFeedback();
                     }, 50);
 
-                    // 4. آپدیت دیتا در پس‌زمینه (بدون اینکه کاربر منتظر بماند)
-                    fetchDashboardData().then(data => {
-                        if(data) updateDashboardUI(data);
-                    });
+                    // آپدیت دیتا در پس‌زمینه
+                    fetchDashboardData().then(data => { if(data) updateDashboardUI(data); });
                     fetchMarketRates().then(res => {
                         if(res && res.status === 'success') {
                             updateTickerUI(res.rates);
@@ -84,7 +111,7 @@
                     checkUnreadSupportMessages();
 
                 } else {
-                    // *** حالت ورود اول (با انیمیشن) ***
+                    // *** ورود اول (با انیمیشن) ***
                     sessionStorage.setItem('splash_shown', 'true');
                     
                     const splashTimer = new Promise(resolve => setTimeout(resolve, MIN_SPLASH_TIME));
@@ -96,6 +123,7 @@
                     if (dataResult) {
                         updateDashboardUI(dataResult);
                         checkUnreadSupportMessages();
+                        
                         if (ratesResult && ratesResult.status === 'success') {
                             updateTickerUI(ratesResult.rates);
                             const usdt = ratesResult.rates.find(r => r.symbol === 'USDT');
@@ -110,40 +138,41 @@
                             init3DCardEffect();
                             initHapticFeedback();
                         }, 100);
+                    } else {
+                        // اگر دیتا فچ نشد، باز هم باز شود
+                        forceHideLoader();
                     }
                 }
                 
-                // تنظیم رنگ هدر نهایی
+                // تثبیت رنگ هدر نهایی
                 tg.setHeaderColor('#050505');
                 tg.setBackgroundColor('#050505');
 
             } else if (isSupportPage) {
-                // صفحه پشتیبانی
-                tg.setHeaderColor('#1a1a1a');
-                forceHideLoader(); // حذف فوری لودر
-                
+                // --- منطق صفحه پشتیبانی ---
+                forceHideLoader(); // در صفحات داخلی لودر نیاز نیست
                 setupChatListeners();
                 await loadChatHistory(true); 
                 startChatPolling();
                 initHapticFeedback();
             } else {
-                // سایر صفحات
+                // --- سایر صفحات ---
                 forceHideLoader();
+                tg.BackButton.show();
+                tg.BackButton.onClick(() => window.location.href = 'dashboard.html');
             }
 
         } catch (error) {
             console.error("Critical Init Error:", error);
-            forceHideLoader(); // در صورت خطا هم صفحه باز شود
+            forceHideLoader(); // fail-safe
         }
     };
 
     // ==========================================
-    // Caching Logic (برای سرعت بالا)
+    // Caching Logic
     // ==========================================
     function saveToCache(data) {
-        try {
-            localStorage.setItem('dashboard_cache', JSON.stringify(data));
-        } catch (e) {}
+        try { localStorage.setItem('dashboard_cache', JSON.stringify(data)); } catch (e) {}
     }
 
     function loadFromCache() {
@@ -151,16 +180,20 @@
             const cached = localStorage.getItem('dashboard_cache');
             if (cached) {
                 const data = JSON.parse(cached);
-                updateDashboardUI(data, false); // false = کش را دوباره ذخیره نکن
+                updateDashboardUI(data, false);
             }
         } catch (e) {}
     }
 
     // ==========================================
-    // Loader Functions
+    // Loader Functions (Optimized)
     // ==========================================
     function forceHideLoader() {
-        if (loader) loader.style.display = 'none';
+        document.body.classList.remove('loading-active'); // حذف کلاس از بادی
+        if (loader) {
+            loader.style.display = 'none';
+            loader.style.opacity = '0';
+        }
         if (appContainer) {
             appContainer.classList.remove('hidden-content');
             appContainer.style.opacity = '1';
@@ -169,6 +202,7 @@
     }
 
     function hideLoaderWithAnimation() {
+        document.body.classList.remove('loading-active');
         if (loader) {
             loader.style.opacity = '0';
             loader.style.pointerEvents = 'none';
@@ -183,7 +217,7 @@
     }
 
     // ==========================================
-    // Core Logic
+    // Data Fetching
     // ==========================================
     async function fetchDashboardData() {
         try {
@@ -194,19 +228,10 @@
             });
             if (!response.ok) throw new Error("Server Error");
             const data = await response.json();
-            
-            // ذخیره در کش برای دفعه بعد
             if(data.status === 'success') saveToCache(data);
-            
             return data;
-        } catch (error) {
-            return null;
-        }
+        } catch (error) { return null; }
     }
-
-    // ... (توابع مارکت، تیکر، چارت، 3D و Haptic بدون تغییر باقی می‌مانند) ...
-    // برای جلوگیری از طولانی شدن، کدهای تکراری پایین را حفظ کن 
-    // اما برای اطمینان من کل فایل را کامل می‌گذارم:
 
     async function fetchMarketRates() {
         try {
@@ -216,8 +241,11 @@
         } catch (e) { return null; }
     }
 
+    // ==========================================
+    // UI Updaters
+    // ==========================================
     function updateDashboardUI(data, saveCache = true) {
-        if (data.status === 'error') return;
+        if (!data || data.status === 'error') return;
         if(saveCache) saveToCache(data);
 
         if (els.welcomeName) els.welcomeName.innerText = data.first_name || "کاربر گرامی";
@@ -225,7 +253,7 @@
         if (els.uusdBalance) els.uusdBalance.innerHTML = `${data.uusd_balance} <small>$</small>`;
         if (els.xpBalance) els.xpBalance.innerHTML = `${data.xp_balance} <small>XP</small>`;
 
-        updateLevelProgress(parseInt(data.xp_balance.replace(/,/g, '')) || 0);
+        updateLevelProgress(parseInt((data.xp_balance || "0").replace(/,/g, '')) || 0);
 
         if (tg.initDataUnsafe?.user?.photo_url && els.avatar) {
             els.avatar.src = tg.initDataUnsafe.user.photo_url;
@@ -289,6 +317,9 @@
         svg.appendChild(pathFill); svg.appendChild(pathLine);
     }
 
+    // ==========================================
+    // Effects & Interactions
+    // ==========================================
     function init3DCardEffect() {
         const card = document.querySelector('.premium-card');
         const container = document.querySelector('.main-content');
@@ -348,10 +379,14 @@
         } catch (e) {}
     }
 
+    // ==========================================
+    // Chat Functions
+    // ==========================================
     function startChatPolling() {
         if (chatPollInterval) clearInterval(chatPollInterval);
         chatPollInterval = setInterval(() => loadChatHistory(false), 3000);
     }
+    
     async function loadChatHistory(isFirstLoad = false) {
         if (!chatEls.container) return;
         try {
@@ -380,6 +415,7 @@
             if (isFirstLoad) renderSystemMessage("خطا در بارگذاری تاریخچه.");
         }
     }
+
     function setupChatListeners() {
         if (!chatEls.sendBtn || !chatEls.input) return;
         const newSendBtn = chatEls.sendBtn.cloneNode(true);
@@ -397,6 +433,7 @@
             });
         }
     }
+
     async function handleFileUpload(e) {
         const file = e.target.files[0];
         if (!file) return;
@@ -413,6 +450,7 @@
             else { tg.showAlert("خطا در آپلود: " + (result.message || "نامشخص")); chatEls.fileInput.value = ''; }
         } catch (e) { tg.showAlert("عدم اتصال به سرور."); chatEls.fileInput.value = ''; }
     }
+
     async function sendMessage() {
         if (isSending) return;
         const text = chatEls.input.value.trim();
@@ -444,6 +482,7 @@
             chatEls.input.focus();
         }
     }
+
     function renderMessage(msg) {
         const isUser = msg.sender === 'user' || msg.is_me; 
         const wrapperClass = isUser ? 'msg-user' : 'msg-admin';
@@ -454,6 +493,7 @@
         const html = `<div class="message-wrapper ${wrapperClass}"><div class="bubble">${contentHtml}</div><div class="msg-meta"><span>${msg.timestamp || ''}</span>${checkIcon}</div></div>`;
         chatEls.container.insertAdjacentHTML('beforeend', html);
     }
+
     function renderSystemMessage(text) {
         const html = `<div style="text-align:center; font-size:0.75rem; color:#666; margin:15px 0; background:rgba(255,255,255,0.05); padding:5px; border-radius:10px; display:inline-block; margin-left:auto; margin-right:auto;">${text}</div>`;
         const wrapper = document.createElement('div');
@@ -461,6 +501,7 @@
         wrapper.innerHTML = html;
         chatEls.container.appendChild(wrapper);
     }
+
     function scrollToBottom() { if (chatEls.container) chatEls.container.scrollTop = chatEls.container.scrollHeight; }
     function escapeHtml(text) { if (!text) return ""; return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
     function showError(msg) { if (loader) { loader.style.opacity = '1'; loader.style.display = 'flex'; loader.innerHTML = `<div class="loader-content"><p style="color:#F6465D;">${msg}</p><button onclick="window.location.reload()">تلاش مجدد</button></div>`; } }

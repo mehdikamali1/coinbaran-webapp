@@ -7,9 +7,10 @@
     <title>Coin Baran | Premium Dashboard</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    <link rel="stylesheet" href="webapp/dashboard-style.css?v=99.0">
+    <link rel="stylesheet" href="webapp/dashboard-style.css?v=100.0">
 </head>
 <body class="loading-active">
 
@@ -28,12 +29,12 @@
                 </defs>
                 <path class="infinity-path" d="M170,85 C 230,145 310,145 310,85 C 310,25 230,25 170,85 C 110,145 30,145 30,85 C 30,25 110,25 170,85" />
             </svg>
-            <img src="webapp/images/logo-gold.png" class="loader-logo" alt="CB">
+            <img src="webapp/images/logo-gold.png" onerror="this.style.display='none'" class="loader-logo" alt="CB">
         </div>
         <div class="loader-text">
             <span class="loading-title">COIN BARAN</span>
             <div class="loading-line"></div>
-            <span class="loading-status">SECURING CONNECTION...</span>
+            <span class="loading-status">ESTABLISHING SECURE CONNECTION...</span>
         </div>
     </div>
 
@@ -41,7 +42,7 @@
         
         <header class="glass-header">
             <div class="profile-section">
-                <div class="avatar-container ripple-effect">
+                <div class="avatar-container ripple-btn" onclick="window.location.href='kyc.html'">
                     <img src="webapp/images/logo-gold.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'" alt="User" class="avatar-img">
                     <div class="status-indicator"></div>
                 </div>
@@ -61,15 +62,17 @@
                 </div>
             </div>
             <div class="header-actions">
-                <button class="action-icon-btn ripple-btn">
+                <div class="action-icon-btn ripple-btn">
                     <i class="fas fa-bell"></i>
-                </button>
+                </div>
             </div>
         </header>
 
         <div class="ticker-wrap">
             <div class="ticker-move" id="price-ticker">
-                <div class="ticker-item">در حال دریافت نرخ‌های لحظه‌ای...</div>
+                <div class="ticker-item skeleton">BTC/USDT Loading...</div>
+                <div class="ticker-item skeleton">ETH/USDT Loading...</div>
+                <div class="ticker-item skeleton">USDT/IRT Loading...</div>
             </div>
         </div>
 
@@ -110,7 +113,7 @@
                                 <stop offset="100%" stop-color="#F6465D" stop-opacity="0"/>
                             </linearGradient>
                         </defs>
-                    </svg>
+                        </svg>
                 </div>
 
                 <div class="card-footer">
@@ -144,13 +147,13 @@
                 </button>
                 <button class="glass-btn ripple-btn" onclick="window.location.href='kyc.html'">
                     <div class="btn-icon kyc-color"><i class="fas fa-fingerprint"></i></div>
-                    <span>احراز</span>
+                    <span>احراز <small id="kyc-text" style="font-size:0.5rem; opacity:0.7">...</small></span>
                 </button>
             </div>
 
             <div class="section-title">خدمات ویژه</div>
             
-            <div class="game-banner ripple-effect" onclick="window.location.href='game.html'">
+            <div class="game-banner ripple-btn" onclick="window.location.href='game.html'">
                 <div class="banner-glow"></div>
                 <div class="banner-content">
                     <div class="game-info">
@@ -175,7 +178,7 @@
                 <div class="service-card ripple-btn" onclick="window.location.href='utopia.html'">
                     <img src="webapp/images/utopia.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/6001/6001368.png'" alt="Utopia" style="width: 32px; height: 32px; margin-left: 10px; filter: drop-shadow(0 0 8px rgba(0, 229, 255, 0.6));">
                     <div class="service-meta">
-                        <h4>یوتوپیا</h4>
+                        <h4 style="color:var(--utopia-accent)">یوتوپیا</h4>
                         <span>خرید و فروش آنی</span>
                     </div>
                 </div>
@@ -200,10 +203,9 @@
                 </div>
             </div>
 
-            <div style="height: 100px;"></div>
         </main>
     </div>
     
-    <script src="webapp/script.js?v=96.0"></script>
+    <script src="webapp/script.js?v=100.0"></script>
 </body>
 </html>

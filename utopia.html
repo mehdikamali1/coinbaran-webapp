@@ -4,14 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>صرافی یوتوپیا | Coin Baran</title>
+    
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    <link rel="stylesheet" href="webapp/dashboard-style.css?v=99.0">
+    <link rel="stylesheet" href="webapp/dashboard-style.css?v=100.0">
 </head>
-<body>
+<body class="loading-active">
 
-    <div class="ambient-glow" style="background: radial-gradient(ellipse at center, rgba(0, 229, 255, 0.08), transparent 70%);"></div>
+    <div class="ambient-glow" style="background: radial-gradient(ellipse at center, rgba(0, 229, 255, 0.15), transparent 70%);"></div>
     <div class="grid-pattern"></div>
 
     <header class="glass-header">
@@ -94,7 +95,7 @@
         window.onload = function() {
             tg.ready(); tg.expand(); 
             // تنظیم رنگ هدر برای هماهنگی با تم مشکی
-            tg.setHeaderColor('#0a0a0a'); 
+            tg.setHeaderColor('#000000'); 
             tg.setBackgroundColor('#000000');
             
             // بازگشت به داشبورد
@@ -102,10 +103,14 @@
             tg.BackButton.onClick(function() { window.location.href = 'dashboard.html'; });
 
             if (!tg.initData) tg.initData = "query_id=TEST";
+            
+            // حذف لودینگ کلاس بادی
+            document.body.classList.remove('loading-active');
+            
             fetchRates();
         };
 
-        // مدیریت تب‌ها با کلاس‌های جدید
+        // مدیریت تب‌ها
         function switchTab(tab) {
             document.querySelectorAll('.tab-btn').forEach(b => {
                 b.classList.remove('active', 'buy-mode', 'sell-mode');

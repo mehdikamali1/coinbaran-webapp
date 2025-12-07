@@ -1,4 +1,4 @@
-﻿/* webapp/script.js (v119.0 - Final Stable: UI Fallback Logic) */
+﻿/* webapp/script.js (v120.0 - Final Stable: Simplified Polling Fallback) */
 (function () {
     'use strict';
 
@@ -6,8 +6,8 @@
     const API_BASE_URL = window.location.origin;
     
     let activeCardNumber = ""; 
-    let lastKnownTxId = 0; 
     let ws = null; // متغیر برای نگهداری اتصال WebSocket
+    let pollingInterval = null; // متغیر برای نگهداری اینتروال نظرسنجی
 
     // تشخیص صفحه
     const isDashboard = !!document.getElementById('toman-balance');
@@ -32,7 +32,7 @@
                 const userId = getUserIdFromInitData(tg.initData);
                 if(userId) connectWebSocket(userId); 
                 
-                await fetchWalletData(); // این تابع lastKnownTxId را هم آپدیت می‌کند
+                await fetchWalletData(); 
                 await fetchActiveCardData();
             }
 
@@ -113,11 +113,6 @@
                 const elBalUusd = document.getElementById('balance-uusd');
                 if(elBalToman) elBalToman.innerText = data.balances.toman;
                 if(elBalUusd) elBalUusd.innerText = `${data.balances.uusd} $`;
-                
-                // *** ذخیره ID آخرین تراکنش برای مقایسه بعدی ***
-                if (data.transactions && data.transactions.length > 0) {
-                    lastKnownTxId = parseInt(data.transactions[0].ref_id) || 0;
-                }
 
                 renderTransactions(data.transactions);
             }
@@ -207,6 +202,8 @@
             try {
                 const data = JSON.parse(event.data);
                 if (data.type === 'TX_CONFIRMED') {
+                    // اگر سیگنال WS رسید، مستقیماً UI را آپدیت کن و پولینگ را قطع کن
+                    if (pollingInterval) clearInterval(pollingInterval);
                     handleInstantConfirmation(data);
                 }
             } catch (e) {
@@ -230,19 +227,17 @@
         };
     }
 
-    // [FINAL FIX] تابع handleInstantConfirmation ساده شده برای تضمین آپدیت UI
+    // تابع اصلی برای آپدیت UI پس از تأیید تراکنش
     function handleInstantConfirmation(data) {
         const radarBox = document.getElementById('radar-section');
         const depositModal = document.getElementById('deposit-modal');
         
-        // اگر مودال بسته شده بود، یا اگر نوع پیام تایید نبود، کاری نکن
-        if (!depositModal.classList.contains('active') || data.type !== 'TX_CONFIRMED') {
-            console.warn("WS received, but modal is inactive or type is wrong.");
+        if (!depositModal.classList.contains('active')) {
+            console.warn("Confirmation received, but modal is inactive.");
             return;
         }
 
         // --- شروع انیمیشن تایید ---
-        // ما به مبلغ چک نمی‌کنیم چون سرور کار تطبیق را انجام داده و فقط به سیگنال گوش می‌دهیم.
         stopAutoCheck(false); // ریست کردن UI بدون پاک کردن حالت تایید
 
         radarBox.innerHTML = `<div style="font-size:3.5rem; color:#0ECB81; margin-bottom:15px;"><i class="fas fa-check-circle"></i></div><h3 style="color:#fff;">واریز تایید شد!</h3>`;
@@ -288,7 +283,7 @@
         if(area.style.display === 'block') area.scrollIntoView({behavior: "smooth"});
     };
 
-    // --- شروع پروسه هوشمند (با Fallback) ---
+    // --- شروع پروسه هوشمند (با Polling) ---
     window.startAutoCheck = function() {
         const input = document.getElementById('deposit-amount');
         const amount = parseInt(input.value.replace(/,/g, ''));
@@ -302,8 +297,9 @@
         createPendingRequest(amount);
     };
 
-    // [FALLBACK LOGIC]
+    // مکانیزم Polling/نظرسنجی
     async function createPendingRequest(amount) {
+        // 1. ارسال درخواست ایجاد تراکنش معلق
         const blob = new Blob(["waiting"], { type: "text/plain" });
         const file = new File([blob], "auto_wait.txt"); 
         const formData = new FormData();
@@ -312,12 +308,9 @@
         try {
             await fetch(`${API_BASE_URL}/webapp/submit_deposit`, { method: 'POST', body: formData });
             
-            // --- مکانیزم FALLBACK: چک کردن بعد از 1.5 ثانیه (فقط برای اطمینان از آپدیت UI) ---
-            setTimeout(() => { 
-                // فرض می‌کنیم که اگر بعد از 1.5 ثانیه سیگنال WS نرسید، تراکنش در DB ثبت شده است.
-                // پس یک بار دستی چک می‌کنیم که آیا تراکنش جدیدی بود یا خیر.
-                checkIfTransactionAppeared(amount);
-            }, 1500);
+            // 2. شروع پولینگ برای چک کردن وضعیت (Fallback قوی)
+            if (pollingInterval) clearInterval(pollingInterval);
+            pollingInterval = setInterval(() => checkDepositStatus(amount), 2000); // هر 2 ثانیه یکبار چک کن
 
         } catch (e) { 
             tg.showAlert("خطا در اتصال"); 
@@ -325,33 +318,37 @@
         }
     }
 
-    // [NEW FALLBACK FUNCTION]
-    async function checkIfTransactionAppeared(amount) {
-        if (!document.getElementById('deposit-modal').classList.contains('active')) return;
-        
-        const data = await fetchWalletData(); // این تابع lastKnownTxId را آپدیت می‌کند
+    // تابع پولینگ
+    async function checkDepositStatus(requestedAmount) {
+        if (!document.getElementById('deposit-modal').classList.contains('active')) {
+            // اگر مودال بسته شده، اینتروال را قطع کن
+            if (pollingInterval) clearInterval(pollingInterval);
+            pollingInterval = null;
+            return;
+        }
+
+        const data = await fetchWalletData(); 
         
         if (data.status === 'success' && data.transactions.length > 0) {
             const latestTx = data.transactions[0];
             const txAmt = parseInt(latestTx.display_amount.replace(/[^0-9]/g, '').replace(/,/g, ''));
-            const txId = parseInt(latestTx.ref_id);
 
-            // اگر تراکنش جدید (ID بزرگتر) و موفق باشد
-            if (latestTx.color === 'success' && Math.abs(txAmt - amount) < 1000 && txId > lastKnownTxId) {
-                // شبیه سازی دریافت سیگنال WS
-                handleInstantConfirmation({type: 'TX_CONFIRMED', amount: amount});
-            } else if (document.getElementById('deposit-modal').classList.contains('active')) {
-                 // اگر تایید نشد و مودال باز است، بعد از 4 ثانیه دوباره چک کند.
-                 setTimeout(() => checkIfTransactionAppeared(amount), 4000);
+            // چک می‌کنیم که آخرین تراکنش، موفق (success) باشد و مبلغ آن تقریباً با مبلغ درخواستی برابر باشد.
+            if (latestTx.color === 'success' && Math.abs(txAmt - requestedAmount) < 1000) {
+                // اگر پیدا شد، اینتروال را قطع و UI را آپدیت کن
+                if (pollingInterval) clearInterval(pollingInterval);
+                pollingInterval = null;
+                handleInstantConfirmation({type: 'TX_CONFIRMED'});
             }
-        } else if (document.getElementById('deposit-modal').classList.contains('active')) {
-             // اگر هنوز هیچ تراکنشی نیست و مودال باز است، بعد از 4 ثانیه دوباره چک کند.
-             setTimeout(() => checkIfTransactionAppeared(amount), 4000);
         }
     }
 
 
     window.stopAutoCheck = function(resetRadarContent = true) {
+        // قطع کردن اینتروال در هنگام توقف
+        if (pollingInterval) clearInterval(pollingInterval);
+        pollingInterval = null;
+
         if (document.getElementById('deposit-modal').classList.contains('active')) {
             document.getElementById('radar-section').style.display = 'none';
             document.getElementById('btn-confirm').style.display = 'block';

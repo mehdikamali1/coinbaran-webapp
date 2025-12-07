@@ -3,85 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>صرافی یوتوپیا | Coin Baran</title>
-    
+    <title>صرافی یوتوپیا</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    <link rel="stylesheet" href="webapp/dashboard-style.css?v=100.0">
-</head>
-<body class="loading-active">
+    <link rel="stylesheet" href="webapp/dashboard-style.css?v=30.0">
 
-    <div class="ambient-glow" style="background: radial-gradient(ellipse at center, rgba(0, 229, 255, 0.15), transparent 70%);"></div>
-    <div class="grid-pattern"></div>
+    <style>
+        :root { --utopia-pink: #FF007A; }
+
+        .utopia-ticker {
+            background: linear-gradient(135deg, rgba(255, 0, 122, 0.1) 0%, rgba(0,0,0,0) 100%);
+            border: 1px solid rgba(255, 0, 122, 0.3);
+            border-radius: var(--radius-lg);
+            padding: 20px; display: flex; justify-content: space-between;
+            margin-bottom: 25px;
+        }
+        
+        .tick-item { display: flex; flex-direction: column; gap: 5px; }
+        .tick-label { font-size: 0.75rem; color: var(--text-muted); }
+        .tick-val { font-family: monospace; font-size: 1.2rem; font-weight: 800; }
+        .c-buy { color: var(--color-up); }
+        .c-sell { color: var(--utopia-pink); }
+
+        .u-tabs {
+            background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
+            border-radius: 16px; padding: 5px; display: flex; margin-bottom: 25px;
+        }
+        .u-tab {
+            flex: 1; padding: 12px; text-align: center; border-radius: 12px;
+            font-weight: 700; font-size: 0.9rem; color: var(--text-muted);
+            cursor: pointer; transition: all 0.3s;
+        }
+        .u-tab.active { color: #fff; background: var(--utopia-pink); box-shadow: 0 0 15px rgba(255,0,122,0.3); }
+        
+        .section-box { display: none; animation: fadeIn 0.4s ease; }
+        .section-box.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .glass-inp {
+            width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border);
+            color: #fff; padding: 16px; border-radius: 16px;
+            font-size: 1.1rem; font-weight: 700; font-family: monospace; text-align: center;
+        }
+        
+        .btn-pink { 
+            width: 100%; padding: 18px; border-radius: 18px; border: none;
+            font-size: 1.1rem; font-weight: 800; cursor: pointer; color: #fff;
+            background: var(--utopia-pink); box-shadow: 0 5px 20px rgba(255, 0, 122, 0.3);
+            margin-top: 20px;
+        }
+        
+        .btn-green {
+            width: 100%; padding: 18px; border-radius: 18px; border: none;
+            font-size: 1.1rem; font-weight: 800; cursor: pointer; color: #000;
+            background: var(--color-up); box-shadow: 0 5px 20px rgba(14, 203, 129, 0.3);
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ambient-glow glow-top" style="background:var(--utopia-pink)"></div>
+    <div class="scanlines"></div>
 
     <header class="glass-header">
         <div class="profile-section">
-            <div class="icon-btn" onclick="window.location.href='dashboard.html'"><i class="fas fa-arrow-right"></i></div>
-            
-            <div style="display:flex; align-items:center; gap:10px; margin-right:10px;">
-                <img src="webapp/images/utopia.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/6001/6001368.png'" style="width:28px; height:28px;" alt="logo">
-                <span style="font-weight:700; font-size:1rem; letter-spacing:0.5px;">صرافی یوتوپیا</span>
-            </div>
+            <div class="icon-btn" onclick="window.location.href='/'"><i class="fas fa-arrow-right"></i></div>
+            <div style="font-weight:800; font-size:1.1rem">صرافی <span style="color:var(--utopia-pink)">یوتوپیا</span></div>
         </div>
         <div style="width:40px"></div>
     </header>
 
-    <div class="glass-wrapper">
+    <div class="glass-wrapper main-scroll-area">
         
-        <div class="utopia-card">
-            <div class="rate-group">
-                <span class="rate-label">خرید (از ما)</span>
-                <span class="rate-val" style="color:var(--utopia-accent)" id="rate-sell">...</span>
+        <div class="utopia-ticker">
+            <div class="tick-item">
+                <span class="tick-label">خرید (از شما)</span>
+                <span class="tick-val c-buy" id="rate-sell">...</span>
             </div>
-            <div style="width:1px; height:30px; background:var(--glass-border)"></div>
-            <div class="rate-group" style="align-items:flex-end">
-                <span class="rate-label">فروش (به ما)</span>
-                <span class="rate-val" style="color:var(--color-up)" id="rate-buy">...</span>
+            <div style="width:1px; background:rgba(255,255,255,0.1)"></div>
+            <div class="tick-item" style="align-items:flex-end">
+                <span class="tick-label">فروش (به شما)</span>
+                <span class="tick-val c-sell" id="rate-buy">...</span>
             </div>
         </div>
 
-        <div class="tab-container">
-            <div class="tab-btn active buy-mode" onclick="switchTab('buy')">خرید ووچر</div>
-            <div class="tab-btn" onclick="switchTab('sell')">فروش ووچر</div>
+        <div class="u-tabs">
+            <div class="u-tab active" onclick="switchTab('buy')">خرید ووچر</div>
+            <div class="u-tab" onclick="switchTab('sell')">فروش ووچر</div>
         </div>
 
         <div id="buy-section" class="section-box active">
-            <div style="margin-bottom:25px;">
-                <label style="display:block; color:#aaa; margin-bottom:10px; font-size:0.85rem;">مقدار ووچر (دلار)</label>
-                <input type="number" id="buy-amount" class="glass-inp" placeholder="مثلا: 10" oninput="calcPrice()">
+            <div style="margin-bottom:20px;">
+                <label style="display:block; color:#888; margin-bottom:8px; font-size:0.9rem;">مقدار (دلار):</label>
+                <input type="number" id="buy-amount" class="glass-inp" placeholder="10" oninput="calcPrice()">
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:0 10px;">
+                <span style="color:#888; font-size:0.9rem;">مبلغ قابل پرداخت:</span>
+                <span id="buy-total" style="color:var(--gold-primary); font-weight:bold; font-family:monospace;">0</span>
             </div>
 
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding:0 5px;">
-                <span style="color:#666; font-size:0.85rem;">مبلغ قابل پرداخت</span>
-                <span id="buy-total" style="color:#fff; font-weight:700; font-family:monospace; font-size:1.1rem;">0 T</span>
-            </div>
-
-            <button id="btn-do-buy" class="btn-action btn-cyan" onclick="doBuy()">
-                <span>خرید آنی</span> <i class="fas fa-bolt"></i>
+            <button id="btn-do-buy" class="btn-pink" onclick="doBuy()">
+                <i class="fas fa-shopping-cart"></i> خرید آنی
             </button>
             
-            <div id="buy-result" class="result-box">
-                <div style="color:var(--color-up); font-weight:800; margin-bottom:10px; font-size:1.1rem;">✅ خرید موفق</div>
-                <div style="font-size:0.8rem; color:#aaa; margin-bottom:8px;">کد ووچر اختصاصی شما:</div>
-                <div id="new-voucher-code" style="font-family:monospace; font-size:1rem; color:#fff; background:rgba(0,0,0,0.3); padding:12px; border-radius:8px; margin-bottom:15px; word-break:break-all; border:1px solid rgba(255,255,255,0.1);">...</div>
-                <button onclick="copyCode()" style="background:transparent; border:1px solid var(--utopia-accent); color:var(--utopia-accent); padding:6px 20px; border-radius:20px; font-size:0.8rem; cursor:pointer;">کپی کردن</button>
+            <div id="buy-result" style="display:none; background:#000; border:1px dashed var(--utopia-pink); padding:20px; border-radius:16px; margin-top:20px; text-align:center;">
+                <div style="color:var(--color-up); font-weight:800; margin-bottom:10px">✅ خرید موفق!</div>
+                <div style="font-size:0.8rem; color:#aaa">کد ووچر شما:</div>
+                <div id="new-voucher-code" style="font-family:monospace; font-size:1.1rem; color:#fff; background:rgba(255,0,122,0.1); padding:10px; border-radius:8px; margin:10px 0; word-break:break-all;">...</div>
+                <button onclick="copyCode()" style="background:transparent; border:1px solid #fff; color:#fff; padding:5px 15px; border-radius:15px;">کپی</button>
             </div>
         </div>
 
         <div id="sell-section" class="section-box">
-            <div style="margin-bottom:25px;">
-                <label style="display:block; color:#aaa; margin-bottom:10px; font-size:0.85rem;">کد ووچر یوتوپیا</label>
-                <input type="text" id="sell-code" class="glass-inp" placeholder="UTP-..." style="font-size:1rem;">
+            <div style="margin-bottom:20px;">
+                <label style="display:block; color:#888; margin-bottom:8px; font-size:0.9rem;">کد ووچر:</label>
+                <input type="text" id="sell-code" class="glass-inp" placeholder="UTP...">
             </div>
             
-            <div style="background:rgba(14, 203, 129, 0.05); border:1px solid rgba(14, 203, 129, 0.2); border-radius:12px; padding:15px; text-align:center;">
-                <i class="fas fa-shield-alt" style="color:var(--color-up); margin-bottom:8px; font-size:1.2rem;"></i>
-                <p style="margin:0; font-size:0.75rem; color:#aaa; line-height:1.6;">سیستم به صورت خودکار ووچر را بررسی و مبلغ ریالی را آنی به کیف پول شما واریز می‌کند.</p>
+            <div style="background:rgba(14, 203, 129, 0.1); border:1px dashed var(--color-up); border-radius:12px; padding:15px; text-align:center;">
+                <p style="margin:0; font-size:0.8rem; color:#eee;">سیستم به صورت خودکار ووچر را نقد می‌کند.</p>
             </div>
 
-            <button id="btn-do-sell" class="btn-action btn-green" onclick="doSell()">
-                <span>نقد کردن</span> <i class="fas fa-arrow-down"></i>
+            <button id="btn-do-sell" class="btn-green" onclick="doSell()">
+                <i class="fas fa-exchange-alt"></i> نقد کردن
             </button>
         </div>
 
@@ -93,37 +139,19 @@
         let rates = { buy: 0, sell: 0 };
 
         window.onload = function() {
-            tg.ready(); tg.expand(); 
-            // تنظیم رنگ هدر برای هماهنگی با تم مشکی
-            tg.setHeaderColor('#000000'); 
-            tg.setBackgroundColor('#000000');
-            
-            // بازگشت به داشبورد
-            tg.BackButton.show();
-            tg.BackButton.onClick(function() { window.location.href = 'dashboard.html'; });
-
-            if (!tg.initData) tg.initData = "query_id=TEST";
-            
-            // حذف لودینگ کلاس بادی
-            document.body.classList.remove('loading-active');
-            
+            tg.ready(); tg.expand(); tg.setHeaderColor('#000000');
+            if (!tg.initData) tg.initData = "query_id=TEST&user=%7B%22id%22%3A111111111%7D&auth_date=1700000000&hash=fake";
             fetchRates();
         };
 
-        // مدیریت تب‌ها
         function switchTab(tab) {
-            document.querySelectorAll('.tab-btn').forEach(b => {
-                b.classList.remove('active', 'buy-mode', 'sell-mode');
-            });
+            document.querySelectorAll('.u-tab').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.section-box').forEach(s => s.classList.remove('active'));
-            
             if(tab === 'buy') {
-                const btn = document.querySelector('.tab-btn:nth-child(1)');
-                btn.classList.add('active', 'buy-mode');
+                document.querySelector('.u-tab:nth-child(1)').classList.add('active');
                 document.getElementById('buy-section').classList.add('active');
             } else {
-                const btn = document.querySelector('.tab-btn:nth-child(2)');
-                btn.classList.add('active', 'sell-mode');
+                document.querySelector('.u-tab:nth-child(2)').classList.add('active');
                 document.getElementById('sell-section').classList.add('active');
             }
         }
@@ -149,7 +177,7 @@
                 const total = val * rates.buy;
                 document.getElementById('buy-total').innerText = parseInt(total).toLocaleString() + " تومان";
             } else {
-                document.getElementById('buy-total').innerText = "0 T";
+                document.getElementById('buy-total').innerText = "0";
             }
         }
 
@@ -159,7 +187,7 @@
             
             if(!amount || amount < 1) { tg.showAlert("حداقل خرید ۱ دلار است."); return; }
 
-            btn.disabled = true; btn.style.opacity = "0.7"; btn.innerHTML = '<span>پردازش...</span>';
+            btn.disabled = true; btn.innerText = 'پردازش...';
             document.getElementById('buy-result').style.display = 'none';
 
             try {
@@ -173,13 +201,14 @@
                     tg.HapticFeedback.notificationOccurred('success');
                     document.getElementById('new-voucher-code').innerText = data.voucher_code;
                     document.getElementById('buy-result').style.display = 'block';
+                    tg.showAlert("✅ خرید موفقیت آمیز بود");
                 } else {
                     tg.HapticFeedback.notificationOccurred('error');
                     tg.showAlert("❌ " + data.message);
                 }
             } catch(e) { tg.showAlert("خطای شبکه"); }
             
-            btn.disabled = false; btn.style.opacity = "1"; btn.innerHTML = '<span>خرید آنی</span> <i class="fas fa-bolt"></i>';
+            btn.disabled = false; btn.innerHTML = '<i class="fas fa-shopping-cart"></i> خرید آنی';
         }
 
         async function doSell() {
@@ -188,7 +217,7 @@
             
             if(code.length < 10) { tg.showAlert("کد نامعتبر است."); return; }
 
-            btn.disabled = true; btn.style.opacity = "0.7"; btn.innerHTML = '<span>استعلام...</span>';
+            btn.disabled = true; btn.innerText = 'در حال استعلام...';
 
             try {
                 const res = await fetch(`${API_BASE_URL}/webapp/utopia/sell`, {
@@ -207,7 +236,7 @@
                 }
             } catch(e) { tg.showAlert("خطای شبکه"); }
 
-            btn.disabled = false; btn.style.opacity = "1"; btn.innerHTML = '<span>نقد کردن</span> <i class="fas fa-arrow-down"></i>';
+            btn.disabled = false; btn.innerHTML = '<i class="fas fa-exchange-alt"></i> نقد کردن';
         }
 
         function copyCode() {

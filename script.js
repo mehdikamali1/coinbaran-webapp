@@ -1,569 +1,331 @@
-﻿/* webapp/script.js (v100.0 - Production & High Performance) */
+﻿/* webapp/script.js (v100.0 - Final Production - Smart Deposit Logic) */
 (function () {
     'use strict';
 
     const tg = window.Telegram.WebApp;
-    // تشخیص اتوماتیک آدرس سرور (لوکال یا پروداکشن)
     const API_BASE_URL = window.location.origin;
     
-    // تنظیمات زمان‌بندی
-    let MIN_SPLASH_TIME = 2500; // کاهش زمان برای سرعت بیشتر در تجربه کاربری
+    // تنظیمات
+    let MIN_SPLASH_TIME = 3500; 
+    let pollingInterval = null; // برای رادار واریز
 
-    // کش کردن المنت‌های DOM برای پرفورمنس
-    const loader = document.getElementById('loader');
-    const appContainer = document.getElementById('app-container');
-    
-    // تشخیص صفحه فعلی
-    const isDashboard = !!document.getElementById('toman-balance');
-    const isSupportPage = !!document.getElementById('messages-container');
-
-    // متغیرهای چت
-    let chatPollInterval = null;
-    let lastMessageCount = 0;
-    let isSending = false;
-
-    // المنت‌های اصلی داشبورد
+    // المنت‌های اصلی
     const els = {
-        welcomeName: document.getElementById('welcome-name'),
-        tomanBalance: document.getElementById('toman-balance'),
-        uusdBalance: document.getElementById('uusd-balance'),
-        xpBalance: document.getElementById('xp-balance'),
-        kycText: document.getElementById('kyc-text'),
-        avatar: document.querySelector('.avatar-img'),
-        supportNotif: document.getElementById('support-notif'),
-        ticker: document.getElementById('price-ticker'),
-        xpFill: document.getElementById('xp-progress-fill'),
-        levelBadge: document.getElementById('level-badge'),
-        nextLevelText: document.getElementById('next-level-text')
-    };
-
-    // المنت‌های صفحه چت
-    const chatEls = {
-        container: document.getElementById('messages-container'),
-        input: document.getElementById('message-input'),
-        sendBtn: document.getElementById('send-btn'),
-        optionsBtn: document.getElementById('chat-options-btn'),
-        fileInput: document.getElementById('file-input'),
-        attachBtn: document.getElementById('attach-btn')
+        balanceToman: document.getElementById('balance-toman'),
+        balanceUusd: document.getElementById('balance-uusd'),
+        txList: document.getElementById('tx-list')
     };
 
     // ==========================================
-    // 1. GLOBAL FIX: BFCache Handler (حیاتی برای تلگرام)
-    // ==========================================
-    window.addEventListener('pageshow', function(event) {
-        // اگر صفحه از کش مرورگر (Back Button) لود شد
-        if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
-            console.log("Restored from cache - Forcing loader hide");
-            forceHideLoader();
-            document.body.style.overflow = 'auto';
-        }
-    });
-
-    // ==========================================
-    // 2. MAIN INITIALIZATION
+    // 1. INITIALIZATION
     // ==========================================
     window.onload = async function() {
         try {
             tg.ready();
             tg.expand();
             
-            // تنظیم رنگ هدر بر اساس صفحه
-            if (isDashboard) {
-                tg.setHeaderColor('#000000'); 
-                tg.setBackgroundColor('#000000');
-                tg.BackButton.hide();
-            } else {
-                tg.setHeaderColor('#1a1a1a');
-                tg.setBackgroundColor('#000000');
-                tg.BackButton.show();
-                tg.BackButton.onClick(function() {
-                    window.location.href = 'dashboard.html';
-                });
-            }
+            // تنظیم رنگ هدر برای زیبایی
+            tg.setHeaderColor('#050505');
+            tg.setBackgroundColor('#050505');
 
-            // مدیریت دیتای تست برای توسعه
             if (!tg.initData) {
-                console.warn("⚠️ No InitData found. Running in DEV mode.");
+                console.warn("Test Mode Active");
                 tg.initData = "query_id=TEST_DEV_MODE"; 
             }
 
-            const hasSeenSplash = sessionStorage.getItem('splash_shown');
+            // لود اولیه دیتا
+            await fetchWalletData();
 
-            if (isDashboard) {
-                if (hasSeenSplash) {
-                    // *** بازگشت مجدد (Fast Load) ***
-                    // اگر کاربر قبلا اسپلش را دیده، بلافاصله دیتای کش شده را نشان بده
-                    loadFromCache(); 
-                    forceHideLoader();
-                    
-                    setTimeout(() => {
-                        init3DCardEffect();
-                        initHapticFeedback();
-                    }, 50);
-
-                    // آپدیت دیتا در پس‌زمینه (بدون لودینگ)
-                    fetchDashboardData().then(data => { if(data) updateDashboardUI(data); });
-                    fetchMarketRates().then(res => {
-                        if(res && res.status === 'success') {
-                            updateTickerUI(res.rates);
-                            const usdt = res.rates.find(r => r.symbol === 'USDT');
-                            if(usdt) renderSmartChart(usdt.change);
-                        }
-                    });
-                    checkUnreadSupportMessages();
-
-                } else {
-                    // *** ورود اول (Full Splash Screen) ***
-                    sessionStorage.setItem('splash_shown', 'true');
-                    
-                    // حداقل زمان نمایش لوگو
-                    const splashTimer = new Promise(resolve => setTimeout(resolve, MIN_SPLASH_TIME));
-                    
-                    // شروع دریافت دیتا همزمان با انیمیشن
-                    const dataFetch = fetchDashboardData();
-                    const ratesFetch = fetchMarketRates(); 
-
-                    // منتظر ماندن برای پایان تایمر و دریافت دیتا
-                    const [dataResult, ratesResult] = await Promise.all([dataFetch, ratesFetch, splashTimer]);
-
-                    if (dataResult) {
-                        updateDashboardUI(dataResult);
-                        checkUnreadSupportMessages();
-                        
-                        if (ratesResult && ratesResult.status === 'success') {
-                            updateTickerUI(ratesResult.rates);
-                            const usdt = ratesResult.rates.find(r => r.symbol === 'USDT');
-                            if(usdt) renderSmartChart(usdt.change);
-                        } else {
-                            renderSmartChart(0);
-                        }
-                        
-                        hideLoaderWithAnimation();
-                        
-                        setTimeout(() => {
-                            init3DCardEffect();
-                            initHapticFeedback();
-                        }, 100);
-                    } else {
-                        // در صورت خطا در دریافت دیتا، لودر را مخفی کن تا کاربر گیر نکند
-                        forceHideLoader();
-                    }
-                }
-                
-                // نهایی کردن رنگ‌ها
-                tg.setHeaderColor('#050505');
-                tg.setBackgroundColor('#050505');
-
-            } else if (isSupportPage) {
-                forceHideLoader();
-                setupChatListeners();
-                await loadChatHistory(true); 
-                startChatPolling();
-                initHapticFeedback();
-            } else {
-                // صفحات فرعی دیگر (مثل کیف پول) خودشان لودر را هندل می‌کنند
-                forceHideLoader();
-            }
+            // مخفی کردن لودر بعد از اتمام کار
+            setTimeout(hideLoader, 1000);
 
         } catch (error) {
-            console.error("Critical Init Error:", error);
-            forceHideLoader();
+            console.error("Init Error:", error);
+            hideLoader();
         }
     };
 
-    // ==========================================
-    // Caching Logic (Local Storage)
-    // ==========================================
-    function saveToCache(data) {
-        try { localStorage.setItem('dashboard_cache', JSON.stringify(data)); } catch (e) {}
-    }
-
-    function loadFromCache() {
-        try {
-            const cached = localStorage.getItem('dashboard_cache');
-            if (cached) {
-                const data = JSON.parse(cached);
-                updateDashboardUI(data, false);
-            }
-        } catch (e) {}
-    }
-
-    // ==========================================
-    // Loader Functions
-    // ==========================================
-    function forceHideLoader() {
-        document.body.classList.remove('loading-active');
-        if (loader) {
-            loader.style.display = 'none';
+    function hideLoader() {
+        const loader = document.getElementById('loader');
+        const app = document.getElementById('app-container');
+        if(loader) {
             loader.style.opacity = '0';
-        }
-        if (appContainer) {
-            appContainer.classList.remove('hidden-content');
-            appContainer.style.opacity = '1';
-            appContainer.style.transform = 'translateY(0)';
-        }
-    }
-
-    function hideLoaderWithAnimation() {
-        document.body.classList.remove('loading-active');
-        if (loader) {
-            loader.style.opacity = '0';
-            loader.style.pointerEvents = 'none';
+            loader.style.pointerEvents = 'none'; // کلیک رد شود
             setTimeout(() => {
                 loader.style.display = 'none';
-                if (appContainer) {
-                    appContainer.classList.remove('hidden-content');
-                    appContainer.classList.add('fade-in-active');
-                }
-            }, 800); 
+                app.classList.remove('hidden-content');
+                app.classList.add('fade-in-active');
+            }, 800);
         }
     }
 
     // ==========================================
-    // Data Fetching
+    // 2. DATA FETCHING
     // ==========================================
-    async function fetchDashboardData() {
+    async function fetchWalletData() {
         try {
-            const response = await fetch(`${API_BASE_URL}/webapp/get_user_data`, {
-                method: 'POST',
+            const res = await fetch(`${API_BASE_URL}/webapp/get_wallet_data`, {
+                method: 'POST', 
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ initData: tg.initData })
             });
-            if (!response.ok) throw new Error("Server Error");
-            const data = await response.json();
-            if(data.status === 'success') saveToCache(data);
-            return data;
-        } catch (error) { return null; }
-    }
-
-    async function fetchMarketRates() {
-        try {
-            const response = await fetch(`${API_BASE_URL}/webapp/market/rates`);
-            if (!response.ok) return null;
-            return await response.json();
-        } catch (e) { return null; }
-    }
-
-    // ==========================================
-    // UI Updaters (Skeleton Handling)
-    // ==========================================
-    function updateDashboardUI(data, saveCache = true) {
-        if (!data || data.status === 'error') return;
-        if(saveCache) saveToCache(data);
-
-        // 1. Update Name & Remove Skeleton
-        if (els.welcomeName) {
-            els.welcomeName.innerText = data.first_name || "کاربر گرامی";
-            els.welcomeName.classList.remove('skeleton');
-        }
-
-        // 2. Update Toman Balance & Remove Skeleton
-        if (els.tomanBalance) {
-            els.tomanBalance.innerText = data.toman_balance; 
-            els.tomanBalance.classList.remove('skeleton');
-        }
-
-        // 3. Update UUSD Balance & Remove Skeleton
-        if (els.uusdBalance) {
-            els.uusdBalance.innerHTML = `${data.uusd_balance} <small>$</small>`;
-            els.uusdBalance.classList.remove('skeleton');
-        }
-
-        // 4. Update XP Balance & Remove Skeleton
-        if (els.xpBalance) {
-            els.xpBalance.innerHTML = `${data.xp_balance} <small>XP</small>`;
-            els.xpBalance.classList.remove('skeleton');
-        }
-
-        updateLevelProgress(parseInt((data.xp_balance || "0").replace(/,/g, '')) || 0);
-
-        if (tg.initDataUnsafe?.user?.photo_url && els.avatar) {
-            els.avatar.src = tg.initDataUnsafe.user.photo_url;
-        }
-        updateKycBadge(data.kyc_status_code);
-    }
-
-    function updateLevelProgress(xp) {
-        if (!els.xpFill || !els.levelBadge) return;
-        const levels = [0, 500, 1500, 3500, 7000, 15000, 30000]; 
-        let currentLevel = 1; let prevThreshold = 0; let nextThreshold = 500;
-        for (let i = 0; i < levels.length; i++) {
-            if (xp >= levels[i]) { currentLevel = i + 1; prevThreshold = levels[i]; nextThreshold = levels[i+1] || (levels[i] * 2); } else { break; }
-        }
-        let percentage = 0;
-        if (nextThreshold > prevThreshold) percentage = ((xp - prevThreshold) / (nextThreshold - prevThreshold)) * 100;
-        percentage = Math.min(100, Math.max(0, percentage));
-        
-        els.xpFill.style.width = `${percentage}%`;
-        els.levelBadge.innerText = `VIP ${currentLevel}`;
-        if (els.nextLevelText) els.nextLevelText.innerText = `${Math.floor(percentage)}%`;
-    }
-
-    function updateTickerUI(rates) {
-        if (!els.ticker || !rates || rates.length === 0) return;
-        let html = '';
-        const loopRates = [...rates, ...rates, ...rates]; 
-        loopRates.forEach(rate => {
-            const changeClass = rate.change >= 0 ? 'up' : 'down';
-            const arrow = rate.change > 0 ? '▲' : (rate.change < 0 ? '▼' : '');
-            const colorClass = rate.change === 0 ? '' : changeClass;
-            html += `<div class="ticker-item">${rate.symbol} <span class="${colorClass}">${rate.price} ${arrow} <small>(${rate.change}%)</small></span></div>`;
-        });
-        els.ticker.innerHTML = html;
-    }
-
-    function renderSmartChart(changePercent) {
-        const svg = document.getElementById('sparkline-svg');
-        if (!svg) return;
-        const existingPaths = svg.querySelectorAll('path');
-        existingPaths.forEach(p => p.remove());
-        
-        const width = 300; const height = 50; const pointsCount = 20; 
-        const points = []; const trendFactor = changePercent * 2; 
-        
-        for (let i = 0; i <= pointsCount; i++) {
-            const x = (i / pointsCount) * width;
-            const noise = (Math.random() - 0.5) * 15;
-            const trend = (i / pointsCount) * -trendFactor; 
-            let y = (height / 2) + trend + noise;
-            y = Math.max(5, Math.min(height - 5, y));
-            points.push({x, y});
-        }
-        
-        let d = `M ${points[0].x},${points[0].y}`;
-        for (let i = 1; i < points.length; i++) { d += ` L ${points[i].x},${points[i].y}`; }
-        
-        let strokeColor = '#FFD700'; let fillUrl = 'url(#gradNeutral)';
-        if (changePercent > 0) { strokeColor = '#0ECB81'; fillUrl = 'url(#gradUp)'; } 
-        else if (changePercent < 0) { strokeColor = '#F6465D'; fillUrl = 'url(#gradDown)'; }
-        
-        const pathLine = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        pathLine.setAttribute("d", d); pathLine.setAttribute("fill", "none"); 
-        pathLine.setAttribute("stroke", strokeColor); pathLine.setAttribute("stroke-width", "2"); 
-        pathLine.setAttribute("stroke-linecap", "round"); pathLine.setAttribute("stroke-linejoin", "round");
-        
-        const dFill = d + ` V ${height} H 0 Z`;
-        const pathFill = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        pathFill.setAttribute("d", dFill); pathFill.setAttribute("fill", fillUrl); 
-        pathFill.setAttribute("stroke", "none"); pathFill.style.opacity = "0.5";
-        
-        svg.appendChild(pathFill); svg.appendChild(pathLine);
-    }
-
-    // ==========================================
-    // Effects & Interactions
-    // ==========================================
-    function init3DCardEffect() {
-        const card = document.querySelector('.premium-card');
-        const container = document.querySelector('.main-content');
-        if (!card) return;
-        
-        if (container) {
-            container.addEventListener('mousemove', (e) => {
-                const rect = card.getBoundingClientRect();
-                const cardCenterX = rect.left + rect.width / 2;
-                const cardCenterY = rect.top + rect.height / 2;
-                const mouseX = e.clientX - cardCenterX;
-                const mouseY = e.clientY - cardCenterY;
-                const rotateX = (mouseY / rect.height) * -15;
-                const rotateY = (mouseX / rect.width) * 15;
-                card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-            });
-            container.addEventListener('mouseleave', () => { card.style.transform = `rotateX(0deg) rotateY(0deg)`; });
-        }
-        
-        if (window.DeviceOrientationEvent) {
-            window.addEventListener("deviceorientation", (event) => {
-                if (!event.gamma && !event.beta) return;
-                let rotateY = event.gamma; let rotateX = event.beta;  
-                if (rotateY > 20) rotateY = 20; if (rotateY < -20) rotateY = -20;
-                if (rotateX > 40) rotateX = 40; if (rotateX < -40) rotateX = -40;
-                rotateX = rotateX - 30; 
-                card.style.transform = `rotateX(${-rotateX}deg) rotateY(${rotateY}deg)`;
-            });
-        }
-    }
-
-    function initHapticFeedback() {
-        const interactives = document.querySelectorAll('.ripple-btn, .glass-btn, .service-card, .game-banner, .action-icon-btn, .attach-btn, .send-btn');
-        interactives.forEach(el => {
-            el.addEventListener('touchstart', () => { tg.HapticFeedback.impactOccurred('light'); }, {passive: true});
-            el.addEventListener('click', () => { if(tg.platform !== 'tdesktop' && tg.platform !== 'macos') { tg.HapticFeedback.impactOccurred('light'); } });
-        });
-    }
-
-    function updateKycBadge(status) {
-        if (!els.kycText) return;
-        let text = "Guest", color = "#848E9C", bg = "rgba(255,255,255,0.05)", border = "rgba(255,255,255,0.1)";
-        if (status === 'verified') { text = "Verified ✅"; color = "#0ECB81"; bg = "rgba(14, 203, 129, 0.1)"; border = "rgba(14, 203, 129, 0.3)"; }
-        else if (status === 'pending') { text = "Pending ⏳"; color = "#F0B90B"; bg = "rgba(240, 185, 11, 0.1)"; border = "rgba(240, 185, 11, 0.3)"; }
-        else if (status === 'rejected') { text = "Action Req ❌"; color = "#F6465D"; bg = "rgba(246, 70, 93, 0.1)"; border = "rgba(246, 70, 93, 0.3)"; }
-        els.kycText.innerText = text; els.kycText.style.color = color; els.kycText.style.background = bg; els.kycText.style.borderColor = border;
-    }
-
-    async function checkUnreadSupportMessages() {
-        if (!els.supportNotif) return;
-        try {
-            const response = await fetch(`${API_BASE_URL}/webapp/support/check_unread`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ initData: tg.initData })
-            });
-            const data = await response.json();
-            if (data.has_unread) els.supportNotif.style.display = 'block';
-        } catch (e) {}
-    }
-
-    // ==========================================
-    // Chat Functions (Production Ready)
-    // ==========================================
-    function startChatPolling() {
-        if (chatPollInterval) clearInterval(chatPollInterval);
-        chatPollInterval = setInterval(() => loadChatHistory(false), 3000);
-    }
-    
-    async function loadChatHistory(isFirstLoad = false) {
-        if (!chatEls.container) return;
-        try {
-            const response = await fetch(`${API_BASE_URL}/webapp/support/get_history`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ initData: tg.initData })
-            });
-            if (response.ok) {
-                const data = await response.json();
-                if (isFirstLoad) {
-                    chatEls.container.innerHTML = '<div class="date-separator">گفتگوی امن</div>';
-                    lastMessageCount = 0;
-                }
-                const messages = data.messages || [];
-                if (messages.length > lastMessageCount) {
-                    const newMessages = messages.slice(lastMessageCount);
-                    newMessages.forEach(msg => renderMessage(msg));
-                    lastMessageCount = messages.length;
-                    scrollToBottom();
-                } else if (messages.length === 0 && isFirstLoad) {
-                    renderSystemMessage("هنوز پیامی ندارید. اولین پیام را ارسال کنید.");
-                }
+            const data = await res.json();
+            
+            if (data.status === 'success') {
+                // آپدیت موجودی‌ها
+                if(els.balanceToman) els.balanceToman.innerText = data.balances.toman;
+                if(els.balanceUusd) els.balanceUusd.innerText = `${data.balances.uusd} $`;
+                
+                // رندر لیست تراکنش‌ها
+                renderTransactions(data.transactions);
             }
         } catch (e) {
-            if (isFirstLoad) renderSystemMessage("خطا در بارگذاری تاریخچه.");
+            console.error("Fetch Error:", e);
         }
     }
 
-    function setupChatListeners() {
-        if (!chatEls.sendBtn || !chatEls.input) return;
-        const newSendBtn = chatEls.sendBtn.cloneNode(true);
-        chatEls.sendBtn.parentNode.replaceChild(newSendBtn, chatEls.sendBtn);
-        chatEls.sendBtn = newSendBtn;
-        chatEls.sendBtn.addEventListener('click', sendMessage);
-        chatEls.input.addEventListener('keypress', function (e) { if (e.key === 'Enter') sendMessage(); });
+    function renderTransactions(txs) {
+        if (!els.txList) return;
+        els.txList.innerHTML = '';
         
-        if (chatEls.attachBtn && chatEls.fileInput) {
-            chatEls.attachBtn.addEventListener('click', () => { chatEls.fileInput.click(); });
-            chatEls.fileInput.addEventListener('change', handleFileUpload);
+        if (!txs || txs.length === 0) { 
+            els.txList.innerHTML = '<div style="text-align:center;padding:30px;color:#666;font-size:0.8rem">تراکنشی یافت نشد</div>'; 
+            return; 
         }
-        
-        if (chatEls.optionsBtn) {
-            chatEls.optionsBtn.addEventListener('click', () => {
-                tg.showPopup({ 
-                    title: 'پشتیبانی', 
-                    message: 'آیا می‌خواهید تیکت را ببندید؟', 
-                    buttons: [{id: 'close', type: 'destructive', text: 'بله'}, {type: 'cancel'}] 
-                }, (btnId) => { if (btnId === 'close') tg.close(); });
-            });
-        }
+
+        txs.forEach((tx, index) => {
+            const div = document.createElement('div');
+            div.className = 'tx-card ripple-btn';
+            
+            // تعیین رنگ و آیکون بر اساس وضعیت
+            let colorClass = '#fff';
+            let icon = '';
+            
+            if(tx.color === 'success') { 
+                colorClass = 'var(--gold-primary)'; // طلایی برای موفق
+                icon = '<i class="fas fa-arrow-down" style="color:var(--gold-primary)"></i>'; 
+            } else if(tx.color === 'danger') { 
+                colorClass = '#F6465D'; // قرمز برای برداشت
+                icon = '<i class="fas fa-arrow-up" style="color:#F6465D"></i>'; 
+            } else { 
+                colorClass = '#F0B90B'; 
+                icon = '<i class="fas fa-clock" style="color:#F0B90B"></i>'; 
+            }
+
+            div.innerHTML = `
+                <div class="tx-left">
+                    <div class="tx-icon-box">${icon}</div>
+                    <div class="tx-details">
+                        <span class="tx-title">${tx.title}</span>
+                        <span class="tx-date">${tx.date}</span>
+                    </div>
+                </div>
+                <div class="tx-amount" style="color:${colorClass}">${tx.display_amount}</div>
+            `;
+            els.txList.appendChild(div);
+        });
     }
 
-    async function handleFileUpload(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        if (file.size > 5 * 1024 * 1024) { tg.showAlert("حجم فایل نباید بیشتر از ۵ مگابایت باشد."); chatEls.fileInput.value = ''; return; }
+    // ==========================================
+    // 3. SMART DEPOSIT FUNCTIONS
+    // ==========================================
+    
+    // باز و بسته کردن مدال
+    window.openSmartDepositModal = function() { 
+        document.getElementById('deposit-modal').classList.add('active'); 
+        tg.HapticFeedback.impactOccurred('medium');
+    };
+    window.closeDepositModal = function() { 
+        document.getElementById('deposit-modal').classList.remove('active'); 
+        stopSmartCheck(); // اگر رادار روشن است، خاموش شود
+    };
+
+    // کپی شماره کارت
+    window.copyCardNumber = function() {
+        // شماره کارت تستی (می‌توانی از کانفیگ بگیری اگر داینامیک کردی)
+        const cardNumber = "6219861987089975"; 
+        navigator.clipboard.writeText(cardNumber).then(() => {
+            tg.showAlert("✅ شماره کارت کپی شد!");
+            tg.HapticFeedback.notificationOccurred('success');
+        });
+    };
+
+    // فرمت دهی مبلغ (سه رقم سه رقم)
+    window.formatAmountInput = function(input) {
+        let val = input.value.replace(/[^0-9]/g, ''); // حذف غیر عدد
+        if (!val) { input.value = ''; return; }
+        input.value = parseInt(val).toLocaleString(); // افزودن ویرگول
+    };
+
+    // شروع پروسه هوشمند (رادار)
+    window.startSmartCheck = function() {
+        const input = document.getElementById('deposit-amount');
+        const rawAmount = input.value.replace(/,/g, '');
+        const amount = parseInt(rawAmount);
+
+        if (!amount || amount < 10000) {
+            tg.showAlert("لطفاً مبلغ صحیح را وارد کنید (حداقل ۱۰,۰۰۰ تومان)");
+            return;
+        }
+
+        // نمایش رادار و مخفی کردن دکمه و اینپوت
+        document.getElementById('radar-area').style.display = 'block';
+        document.getElementById('btn-confirm-dep').style.display = 'none';
+        input.disabled = true;
+        document.getElementById('manual-upload-section').style.display = 'block'; // نمایش گزینه آپلود دستی اگر خودکار کار نکرد
+
+        tg.HapticFeedback.notificationOccurred('warning'); // ویبره شروع جستجو
+
+        // ثبت درخواست در سرور (تا سرور بداند منتظر چه مبلغی باشد)
+        // نکته: اینجا فیش نداریم، پس فقط "اعلام انتظار" می‌کنیم.
+        // اما چون لاجیک سرور ما بر اساس "تطبیق مبلغ" است، ما نیاز داریم 
+        // یک رکورد Pending در دیتابیس ایجاد کنیم.
+        // برای سادگی، فعلاً یک درخواست "دستی بدون عکس" می‌سازیم که سرور بفهمد.
+        createPendingRequest(amount);
+    };
+
+    // ایجاد درخواست انتظار در سرور
+    async function createPendingRequest(amount) {
+        // یک عکس خالی یا پیش‌فرض برای این مرحله می‌فرستیم (چون کاربر هنوز فیش نداده)
+        // یا بهتر: سرور را طوری تنظیم کردیم که اگر فیش نبود هم قبول کند؟ 
+        // در کد فعلی سرور (v115) آپلود فایل اجباری است. 
+        // راه حل هوشمندانه: یک فایل متنی خالی به عنوان فیش موقت می‌فرستیم.
         
-        renderMessage({ sender: 'user', text: '📷 در حال آپلود تصویر...', is_me: true, type: 'text' });
-        scrollToBottom();
-        
+        const blob = new Blob(["waiting_for_sms"], { type: "text/plain" });
+        const file = new File([blob], "auto_wait.txt");
+
         const formData = new FormData();
         formData.append('initData', tg.initData);
-        formData.append('file', file);
-        
-        try {
-            const response = await fetch(`${API_BASE_URL}/webapp/support/upload_file`, { method: 'POST', body: formData });
-            const result = await response.json();
-            if (response.ok && result.status === 'success') { 
-                chatEls.fileInput.value = ''; 
-                await loadChatHistory(false); 
-            } else { 
-                tg.showAlert("خطا در آپلود: " + (result.message || "نامشخص")); 
-                chatEls.fileInput.value = ''; 
-            }
-        } catch (e) { 
-            tg.showAlert("عدم اتصال به سرور."); 
-            chatEls.fileInput.value = ''; 
-        }
-    }
+        formData.append('amount', amount);
+        formData.append('receipt', file);
 
-    async function sendMessage() {
-        if (isSending) return;
-        const text = chatEls.input.value.trim();
-        if (!text) return;
-        
-        isSending = true;
-        chatEls.sendBtn.style.opacity = '0.5';
-        
-        renderMessage({ sender: 'user', text: text, timestamp: '...', is_me: true });
-        lastMessageCount++;
-        chatEls.input.value = '';
-        scrollToBottom();
-        
         try {
-            const response = await fetch(`${API_BASE_URL}/webapp/support/send_message`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ initData: tg.initData, message: text, type: 'text' })
+            // ارسال به سرور برای ثبت وضعیت "در انتظار"
+            await fetch(`${API_BASE_URL}/webapp/submit_deposit`, { 
+                method: 'POST', body: formData 
             });
-            const result = await response.json();
-            if (!response.ok || result.status !== 'success') throw new Error(result.message || "خطا");
-            await loadChatHistory(false);
+            
+            // شروع پولینگ (چک کردن مداوم وضعیت)
+            pollingInterval = setInterval(() => checkTransactionStatus(amount), 5000); // هر ۵ ثانیه چک کن
+
         } catch (e) {
-            tg.showAlert("خطا در ارسال پیام.");
-            chatEls.input.value = text;
-            lastMessageCount--;
-            const bubbles = document.querySelectorAll('.message-wrapper');
-            if(bubbles.length > 0) bubbles[bubbles.length - 1].remove();
+            console.error("Pending Req Error:", e);
+        }
+    }
+
+    // چک کردن اینکه آیا واریز تایید شد؟
+    async function checkTransactionStatus(amount) {
+        // دریافت دوباره اطلاعات کیف پول
+        const res = await fetch(`${API_BASE_URL}/webapp/get_wallet_data`, {
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ initData: tg.initData })
+        });
+        const data = await res.json();
+
+        if (data.status === 'success') {
+            // بررسی می‌کنیم آیا تراکنشی با این مبلغ "Approved" شده است؟
+            // (ساده‌ترین راه: چک کردن تغییر موجودی یا لیست تراکنش‌ها)
+            // اما چون لیست تراکنش‌ها را داریم، آخرین تراکنش را چک می‌کنیم.
+            const lastTx = data.transactions[0]; // اولین آیتم جدیدترین است
+            
+            // تبدیل مبلغ نمایشی (مثلا "+50,000 T") به عدد
+            const txAmount = parseInt(lastTx.display_amount.replace(/[^0-9]/g, ''));
+            
+            // اگر مبلغ یکی بود و رنگش سبز (موفق) بود
+            if (lastTx.color === 'success' && Math.abs(txAmount - amount) < 1000) { 
+                // تایید شد!
+                stopSmartCheck();
+                document.getElementById('radar-area').innerHTML = `
+                    <div style="color:#0ECB81; font-size:3rem; margin-bottom:10px;"><i class="fas fa-check-circle"></i></div>
+                    <h3 style="color:#fff; margin:0;">واریز تایید شد!</h3>
+                    <p style="color:#888;">مبلغ به کیف پول شما اضافه گردید.</p>
+                `;
+                tg.HapticFeedback.notificationOccurred('success');
+                fetchWalletData(); // آپدیت نهایی UI
+                
+                // بستن مودال بعد از ۳ ثانیه
+                setTimeout(closeDepositModal, 3000);
+            }
+        }
+    }
+
+    window.stopSmartCheck = function() {
+        if (pollingInterval) clearInterval(pollingInterval);
+        pollingInterval = null;
+        // ریست کردن UI مودال برای دفعه بعد
+        const radar = document.getElementById('radar-area');
+        if(radar) {
+            radar.style.display = 'none';
+            // بازگرداندن متن اصلی رادار اگر تغییر کرده بود
+            if (radar.innerHTML.includes('fa-check-circle')) {
+                radar.innerHTML = `
+                    <div class="radar-container"><div class="radar-core"></div><div class="radar-wave"></div><div class="radar-wave"></div></div>
+                    <p style="font-size:0.85rem; color:#0ECB81; margin-top:10px;">سیستم هوشمند در حال جستجوی واریز شماست...</p>
+                    <p style="font-size:0.75rem; color:#666;">لطفاً پس از واریز، ۱ تا ۲ دقیقه در این صفحه بمانید.</p>
+                `;
+            }
+        }
+        document.getElementById('btn-confirm-dep').style.display = 'block';
+        const input = document.getElementById('deposit-amount');
+        if(input) { input.disabled = false; input.value = ''; }
+        document.getElementById('manual-upload-section').style.display = 'none';
+        document.getElementById('btn-manual-submit').style.display = 'none';
+    };
+
+    // ==========================================
+    // 4. MANUAL DEPOSIT (Fallback)
+    // ==========================================
+    window.handleFileSelect = function(input) {
+        const label = document.getElementById('file-label');
+        const icon = document.getElementById('up-icon');
+        const btn = document.getElementById('btn-manual-submit');
+        
+        if (input.files && input.files.length > 0) {
+            label.innerText = "تصویر انتخاب شد: " + input.files[0].name;
+            label.style.color = "#0ECB81";
+            icon.className = "fas fa-check-circle upload-icon";
+            icon.style.color = "#0ECB81";
+            btn.style.display = 'block'; // نمایش دکمه ارسال فیش
+        }
+    };
+
+    window.submitManualDeposit = async function() {
+        const input = document.getElementById('deposit-amount');
+        const fileInput = document.getElementById('receipt-file');
+        const rawAmount = input.value.replace(/,/g, '');
+        const amount = parseInt(rawAmount);
+
+        if (!amount || fileInput.files.length === 0) {
+            tg.showAlert("لطفاً فیش واریز را انتخاب کنید.");
+            return;
+        }
+
+        const btn = document.getElementById('btn-manual-submit');
+        btn.disabled = true; btn.innerText = "در حال آپلود...";
+
+        const formData = new FormData();
+        formData.append('initData', tg.initData);
+        formData.append('amount', amount);
+        formData.append('receipt', fileInput.files[0]);
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/webapp/submit_deposit`, { 
+                method: 'POST', body: formData 
+            });
+            const result = await res.json();
+            
+            if (res.ok && result.status === 'success') {
+                tg.showAlert("✅ فیش ارسال شد. منتظر تایید ادمین باشید.");
+                closeDepositModal();
+            } else {
+                tg.showAlert("خطا: " + result.message);
+            }
+        } catch (e) {
+            tg.showAlert("خطای شبکه.");
         } finally {
-            isSending = false;
-            chatEls.sendBtn.style.opacity = '1';
-            chatEls.input.focus();
+            btn.disabled = false; btn.innerText = "ارسال فیش";
         }
-    }
-
-    function renderMessage(msg) {
-        const isUser = msg.sender === 'user' || msg.is_me; 
-        const wrapperClass = isUser ? 'msg-user' : 'msg-admin';
-        const checkIcon = isUser ? '<i class="fas fa-check msg-status-icon"></i>' : '';
-        let contentHtml = '';
-        
-        if (msg.type === 'photo' && msg.file_url) { 
-            contentHtml = `<img src="${msg.file_url}" style="max-width: 100%; border-radius: 12px; margin-bottom: 5px; display: block;" alt="Photo">`; 
-            if (msg.text) contentHtml += `<span>${escapeHtml(msg.text)}</span>`; 
-        } else { 
-            contentHtml = escapeHtml(msg.text); 
-        }
-        
-        const html = `<div class="message-wrapper ${wrapperClass}"><div class="bubble">${contentHtml}</div><div class="msg-meta"><span>${msg.timestamp || ''}</span>${checkIcon}</div></div>`;
-        chatEls.container.insertAdjacentHTML('beforeend', html);
-    }
-
-    function renderSystemMessage(text) {
-        const html = `<div style="text-align:center; font-size:0.75rem; color:#666; margin:15px 0; background:rgba(255,255,255,0.05); padding:5px; border-radius:10px; display:inline-block; margin-left:auto; margin-right:auto;">${text}</div>`;
-        const wrapper = document.createElement('div');
-        wrapper.style.textAlign = 'center';
-        wrapper.innerHTML = html;
-        chatEls.container.appendChild(wrapper);
-    }
-
-    function scrollToBottom() { if (chatEls.container) chatEls.container.scrollTop = chatEls.container.scrollHeight; }
-    function escapeHtml(text) { if (!text) return ""; return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+    };
 
 })();

@@ -82,7 +82,7 @@
         .deposit-theme i { color: #0ECB81; } .withdraw-theme i { color: #F6465D; }
         .w-btn span { color: #ccc; font-size: 0.9rem; font-weight: 500; }
 
-        /* === 6. کارت بانکی گرافیکی (لاکچری) === */
+        /* === 6. کارت بانکی گرافیکی (اصلاح شده) === */
         .bank-card-visual {
             width: 100%; height: 210px;
             background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%);
@@ -92,6 +92,7 @@
             transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         .bank-card-visual:active { transform: scale(0.97); }
+        
         /* افکت درخشش */
         .bank-card-visual::after {
             content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
@@ -106,7 +107,15 @@
         }
         .card-chip::before { content: ''; position: absolute; inset: 0; border: 1px solid rgba(0, 0, 0, 0.3); border-radius: 7px; background-image: repeating-linear-gradient(90deg, transparent 0, transparent 10px, rgba(0, 0, 0, 0.1) 10px, rgba(0, 0, 0, 0.1) 11px); }
 
-        .bank-logo-text { position: absolute; top: 25px; right: 25px; color: #fff; font-weight: 800; font-size: 1.1rem; letter-spacing: 1px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+        /* اصلاح محل قرارگیری نام بانک (به سمت چپ منتقل شد) */
+        .bank-logo-text { 
+            position: absolute; 
+            top: 25px; 
+            left: 25px; /* تغییر از right به left */
+            color: #fff; font-weight: 800; font-size: 1.1rem; 
+            letter-spacing: 1px; text-transform: uppercase; 
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8); 
+        }
 
         .card-number {
             font-family: 'Roboto Mono', monospace; font-size: 1.6rem; color: #FFD700;
@@ -223,7 +232,7 @@
             <div class="bank-card-visual" onclick="copyCardNumber()">
                 <div class="card-chip"></div>
                 
-                <div id="card-bank-name" class="bank-logo-text">LOADING...</div>
+                <div id="card-bank-name" class="bank-logo-text" style="left: 25px; right: auto;">LOADING...</div>
 
                 <div id="card-number-box" class="card-number">
                     <span>----</span><span>----</span><span>----</span><span>----</span>
@@ -243,7 +252,7 @@
             <div id="radar-section" class="radar-box">
                 <div class="radar-spinner"></div>
                 <h4 style="margin:15px 0 5px; color:#0ECB81; font-size:1.1rem;">در حال جستجوی واریز...</h4>
-                <p style="font-size:0.8rem; color:#888; margin:0;">لطفاً منتظر بمانید (۱-۲ دقیقه)</p>
+                <p style="font-size:0.8rem; color:#888; margin:0;">لطفاً ۱ تا ۲ دقیقه در این صفحه بمانید.</p>
             </div>
 
             <button id="btn-confirm" class="btn-action" onclick="startAutoCheck()">

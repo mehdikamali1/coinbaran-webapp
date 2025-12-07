@@ -1,67 +1,59 @@
-﻿/* webapp/script.js (v100.0 - Final Production - Smart Deposit Logic) */
+﻿/* webapp/script.js (v105.0 - Final Production - Dynamic Card & Smart Radar) */
 (function () {
     'use strict';
 
     const tg = window.Telegram.WebApp;
     const API_BASE_URL = window.location.origin;
     
-    // تنظیمات
-    let MIN_SPLASH_TIME = 3500; 
-    let pollingInterval = null; // برای رادار واریز
-
-    // المنت‌های اصلی
-    const els = {
-        balanceToman: document.getElementById('balance-toman'),
-        balanceUusd: document.getElementById('balance-uusd'),
-        txList: document.getElementById('tx-list')
-    };
+    // متغیرهای گلوبال
+    let checkInterval = null; // برای رادار
+    let activeCardNumber = ""; // شماره کارت فعال (از سرور گرفته می‌شود)
 
     // ==========================================
-    // 1. INITIALIZATION
+    // 1. INITIALIZATION & SETUP
     // ==========================================
     window.onload = async function() {
         try {
             tg.ready();
             tg.expand();
             
-            // تنظیم رنگ هدر برای زیبایی
-            tg.setHeaderColor('#050505');
-            tg.setBackgroundColor('#050505');
+            // تم مشکی خالص برای لاکچری بودن
+            tg.setHeaderColor('#000000');
+            tg.setBackgroundColor('#000000');
 
             if (!tg.initData) {
-                console.warn("Test Mode Active");
+                console.warn("Dev Mode");
                 tg.initData = "query_id=TEST_DEV_MODE"; 
             }
 
-            // لود اولیه دیتا
+            // 1. دریافت اطلاعات کیف پول
             await fetchWalletData();
+            
+            // 2. دریافت اطلاعات کارت بانکی فعال (جدید)
+            await fetchActiveCardData();
 
-            // مخفی کردن لودر بعد از اتمام کار
-            setTimeout(hideLoader, 1000);
+            // حذف لودر با انیمیشن نرم
+            const loader = document.getElementById('loader');
+            const app = document.getElementById('app-container');
+            if(loader && app) {
+                loader.style.opacity = '0';
+                loader.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                    app.style.opacity = '1';
+                }, 600);
+            }
 
         } catch (error) {
             console.error("Init Error:", error);
-            hideLoader();
         }
     };
 
-    function hideLoader() {
-        const loader = document.getElementById('loader');
-        const app = document.getElementById('app-container');
-        if(loader) {
-            loader.style.opacity = '0';
-            loader.style.pointerEvents = 'none'; // کلیک رد شود
-            setTimeout(() => {
-                loader.style.display = 'none';
-                app.classList.remove('hidden-content');
-                app.classList.add('fade-in-active');
-            }, 800);
-        }
-    }
-
     // ==========================================
-    // 2. DATA FETCHING
+    // 2. DATA FETCHING (Wallet & Card)
     // ==========================================
+    
+    // دریافت موجودی و تراکنش‌ها
     async function fetchWalletData() {
         try {
             const res = await fetch(`${API_BASE_URL}/webapp/get_wallet_data`, {
@@ -72,126 +64,161 @@
             const data = await res.json();
             
             if (data.status === 'success') {
-                // آپدیت موجودی‌ها
-                if(els.balanceToman) els.balanceToman.innerText = data.balances.toman;
-                if(els.balanceUusd) els.balanceUusd.innerText = `${data.balances.uusd} $`;
-                
-                // رندر لیست تراکنش‌ها
+                document.getElementById('balance-toman').innerText = data.balances.toman;
+                document.getElementById('balance-uusd').innerText = data.balances.uusd; // $ در CSS هندل شده یا دستی اضافه شود
                 renderTransactions(data.transactions);
             }
+        } catch (e) { console.error(e); }
+    }
+
+    // دریافت کارت بانکی فعال از سرور (NEW)
+    async function fetchActiveCardData() {
+        try {
+            const res = await fetch(`${API_BASE_URL}/webapp/get_active_card`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ initData: tg.initData })
+            });
+            const data = await res.json();
+
+            if (data.status === 'success') {
+                activeCardNumber = data.card_number; // ذخیره برای کپی
+                
+                // آپدیت نام بانک در بالای کارت
+                const bankLogo = document.querySelector('.bank-card-visual div[style*="absolute"]'); // پیدا کردن المنت نام بانک
+                if(bankLogo) bankLogo.innerText = data.bank_name;
+
+                // آپدیت نام صاحب حساب
+                const holderName = document.querySelector('.card-holder');
+                if(holderName) holderName.innerText = data.owner_name;
+
+                // آپدیت شماره کارت (جدا کردن ۴ رقم ۴ رقم)
+                const numContainer = document.querySelector('.card-number');
+                if(numContainer) {
+                    numContainer.innerHTML = ''; // پاک کردن قبلی
+                    const chunks = data.card_number.match(/.{1,4}/g) || [data.card_number];
+                    chunks.forEach(chunk => {
+                        const span = document.createElement('span');
+                        span.innerText = chunk;
+                        numContainer.appendChild(span);
+                    });
+                }
+            }
         } catch (e) {
-            console.error("Fetch Error:", e);
+            console.error("Card Fetch Error:", e);
+            // در صورت خطا، یک مقدار پیش‌فرض ست می‌شود (که در HTML هست)
+            activeCardNumber = "6219861987089975"; 
         }
     }
 
+    // رندر لیست تراکنش‌ها
     function renderTransactions(txs) {
-        if (!els.txList) return;
-        els.txList.innerHTML = '';
+        const list = document.getElementById('tx-list');
+        if (!list) return;
+        list.innerHTML = '';
         
         if (!txs || txs.length === 0) { 
-            els.txList.innerHTML = '<div style="text-align:center;padding:30px;color:#666;font-size:0.8rem">تراکنشی یافت نشد</div>'; 
+            list.innerHTML = '<div style="text-align:center;padding:30px;color:#666;font-size:0.8rem">هنوز تراکنشی ندارید</div>'; 
             return; 
         }
 
-        txs.forEach((tx, index) => {
-            const div = document.createElement('div');
-            div.className = 'tx-card ripple-btn';
-            
-            // تعیین رنگ و آیکون بر اساس وضعیت
-            let colorClass = '#fff';
-            let icon = '';
+        txs.forEach(tx => {
+            // تعیین رنگ و آیکون
+            let color = '#FFD700'; // زرد (پیش‌فرض/در انتظار)
+            let iconClass = 'fa-clock';
             
             if(tx.color === 'success') { 
-                colorClass = 'var(--gold-primary)'; // طلایی برای موفق
-                icon = '<i class="fas fa-arrow-down" style="color:var(--gold-primary)"></i>'; 
+                color = '#0ECB81'; // سبز
+                iconClass = 'fa-arrow-down'; 
             } else if(tx.color === 'danger') { 
-                colorClass = '#F6465D'; // قرمز برای برداشت
-                icon = '<i class="fas fa-arrow-up" style="color:#F6465D"></i>'; 
-            } else { 
-                colorClass = '#F0B90B'; 
-                icon = '<i class="fas fa-clock" style="color:#F0B90B"></i>'; 
+                color = '#F6465D'; // قرمز
+                iconClass = 'fa-arrow-up'; 
             }
 
-            div.innerHTML = `
-                <div class="tx-left">
-                    <div class="tx-icon-box">${icon}</div>
-                    <div class="tx-details">
-                        <span class="tx-title">${tx.title}</span>
-                        <span class="tx-date">${tx.date}</span>
+            const html = `
+                <div class="tx-item">
+                    <div style="display:flex; align-items:center; gap:15px;">
+                        <div class="tx-icon"><i class="fas ${iconClass}" style="color:${color}"></i></div>
+                        <div>
+                            <div style="color:#fff; font-size:0.9rem; font-weight:bold;">${tx.title}</div>
+                            <div style="color:#666; font-size:0.75rem;">${tx.date}</div>
+                        </div>
                     </div>
+                    <div style="color:${color}; font-family:'Roboto Mono'; font-weight:bold;">${tx.display_amount}</div>
                 </div>
-                <div class="tx-amount" style="color:${colorClass}">${tx.display_amount}</div>
             `;
-            els.txList.appendChild(div);
+            list.insertAdjacentHTML('beforeend', html);
         });
     }
 
     // ==========================================
-    // 3. SMART DEPOSIT FUNCTIONS
+    // 3. UI INTERACTIONS (Modal & Input)
     // ==========================================
     
-    // باز و بسته کردن مدال
-    window.openSmartDepositModal = function() { 
+    window.openDepositModal = function() { 
         document.getElementById('deposit-modal').classList.add('active'); 
         tg.HapticFeedback.impactOccurred('medium');
     };
+    
     window.closeDepositModal = function() { 
         document.getElementById('deposit-modal').classList.remove('active'); 
-        stopSmartCheck(); // اگر رادار روشن است، خاموش شود
+        stopAutoCheck(); // خاموش کردن رادار
     };
 
-    // کپی شماره کارت
     window.copyCardNumber = function() {
-        // شماره کارت تستی (می‌توانی از کانفیگ بگیری اگر داینامیک کردی)
-        const cardNumber = "6219861987089975"; 
-        navigator.clipboard.writeText(cardNumber).then(() => {
+        if(!activeCardNumber) activeCardNumber = "6219861987089975"; // Fallback
+        navigator.clipboard.writeText(activeCardNumber).then(() => {
             tg.showAlert("✅ شماره کارت کپی شد!");
             tg.HapticFeedback.notificationOccurred('success');
         });
     };
 
     // فرمت دهی مبلغ (سه رقم سه رقم)
-    window.formatAmountInput = function(input) {
-        let val = input.value.replace(/[^0-9]/g, ''); // حذف غیر عدد
+    window.formatAmount = function(input) {
+        let val = input.value.replace(/[^0-9]/g, '');
         if (!val) { input.value = ''; return; }
-        input.value = parseInt(val).toLocaleString(); // افزودن ویرگول
+        input.value = parseInt(val).toLocaleString();
     };
 
-    // شروع پروسه هوشمند (رادار)
-    window.startSmartCheck = function() {
+    window.toggleManualUpload = function() {
+        const area = document.getElementById('manual-upload-area');
+        if(area.style.display === 'none') {
+            area.style.display = 'block';
+            // اسکرول به پایین برای دیده شدن
+            area.scrollIntoView({behavior: "smooth"});
+        } else {
+            area.style.display = 'none';
+        }
+    };
+
+    // ==========================================
+    // 4. SMART CHECK LOGIC (Radar System)
+    // ==========================================
+
+    window.startAutoCheck = function() {
         const input = document.getElementById('deposit-amount');
         const rawAmount = input.value.replace(/,/g, '');
         const amount = parseInt(rawAmount);
 
         if (!amount || amount < 10000) {
-            tg.showAlert("لطفاً مبلغ صحیح را وارد کنید (حداقل ۱۰,۰۰۰ تومان)");
+            tg.showAlert("لطفاً مبلغ را صحیح وارد کنید (حداقل ۱۰,۰۰۰ تومان)");
             return;
         }
 
-        // نمایش رادار و مخفی کردن دکمه و اینپوت
-        document.getElementById('radar-area').style.display = 'block';
-        document.getElementById('btn-confirm-dep').style.display = 'none';
-        input.disabled = true;
-        document.getElementById('manual-upload-section').style.display = 'block'; // نمایش گزینه آپلود دستی اگر خودکار کار نکرد
+        // 1. تغییر ظاهر به حالت رادار
+        document.getElementById('radar-section').style.display = 'block';
+        document.getElementById('btn-confirm').style.display = 'none';
+        input.disabled = true; // قفل کردن اینپوت
+        
+        tg.HapticFeedback.notificationOccurred('warning');
 
-        tg.HapticFeedback.notificationOccurred('warning'); // ویبره شروع جستجو
-
-        // ثبت درخواست در سرور (تا سرور بداند منتظر چه مبلغی باشد)
-        // نکته: اینجا فیش نداریم، پس فقط "اعلام انتظار" می‌کنیم.
-        // اما چون لاجیک سرور ما بر اساس "تطبیق مبلغ" است، ما نیاز داریم 
-        // یک رکورد Pending در دیتابیس ایجاد کنیم.
-        // برای سادگی، فعلاً یک درخواست "دستی بدون عکس" می‌سازیم که سرور بفهمد.
+        // 2. ایجاد درخواست "در انتظار" در سرور
         createPendingRequest(amount);
     };
 
-    // ایجاد درخواست انتظار در سرور
     async function createPendingRequest(amount) {
-        // یک عکس خالی یا پیش‌فرض برای این مرحله می‌فرستیم (چون کاربر هنوز فیش نداده)
-        // یا بهتر: سرور را طوری تنظیم کردیم که اگر فیش نبود هم قبول کند؟ 
-        // در کد فعلی سرور (v115) آپلود فایل اجباری است. 
-        // راه حل هوشمندانه: یک فایل متنی خالی به عنوان فیش موقت می‌فرستیم.
-        
-        const blob = new Blob(["waiting_for_sms"], { type: "text/plain" });
+        // ساخت یک فایل مجازی برای فریب دادن API (چون عکس اجباری است)
+        const blob = new Blob(["waiting_for_sms_auto"], { type: "text/plain" });
         const file = new File([blob], "auto_wait.txt");
 
         const formData = new FormData();
@@ -200,22 +227,19 @@
         formData.append('receipt', file);
 
         try {
-            // ارسال به سرور برای ثبت وضعیت "در انتظار"
-            await fetch(`${API_BASE_URL}/webapp/submit_deposit`, { 
-                method: 'POST', body: formData 
-            });
+            await fetch(`${API_BASE_URL}/webapp/submit_deposit`, { method: 'POST', body: formData });
             
-            // شروع پولینگ (چک کردن مداوم وضعیت)
-            pollingInterval = setInterval(() => checkTransactionStatus(amount), 5000); // هر ۵ ثانیه چک کن
+            // 3. شروع چک کردن مداوم (Polling) هر 5 ثانیه
+            checkInterval = setInterval(() => checkTransactionStatus(amount), 5000);
 
         } catch (e) {
-            console.error("Pending Req Error:", e);
+            tg.showAlert("خطا در اتصال به سرور.");
+            stopAutoCheck();
         }
     }
 
-    // چک کردن اینکه آیا واریز تایید شد؟
     async function checkTransactionStatus(amount) {
-        // دریافت دوباره اطلاعات کیف پول
+        // دریافت مجدد اطلاعات برای دیدن تغییرات
         const res = await fetch(`${API_BASE_URL}/webapp/get_wallet_data`, {
             method: 'POST', 
             headers: { 'Content-Type': 'application/json' },
@@ -223,86 +247,74 @@
         });
         const data = await res.json();
 
-        if (data.status === 'success') {
-            // بررسی می‌کنیم آیا تراکنشی با این مبلغ "Approved" شده است؟
-            // (ساده‌ترین راه: چک کردن تغییر موجودی یا لیست تراکنش‌ها)
-            // اما چون لیست تراکنش‌ها را داریم، آخرین تراکنش را چک می‌کنیم.
-            const lastTx = data.transactions[0]; // اولین آیتم جدیدترین است
-            
-            // تبدیل مبلغ نمایشی (مثلا "+50,000 T") به عدد
+        if (data.status === 'success' && data.transactions.length > 0) {
+            const lastTx = data.transactions[0];
+            // حذف کاراکترهای غیر عددی از مبلغ نمایشی (مثلا "+ 50,000 T")
             const txAmount = parseInt(lastTx.display_amount.replace(/[^0-9]/g, ''));
             
-            // اگر مبلغ یکی بود و رنگش سبز (موفق) بود
-            if (lastTx.color === 'success' && Math.abs(txAmount - amount) < 1000) { 
-                // تایید شد!
-                stopSmartCheck();
-                document.getElementById('radar-area').innerHTML = `
-                    <div style="color:#0ECB81; font-size:3rem; margin-bottom:10px;"><i class="fas fa-check-circle"></i></div>
-                    <h3 style="color:#fff; margin:0;">واریز تایید شد!</h3>
-                    <p style="color:#888;">مبلغ به کیف پول شما اضافه گردید.</p>
-                `;
-                tg.HapticFeedback.notificationOccurred('success');
-                fetchWalletData(); // آپدیت نهایی UI
+            // شرط موفقیت: رنگ سبز باشد و مبلغ دقیقاً یکی باشد (با تلورانس کم)
+            if (lastTx.color === 'success' && Math.abs(txAmount - amount) < 500) { 
                 
-                // بستن مودال بعد از ۳ ثانیه
-                setTimeout(closeDepositModal, 3000);
+                // === SUCCESS STATE ===
+                clearInterval(checkInterval);
+                checkInterval = null;
+
+                const radarBox = document.getElementById('radar-section');
+                radarBox.innerHTML = `
+                    <div style="font-size:3.5rem; color:#0ECB81; margin-bottom:15px; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h3 style="color:#fff; margin:0; font-size:1.2rem;">واریز تایید شد!</h3>
+                    <p style="color:#888; font-size:0.8rem;">مبلغ به حساب شما افزوده شد.</p>
+                `;
+                
+                tg.HapticFeedback.notificationOccurred('success');
+                
+                // آپدیت موجودی در صفحه اصلی
+                fetchWalletData(); 
+
+                // بستن مودال بعد از 3 ثانیه
+                setTimeout(() => {
+                    closeDepositModal();
+                    // ریست کردن رادار برای دفعه بعد
+                    setTimeout(() => {
+                        radarBox.innerHTML = `
+                            <div class="radar-spinner"></div>
+                            <h4 style="margin:10px 0 5px; color:#0ECB81;">در حال انتظار واریز...</h4>
+                            <p style="font-size:0.75rem; color:#888; margin:0;">سیستم به طور خودکار واریز شما را شناسایی می‌کند.</p>
+                        `;
+                    }, 500);
+                }, 3000);
             }
         }
     }
 
-    window.stopSmartCheck = function() {
-        if (pollingInterval) clearInterval(pollingInterval);
-        pollingInterval = null;
-        // ریست کردن UI مودال برای دفعه بعد
-        const radar = document.getElementById('radar-area');
-        if(radar) {
-            radar.style.display = 'none';
-            // بازگرداندن متن اصلی رادار اگر تغییر کرده بود
-            if (radar.innerHTML.includes('fa-check-circle')) {
-                radar.innerHTML = `
-                    <div class="radar-container"><div class="radar-core"></div><div class="radar-wave"></div><div class="radar-wave"></div></div>
-                    <p style="font-size:0.85rem; color:#0ECB81; margin-top:10px;">سیستم هوشمند در حال جستجوی واریز شماست...</p>
-                    <p style="font-size:0.75rem; color:#666;">لطفاً پس از واریز، ۱ تا ۲ دقیقه در این صفحه بمانید.</p>
-                `;
-            }
-        }
-        document.getElementById('btn-confirm-dep').style.display = 'block';
-        const input = document.getElementById('deposit-amount');
-        if(input) { input.disabled = false; input.value = ''; }
-        document.getElementById('manual-upload-section').style.display = 'none';
-        document.getElementById('btn-manual-submit').style.display = 'none';
-    };
-
-    // ==========================================
-    // 4. MANUAL DEPOSIT (Fallback)
-    // ==========================================
-    window.handleFileSelect = function(input) {
-        const label = document.getElementById('file-label');
-        const icon = document.getElementById('up-icon');
-        const btn = document.getElementById('btn-manual-submit');
+    window.stopAutoCheck = function() {
+        if (checkInterval) clearInterval(checkInterval);
+        checkInterval = null;
         
-        if (input.files && input.files.length > 0) {
-            label.innerText = "تصویر انتخاب شد: " + input.files[0].name;
-            label.style.color = "#0ECB81";
-            icon.className = "fas fa-check-circle upload-icon";
-            icon.style.color = "#0ECB81";
-            btn.style.display = 'block'; // نمایش دکمه ارسال فیش
+        // بازگرداندن UI به حالت اول
+        document.getElementById('radar-section').style.display = 'none';
+        document.getElementById('btn-confirm').style.display = 'block';
+        
+        const input = document.getElementById('deposit-amount');
+        if(input) {
+            input.disabled = false;
+            input.value = '';
         }
+        document.getElementById('manual-upload-area').style.display = 'none';
     };
 
-    window.submitManualDeposit = async function() {
+    window.submitManual = async function() {
         const input = document.getElementById('deposit-amount');
         const fileInput = document.getElementById('receipt-file');
         const rawAmount = input.value.replace(/,/g, '');
         const amount = parseInt(rawAmount);
 
         if (!amount || fileInput.files.length === 0) {
-            tg.showAlert("لطفاً فیش واریز را انتخاب کنید.");
+            tg.showAlert("لطفاً هم مبلغ و هم تصویر فیش را وارد کنید.");
             return;
         }
-
-        const btn = document.getElementById('btn-manual-submit');
-        btn.disabled = true; btn.innerText = "در حال آپلود...";
 
         const formData = new FormData();
         formData.append('initData', tg.initData);
@@ -310,22 +322,16 @@
         formData.append('receipt', fileInput.files[0]);
 
         try {
-            const res = await fetch(`${API_BASE_URL}/webapp/submit_deposit`, { 
-                method: 'POST', body: formData 
-            });
-            const result = await res.json();
+            const res = await fetch(`${API_BASE_URL}/webapp/submit_deposit`, { method: 'POST', body: formData });
+            const d = await res.json();
             
-            if (res.ok && result.status === 'success') {
-                tg.showAlert("✅ فیش ارسال شد. منتظر تایید ادمین باشید.");
+            if (res.ok && d.status === 'success') {
+                tg.showAlert("✅ فیش ارسال شد. منتظر بررسی ادمین باشید.");
                 closeDepositModal();
             } else {
-                tg.showAlert("خطا: " + result.message);
+                tg.showAlert("خطا: " + (d.message || "نامشخص"));
             }
-        } catch (e) {
-            tg.showAlert("خطای شبکه.");
-        } finally {
-            btn.disabled = false; btn.innerText = "ارسال فیش";
-        }
+        } catch (e) { tg.showAlert("خطای شبکه"); }
     };
 
 })();

@@ -1,13 +1,13 @@
-﻿/* webapp/script.js (v115.0 - Final Fix: Ignore Old Transactions) */
+﻿/* webapp/script.js (v116.0 - Final Fix: WebSocket for Instant Confirmation) */
 (function () {
     'use strict';
 
     const tg = window.Telegram.WebApp;
     const API_BASE_URL = window.location.origin;
     
-    let checkInterval = null;
     let activeCardNumber = ""; 
-    let lastKnownTxId = 0; // برای ذخیره ID آخرین تراکنش
+    let lastKnownTxId = 0; 
+    let ws = null; // متغیر برای نگهداری اتصال WebSocket
 
     // تشخیص صفحه
     const isDashboard = !!document.getElementById('toman-balance');
@@ -28,6 +28,10 @@
                 setTimeout(() => { init3DCardEffect(); }, 500);
             } 
             else if (isWallet) {
+                // بلافاصله اتصال WS را برقرار می‌کنیم
+                const userId = getUserIdFromInitData(tg.initData);
+                if(userId) connectWebSocket(userId); 
+                
                 await fetchWalletData(); // این تابع lastKnownTxId را هم آپدیت می‌کند
                 await fetchActiveCardData();
             }
@@ -48,7 +52,7 @@
     };
 
     // ==========================================
-    // 2. CORE FUNCTIONS
+    // 2. CORE FUNCTIONS (FETCH, RENDER)
     // ==========================================
     async function fetchDashboardData() {
         // ... (کد قبلی داشبورد بدون تغییر) ...
@@ -98,7 +102,7 @@
         if(usdt) renderSmartChart(usdt.change);
     }
 
-    // --- WALLET FUNCTIONS (UPDATED) ---
+    // --- WALLET FUNCTIONS ---
     async function fetchWalletData() {
         try {
             const res = await fetch(`${API_BASE_URL}/webapp/get_wallet_data`, {
@@ -113,7 +117,6 @@
                 
                 // *** ذخیره ID آخرین تراکنش برای مقایسه بعدی ***
                 if (data.transactions && data.transactions.length > 0) {
-                    // فرض می‌کنیم ref_id عددی است یا قابل مقایسه
                     lastKnownTxId = parseInt(data.transactions[0].ref_id) || 0;
                 }
 
@@ -170,10 +173,112 @@
     }
 
     // ==========================================
-    // 3. SMART DEPOSIT (UPDATED LOGIC)
+    // 3. WEB SOCKET LOGIC (NEW)
     // ==========================================
-    window.openDepositModal = function() { document.getElementById('deposit-modal').classList.add('active'); tg.HapticFeedback.impactOccurred('medium'); };
-    window.closeDepositModal = function() { document.getElementById('deposit-modal').classList.remove('active'); stopAutoCheck(); };
+
+    function getUserIdFromInitData(initData) {
+        const userMatch = initData.match(/user=(.*?)(?=&|$)/);
+        if (userMatch) {
+            try {
+                // دیتای تلگرام URL-encoded است، باید دیکد شود
+                return JSON.parse(decodeURIComponent(userMatch[1])).id;
+            } catch (e) {
+                console.error("Error parsing user ID from initData:", e);
+                return null;
+            }
+        }
+        return null;
+    }
+
+    function connectWebSocket(userId) {
+        if (ws) return;
+
+        // تبدیل URL به آدرس WebSocket (http/https به ws/wss)
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        // در صورتی که روی Ngrok یا پروکسی باشید، باید URL کامل را تنظیم کنید
+        const wsUrl = `${wsProtocol}//${window.location.host}/ws/wallet/${userId}`;
+
+        ws = new WebSocket(wsUrl);
+
+        ws.onopen = () => {
+            console.log("WebSocket connected successfully.");
+        };
+
+        ws.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                if (data.type === 'TX_CONFIRMED') {
+                    handleInstantConfirmation(data);
+                }
+            } catch (e) {
+                console.error("WS Message Error:", e);
+            }
+        };
+
+        ws.onclose = () => {
+            console.log("WebSocket disconnected. Retrying in 5 seconds...");
+            ws = null;
+            // تلاش برای اتصال مجدد پس از قطع شدن (فقط اگر در صفحه Wallet باشیم)
+            if (isWallet) {
+                setTimeout(() => {
+                    const currentUserId = getUserIdFromInitData(tg.initData);
+                    if (currentUserId) connectWebSocket(currentUserId);
+                }, 5000);
+            }
+        };
+
+        ws.onerror = (error) => {
+            console.error("WebSocket Error:", error);
+        };
+    }
+
+    function handleInstantConfirmation(data) {
+        const radarBox = document.getElementById('radar-section');
+        const input = document.getElementById('deposit-amount');
+        
+        // اگر مودال بسته شده بود، کاری نکن
+        if (!document.getElementById('deposit-modal').classList.contains('active')) {
+            console.log("Modal is closed, ignoring WS message.");
+            return;
+        }
+
+        const currentRequestedAmount = parseInt(input.value.replace(/,/g, ''));
+        
+        // چک نهایی برای تطابق مبلغ (برای اطمینان بیشتر، حتی اگر سرور درست فرستاده باشد)
+        if (Math.abs(data.amount - currentRequestedAmount) > 500) { 
+            console.warn("WS Confirmation amount mismatch. Ignoring.");
+            return;
+        }
+
+        stopAutoCheck(false); // ریست کردن UI بدون پاک کردن حالت تایید
+
+        radarBox.innerHTML = `<div style="font-size:3.5rem; color:#0ECB81; margin-bottom:15px;"><i class="fas fa-check-circle"></i></div><h3 style="color:#fff;">واریز تایید شد!</h3>`;
+        tg.HapticFeedback.notificationOccurred('success');
+        
+        // آپدیت موجودی و لیست تراکنش‌ها
+        fetchWalletData(); 
+        
+        // بستن مودال پس از نمایش پیام موفقیت
+        setTimeout(() => { 
+            document.getElementById('deposit-modal').classList.remove('active');
+            stopAutoCheck(true); // ریست کامل محتوای رادار برای دفعه بعد
+        }, 3000);
+    }
+
+    // ==========================================
+    // 4. SMART DEPOSIT (UPDATED LOGIC)
+    // ==========================================
+
+    window.openDepositModal = function() { 
+        document.getElementById('deposit-modal').classList.add('active'); 
+        tg.HapticFeedback.impactOccurred('medium'); 
+    };
+    
+    window.closeDepositModal = function() { 
+        document.getElementById('deposit-modal').classList.remove('active'); 
+        stopAutoCheck(); 
+    };
+    
     window.copyCardNumber = function() {
         if(!activeCardNumber) return;
         navigator.clipboard.writeText(activeCardNumber).then(() => { tg.showAlert("✅ شماره کارت کپی شد!"); tg.HapticFeedback.notificationOccurred('success'); });
@@ -195,74 +300,53 @@
         const amount = parseInt(input.value.replace(/,/g, ''));
         if (!amount || amount < 10000) { tg.showAlert("حداقل مبلغ ۱۰,۰۰۰ تومان است"); return; }
 
-        // ذخیره ID آخرین تراکنش قبل از شروع پروسه (خیلی مهم)
-        // اگر تراکنشی وجود نداشته باشد، 0 است.
-        // ما این کار را در fetchWalletData انجام دادیم، اما برای اطمینان دوباره می‌گیریم
-        // البته به دلیل Async بودن شاید بهتر باشد به همان مقدار گلوبال اعتماد کنیم یا یک فچ سریع بزنیم.
-        // اینجا به مقدار گلوبال lastKnownTxId که در لود اولیه پر شده اعتماد می‌کنیم.
-
         document.getElementById('radar-section').style.display = 'block';
         document.getElementById('btn-confirm').style.display = 'none';
         input.disabled = true;
         tg.HapticFeedback.notificationOccurred('warning');
+        
+        // حذف Polling قدیمی (checkInterval)
+        // این متغیر باید در فایل اصلی وجود داشته باشد، اما در این نسخه حذف شده است
+        // اما اگر جایی در کد قدیمی بود، این خط آن را پاک می کند:
+        // if (checkInterval) clearInterval(checkInterval); 
+
+        // ارسال درخواست به سرور
         createPendingRequest(amount);
     };
 
     async function createPendingRequest(amount) {
         const blob = new Blob(["waiting"], { type: "text/plain" });
-        const file = new File([blob], "auto_wait.txt");
+        const file = new File([blob], "auto_wait.txt"); 
         const formData = new FormData();
         formData.append('initData', tg.initData); formData.append('amount', amount); formData.append('receipt', file);
 
         try {
             await fetch(`${API_BASE_URL}/webapp/submit_deposit`, { method: 'POST', body: formData });
-            // شروع چک کردن
-            checkInterval = setInterval(() => checkTransactionStatus(amount), 5000);
-        } catch (e) { tg.showAlert("خطا در اتصال"); stopAutoCheck(); }
-    }
-
-    async function checkTransactionStatus(amount) {
-        const res = await fetch(`${API_BASE_URL}/webapp/get_wallet_data`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ initData: tg.initData })
-        });
-        const data = await res.json();
-        
-        if (data.status === 'success' && data.transactions.length > 0) {
-            const latestTx = data.transactions[0];
-            const txAmt = parseInt(latestTx.display_amount.replace(/[^0-9]/g, ''));
-            const txId = parseInt(latestTx.ref_id);
-
-            // شرط موفقیت اصلاح شده:
-            // 1. رنگ سبز باشد (موفق)
-            // 2. مبلغ یکی باشد
-            // 3. شناسه تراکنش (ID) بزرگتر از آخرین شناسه شناخته شده باشد (یعنی تراکنش جدید است)
-            if (latestTx.color === 'success' && Math.abs(txAmt - amount) < 500 && txId > lastKnownTxId) {
-                
-                clearInterval(checkInterval); checkInterval = null;
-                lastKnownTxId = txId; // آپدیت ID برای دفعات بعدی
-
-                const radarBox = document.getElementById('radar-section');
-                radarBox.innerHTML = `<div style="font-size:3.5rem; color:#0ECB81; margin-bottom:15px;"><i class="fas fa-check-circle"></i></div><h3 style="color:#fff;">واریز تایید شد!</h3>`;
-                tg.HapticFeedback.notificationOccurred('success');
-                
-                fetchWalletData(); // آپدیت موجودی
-                setTimeout(() => { 
-                    closeDepositModal(); 
-                    // ریست متن رادار برای دفعه بعد
-                    setTimeout(() => { 
-                        radarBox.innerHTML = '<div class="radar-spinner"></div><h4 style="margin:10px 0 5px; color:#0ECB81;">در حال انتظار واریز...</h4><p style="font-size:0.75rem; color:#888; margin:0;">سیستم به طور خودکار واریز شما را شناسایی می‌کند.</p>'; 
-                    }, 500); 
-                }, 3000);
-            }
+            // دیگر نیازی به شروع setInterval نیست. منتظر پیام WS می‌مانیم.
+        } catch (e) { 
+            tg.showAlert("خطا در اتصال"); 
+            stopAutoCheck(); 
         }
     }
 
-    window.stopAutoCheck = function() {
-        if (checkInterval) clearInterval(checkInterval); checkInterval = null;
-        document.getElementById('radar-section').style.display = 'none';
-        document.getElementById('btn-confirm').style.display = 'block';
+    // تابع stopAutoCheck تغییر کرد
+    window.stopAutoCheck = function(resetRadarContent = true) {
+        // اگر پولینگ قبلی وجود دارد، آن را متوقف کن (برای اطمینان)
+        // if (checkInterval) clearInterval(checkInterval); 
+
+        if (document.getElementById('deposit-modal').classList.contains('active')) {
+            document.getElementById('radar-section').style.display = 'none';
+            document.getElementById('btn-confirm').style.display = 'block';
+        }
+        
         const input = document.getElementById('deposit-amount');
-        if(input) { input.disabled = false; input.value = ''; }
+        if(input) { input.disabled = false; } 
+
+        if (resetRadarContent) {
+            const radarBox = document.getElementById('radar-section');
+            radarBox.innerHTML = '<div class="radar-spinner"></div><h4 style="margin:10px 0 5px; color:#0ECB81;">در حال انتظار واریز...</h4><p style="font-size:0.75rem; color:#888; margin:0;">سیستم به طور خودکار واریز شما را شناسایی می‌کند.</p>'; 
+        }
+
         document.getElementById('manual-upload-area').style.display = 'none';
     };
 

@@ -1,4 +1,4 @@
-﻿/* webapp/script.js (v116.0 - Final Fix: WebSocket for Instant Confirmation) */
+﻿/* webapp/script.js (v117.0 - Final Stable: WebSocket Logic) */
 (function () {
     'use strict';
 
@@ -55,7 +55,6 @@
     // 2. CORE FUNCTIONS (FETCH, RENDER)
     // ==========================================
     async function fetchDashboardData() {
-        // ... (کد قبلی داشبورد بدون تغییر) ...
         try {
             const res = await fetch(`${API_BASE_URL}/webapp/get_user_data`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ initData: tg.initData })
@@ -180,7 +179,6 @@
         const userMatch = initData.match(/user=(.*?)(?=&|$)/);
         if (userMatch) {
             try {
-                // دیتای تلگرام URL-encoded است، باید دیکد شود
                 return JSON.parse(decodeURIComponent(userMatch[1])).id;
             } catch (e) {
                 console.error("Error parsing user ID from initData:", e);
@@ -195,7 +193,6 @@
 
         // تبدیل URL به آدرس WebSocket (http/https به ws/wss)
         const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        // در صورتی که روی Ngrok یا پروکسی باشید، باید URL کامل را تنظیم کنید
         const wsUrl = `${wsProtocol}//${window.location.host}/ws/wallet/${userId}`;
 
         ws = new WebSocket(wsUrl);
@@ -218,7 +215,6 @@
         ws.onclose = () => {
             console.log("WebSocket disconnected. Retrying in 5 seconds...");
             ws = null;
-            // تلاش برای اتصال مجدد پس از قطع شدن (فقط اگر در صفحه Wallet باشیم)
             if (isWallet) {
                 setTimeout(() => {
                     const currentUserId = getUserIdFromInitData(tg.initData);
@@ -236,7 +232,6 @@
         const radarBox = document.getElementById('radar-section');
         const input = document.getElementById('deposit-amount');
         
-        // اگر مودال بسته شده بود، کاری نکن
         if (!document.getElementById('deposit-modal').classList.contains('active')) {
             console.log("Modal is closed, ignoring WS message.");
             return;
@@ -244,7 +239,7 @@
 
         const currentRequestedAmount = parseInt(input.value.replace(/,/g, ''));
         
-        // چک نهایی برای تطابق مبلغ (برای اطمینان بیشتر، حتی اگر سرور درست فرستاده باشد)
+        // چک نهایی برای تطابق مبلغ (برای اطمینان بیشتر)
         if (Math.abs(data.amount - currentRequestedAmount) > 500) { 
             console.warn("WS Confirmation amount mismatch. Ignoring.");
             return;
@@ -255,10 +250,8 @@
         radarBox.innerHTML = `<div style="font-size:3.5rem; color:#0ECB81; margin-bottom:15px;"><i class="fas fa-check-circle"></i></div><h3 style="color:#fff;">واریز تایید شد!</h3>`;
         tg.HapticFeedback.notificationOccurred('success');
         
-        // آپدیت موجودی و لیست تراکنش‌ها
         fetchWalletData(); 
         
-        // بستن مودال پس از نمایش پیام موفقیت
         setTimeout(() => { 
             document.getElementById('deposit-modal').classList.remove('active');
             stopAutoCheck(true); // ریست کامل محتوای رادار برای دفعه بعد
@@ -305,12 +298,6 @@
         input.disabled = true;
         tg.HapticFeedback.notificationOccurred('warning');
         
-        // حذف Polling قدیمی (checkInterval)
-        // این متغیر باید در فایل اصلی وجود داشته باشد، اما در این نسخه حذف شده است
-        // اما اگر جایی در کد قدیمی بود، این خط آن را پاک می کند:
-        // if (checkInterval) clearInterval(checkInterval); 
-
-        // ارسال درخواست به سرور
         createPendingRequest(amount);
     };
 
@@ -322,18 +309,14 @@
 
         try {
             await fetch(`${API_BASE_URL}/webapp/submit_deposit`, { method: 'POST', body: formData });
-            // دیگر نیازی به شروع setInterval نیست. منتظر پیام WS می‌مانیم.
+            // منتظر پیام WS می‌مانیم.
         } catch (e) { 
             tg.showAlert("خطا در اتصال"); 
             stopAutoCheck(); 
         }
     }
 
-    // تابع stopAutoCheck تغییر کرد
     window.stopAutoCheck = function(resetRadarContent = true) {
-        // اگر پولینگ قبلی وجود دارد، آن را متوقف کن (برای اطمینان)
-        // if (checkInterval) clearInterval(checkInterval); 
-
         if (document.getElementById('deposit-modal').classList.contains('active')) {
             document.getElementById('radar-section').style.display = 'none';
             document.getElementById('btn-confirm').style.display = 'block';
@@ -396,6 +379,5 @@
     function renderSmartChart(change) {
         const svg = document.getElementById('sparkline-svg');
         if(!svg) return;
-        // رسم چارت ساده (اختیاری)
     }
 })();

@@ -1,4 +1,4 @@
-﻿/* webapp/script.js (v118.0 - Final Stable: Instant Confirmation UI Fix) */
+﻿/* webapp/script.js (v119.0 - Final Stable: UI Fallback Logic) */
 (function () {
     'use strict';
 
@@ -121,7 +121,10 @@
 
                 renderTransactions(data.transactions);
             }
-        } catch (e) {}
+            return data;
+        } catch (e) {
+            return {status: 'error'};
+        }
     }
 
     async function fetchActiveCardData() {
@@ -227,7 +230,7 @@
         };
     }
 
-    // [FINAL FIX] تابع handleInstantConfirmation ساده شده برای جلوگیری از خطا
+    // [FINAL FIX] تابع handleInstantConfirmation ساده شده برای تضمین آپدیت UI
     function handleInstantConfirmation(data) {
         const radarBox = document.getElementById('radar-section');
         const depositModal = document.getElementById('deposit-modal');
@@ -285,7 +288,7 @@
         if(area.style.display === 'block') area.scrollIntoView({behavior: "smooth"});
     };
 
-    // --- شروع پروسه هوشمند ---
+    // --- شروع پروسه هوشمند (با Fallback) ---
     window.startAutoCheck = function() {
         const input = document.getElementById('deposit-amount');
         const amount = parseInt(input.value.replace(/,/g, ''));
@@ -299,6 +302,7 @@
         createPendingRequest(amount);
     };
 
+    // [FALLBACK LOGIC]
     async function createPendingRequest(amount) {
         const blob = new Blob(["waiting"], { type: "text/plain" });
         const file = new File([blob], "auto_wait.txt"); 
@@ -307,12 +311,45 @@
 
         try {
             await fetch(`${API_BASE_URL}/webapp/submit_deposit`, { method: 'POST', body: formData });
-            // منتظر پیام WS می‌مانیم.
+            
+            // --- مکانیزم FALLBACK: چک کردن بعد از 1.5 ثانیه (فقط برای اطمینان از آپدیت UI) ---
+            setTimeout(() => { 
+                // فرض می‌کنیم که اگر بعد از 1.5 ثانیه سیگنال WS نرسید، تراکنش در DB ثبت شده است.
+                // پس یک بار دستی چک می‌کنیم که آیا تراکنش جدیدی بود یا خیر.
+                checkIfTransactionAppeared(amount);
+            }, 1500);
+
         } catch (e) { 
             tg.showAlert("خطا در اتصال"); 
             stopAutoCheck(); 
         }
     }
+
+    // [NEW FALLBACK FUNCTION]
+    async function checkIfTransactionAppeared(amount) {
+        if (!document.getElementById('deposit-modal').classList.contains('active')) return;
+        
+        const data = await fetchWalletData(); // این تابع lastKnownTxId را آپدیت می‌کند
+        
+        if (data.status === 'success' && data.transactions.length > 0) {
+            const latestTx = data.transactions[0];
+            const txAmt = parseInt(latestTx.display_amount.replace(/[^0-9]/g, '').replace(/,/g, ''));
+            const txId = parseInt(latestTx.ref_id);
+
+            // اگر تراکنش جدید (ID بزرگتر) و موفق باشد
+            if (latestTx.color === 'success' && Math.abs(txAmt - amount) < 1000 && txId > lastKnownTxId) {
+                // شبیه سازی دریافت سیگنال WS
+                handleInstantConfirmation({type: 'TX_CONFIRMED', amount: amount});
+            } else if (document.getElementById('deposit-modal').classList.contains('active')) {
+                 // اگر تایید نشد و مودال باز است، بعد از 4 ثانیه دوباره چک کند.
+                 setTimeout(() => checkIfTransactionAppeared(amount), 4000);
+            }
+        } else if (document.getElementById('deposit-modal').classList.contains('active')) {
+             // اگر هنوز هیچ تراکنشی نیست و مودال باز است، بعد از 4 ثانیه دوباره چک کند.
+             setTimeout(() => checkIfTransactionAppeared(amount), 4000);
+        }
+    }
+
 
     window.stopAutoCheck = function(resetRadarContent = true) {
         if (document.getElementById('deposit-modal').classList.contains('active')) {

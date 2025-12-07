@@ -1,4 +1,4 @@
-﻿/* webapp/script.js (v117.0 - Final Stable: WebSocket Logic) */
+﻿/* webapp/script.js (v118.0 - Final Stable: Instant Confirmation UI Fix) */
 (function () {
     'use strict';
 
@@ -191,7 +191,6 @@
     function connectWebSocket(userId) {
         if (ws) return;
 
-        // تبدیل URL به آدرس WebSocket (http/https به ws/wss)
         const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const wsUrl = `${wsProtocol}//${window.location.host}/ws/wallet/${userId}`;
 
@@ -228,35 +227,34 @@
         };
     }
 
+    // [FINAL FIX] تابع handleInstantConfirmation ساده شده برای جلوگیری از خطا
     function handleInstantConfirmation(data) {
         const radarBox = document.getElementById('radar-section');
-        const input = document.getElementById('deposit-amount');
+        const depositModal = document.getElementById('deposit-modal');
         
-        if (!document.getElementById('deposit-modal').classList.contains('active')) {
-            console.log("Modal is closed, ignoring WS message.");
+        // اگر مودال بسته شده بود، یا اگر نوع پیام تایید نبود، کاری نکن
+        if (!depositModal.classList.contains('active') || data.type !== 'TX_CONFIRMED') {
+            console.warn("WS received, but modal is inactive or type is wrong.");
             return;
         }
 
-        const currentRequestedAmount = parseInt(input.value.replace(/,/g, ''));
-        
-        // چک نهایی برای تطابق مبلغ (برای اطمینان بیشتر)
-        if (Math.abs(data.amount - currentRequestedAmount) > 500) { 
-            console.warn("WS Confirmation amount mismatch. Ignoring.");
-            return;
-        }
-
+        // --- شروع انیمیشن تایید ---
+        // ما به مبلغ چک نمی‌کنیم چون سرور کار تطبیق را انجام داده و فقط به سیگنال گوش می‌دهیم.
         stopAutoCheck(false); // ریست کردن UI بدون پاک کردن حالت تایید
 
         radarBox.innerHTML = `<div style="font-size:3.5rem; color:#0ECB81; margin-bottom:15px;"><i class="fas fa-check-circle"></i></div><h3 style="color:#fff;">واریز تایید شد!</h3>`;
         tg.HapticFeedback.notificationOccurred('success');
         
+        // آپدیت لیست تراکنش‌ها و موجودی (حیاتی)
         fetchWalletData(); 
         
+        // بستن مودال پس از نمایش پیام موفقیت
         setTimeout(() => { 
-            document.getElementById('deposit-modal').classList.remove('active');
+            depositModal.classList.remove('active');
             stopAutoCheck(true); // ریست کامل محتوای رادار برای دفعه بعد
         }, 3000);
     }
+
 
     // ==========================================
     // 4. SMART DEPOSIT (UPDATED LOGIC)

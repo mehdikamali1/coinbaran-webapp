@@ -1,4 +1,4 @@
-﻿/* webapp/script.js (v120.0 - Final Stable: Simplified Polling Fallback) */
+﻿/* webapp/script.js (v121.0 - Final Stable: Detached Event Listeners + Polling) */
 (function () {
     'use strict';
 
@@ -6,15 +6,15 @@
     const API_BASE_URL = window.location.origin;
     
     let activeCardNumber = ""; 
-    let ws = null; // متغیر برای نگهداری اتصال WebSocket
-    let pollingInterval = null; // متغیر برای نگهداری اینتروال نظرسنجی
+    let ws = null; 
+    let pollingInterval = null; 
 
     // تشخیص صفحه
     const isDashboard = !!document.getElementById('toman-balance');
     const isWallet = !!document.getElementById('balance-toman');
 
     // ==========================================
-    // 1. INITIALIZATION
+    // 1. INITIALIZATION & EVENT LISTENERS
     // ==========================================
     window.onload = async function() {
         try {
@@ -28,7 +28,9 @@
                 setTimeout(() => { init3DCardEffect(); }, 500);
             } 
             else if (isWallet) {
-                // بلافاصله اتصال WS را برقرار می‌کنیم
+                // اتصال Event Listeners (جدید)
+                attachEventListeners(); 
+                
                 const userId = getUserIdFromInitData(tg.initData);
                 if(userId) connectWebSocket(userId); 
                 
@@ -50,6 +52,25 @@
             }
         } catch (error) { console.error("Init Error:", error); }
     };
+    
+    // [NEW] اتصال تمام دکمه‌ها و ورودی‌ها از طریق ID
+    function attachEventListeners() {
+        // دکمه‌های اصلی ولت
+        document.getElementById('deposit-btn')?.addEventListener('click', openDepositModal);
+        document.getElementById('withdraw-btn')?.addEventListener('click', () => tg.showAlert('این بخش در حال بروزرسانی است'));
+        document.getElementById('reload-btn')?.addEventListener('click', () => window.location.reload());
+        
+        // مودال واریز
+        document.getElementById('close-modal-btn')?.addEventListener('click', closeDepositModal);
+        document.getElementById('copy-card-btn')?.addEventListener('click', copyCardNumber);
+        document.getElementById('deposit-amount')?.addEventListener('input', (e) => formatAmount(e.target));
+        document.getElementById('btn-confirm')?.addEventListener('click', startAutoCheck);
+        
+        // واریز دستی
+        document.getElementById('manual-upload-toggle')?.addEventListener('click', toggleManualUpload);
+        document.getElementById('submit-manual-btn')?.addEventListener('click', submitManual);
+    }
+
 
     // ==========================================
     // 2. CORE FUNCTIONS (FETCH, RENDER)
@@ -238,6 +259,9 @@
         }
 
         // --- شروع انیمیشن تایید ---
+        if (pollingInterval) clearInterval(pollingInterval);
+        pollingInterval = null; 
+        
         stopAutoCheck(false); // ریست کردن UI بدون پاک کردن حالت تایید
 
         radarBox.innerHTML = `<div style="font-size:3.5rem; color:#0ECB81; margin-bottom:15px;"><i class="fas fa-check-circle"></i></div><h3 style="color:#fff;">واریز تایید شد!</h3>`;
@@ -258,33 +282,38 @@
     // 4. SMART DEPOSIT (UPDATED LOGIC)
     // ==========================================
 
-    window.openDepositModal = function() { 
+    // [FIXED] توابع برای استفاده از Event Listeners
+    const openDepositModal = () => { 
         document.getElementById('deposit-modal').classList.add('active'); 
         tg.HapticFeedback.impactOccurred('medium'); 
     };
     
-    window.closeDepositModal = function() { 
+    const closeDepositModal = () => { 
         document.getElementById('deposit-modal').classList.remove('active'); 
         stopAutoCheck(); 
     };
     
-    window.copyCardNumber = function() {
+    const copyCardNumber = () => {
         if(!activeCardNumber) return;
         navigator.clipboard.writeText(activeCardNumber).then(() => { tg.showAlert("✅ شماره کارت کپی شد!"); tg.HapticFeedback.notificationOccurred('success'); });
     };
-    window.formatAmount = function(input) {
+    const formatAmount = (input) => {
         let val = input.value.replace(/[^0-9]/g, '');
         if (!val) { input.value = ''; return; }
         input.value = parseInt(val).toLocaleString();
     };
-    window.toggleManualUpload = function() {
+    const toggleManualUpload = () => {
         const area = document.getElementById('manual-upload-area');
         area.style.display = area.style.display === 'none' ? 'block' : 'none';
         if(area.style.display === 'block') area.scrollIntoView({behavior: "smooth"});
     };
+    
+    window.openDepositModal = openDepositModal; // جهت استفاده از onclick در دکمه واریز (فقط برای اطمینان)
+    // بقیه توابع را مستقیم در Event Listener متصل کردیم.
+
 
     // --- شروع پروسه هوشمند (با Polling) ---
-    window.startAutoCheck = function() {
+    const startAutoCheck = () => {
         const input = document.getElementById('deposit-amount');
         const amount = parseInt(input.value.replace(/,/g, ''));
         if (!amount || amount < 10000) { tg.showAlert("حداقل مبلغ ۱۰,۰۰۰ تومان است"); return; }
@@ -297,7 +326,7 @@
         createPendingRequest(amount);
     };
 
-    // مکانیزم Polling/نظرسنجی
+    // [FALLBACK LOGIC & POLLING START]
     async function createPendingRequest(amount) {
         // 1. ارسال درخواست ایجاد تراکنش معلق
         const blob = new Blob(["waiting"], { type: "text/plain" });
@@ -365,7 +394,7 @@
         document.getElementById('manual-upload-area').style.display = 'none';
     };
 
-    window.submitManual = async function() {
+    const submitManual = async () => {
         const amount = parseInt(document.getElementById('deposit-amount').value.replace(/,/g, ''));
         const fileInp = document.getElementById('receipt-file');
         if (!amount || fileInp.files.length === 0) { tg.showAlert("لطفاً هم مبلغ و هم تصویر را وارد کنید"); return; }
@@ -377,6 +406,7 @@
             if (res.ok && d.status === 'success') { tg.showAlert("✅ فیش ارسال شد"); closeDepositModal(); } else { tg.showAlert(d.message); }
         } catch (e) { tg.showAlert("خطای شبکه"); }
     };
+
 
     // --- Helpers ---
     function updateLevelProgress(xp) {

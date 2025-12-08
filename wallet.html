@@ -67,6 +67,7 @@
 
         /* === 5. دکمه‌های عملیات === */
         .wallet-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 35px; }
+        /* [FIXED] اضافه کردن ID برای اتصال در JS */
         .w-btn {
             background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
             border-radius: 20px; padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 12px;
@@ -174,7 +175,7 @@
             </div>
             <div style="font-weight:800; font-size:1.15rem; color: #fff;">مدیریت دارایی</div>
         </div>
-        <div class="header-btn" onclick="window.location.reload()">
+        <div id="reload-btn" class="header-btn">
             <i class="fas fa-sync-alt" style="color:#fff;"></i>
         </div>
     </header>
@@ -198,11 +199,11 @@
         </div>
 
         <div class="wallet-actions">
-            <div class="w-btn deposit-theme" onclick="openDepositModal()">
+            <div id="deposit-btn" class="w-btn deposit-theme">
                 <div class="btn-icon"><i class="fas fa-arrow-down"></i></div>
                 <span>واریز (اتوماتیک)</span>
             </div>
-            <div class="w-btn withdraw-theme" onclick="window.Telegram.WebApp.showAlert('این بخش در حال بروزرسانی است')">
+            <div id="withdraw-btn" class="w-btn withdraw-theme">
                 <div class="btn-icon"><i class="fas fa-arrow-up"></i></div>
                 <span>برداشت وجه</span>
             </div>
@@ -222,14 +223,14 @@
         <div class="modal-content">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
                 <h3 style="margin:0; color:#FFD700; font-size:1.4rem;">واریز آنی ⚡️</h3>
-                <i class="fas fa-times" onclick="closeDepositModal()" style="font-size:1.4rem; color:#666; cursor:pointer;"></i>
+                <i id="close-modal-btn" class="fas fa-times" style="font-size:1.4rem; color:#666; cursor:pointer;"></i>
             </div>
 
             <p style="font-size:0.9rem; color:#ccc; text-align:center; margin-bottom:25px; line-height:1.6;">
                 لطفاً مبلغ را به کارت زیر واریز کنید. سیستم به صورت هوشمند واریز را تشخیص می‌دهد.
             </p>
 
-            <div class="bank-card-visual" onclick="copyCardNumber()">
+            <div id="copy-card-btn" class="bank-card-visual">
                 <div class="card-chip"></div>
                 
                 <div id="card-bank-name" class="bank-logo-text" style="left: 25px; right: auto;">LOADING...</div>
@@ -245,7 +246,7 @@
             </div>
 
             <div class="input-group">
-                <input type="tel" id="deposit-amount" class="smart-input" placeholder="0" oninput="formatAmount(this)">
+                <input type="tel" id="deposit-amount" class="smart-input" placeholder="0">
                 <div class="input-label">مبلغ واریزی (تومان)</div>
             </div>
 
@@ -255,19 +256,19 @@
                 <p style="font-size:0.8rem; color:#888; margin:0;">لطفاً ۱ تا ۲ دقیقه در این صفحه بمانید.</p>
             </div>
 
-            <button id="btn-confirm" class="btn-action" onclick="startAutoCheck()">
+            <button id="btn-confirm" class="btn-action">
                 واریز را انجام دادم ✅
             </button>
 
             <div style="text-align:center; margin-top:25px;">
-                <span onclick="toggleManualUpload()" style="font-size:0.85rem; color:#666; border-bottom:1px dashed #666; cursor:pointer;">
+                <span id="manual-upload-toggle" style="font-size:0.85rem; color:#666; border-bottom:1px dashed #666; cursor:pointer;">
                     مشکلی پیش آمد؟ ارسال فیش دستی
                 </span>
             </div>
 
             <div id="manual-upload-area" style="display:none; margin-top:25px; background:#151515; padding:20px; border-radius:16px; border:1px dashed #333;">
                 <input type="file" id="receipt-file" style="width:100%; margin-bottom:15px; color:#ccc;">
-                <button onclick="submitManual()" style="width:100%; padding:12px; background:#333; border:none; color:#fff; border-radius:10px; font-weight:bold;">ارسال فیش</button>
+                <button id="submit-manual-btn" style="width:100%; padding:12px; background:#333; border:none; color:#fff; border-radius:10px; font-weight:bold;">ارسال فیش</button>
             </div>
 
         </div>

@@ -9,7 +9,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    <link rel="stylesheet" href="webapp/dashboard-style.css?v=77.3"> <style>
+    <link rel="stylesheet" href="webapp/dashboard-style.css?v=77.4"> <style>
         /* --- Wallet Specific Styles --- */
         
         :root {
@@ -453,6 +453,17 @@
             </div>
         </div>
     </div>
+    <div id="status-modal" class="modal-overlay">
+        <div class="modal-content glass-panel" style="text-align:center; padding:30px;">
+             <i id="status-icon" class="fas fa-check-circle" style="font-size:3rem; margin-bottom:20px; color:var(--accent-green);"></i>
+             <h3 id="status-title" style="color:#fff; margin-top:0;">تایید شد!</h3>
+             <p id="status-message" style="color:var(--text-muted); font-size:0.9rem; line-height:1.6;">مبلغ ۶۰,۵۰۲ تومان با موفقیت به حساب شما افزوده شد.</p>
+             <button class="btn-close-modal ripple-effect" style="width:100%; margin-top:30px; background:var(--accent-green); color:#000;" onclick="closeStatusModal()">
+                 بستن و ادامه
+             </button>
+        </div>
+    </div>
+    
     <div id="detail-modal" class="modal-overlay">
         <div class="modal-content glass-panel">
             <div class="modal-header">
@@ -472,13 +483,17 @@
 
     <script>
         const tg = window.Telegram.WebApp;
+        // Use wss for secure websocket connection over HTTPS
+        const WS_PROTOCOL = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const API_BASE_URL = window.location.origin;
+        const WS_URL = `${WS_PROTOCOL}//${window.location.host}/ws/wallet/${tg.initData}`;
         const EXCHANGE_CARD_NUMBER = '6219861987089975'; 
         let transactionsData = [];
         let finalUniqueAmount = 0;
         let selectedDepositType = 'auto'; 
         let selectedWithdrawalType = 'toman'; 
         let userBalances = { toman: 0, uusd: 0 };
+        let ws; 
 
 
         window.onload = function() {
@@ -494,12 +509,72 @@
                 showWalletTab(initialTab);
             }
             fetchWalletData();
-            checkPendingDeposits(); // CHECK FOR PENDING DEPOSITS ON LOAD
+            checkPendingDeposits(); 
+            connectWebSocket(); // NEW: Start WebSocket connection
         };
+        
+        function connectWebSocket() {
+            if (ws && ws.readyState === WebSocket.OPEN) return;
 
-        // --- Core Functions ---
+            ws = new WebSocket(WS_URL);
+
+            ws.onopen = () => {
+                console.log("WebSocket connected successfully.");
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                console.log("WS Message Received:", data);
+                
+                if (data.type === 'deposit_status') {
+                    // Display status to user
+                    showStatusModal(data.status, data.amount, data.message);
+                    
+                    // Clear pending status and refresh data
+                    checkPendingDeposits();
+                    fetchWalletData(); 
+                }
+            };
+
+            ws.onclose = () => {
+                console.log("WebSocket connection closed. Reconnecting in 5s...");
+                setTimeout(connectWebSocket, 5000); // Reconnect logic
+            };
+
+            ws.onerror = (error) => {
+                console.error("WebSocket Error:", error);
+            };
+        }
+
+        function showStatusModal(status, amount, message) {
+            const modal = document.getElementById('status-modal');
+            const icon = document.getElementById('status-icon');
+            const title = document.getElementById('status-title');
+            const msg = document.getElementById('status-message');
+            const btn = modal.querySelector('button');
+            
+            const isSuccess = status === 'approved' || status === 'success';
+
+            icon.className = isSuccess ? 'fas fa-check-circle' : 'fas fa-times-circle';
+            icon.style.color = isSuccess ? 'var(--accent-green)' : 'var(--accent-red)';
+            btn.style.background = isSuccess ? 'var(--accent-green)' : 'var(--accent-red)';
+            btn.style.color = isSuccess ? '#000' : '#fff';
+            
+            title.innerText = isSuccess ? 'تایید موفق!' : 'تایید نشد.';
+            msg.innerHTML = message;
+            
+            modal.classList.add('active');
+            tg.HapticFeedback.notificationOccurred(isSuccess ? 'success' : 'error');
+        }
+        
+        function closeStatusModal() {
+            document.getElementById('status-modal').classList.remove('active');
+        }
+
+        // --- Core Functions (fetch/checkPendingDeposits) ---
         
         async function fetchWalletData() {
+            // ... (Logic remains the same) ...
             try {
                 const res = await fetch(`${API_BASE_URL}/webapp/get_wallet_data`, {
                     method: 'POST', 
@@ -522,7 +597,6 @@
                     transactionsData = data.transactions;
                     renderTx(data.transactions);
                     
-                    // After fetching data, check pending status to update UI based on fresh balance
                     checkPendingDeposits(); 
                     
                     hideLoader(); 
@@ -531,7 +605,6 @@
         }
         
         async function checkPendingDeposits() {
-            // Endpoint to check for pending requests
             try {
                 const res = await fetch(`${API_BASE_URL}/webapp/check_pending_deposits`, {
                     method: 'POST',
@@ -566,9 +639,10 @@
             }
         }
         
-        // --- Deposit/Withdrawal Logic ---
-
+        // --- Deposit/Withdrawal Logic (Unchanged core logic) ---
+        
         async function startDepositProcess() {
+            // ... (Unchanged logic) ...
             if (selectedDepositType === 'manual') return;
 
             const amountInput = document.getElementById('deposit-amount');
@@ -613,6 +687,7 @@
         }
         
         async function submitManualDeposit() {
+            // ... (Unchanged logic) ...
             const amountInput = document.getElementById('manual-deposit-amount');
             const refInput = document.getElementById('manual-deposit-ref');
             const fileInput = document.getElementById('manual-deposit-receipt');
@@ -666,6 +741,7 @@
         }
         
         async function submitWithdrawal() {
+            // ... (Unchanged logic) ...
             const amountInput = document.getElementById('withdrawal-amount');
             const destInput = document.getElementById('iban-or-address');
             const networkInput = document.getElementById('withdrawal-network');
@@ -741,7 +817,7 @@
             }
         }
         
-        // --- UI/Modal Management ---
+        // --- UI/Modal Management (Unchanged) ---
 
         function openDepositModal() { 
             if (document.getElementById('deposit-pending-status').style.display !== 'none') {
@@ -820,7 +896,7 @@
             }
         }
 
-        // --- Tab Management ---
+        // --- Tab Management (Unchanged) ---
         function showWalletTab(tab) {
             document.getElementById('tab-deposit').classList.remove('active');
             document.getElementById('tab-withdraw').classList.remove('active');
@@ -837,7 +913,7 @@
             }
         }
         
-        // --- Utility Functions ---
+        // --- Utility Functions (Unchanged) ---
 
         function hideLoader() {
             const loader = document.getElementById('loader');
@@ -858,16 +934,9 @@
             return cardNum.match(/.{1,4}/g).join('-');
         }
 
-        // --- (renderTx and showDetail functions remain unchanged) ---
+        // --- Transaction Rendering (with Pagination Placeholder) ---
         function renderTx(txs) {
             const list = document.getElementById('tx-list');
-            list.innerHTML = '';
-            if (txs.length === 0) { 
-                list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:0.8rem">هنوز تراکنشی ثبت نشده است</div>'; 
-                return; 
-            }
-
-            // Simple Pagination Placeholder for UX fix
             const itemsPerPage = 5; 
             let currentPage = 1;
             const totalPages = Math.ceil(txs.length / itemsPerPage);
@@ -875,7 +944,7 @@
             function displayPage(page) {
                 const start = (page - 1) * itemsPerPage;
                 const end = start + itemsPerPage;
-                list.innerHTML = ''; // Clear existing list
+                list.innerHTML = ''; 
                 
                 const pageTxs = txs.slice(start, end);
 

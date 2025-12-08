@@ -1,22 +1,28 @@
-﻿/* webapp/script.js (v95.0 - Final Fix: BFCache & Navigation) */
+﻿/* webapp/script.js (v96.0 - FINAL UX & WebSocket Integration) */
 (function () {
     'use strict';
 
     const tg = window.Telegram.WebApp;
+    // Base URLs
     const API_BASE_URL = window.location.origin;
-    
+    const WS_PROTOCOL = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    let WS_URL = null; // Defined after tg.initData is ready
+
     // تنظیم زمان اسپلش اسکرین
-    let MIN_SPLASH_TIME = 3500; 
+    let MIN_SPLASH_TIME = 1500; // Reduced for better UX
 
     const loader = document.getElementById('loader');
     const appContainer = document.getElementById('app-container');
     
+    // شناسایی صفحات
     const isDashboard = !!document.getElementById('toman-balance');
     const isSupportPage = !!document.getElementById('messages-container');
+    const isWalletPage = window.location.pathname.includes('/wallet');
 
     let chatPollInterval = null;
     let lastMessageCount = 0;
     let isSending = false;
+    let ws; // WebSocket connection object
 
     // المنت‌های اصلی داشبورد
     const els = {
@@ -46,14 +52,18 @@
     // ==========================================
     // 1. GLOBAL FIX: BFCache Handler (The Magic Fix)
     // ==========================================
-    // این رویداد همیشه اجرا می‌شود، حتی اگر دکمه برگشت زده شود و صفحه از کش بیاید
     window.addEventListener('pageshow', function(event) {
-        // اگر صفحه از کش لود شده باشد (Back زدن کاربر)
         if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
             console.log("Restored from cache - Forcing loader hide");
             forceHideLoader();
-            // بازگرداندن اسکرول به حالت طبیعی
             document.body.style.overflow = 'auto';
+            if (isDashboard) {
+                 // Forcing a data refresh when returning from cache
+                 fetchDashboardData().then(data => { if(data) updateDashboardUI(data); });
+                 fetchMarketRates().then(res => {
+                    if(res && res.status === 'success') updateTickerUI(res.rates);
+                 });
+            }
         }
     });
 
@@ -65,111 +75,176 @@
             tg.ready();
             tg.expand();
             
-            // تنظیمات ظاهری تلگرام
+            if (!tg.initData) {
+                console.warn("Using Test Data");
+                tg.initData = "query_id=TEST_DEV_MODE"; 
+            }
+            
+            // Define WS URL only after initData is ready
+            WS_URL = `${WS_PROTOCOL}//${window.location.host}/ws/wallet/${tg.initData}`;
+
+            const hasSeenSplash = sessionStorage.getItem('splash_shown');
+            let dataResult = null;
+            let ratesResult = null;
+
+            // --- تنظیمات ظاهری تلگرام ---
             if (isDashboard) {
-                tg.setHeaderColor('#000000'); 
-                tg.setBackgroundColor('#000000');
-                tg.BackButton.hide(); // مخفی کردن دکمه بک در خانه
+                tg.setHeaderColor('#050505'); 
+                tg.setBackgroundColor('#050505');
+                tg.BackButton.hide();
+                connectWebSocket(); // NEW: Connect WS on Dashboard
             } else {
                 tg.setHeaderColor('#1a1a1a');
                 tg.setBackgroundColor('#000000');
-                // نمایش دکمه بک و مدیریت بازگشت
                 tg.BackButton.show();
                 tg.BackButton.onClick(function() {
                     window.location.href = 'dashboard.html';
                 });
             }
 
-            if (!tg.initData) {
-                console.warn("Using Test Data");
-                tg.initData = "query_id=TEST_DEV_MODE"; 
-            }
+            // --- منطق لودینگ ---
+            if (isDashboard && !hasSeenSplash) {
+                sessionStorage.setItem('splash_shown', 'true');
+                
+                const splashTimer = new Promise(resolve => setTimeout(resolve, MIN_SPLASH_TIME));
+                const dataFetch = fetchDashboardData();
+                const ratesFetch = fetchMarketRates(); 
 
-            const hasSeenSplash = sessionStorage.getItem('splash_shown');
+                [dataResult, ratesResult] = await Promise.all([dataFetch, ratesFetch, splashTimer]);
 
-            // --- منطق لودینگ داشبورد ---
-            if (isDashboard) {
-                if (hasSeenSplash) {
-                    // *** بازگشت مجدد به داشبورد (سریع) ***
-                    loadFromCache();
-                    forceHideLoader(); // حذف فوری لودر
+                if (dataResult) {
+                    updateDashboardUI(dataResult);
+                    checkUnreadSupportMessages();
+                    if (ratesResult && ratesResult.status === 'success') {
+                        updateTickerUI(ratesResult.rates);
+                        const usdt = ratesResult.rates.find(r => r.symbol === 'USDT');
+                        if(usdt) renderSmartChart(usdt.change);
+                    } else {
+                        renderSmartChart(0);
+                    }
+                    hideLoaderWithAnimation();
                     
                     setTimeout(() => {
                         init3DCardEffect();
                         initHapticFeedback();
-                    }, 50);
-
-                    // آپدیت دیتا در پس‌زمینه
-                    fetchDashboardData().then(data => { if(data) updateDashboardUI(data); });
-                    fetchMarketRates().then(res => {
-                        if(res && res.status === 'success') {
-                            updateTickerUI(res.rates);
-                            const usdt = res.rates.find(r => r.symbol === 'USDT');
-                            if(usdt) renderSmartChart(usdt.change);
-                        }
-                    });
-                    checkUnreadSupportMessages();
-
+                    }, 100);
                 } else {
-                    // *** ورود اول (با انیمیشن) ***
-                    sessionStorage.setItem('splash_shown', 'true');
-                    
-                    const splashTimer = new Promise(resolve => setTimeout(resolve, MIN_SPLASH_TIME));
-                    const dataFetch = fetchDashboardData();
-                    const ratesFetch = fetchMarketRates(); 
-
-                    const [dataResult, ratesResult] = await Promise.all([dataFetch, ratesFetch, splashTimer]);
-
-                    if (dataResult) {
-                        updateDashboardUI(dataResult);
-                        checkUnreadSupportMessages();
-                        
-                        if (ratesResult && ratesResult.status === 'success') {
-                            updateTickerUI(ratesResult.rates);
-                            const usdt = ratesResult.rates.find(r => r.symbol === 'USDT');
-                            if(usdt) renderSmartChart(usdt.change);
-                        } else {
-                            renderSmartChart(0);
-                        }
-                        
-                        hideLoaderWithAnimation();
-                        
-                        setTimeout(() => {
-                            init3DCardEffect();
-                            initHapticFeedback();
-                        }, 100);
-                    } else {
-                        // اگر دیتا فچ نشد، باز هم باز شود
-                        forceHideLoader();
-                    }
+                    forceHideLoader();
                 }
-                
-                // تثبیت رنگ هدر نهایی
-                tg.setHeaderColor('#050505');
-                tg.setBackgroundColor('#050505');
-
+            } else if (isDashboard) {
+                 // Fast load from cache/re-entry
+                 loadFromCache(); 
+                 forceHideLoader(); 
+                 fetchDashboardData().then(data => { if(data) updateDashboardUI(data); });
+                 fetchMarketRates().then(res => {
+                    if(res && res.status === 'success') updateTickerUI(res.rates);
+                 });
+                 checkUnreadSupportMessages();
+                 init3DCardEffect();
+                 initHapticFeedback();
             } else if (isSupportPage) {
                 // --- منطق صفحه پشتیبانی ---
-                forceHideLoader(); // در صفحات داخلی لودر نیاز نیست
+                forceHideLoader(); 
                 setupChatListeners();
                 await loadChatHistory(true); 
                 startChatPolling();
                 initHapticFeedback();
             } else {
-                // --- سایر صفحات ---
+                // --- سایر صفحات (مانند wallet و kyc) ---
                 forceHideLoader();
-                tg.BackButton.show();
-                tg.BackButton.onClick(() => window.location.href = 'dashboard.html');
+                initHapticFeedback();
+            }
+
+            // Global Status Modal must be accessible for Wallet
+            if(isWalletPage) {
+                 window.showStatusModal = showStatusModal;
+                 window.closeStatusModal = closeStatusModal;
             }
 
         } catch (error) {
             console.error("Critical Init Error:", error);
-            forceHideLoader(); // fail-safe
+            forceHideLoader();
         }
     };
 
     // ==========================================
-    // Caching Logic
+    // 3. Web Socket & Real-time Status
+    // ==========================================
+    function connectWebSocket() {
+        if (!WS_URL || (ws && ws.readyState === WebSocket.OPEN)) return;
+
+        ws = new WebSocket(WS_URL);
+
+        ws.onopen = () => {
+            console.log("WS connected successfully.");
+        };
+
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            console.log("WS Message Received:", data);
+            
+            if (data.type === 'deposit_status') {
+                // Show modal in Dashboard/Wallet
+                showStatusModal(data.status, data.amount, data.message);
+                
+                // Force data refresh on success
+                fetchDashboardData().then(data => { if(data) updateDashboardUI(data); });
+                if(isWalletPage && window.checkPendingDeposits) {
+                    window.checkPendingDeposits(); // Clear pending status in wallet UI
+                    if (data.status === 'approved') {
+                        window.fetchWalletData(); // Full refresh in wallet
+                    }
+                }
+            }
+        };
+
+        ws.onclose = () => {
+            console.log("WS connection closed. Reconnecting in 5s...");
+            setTimeout(connectWebSocket, 5000); 
+        };
+
+        ws.onerror = (error) => {
+            console.error("WS Error:", error);
+        };
+    }
+
+    function showStatusModal(status, amount, message) {
+        const modal = document.getElementById('status-modal');
+        if (!modal) {
+             // If modal is not in DOM (e.g., in Dashboard), use native alert/haptic feedback
+             const isSuccess = status === 'approved' || status === 'success';
+             tg.showAlert(isSuccess ? `✅ تایید موفق: ${message}` : `❌ رد شد: ${message}`);
+             tg.HapticFeedback.notificationOccurred(isSuccess ? 'success' : 'error');
+             return;
+        }
+
+        const icon = document.getElementById('status-icon');
+        const title = document.getElementById('status-title');
+        const msg = document.getElementById('status-message');
+        const btn = modal.querySelector('button');
+        
+        const isSuccess = status === 'approved' || status === 'success';
+
+        icon.className = isSuccess ? 'fas fa-check-circle' : 'fas fa-times-circle';
+        icon.style.color = isSuccess ? 'var(--accent-green)' : 'var(--accent-red)';
+        btn.style.background = isSuccess ? 'var(--accent-green)' : 'var(--accent-red)';
+        btn.style.color = isSuccess ? '#000' : '#fff';
+        
+        title.innerText = isSuccess ? 'تایید موفق!' : 'تایید نشد.';
+        msg.innerHTML = message;
+        
+        modal.classList.add('active');
+        tg.HapticFeedback.notificationOccurred(isSuccess ? 'success' : 'error');
+    }
+    
+    function closeStatusModal() {
+        const modal = document.getElementById('status-modal');
+        if(modal) modal.classList.remove('active');
+    }
+
+
+    // ==========================================
+    // 4. Caching & Loader (Optimized)
     // ==========================================
     function saveToCache(data) {
         try { localStorage.setItem('dashboard_cache', JSON.stringify(data)); } catch (e) {}
@@ -185,11 +260,8 @@
         } catch (e) {}
     }
 
-    // ==========================================
-    // Loader Functions (Optimized)
-    // ==========================================
     function forceHideLoader() {
-        document.body.classList.remove('loading-active'); // حذف کلاس از بادی
+        document.body.classList.remove('loading-active');
         if (loader) {
             loader.style.display = 'none';
             loader.style.opacity = '0';
@@ -216,8 +288,9 @@
         }
     }
 
+
     // ==========================================
-    // Data Fetching
+    // 5. Data Fetching & UI Updaters (Unchanged Core Logic)
     // ==========================================
     async function fetchDashboardData() {
         try {
@@ -241,9 +314,6 @@
         } catch (e) { return null; }
     }
 
-    // ==========================================
-    // UI Updaters
-    // ==========================================
     function updateDashboardUI(data, saveCache = true) {
         if (!data || data.status === 'error') return;
         if(saveCache) saveToCache(data);
@@ -317,9 +387,7 @@
         svg.appendChild(pathFill); svg.appendChild(pathLine);
     }
 
-    // ==========================================
-    // Effects & Interactions
-    // ==========================================
+    // ... (Effects & Interactions, KYC Badge, Support Functions - Unchanged) ...
     function init3DCardEffect() {
         const card = document.querySelector('.premium-card');
         const container = document.querySelector('.main-content');
@@ -378,10 +446,7 @@
             if (data.has_unread) els.supportNotif.style.display = 'block';
         } catch (e) {}
     }
-
-    // ==========================================
-    // Chat Functions
-    // ==========================================
+    
     function startChatPolling() {
         if (chatPollInterval) clearInterval(chatPollInterval);
         chatPollInterval = setInterval(() => loadChatHistory(false), 3000);
@@ -504,5 +569,5 @@
 
     function scrollToBottom() { if (chatEls.container) chatEls.container.scrollTop = chatEls.container.scrollHeight; }
     function escapeHtml(text) { if (!text) return ""; return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
-    function showError(msg) { if (loader) { loader.style.opacity = '1'; loader.style.display = 'flex'; loader.innerHTML = `<div class="loader-content"><p style="color:#F6465D;">${msg}</p><button onclick="window.location.reload()">تلاش مجدد</button></div>`; } }
+    // NOTE: Removed unused showError function from original code block
 })();

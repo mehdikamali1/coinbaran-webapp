@@ -1,4 +1,4 @@
-﻿/* webapp/dashboard-style.css (v91.0 - XP System & Luxury UI) */
+﻿/* webapp/dashboard-style.css (v92.0 - Wallet & Tab System Update) */
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;300;400;500;700;800;900&family=Cinzel:wght@400;700;900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap');
 
@@ -12,6 +12,10 @@
     --glass-border: rgba(255, 255, 255, 0.08);
     --card-gradient: linear-gradient(145deg, #1c1c1e 0%, #000000 100%);
     
+    --accent-green: #0ECB81; /* Success / Auto Deposit */
+    --accent-red: #F6465D; /* Danger / Withdraw */
+    --accent-blue: #3B82F6; /* Info / Manual Deposit */
+
     --radius-xl: 24px;
     --radius-lg: 18px;
     --radius-md: 14px;
@@ -31,8 +35,8 @@ body {
 }
 
 /* =========================================
-   1. انیمیشن ورودی سریع (3.5 Seconds)
-   ========================================= */
+    1. انیمیشن ورودی سریع (3.5 Seconds)
+    ========================================= */
 #loader {
     position: fixed; inset: 0;
     background: radial-gradient(circle at center, #0a0a0a 0%, #000000 90%);
@@ -80,8 +84,8 @@ body {
 @keyframes load-bar { to { transform: translateX(0); } }
 
 /* =========================================
-   2. استایل‌های اصلی داشبورد
-   ========================================= */
+    2. استایل‌های اصلی داشبورد
+    ========================================= */
 #app-container { max-width: 600px; margin: 0 auto; min-height: 100vh; position: relative; z-index: 2; display: flex; flex-direction: column; }
 .ambient-light { position: fixed; top: -100px; left: 50%; transform: translateX(-50%); width: 80%; height: 300px; background: radial-gradient(ellipse at center, rgba(255, 215, 0, 0.08), transparent 70%); z-index: 1; pointer-events: none; }
 .grid-pattern { position: fixed; inset: 0; background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 20px 20px; z-index: 0; pointer-events: none; }
@@ -170,44 +174,180 @@ body {
 .usd-color { color: #0ECB81; } .xp-color { color: var(--gold-primary); }
 .vertical-divider { width: 1px; height: 25px; background: rgba(255,255,255,0.1); }
 
-/* Quick Actions */
+/* Quick Actions (Dashboard Specific) */
 .section-title { font-size: 0.9rem; font-weight: 700; color: #fff; margin-bottom: 15px; padding-right: 10px; border-right: 3px solid var(--gold-primary); }
 .quick-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 35px; }
 .glass-btn { display: flex; flex-direction: column; align-items: center; gap: 8px; background: transparent; border: none; cursor: pointer; }
 .btn-icon { width: 54px; height: 54px; border-radius: 18px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; transition: transform 0.2s, box-shadow 0.2s; }
 .glass-btn span { font-size: 0.75rem; color: #888; font-weight: 500; }
-.deposit-color { color: #0ECB81; } .withdraw-color { color: #F6465D; } .trade-color { color: #3B82F6; } .kyc-color { color: var(--gold-primary); }
+.deposit-color { color: var(--accent-green); } .withdraw-color { color: var(--accent-red); } .trade-color { color: var(--accent-blue); } .kyc-color { color: var(--gold-primary); }
 .glass-btn:active .btn-icon { transform: scale(0.95); background: rgba(255,255,255,0.05); }
 
-/* Services Grid */
-.services-grid-modern { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.service-card {
-    background: rgba(20, 20, 20, 0.5); border: 1px solid var(--glass-border);
-    border-radius: var(--radius-md); padding: 16px; display: flex; align-items: center; gap: 15px;
-    cursor: pointer; transition: background 0.2s;
-}
-.service-card:active { background: rgba(255,255,255,0.05); }
-.service-icon { font-size: 1.6rem; width: 40px; text-align: center; }
-.gold-glow { color: #0ECB81; filter: drop-shadow(0 0 8px rgba(14,203,129,0.3)); }
-.pink-glow { color: #FF007A; filter: drop-shadow(0 0 8px rgba(255,0,122,0.3)); }
-.green-glow { color: #fff; filter: drop-shadow(0 0 8px rgba(255,255,255,0.3)); }
-.blue-glow { color: var(--gold-primary); filter: drop-shadow(0 0 8px rgba(255,215,0,0.3)); }
-.service-meta h4 { margin: 0 0 3px 0; font-size: 0.9rem; color: #e0e0e0; }
-.service-meta span { font-size: 0.7rem; color: #666; }
+/* =========================================
+    3. استایل‌های مشترک ولت و تراکنش‌ها
+    ========================================= */
 
-/* Game Banner */
-.game-banner {
-    position: relative; height: 120px; border-radius: var(--radius-lg); overflow: hidden;
-    background: linear-gradient(135deg, #0f172a 0%, #000 100%); border: 1px solid rgba(59,130,246,0.3);
-    margin-bottom: 20px; display: flex; align-items: center; padding: 0 25px; cursor: pointer;
-}
-.banner-glow { position: absolute; right: -20px; top: -50%; width: 150px; height: 200%; background: rgba(59,130,246,0.2); filter: blur(40px); transform: rotate(15deg); }
-.banner-content { display: flex; justify-content: space-between; width: 100%; position: relative; z-index: 2; align-items: center; }
-.game-info h3 { margin: 0 0 5px 0; font-size: 1.2rem; color: #fff; }
-.game-info p { margin: 0; font-size: 0.8rem; color: #888; }
-.play-icon { width: 45px; height: 45px; border-radius: 50%; background: #3B82F6; display: flex; align-items: center; justify-content: center; color: #fff; box-shadow: 0 0 15px rgba(59,130,246,0.5); }
+.main-scroll-area { padding: 20px; overflow-y: auto; }
 
-/* --- استایل‌های پشتیبانی (حفظ شده) --- */
+/* Tab System */
+.tab-bar {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    margin-bottom: 25px;
+    padding: 5px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--glass-border);
+}
+.tab-item {
+    padding: 12px 10px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: var(--radius-md);
+    transition: all 0.2s;
+}
+.tab-item.active {
+    background: var(--gold-rich);
+    color: #000;
+    box-shadow: 0 4px 15px rgba(240, 185, 11, 0.3);
+}
+
+/* Transaction List Styling */
+.tx-container { padding-bottom: 80px; }
+.section-label { 
+    font-size: 0.95rem; color: var(--text-white); margin-bottom: 15px; 
+    display: flex; align-items: center; gap: 8px; font-weight: 800;
+}
+.section-label::before { content: ''; width: 4px; height: 16px; background: var(--gold-primary); border-radius: 2px; }
+
+.tx-card {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px; margin-bottom: 12px;
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+    cursor: pointer; transition: all 0.2s;
+}
+.tx-card:active { background: rgba(255, 255, 255, 0.06); transform: translateX(-3px); }
+
+.tx-left { display: flex; align-items: center; gap: 14px; }
+.tx-icon-box {
+    width: 44px; height: 44px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border);
+}
+
+.tx-details { display: flex; flex-direction: column; gap: 4px; }
+.tx-title { font-size: 0.9rem; font-weight: 700; color: #fff; }
+.tx-date { font-size: 0.75rem; color: var(--text-muted); font-family: 'Roboto Mono'; }
+
+.tx-amount { font-family: 'Roboto Mono'; font-weight: 700; font-size: 1rem; direction: ltr; }
+
+/* Deposit Modal Custom Styles */
+
+.deposit-type-select {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    margin-bottom: 25px;
+}
+.type-btn {
+    padding: 15px; border-radius: 12px;
+    border: 2px solid var(--glass-border);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 700;
+    color: var(--text-muted);
+    background: rgba(255,255,255,0.02);
+}
+.type-btn.active {
+    border-color: var(--gold-primary);
+    background: rgba(255, 192, 0, 0.05);
+    color: var(--gold-primary);
+    box-shadow: 0 0 10px rgba(255, 192, 0, 0.2);
+}
+.type-btn i { margin-left: 5px; }
+
+/* Input Field - Globalized */
+.glass-field {
+    width: 100%; padding: 16px;
+    background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
+    border-radius: 12px; color: #fff; font-size: 1.2rem; font-family: 'Vazirmatn';
+    font-weight: bold; text-align: center; outline: none;
+}
+.glass-field:focus { border-color: var(--gold-primary); box-shadow: 0 0 15px rgba(240,185,11,0.1); }
+
+/* Unique Amount Display */
+.unique-amount-box {
+    background: linear-gradient(145deg, #101010, #000);
+    border: 2px solid var(--gold-primary);
+    border-radius: 18px;
+    padding: 20px;
+    text-align: center;
+    margin-top: 25px;
+    box-shadow: 0 10px 30px rgba(255, 192, 0, 0.2);
+}
+.unique-amount-val {
+    font-family: 'Roboto Mono';
+    font-size: 2.0rem; /* Made larger */
+    font-weight: 900;
+    color: var(--gold-primary);
+    letter-spacing: -1px;
+    display: block;
+    margin-top: 10px;
+}
+.copy-btn-gold {
+    background: var(--gold-primary);
+    color: #000;
+    border: none;
+    padding: 10px 25px; /* Larger button */
+    border-radius: 12px;
+    margin-top: 15px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(255, 192, 0, 0.5);
+    transition: all 0.2s;
+}
+.copy-btn-gold:active {
+    transform: scale(0.95);
+}
+.card-details-box {
+    background: rgba(255,255,255,0.05); 
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 15px; 
+    border-radius: 12px; 
+    margin-top: 25px; 
+    text-align: center;
+}
+
+/* Modal Close Button (Globalized from wallet.html) */
+.btn-close-modal {
+    background: var(--text-muted);
+    color: #fff;
+    padding: 12px;
+    border-radius: 12px;
+    border: none;
+    font-weight: bold;
+    transition: background 0.2s;
+}
+.btn-close-modal:hover {
+    background: #444;
+}
+.btn-confirm-swap {
+    padding: 15px;
+    border-radius: 12px;
+    border: none;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+/* =========================================
+    4. استایل‌های پشتیبانی (حفظ شده)
+    ========================================= */
 .notif-dot-support {
     position: absolute; top: -3px; right: -3px; width: 9px; height: 9px;
     background-color: #ff3b30; border-radius: 50%; border: 1.5px solid #1c1c1e;

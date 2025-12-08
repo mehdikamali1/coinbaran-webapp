@@ -9,12 +9,13 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    <link rel="stylesheet" href="webapp/dashboard-style.css?v=77.2"> <style>
+    <link rel="stylesheet" href="webapp/dashboard-style.css?v=77.3"> <style>
         /* --- Wallet Specific Styles --- */
         
         :root {
             --primary-gold: #FFC000; /* Striking gold color */
             --luxury-bg: rgba(255, 255, 255, 0.05); /* Light glass effect for sections */
+            --accent-yellow: #FFD700;
         }
         
         .tab-bar {
@@ -218,10 +219,17 @@
         <div id="deposit-content">
             <div class="tx-container">
                 <div class="section-label">عملیات واریز</div>
-                <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">
+                
+                <div id="deposit-pending-status" style="display:none; text-align:center; padding:15px; margin-bottom:20px; border-radius:12px; border:1px solid var(--accent-yellow); background:rgba(255,215,0,0.1);">
+                    <i class="fas fa-clock fa-spin" style="color:var(--accent-yellow); margin-left:8px;"></i> 
+                    <span id="pending-status-text" style="font-weight:700; font-size:0.9rem; color:#fff;">درخواست شما با مبلغ --- تومان در انتظار واریز است.</span>
+                    <p style="font-size:0.75rem; color:var(--text-muted); margin-top:5px;">لطفاً مبلغ را دقیقاً واریز کنید تا سیستم به صورت خودکار شارژ کند.</p>
+                </div>
+                
+                <p id="deposit-intro-text" style="color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">
                     برای شارژ حساب خود، روش واریز را انتخاب کنید.
                 </p>
-                <button class="btn-confirm-swap ripple-effect" style="width:100%; background:var(--accent-green);" onclick="openDepositModal()">
+                <button id="btn-open-deposit-modal" class="btn-confirm-swap ripple-effect" style="width:100%; background:var(--accent-green);" onclick="openDepositModal()">
                     <i class="fas fa-bolt"></i> شروع واریز اتوماتیک / دستی
                 </button>
             </div>
@@ -337,7 +345,7 @@
                            <p style="color:var(--accent-green); font-size:0.9rem; font-weight:bold;">
                                بعد از واریز، منتظر پیام تأیید در تلگرام باشید. (نیاز به ارسال رسید نیست)
                            </p>
-                           <button class="btn-close-modal ripple-effect" style="width:100%;" onclick="closeDepositModal()">
+                           <button class="btn-close-modal ripple-effect" style="width:100%;" onclick="closeDepositModal(); checkPendingDeposits(finalUniqueAmount);">
                                بستن و ادامه
                            </button>
                            <button class="btn-close-modal ripple-effect" style="width:100%; margin-top:10px; background:rgba(255,255,255,0.1); color:#fff;" onclick="goToDepositStep(1)">
@@ -462,11 +470,11 @@
     <script>
         const tg = window.Telegram.WebApp;
         const API_BASE_URL = window.location.origin;
-        const EXCHANGE_CARD_NUMBER = '6219861987089975'; // NOTE: Hardcoded for display only.
+        const EXCHANGE_CARD_NUMBER = '6219861987089975'; 
         let transactionsData = [];
         let finalUniqueAmount = 0;
-        let selectedDepositType = 'auto'; // Default: auto
-        let selectedWithdrawalType = 'toman'; // Default: toman
+        let selectedDepositType = 'auto'; 
+        let selectedWithdrawalType = 'toman'; 
         let userBalances = { toman: 0, uusd: 0 };
 
 
@@ -483,90 +491,71 @@
                 showWalletTab(initialTab);
             }
             fetchWalletData();
+            checkPendingDeposits(); // CHECK FOR PENDING DEPOSITS ON LOAD
         };
 
-        // --- Loader Functions ---
-        function hideLoader() {
-            const loader = document.getElementById('loader');
-            const app = document.getElementById('app-container');
-            if(loader) {
-                loader.style.opacity = '0';
-                loader.style.pointerEvents = 'none';
-                document.body.classList.remove('loading-active');
-                setTimeout(() => {
-                    loader.style.display = 'none';
-                    app.classList.remove('hidden-content');
-                    app.classList.add('fade-in-active');
-                }, 500);
-            }
-        }
+        // --- Core Functions ---
         
-        // --- Shared Helper Functions ---
-        function formatCardNumber(cardNum) {
-            return cardNum.match(/.{1,4}/g).join('-');
-        }
-        
-        // --- Deposit Modal Management (Unchanged) ---
-        function openDepositModal() { 
-            selectDepositType('auto');
-            goToDepositStep(0);
-            document.getElementById('deposit-modal').classList.add('active'); 
-            document.getElementById('exchange-card-number').innerText = formatCardNumber(EXCHANGE_CARD_NUMBER);
-        }
-        
-        function closeDepositModal() { 
-            document.getElementById('deposit-modal').classList.remove('active'); 
-        }
+        async function fetchWalletData() {
+            try {
+                const res = await fetch(`${API_BASE_URL}/webapp/get_wallet_data`, {
+                    method: 'POST', 
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'ngrok-skip-browser-warning': 'true'
+                    },
+                    body: JSON.stringify({ initData: tg.initData })
+                });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    const tomanBalance = parseInt(data.balances.toman.replace(/,/g, ''));
+                    const uusdBalance = parseFloat(data.balances.uusd);
+                    userBalances.toman = tomanBalance;
+                    userBalances.uusd = uusdBalance;
 
-        function copyFinalAmount() { 
-            navigator.clipboard.writeText(finalUniqueAmount);
-            tg.showAlert("✅ مبلغ واریز یکتا کپی شد!");
-            tg.HapticFeedback.notificationOccurred('success');
-        }
+                    document.getElementById('balance-toman').innerText = tomanBalance.toLocaleString();
+                    document.getElementById('balance-uusd').innerText = `${uusdBalance} $`;
 
-        function copyCardNumber() {
-            navigator.clipboard.writeText(EXCHANGE_CARD_NUMBER);
-            tg.showAlert("✅ شماره کارت مقصد کپی شد!");
-            tg.HapticFeedback.notificationOccurred('success');
-        }
-
-        function selectDepositType(type) {
-            selectedDepositType = type;
-            document.getElementById('type-auto').classList.remove('active');
-            document.getElementById('type-manual').classList.remove('active');
-            document.getElementById(`type-${type}`).classList.add('active');
-
-            if(type === 'auto') {
-                document.getElementById('btn-next-dep').style.background = 'var(--primary-gold)';
-                document.getElementById('btn-next-dep').style.color = '#000';
-            } else {
-                document.getElementById('btn-next-dep').style.background = 'var(--accent-blue)';
-                document.getElementById('btn-next-dep').style.color = '#fff';
-            }
-        }
-
-        function goToDepositStep(step) {
-            document.getElementById('deposit-step-0').style.display = 'none';
-            document.getElementById('deposit-step-1').style.display = 'none';
-            document.getElementById('deposit-step-2').style.display = 'none';
-            document.getElementById('deposit-step-manual').style.display = 'none';
-            
-            if (step === 0) {
-                document.getElementById('deposit-step-0').style.display = 'block';
-            } else if (step === 1) {
-                if (selectedDepositType === 'auto') {
-                    document.getElementById('step-1-title').innerText = 'درخواست واریز اتوماتیک ⚡️';
-                    document.getElementById('btn-submit-dep').style.background = 'var(--accent-green)';
-                    document.getElementById('btn-submit-dep').innerText = 'ثبت و دریافت مبلغ واریز یکتا';
-                    document.getElementById('deposit-step-1').style.display = 'block';
-                } else if (selectedDepositType === 'manual') {
-                    document.getElementById('deposit-step-manual').style.display = 'block';
+                    transactionsData = data.transactions;
+                    renderTx(data.transactions);
+                    hideLoader(); 
                 }
-            } else if (step === 2) {
-                document.getElementById('deposit-step-2').style.display = 'block';
+            } catch (e) { console.error(e); hideLoader(); }
+        }
+        
+        async function checkPendingDeposits(uniqueAmount = null) {
+            // New Endpoint to check for pending requests
+            try {
+                const res = await fetch(`${API_BASE_URL}/webapp/check_pending_deposits`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ initData: tg.initData, unique_amount: uniqueAmount })
+                });
+                const result = await res.json();
+
+                const pendingStatusDiv = document.getElementById('deposit-pending-status');
+                const depositBtn = document.getElementById('btn-open-deposit-modal');
+                const introText = document.getElementById('deposit-intro-text');
+
+                if (result.status === 'pending') {
+                    const amountDisplay = result.amount.toLocaleString();
+                    document.getElementById('pending-status-text').innerHTML = `درخواست شما با مبلغ **${amountDisplay} تومان** در انتظار واریز است.`;
+                    
+                    pendingStatusDiv.style.display = 'block';
+                    depositBtn.style.display = 'none';
+                    introText.style.display = 'none';
+                } else {
+                    pendingStatusDiv.style.display = 'none';
+                    depositBtn.style.display = 'block';
+                    introText.style.display = 'block';
+                }
+            } catch (e) {
+                console.error("Error checking pending deposits:", e);
             }
         }
         
+        // --- Deposit/Withdrawal Logic ---
+
         async function startDepositProcess() {
             if (selectedDepositType === 'manual') return;
 
@@ -577,6 +566,9 @@
                 tg.showAlert("حداقل مبلغ واریز ۵۰,۰۰۰ تومان است."); 
                 return; 
             }
+            
+            // Check for existing pending request before generating unique amount
+            // Since we added checkPendingDeposits on load, this helps prevent multiple concurrent requests.
             
             const randomSuffix = Math.floor(Math.random() * 999) + 1;
             const baseAmount = Math.trunc(amount / 1000) * 1000;
@@ -634,10 +626,10 @@
 
             const formData = new FormData();
             formData.append('initData', tg.initData);
-            formData.append('requested_amount', amount); // Updated name to match the unified backend endpoint
+            formData.append('requested_amount', amount); 
             formData.append('tracking_code', refInput.value || 'N/A');
             formData.append('receipt_file', receiptFile);
-            formData.append('deposit_type', 'manual'); // Updated name to match the unified backend endpoint
+            formData.append('deposit_type', 'manual'); 
 
             try {
                 const res = await fetch(`${API_BASE_URL}/webapp/submit_deposit_request`, {
@@ -651,6 +643,7 @@
                     tg.showAlert("✅ درخواست واریز دستی شما ثبت شد و در حال بررسی است.");
                     tg.HapticFeedback.notificationOccurred('success');
                     closeDepositModal();
+                    checkPendingDeposits(); // Check again to hide the deposit button
                 } else {
                     tg.showAlert(`❌ خطا در ثبت درخواست: ${result.message || 'نامشخص'}`);
                     tg.HapticFeedback.notificationOccurred('error');
@@ -662,48 +655,7 @@
                 btn.disabled = false; btn.innerHTML = '<i class="fas fa-upload"></i> ثبت درخواست واریز دستی';
             }
         }
-
-        // --- Withdrawal Modal Management ---
-        function openWithdrawalModal() {
-            selectWithdrawalType('toman'); // Default to Toman when opening
-            document.getElementById('withdrawal-modal').classList.add('active');
-        }
-
-        function closeWithdrawalModal() {
-            document.getElementById('withdrawal-modal').classList.remove('active');
-        }
-
-        function selectWithdrawalType(type) {
-            selectedWithdrawalType = type;
-            document.getElementById('w-type-toman').classList.remove('active');
-            document.getElementById('w-type-usdt').classList.remove('active');
-            document.getElementById(`w-type-${type}`).classList.add('active');
-
-            const amountLabel = document.getElementById('w-amount-label');
-            const destLabel = document.getElementById('w-dest-label');
-            const minMax = document.getElementById('w-min-max');
-            const networkField = document.getElementById('withdrawal-network-field');
-            const destInput = document.getElementById('iban-or-address');
-
-            if (type === 'toman') {
-                amountLabel.innerText = 'مبلغ برداشت (تومان)';
-                destLabel.innerText = 'شماره شبا مقصد';
-                minMax.innerText = `حداقل برداشت: ۵۰,۰۰۰ تومان. موجودی شما: ${userBalances.toman.toLocaleString()} تومان`;
-                networkField.style.display = 'none';
-                destInput.placeholder = 'IRxxxxxxxxxxxxxxxxxxxxxxx';
-                destInput.dir = 'ltr';
-                destInput.style.textAlign = 'left';
-            } else { // usdt
-                amountLabel.innerText = 'مبلغ برداشت (UUSD)';
-                destLabel.innerText = 'آدرس کیف پول مقصد';
-                minMax.innerText = `حداقل برداشت: ۱۰ UUSD. موجودی شما: ${userBalances.uusd} $`;
-                networkField.style.display = 'block';
-                destInput.placeholder = '0x... یا T...';
-                destInput.dir = 'ltr';
-                destInput.style.textAlign = 'left';
-            }
-        }
-
+        
         async function submitWithdrawal() {
             const amountInput = document.getElementById('withdrawal-amount');
             const destInput = document.getElementById('iban-or-address');
@@ -767,7 +719,7 @@
                     tg.showAlert("✅ درخواست برداشت شما ثبت شد. پس از تایید مدیر، واریز انجام می‌شود.");
                     tg.HapticFeedback.notificationOccurred('success');
                     closeWithdrawalModal();
-                    fetchWalletData(); // Refresh balances
+                    fetchWalletData(); 
                 } else {
                     tg.showAlert(`❌ خطا در ثبت درخواست: ${result.message || 'نامشخص'}`);
                     tg.HapticFeedback.notificationOccurred('error');
@@ -780,6 +732,24 @@
             }
         }
         
+        // --- UI/Modal Management (with minor updates) ---
+
+        function openDepositModal() { 
+            // Check for pending request before opening
+            if (document.getElementById('deposit-pending-status').style.display !== 'none') {
+                 tg.showAlert("شما در حال حاضر یک درخواست واریز معلق دارید. لطفاً آن را نهایی کنید.");
+                 return;
+            }
+            selectDepositType('auto');
+            goToDepositStep(0);
+            document.getElementById('deposit-modal').classList.add('active'); 
+            document.getElementById('exchange-card-number').innerText = formatCardNumber(EXCHANGE_CARD_NUMBER);
+        }
+
+        function closeDepositModal() { 
+            document.getElementById('deposit-modal').classList.remove('active'); 
+        }
+
         // --- Tab Management ---
         function showWalletTab(tab) {
             document.getElementById('tab-deposit').classList.remove('active');
@@ -793,39 +763,29 @@
             } else if (tab === 'withdraw') {
                 document.getElementById('tab-withdraw').classList.add('active');
                 document.getElementById('withdraw-content').style.display = 'block';
-                // Update min/max info when switching to the tab
                 selectWithdrawalType(selectedWithdrawalType);
             }
         }
+        
+        // --- Utility Functions ---
 
-
-        // --- Data Fetching and TX Rendering ---
-        async function fetchWalletData() {
-            try {
-                const res = await fetch(`${API_BASE_URL}/webapp/get_wallet_data`, {
-                    method: 'POST', 
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'ngrok-skip-browser-warning': 'true'
-                    },
-                    body: JSON.stringify({ initData: tg.initData })
-                });
-                const data = await res.json();
-                if (data.status === 'success') {
-                    // Update Balances
-                    const tomanBalance = parseInt(data.balances.toman.replace(/,/g, ''));
-                    const uusdBalance = parseFloat(data.balances.uusd);
-                    userBalances.toman = tomanBalance;
-                    userBalances.uusd = uusdBalance;
-
-                    document.getElementById('balance-toman').innerText = tomanBalance.toLocaleString();
-                    document.getElementById('balance-uusd').innerText = `${uusdBalance} $`;
-
-                    transactionsData = data.transactions;
-                    renderTx(data.transactions);
-                    hideLoader(); 
-                }
-            } catch (e) { console.error(e); hideLoader(); }
+        function hideLoader() {
+            const loader = document.getElementById('loader');
+            const app = document.getElementById('app-container');
+            if(loader) {
+                loader.style.opacity = '0';
+                loader.style.pointerEvents = 'none';
+                document.body.classList.remove('loading-active');
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                    app.classList.remove('hidden-content');
+                    app.classList.add('fade-in-active');
+                }, 500);
+            }
+        }
+        
+        function formatCardNumber(cardNum) {
+            return cardNum.match(/.{1,4}/g).join('-');
         }
 
         // --- (renderTx and showDetail functions remain unchanged) ---

@@ -1,4 +1,4 @@
-﻿/* webapp/script.js (v121.0 - Final Stable: Detached Event Listeners + Polling) */
+﻿/* webapp/script.js (v125.2 - UI Sync FIX + 3D Card Effect) */
 (function () {
     'use strict';
 
@@ -25,10 +25,9 @@
             if (isDashboard) {
                 await fetchDashboardData();
                 await fetchMarketRates();
-                setTimeout(() => { init3DCardEffect(); }, 500);
+                // 💡 برای داشبورد اگر نیاز به کارت ۳D بود، اینجا فعال شود
             } 
             else if (isWallet) {
-                // اتصال Event Listeners (جدید)
                 attachEventListeners(); 
                 
                 const userId = getUserIdFromInitData(tg.initData);
@@ -36,6 +35,10 @@
                 
                 await fetchWalletData(); 
                 await fetchActiveCardData();
+
+                // 🌟 [LUXURY-FICATION]: فعال کردن افکت ۳D برای کارت واریز
+                init3DCardEffect('wallet-card-container', '.bank-card-visual');
+                // ----------------------------------------------------
             }
 
             const loader = document.getElementById('loader');
@@ -59,6 +62,7 @@
         document.getElementById('deposit-btn')?.addEventListener('click', openDepositModal);
         document.getElementById('withdraw-btn')?.addEventListener('click', () => tg.showAlert('این بخش در حال بروزرسانی است'));
         document.getElementById('reload-btn')?.addEventListener('click', () => window.location.reload());
+        document.getElementById('back-to-dashboard-btn')?.addEventListener('click', () => window.location.href='dashboard.html');
         
         // مودال واریز
         document.getElementById('close-modal-btn')?.addEventListener('click', closeDepositModal);
@@ -253,8 +257,10 @@
         const radarBox = document.getElementById('radar-section');
         const depositModal = document.getElementById('deposit-modal');
         
-        if (!depositModal.classList.contains('active')) {
-            console.warn("Confirmation received, but modal is inactive.");
+        if (!depositModal || !depositModal.classList.contains('active')) {
+            console.warn("Confirmation received, but modal is inactive or missing.");
+            if (pollingInterval) clearInterval(pollingInterval);
+            pollingInterval = null;
             return;
         }
 
@@ -262,9 +268,11 @@
         if (pollingInterval) clearInterval(pollingInterval);
         pollingInterval = null; 
         
-        stopAutoCheck(false); // ریست کردن UI بدون پاک کردن حالت تایید
+        // ریست کردن دکمه و ورودی (اما رادار را پاک نکن)
+        stopAutoCheck(false); 
 
-        radarBox.innerHTML = `<div style="font-size:3.5rem; color:#0ECB81; margin-bottom:15px;"><i class="fas fa-check-circle"></i></div><h3 style="color:#fff;">واریز تایید شد!</h3>`;
+        // نمایش انیمیشن تایید (سبز شدن)
+        if(radarBox) radarBox.innerHTML = `<div style="font-size:3.5rem; color:#0ECB81; margin-bottom:15px;"><i class="fas fa-check-circle"></i></div><h3 style="color:#fff;">واریز تایید شد!</h3>`;
         tg.HapticFeedback.notificationOccurred('success');
         
         // آپدیت لیست تراکنش‌ها و موجودی (حیاتی)
@@ -282,7 +290,7 @@
     // 4. SMART DEPOSIT (UPDATED LOGIC)
     // ==========================================
 
-    // [FIXED] توابع برای استفاده از Event Listeners
+    // توابع برای استفاده از Event Listeners
     const openDepositModal = () => { 
         document.getElementById('deposit-modal').classList.add('active'); 
         tg.HapticFeedback.impactOccurred('medium'); 
@@ -290,7 +298,7 @@
     
     const closeDepositModal = () => { 
         document.getElementById('deposit-modal').classList.remove('active'); 
-        stopAutoCheck(); 
+        stopAutoCheck(true); // همیشه در حالت بستن دستی، ریست کامل انجام شود.
     };
     
     const copyCardNumber = () => {
@@ -308,8 +316,7 @@
         if(area.style.display === 'block') area.scrollIntoView({behavior: "smooth"});
     };
     
-    window.openDepositModal = openDepositModal; // جهت استفاده از onclick در دکمه واریز (فقط برای اطمینان)
-    // بقیه توابع را مستقیم در Event Listener متصل کردیم.
+    window.openDepositModal = openDepositModal; 
 
 
     // --- شروع پروسه هوشمند (با Polling) ---
@@ -328,7 +335,7 @@
 
     // [FALLBACK LOGIC & POLLING START]
     async function createPendingRequest(amount) {
-        // 1. ارسال درخواست ایجاد تراکنش معلق
+        // 1. ارسال درخواست ایجاد تراکنش معلق (با فایل dummy)
         const blob = new Blob(["waiting"], { type: "text/plain" });
         const file = new File([blob], "auto_wait.txt"); 
         const formData = new FormData();
@@ -339,18 +346,17 @@
             
             // 2. شروع پولینگ برای چک کردن وضعیت (Fallback قوی)
             if (pollingInterval) clearInterval(pollingInterval);
-            pollingInterval = setInterval(() => checkDepositStatus(amount), 2000); // هر 2 ثانیه یکبار چک کن
+            pollingInterval = setInterval(() => checkDepositStatus(amount), 2000); 
 
         } catch (e) { 
             tg.showAlert("خطا در اتصال"); 
-            stopAutoCheck(); 
+            stopAutoCheck(true); 
         }
     }
 
     // تابع پولینگ
     async function checkDepositStatus(requestedAmount) {
-        if (!document.getElementById('deposit-modal').classList.contains('active')) {
-            // اگر مودال بسته شده، اینتروال را قطع کن
+        if (!document.getElementById('deposit-modal')?.classList.contains('active')) {
             if (pollingInterval) clearInterval(pollingInterval);
             pollingInterval = null;
             return;
@@ -364,7 +370,6 @@
 
             // چک می‌کنیم که آخرین تراکنش، موفق (success) باشد و مبلغ آن تقریباً با مبلغ درخواستی برابر باشد.
             if (latestTx.color === 'success' && Math.abs(txAmt - requestedAmount) < 1000) {
-                // اگر پیدا شد، اینتروال را قطع و UI را آپدیت کن
                 if (pollingInterval) clearInterval(pollingInterval);
                 pollingInterval = null;
                 handleInstantConfirmation({type: 'TX_CONFIRMED'});
@@ -378,19 +383,29 @@
         if (pollingInterval) clearInterval(pollingInterval);
         pollingInterval = null;
 
-        if (document.getElementById('deposit-modal').classList.contains('active')) {
-            document.getElementById('radar-section').style.display = 'none';
-            document.getElementById('btn-confirm').style.display = 'block';
+        const radarBox = document.getElementById('radar-section');
+        const confirmBtn = document.getElementById('btn-confirm');
+        const depositModal = document.getElementById('deposit-modal');
+        const input = document.getElementById('deposit-amount');
+
+        if (depositModal?.classList.contains('active')) {
+            if (resetRadarContent && radarBox) { 
+                radarBox.style.display = 'none';
+            } else if (radarBox) {
+                // اگر resetRadarContent=false باشد، رادار نباید مخفی شود، اما دکمه Confirm باید مخفی بماند.
+                radarBox.style.display = 'block'; 
+            }
+
+            if (confirmBtn) confirmBtn.style.display = resetRadarContent ? 'block' : 'none';
         }
         
-        const input = document.getElementById('deposit-amount');
         if(input) { input.disabled = false; } 
 
-        if (resetRadarContent) {
-            const radarBox = document.getElementById('radar-section');
+        if (resetRadarContent && radarBox) {
+            // ریست محتوای داخلی رادار به حالت انتظار
             radarBox.innerHTML = '<div class="radar-spinner"></div><h4 style="margin:10px 0 5px; color:#0ECB81;">در حال انتظار واریز...</h4><p style="font-size:0.75rem; color:#888; margin:0;">سیستم به طور خودکار واریز شما را شناسایی می‌کند.</p>'; 
         }
-
+        
         document.getElementById('manual-upload-area').style.display = 'none';
     };
 
@@ -409,6 +424,46 @@
 
 
     // --- Helpers ---
+    // 🌟 [LUXURY-FICATION]: تابع جدید برای افکت ۳D کارت
+    function init3DCardEffect(containerId, cardSelector) {
+        const container = document.getElementById(containerId);
+        const card = container ? container.querySelector(cardSelector) : null;
+        if(!card || !container) return;
+        
+        const applyRotation = (e) => {
+            const rect = card.getBoundingClientRect();
+            // محاسبه موقعیت ماوس نسبت به مرکز کارت
+            const x = e.clientX - (rect.left + rect.width / 2);
+            const y = e.clientY - (rect.top + rect.height / 2);
+            
+            // چرخش بر اساس مختصات (تقسیم بر یک عدد بزرگتر برای حرکت ظریف‌تر)
+            card.style.transform = `rotateY(${x/25}deg) rotateX(${-y/25}deg) translateZ(10px)`;
+        };
+
+        const resetRotation = () => {
+            card.style.transform = 'rotateY(0) rotateX(0) translateZ(0)';
+        };
+
+        // فعال‌سازی حرکت بر روی دسکتاپ (برای توسعه)
+        container.addEventListener('mousemove', applyRotation);
+        container.addEventListener('mouseleave', resetRotation);
+
+        // فعال‌سازی برای دستگاه‌های لمسی (Mini App)
+        // بر اساس موقعیت انگشت اول
+        container.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 1) {
+                applyRotation(e.touches[0]);
+            }
+        });
+        container.addEventListener('touchend', resetRotation);
+        container.addEventListener('touchcancel', resetRotation);
+
+        // افکت اولیه برای جذابیت بصری
+        setTimeout(() => { card.style.transform = 'rotateY(5deg) rotateX(-5deg) translateZ(10px)'; }, 100);
+        setTimeout(resetRotation, 800);
+    }
+    // ----------------------------------------------------
+
     function updateLevelProgress(xp) {
         const xpFill = document.getElementById('xp-progress-fill');
         const lvlBadge = document.getElementById('level-badge');
@@ -426,18 +481,7 @@
         else if(status==='pending'){text="Pending ⏳";color="#F0B90B";bg="rgba(240,185,11,0.1)";}
         el.innerText=text; el.style.color=color; el.style.background=bg;
     }
-    function init3DCardEffect() {
-        const card = document.querySelector('.premium-card');
-        const container = document.querySelector('.main-content');
-        if(!card || !container) return;
-        container.addEventListener('mousemove', (e) => {
-            const rect = card.getBoundingClientRect();
-            const x = e.clientX - (rect.left + rect.width/2);
-            const y = e.clientY - (rect.top + rect.height/2);
-            card.style.transform = `rotateY(${x/20}deg) rotateX(${-y/20}deg)`;
-        });
-        container.addEventListener('mouseleave', () => { card.style.transform = 'rotateY(0) rotateX(0)'; });
-    }
+    
     function renderSmartChart(change) {
         const svg = document.getElementById('sparkline-svg');
         if(!svg) return;

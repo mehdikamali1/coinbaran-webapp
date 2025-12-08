@@ -18,7 +18,7 @@
             --text-white: #ffffff;
             --glass-border: rgba(255, 255, 255, 0.1);
         }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; user-select: none; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; /*user-select: none;*/ }
         body {
             margin: 0; padding: 0; font-family: 'Vazirmatn', sans-serif;
             background-color: var(--bg-deep); color: var(--text-white);
@@ -67,7 +67,6 @@
 
         /* === 5. دکمه‌های عملیات === */
         .wallet-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 35px; }
-        /* [FIXED] اضافه کردن ID برای اتصال در JS */
         .w-btn {
             background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
             border-radius: 20px; padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 12px;
@@ -83,16 +82,25 @@
         .deposit-theme i { color: #0ECB81; } .withdraw-theme i { color: #F6465D; }
         .w-btn span { color: #ccc; font-size: 0.9rem; font-weight: 500; }
 
-        /* === 6. کارت بانکی گرافیکی (اصلاح شده) === */
+        /* === 6. کارت بانکی گرافیکی (به همراه استایل های 3D) === */
+        
+        .wallet-card-container {
+            /* مهم: برای فعال شدن افکت ۳D روی کارت */
+            perspective: 1000px;
+            padding: 10px 0; /* برای فضای حرکت کارت */
+        }
         .bank-card-visual {
             width: 100%; height: 210px;
             background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%);
             border-radius: 22px; padding: 25px; position: relative; overflow: hidden;
-            border: 1px solid rgba(255, 215, 0, 0.2); margin: 25px 0;
+            border: 1px solid rgba(255, 215, 0, 0.2); margin: 0 auto;
             box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.9);
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            
+            /* مهم: برای حفظ لایه‌ها در حرکت ۳D */
+            transform-style: preserve-3d;
+            cursor: pointer;
         }
-        .bank-card-visual:active { transform: scale(0.97); }
         
         /* افکت درخشش */
         .bank-card-visual::after {
@@ -100,7 +108,7 @@
             background: linear-gradient(45deg, transparent 40%, rgba(255, 215, 0, 0.08) 50%, transparent 60%);
             animation: cardShine 5s infinite; pointer-events: none;
         }
-        @keyframes cardShine { 0% { transform: translateX(-100%) translateY(-100%); } 100% { transform: translateX(100%) translateY(100%); } }
+        @keyframes cardShine { 0% { transform: translate3d(-100%, -100%, 0); } 100% { transform: translate3d(100%, 100%, 0); } }
 
         .card-chip {
             width: 50px; height: 38px; background: linear-gradient(135deg, #ffdb73 0%, #b58e28 100%);
@@ -122,6 +130,8 @@
             font-family: 'Roboto Mono', monospace; font-size: 1.6rem; color: #FFD700;
             letter-spacing: 3px; margin-bottom: 25px; text-shadow: 0 2px 4px rgba(0,0,0,0.8);
             display: flex; justify-content: space-between; direction: ltr; width: 100%;
+            /* برای جلوگیری از نفوذ افکت ۳D به عمق */
+            transform: translateZ(20px);
         }
         .card-info { display: flex; justify-content: space-between; align-items: flex-end; }
         .card-holder { font-size: 0.9rem; color: #ccc; text-transform: uppercase; letter-spacing: 1px; font-weight: 500; }
@@ -170,7 +180,7 @@
 
     <header class="glass-header">
         <div class="profile-section" style="display:flex; align-items:center; gap:12px;">
-            <div class="header-btn" onclick="window.location.href='dashboard.html'">
+            <div id="back-to-dashboard-btn" class="header-btn" onclick="window.location.href='dashboard.html'">
                 <i class="fas fa-arrow-right" style="color:#fff;"></i>
             </div>
             <div style="font-weight:800; font-size:1.15rem; color: #fff;">مدیریت دارایی</div>
@@ -230,21 +240,22 @@
                 لطفاً مبلغ را به کارت زیر واریز کنید. سیستم به صورت هوشمند واریز را تشخیص می‌دهد.
             </p>
 
-            <div id="copy-card-btn" class="bank-card-visual">
-                <div class="card-chip"></div>
-                
-                <div id="card-bank-name" class="bank-logo-text" style="left: 25px; right: auto;">LOADING...</div>
+            <div class="wallet-card-container">
+                <div id="copy-card-btn" class="bank-card-visual">
+                    <div class="card-chip"></div>
+                    
+                    <div id="card-bank-name" class="bank-logo-text" style="left: 25px; right: auto;">LOADING...</div>
 
-                <div id="card-number-box" class="card-number">
-                    <span>----</span><span>----</span><span>----</span><span>----</span>
-                </div>
+                    <div id="card-number-box" class="card-number">
+                        <span>----</span><span>----</span><span>----</span><span>----</span>
+                    </div>
 
-                <div class="card-info">
-                    <div id="card-owner-name" class="card-holder">LOADING...</div>
-                    <div class="copy-tag"><i class="fas fa-copy"></i> کپی</div>
+                    <div class="card-info">
+                        <div id="card-owner-name" class="card-holder">LOADING...</div>
+                        <div class="copy-tag"><i class="fas fa-copy"></i> کپی</div>
+                    </div>
                 </div>
             </div>
-
             <div class="input-group">
                 <input type="tel" id="deposit-amount" class="smart-input" placeholder="0">
                 <div class="input-label">مبلغ واریزی (تومان)</div>

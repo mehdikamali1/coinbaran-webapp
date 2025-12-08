@@ -9,13 +9,11 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    <link rel="stylesheet" href="webapp/dashboard-style.css?v=76.0">
-
-    <style>
+    <link rel="stylesheet" href="webapp/dashboard-style.css?v=77.0"> <style>
         /* --- Wallet Specific Styles --- */
         
         :root {
-            --primary-gold: #FFC000; /* Use a defined gold for consistency */
+            --primary-gold: #FFC000; /* Define a striking gold color */
         }
         
         .wallet-actions {
@@ -97,7 +95,7 @@
         }
         .unique-amount-val {
             font-family: 'Roboto Mono';
-            font-size: 1.8rem;
+            font-size: 2.0rem; /* Made larger */
             font-weight: 900;
             color: var(--primary-gold);
             letter-spacing: -1px;
@@ -108,13 +106,17 @@
             background: var(--primary-gold);
             color: #000;
             border: none;
-            padding: 8px 20px;
-            border-radius: 10px;
+            padding: 10px 25px; /* Larger button */
+            border-radius: 12px;
             margin-top: 15px;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 5px 15px rgba(255, 192, 0, 0.3);
+            box-shadow: 0 5px 15px rgba(255, 192, 0, 0.5);
+            transition: all 0.2s;
+        }
+        .copy-btn-gold:active {
+            transform: scale(0.95);
         }
         .card-details-box {
             background: rgba(255,255,255,0.05); 
@@ -123,6 +125,19 @@
             border-radius: 12px; 
             margin-top: 25px; 
             text-align: center;
+        }
+        .btn-close-modal {
+            background: var(--text-muted);
+            color: #fff;
+            padding: 12px;
+            border-radius: 12px;
+            border: none;
+            font-weight: bold;
+            margin-top: 20px;
+            transition: background 0.2s;
+        }
+        .btn-close-modal:hover {
+            background: #444;
         }
 
     </style>
@@ -232,7 +247,7 @@
                     <button id="btn-submit-dep" class="btn-confirm-swap ripple-effect" 
                         style="width:100%; margin-top:25px; background:var(--accent-green);" 
                         onclick="startDepositProcess()">
-                        ثبت درخواست و دریافت مبلغ واریز یکتا
+                        <i class="fas fa-key"></i> ثبت و دریافت مبلغ واریز یکتا
                     </button>
                 </div>
             </div>
@@ -252,26 +267,26 @@
                     <div class="unique-amount-box" id="unique-amount-display">
                         <span style="font-size:0.8rem; color:#ccc;">مبلغ نهایی واریز شما:</span>
                         <span class="unique-amount-val" id="final-unique-amount">0</span>
-                        <span class="currency-symbol" style="color:#aaa; font-weight:bold;">تومان</span>
+                        <span class="currency-symbol" style="color:#aaa; font-weight:bold; display:block;">تومان</span>
                         <button class="copy-btn-gold ripple-effect" onclick="copyFinalAmount()">
                             <i class="fas fa-copy"></i> کپی مبلغ
                         </button>
                     </div>
 
                     <div class="card-details-box">
-                        <span style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:5px;">شماره کارت مقصد (کوین باران):</span>
+                        <span style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:10px;">شماره کارت مقصد (کوین باران):</span>
                         <span id="exchange-card-number" style="font-family:'Roboto Mono'; font-weight:700; color:var(--primary-gold); font-size:1.1rem;">---</span>
-                        <button class="copy-btn-gold ripple-effect" style="margin-top:10px;" onclick="copyCardNumber()">
+                        <button class="copy-btn-gold ripple-effect" style="margin-top:15px;" onclick="copyCardNumber()">
                             <i class="fas fa-copy"></i> کپی شماره کارت
                         </button>
                     </div>
 
-                    <div style="margin-top:20px; text-align:center;">
+                    <div style="margin-top:30px; text-align:center;">
                          <p style="color:var(--accent-green); font-size:0.9rem; font-weight:bold;">
                             بعد از واریز، منتظر پیام تأیید در تلگرام باشید. (نیاز به ارسال رسید نیست)
                          </p>
-                         <button class="btn-submit ripple-effect" style="width:100%; background:#2c2c2e; color:#fff;" onclick="closeDepositModal()">
-                            بستن و انتظار
+                         <button class="btn-close-modal ripple-effect" style="width:100%;" onclick="closeDepositModal()">
+                            بستن و ادامه
                          </button>
                     </div>
                 </div>
@@ -371,8 +386,9 @@
             // 1. Generate Unique Amount (Toman only needs 3 random digits, 001-999)
             // NOTE: Amount should be base 1000 to match deposit requests
             const randomSuffix = Math.floor(Math.random() * 999) + 1; // 1 to 999
-            const baseAmount = amount - (amount % 1000); // Strip last 3 digits
-            finalUniqueAmount = baseAmount + randomSuffix; 
+            // Use Math.trunc to ensure we work with integers
+            const baseAmount = Math.trunc(amount / 1000) * 1000; // Example: 100123 -> 100000
+            finalUniqueAmount = baseAmount + randomSuffix; // 100000 + 874 = 100874
 
             // 2. Submit the request to backend (registering the unique amount)
             const btn = document.getElementById('btn-submit-dep');
@@ -397,6 +413,7 @@
                     document.getElementById('deposit-step-2').style.display = 'block';
 
                     tg.HapticFeedback.notificationOccurred('success');
+                    // We don't close the modal here, user needs to see the final amount.
 
                 } else {
                     tg.showAlert(`❌ خطا در ثبت درخواست: ${result.message || 'نامشخص'}`);
@@ -406,7 +423,7 @@
             } catch (e) {
                 tg.showAlert("خطای شبکه در ثبت درخواست.");
             } finally {
-                btn.disabled = false; btn.innerHTML = 'ثبت درخواست و دریافت مبلغ واریز یکتا';
+                btn.disabled = false; btn.innerHTML = '<i class="fas fa-key"></i> ثبت و دریافت مبلغ واریز یکتا';
             }
         }
         

@@ -1,15 +1,15 @@
-﻿/* webapp/script.js (v96.0 - FINAL UX & WebSocket Integration) */
+﻿/* webapp/script.js (v98.0 - FINAL COMPLETE JS LOGIC WITH WS & DATA FIX) */
 (function () {
     'use strict';
 
     const tg = window.Telegram.WebApp;
     // Base URLs
-    const API_BASE_URL = window.location.origin;
     const WS_PROTOCOL = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    let WS_URL = null; // Defined after tg.initData is ready
+    const API_BASE_URL = window.location.origin;
+    let WS_URL = null; 
 
     // تنظیم زمان اسپلش اسکرین
-    let MIN_SPLASH_TIME = 1500; // Reduced for better UX
+    let MIN_SPLASH_TIME = 1500; 
 
     const loader = document.getElementById('loader');
     const appContainer = document.getElementById('app-container');
@@ -18,13 +18,14 @@
     const isDashboard = !!document.getElementById('toman-balance');
     const isSupportPage = !!document.getElementById('messages-container');
     const isWalletPage = window.location.pathname.includes('/wallet');
+    const isKYCPage = window.location.pathname.includes('/kyc');
 
     let chatPollInterval = null;
     let lastMessageCount = 0;
     let isSending = false;
-    let ws; // WebSocket connection object
+    let ws; 
 
-    // المنت‌های اصلی داشبورد
+    // المنت‌های اصلی داشبورد (برخی در تمام صفحات استفاده می‌شوند)
     const els = {
         welcomeName: document.getElementById('welcome-name'),
         tomanBalance: document.getElementById('toman-balance'),
@@ -50,14 +51,14 @@
     };
 
     // ==========================================
-    // 1. GLOBAL FIX: BFCache Handler (The Magic Fix)
+    // 1. GLOBAL FIX: BFCache Handler
     // ==========================================
     window.addEventListener('pageshow', function(event) {
         if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
             console.log("Restored from cache - Forcing loader hide");
             forceHideLoader();
             document.body.style.overflow = 'auto';
-            if (isDashboard) {
+            if (isDashboard || isWalletPage || isKYCPage) {
                  // Forcing a data refresh when returning from cache
                  fetchDashboardData().then(data => { if(data) updateDashboardUI(data); });
                  fetchMarketRates().then(res => {
@@ -80,19 +81,16 @@
                 tg.initData = "query_id=TEST_DEV_MODE"; 
             }
             
-            // Define WS URL only after initData is ready
             WS_URL = `${WS_PROTOCOL}//${window.location.host}/ws/wallet/${tg.initData}`;
 
             const hasSeenSplash = sessionStorage.getItem('splash_shown');
-            let dataResult = null;
-            let ratesResult = null;
-
+            
             // --- تنظیمات ظاهری تلگرام ---
             if (isDashboard) {
                 tg.setHeaderColor('#050505'); 
                 tg.setBackgroundColor('#050505');
                 tg.BackButton.hide();
-                connectWebSocket(); // NEW: Connect WS on Dashboard
+                connectWebSocket();
             } else {
                 tg.setHeaderColor('#1a1a1a');
                 tg.setBackgroundColor('#000000');
@@ -102,15 +100,16 @@
                 });
             }
 
-            // --- منطق لودینگ ---
+            // --- منطق لودینگ عمومی ---
             if (isDashboard && !hasSeenSplash) {
+                // *** ورود اول (با انیمیشن) ***
                 sessionStorage.setItem('splash_shown', 'true');
                 
                 const splashTimer = new Promise(resolve => setTimeout(resolve, MIN_SPLASH_TIME));
                 const dataFetch = fetchDashboardData();
                 const ratesFetch = fetchMarketRates(); 
 
-                [dataResult, ratesResult] = await Promise.all([dataFetch, ratesFetch, splashTimer]);
+                const [dataResult, ratesResult] = await Promise.all([dataFetch, ratesFetch, splashTimer]);
 
                 if (dataResult) {
                     updateDashboardUI(dataResult);
@@ -132,7 +131,7 @@
                     forceHideLoader();
                 }
             } else if (isDashboard) {
-                 // Fast load from cache/re-entry
+                 // Fast load for Dashboard
                  loadFromCache(); 
                  forceHideLoader(); 
                  fetchDashboardData().then(data => { if(data) updateDashboardUI(data); });
@@ -142,6 +141,15 @@
                  checkUnreadSupportMessages();
                  init3DCardEffect();
                  initHapticFeedback();
+            } else if (isWalletPage || isKYCPage) { 
+                // *** Fast load for Wallet/KYC (Fixing the load issue) ***
+                forceHideLoader();
+                // Ensure balance and rates are fetched for sub-pages too
+                fetchDashboardData().then(data => { if(data) updateDashboardUI(data); });
+                fetchMarketRates().then(res => {
+                    if(res && res.status === 'success') updateTickerUI(res.rates);
+                });
+                initHapticFeedback();
             } else if (isSupportPage) {
                 // --- منطق صفحه پشتیبانی ---
                 forceHideLoader(); 
@@ -150,11 +158,10 @@
                 startChatPolling();
                 initHapticFeedback();
             } else {
-                // --- سایر صفحات (مانند wallet و kyc) ---
                 forceHideLoader();
                 initHapticFeedback();
             }
-
+            
             // Global Status Modal must be accessible for Wallet
             if(isWalletPage) {
                  window.showStatusModal = showStatusModal;
@@ -184,15 +191,13 @@
             console.log("WS Message Received:", data);
             
             if (data.type === 'deposit_status') {
-                // Show modal in Dashboard/Wallet
                 showStatusModal(data.status, data.amount, data.message);
                 
-                // Force data refresh on success
                 fetchDashboardData().then(data => { if(data) updateDashboardUI(data); });
                 if(isWalletPage && window.checkPendingDeposits) {
-                    window.checkPendingDeposits(); // Clear pending status in wallet UI
+                    window.checkPendingDeposits(); 
                     if (data.status === 'approved') {
-                        window.fetchWalletData(); // Full refresh in wallet
+                        window.fetchWalletData(); 
                     }
                 }
             }
@@ -211,7 +216,6 @@
     function showStatusModal(status, amount, message) {
         const modal = document.getElementById('status-modal');
         if (!modal) {
-             // If modal is not in DOM (e.g., in Dashboard), use native alert/haptic feedback
              const isSuccess = status === 'approved' || status === 'success';
              tg.showAlert(isSuccess ? `✅ تایید موفق: ${message}` : `❌ رد شد: ${message}`);
              tg.HapticFeedback.notificationOccurred(isSuccess ? 'success' : 'error');
@@ -290,7 +294,7 @@
 
 
     // ==========================================
-    // 5. Data Fetching & UI Updaters (Unchanged Core Logic)
+    // 5. Data Fetching & UI Updaters 
     // ==========================================
     async function fetchDashboardData() {
         try {
@@ -318,9 +322,17 @@
         if (!data || data.status === 'error') return;
         if(saveCache) saveToCache(data);
 
+        // --- Core UI Updates ---
         if (els.welcomeName) els.welcomeName.innerText = data.first_name || "کاربر گرامی";
-        if (els.tomanBalance) els.tomanBalance.innerText = data.toman_balance; 
-        if (els.uusdBalance) els.uusdBalance.innerHTML = `${data.uusd_balance} <small>$</small>`;
+        
+        // Find existing balance elements
+        const balanceTomanEl = document.getElementById('balance-toman');
+        const balanceUUSDEl = document.getElementById('balance-uusd');
+        
+        // Update balance elements if they exist (used in Wallet/KYC pages)
+        if (balanceTomanEl) balanceTomanEl.innerText = data.toman_balance; 
+        if (balanceUUSDEl) balanceUUSDEl.innerHTML = `${data.uusd_balance} <small>$</small>`;
+        
         if (els.xpBalance) els.xpBalance.innerHTML = `${data.xp_balance} <small>XP</small>`;
 
         updateLevelProgress(parseInt((data.xp_balance || "0").replace(/,/g, '')) || 0);
@@ -330,8 +342,14 @@
         }
         updateKycBadge(data.kyc_status_code);
     }
+    
+    // --- Register global functions for wallet.html to use ---
+    window.fetchDashboardData = fetchDashboardData;
+    window.fetchMarketRates = fetchMarketRates;
+    window.updateDashboardUI = updateDashboardUI;
 
-    function updateLevelProgress(xp) {
+    // ... (rest of the dashboard functions remain unchanged) ...
+    function updateLevelProgress(xp) { 
         if (!els.xpFill || !els.levelBadge) return;
         const levels = [0, 500, 1500, 3500, 7000, 15000, 30000]; 
         let currentLevel = 1; let prevThreshold = 0; let nextThreshold = 500;
@@ -346,7 +364,7 @@
         if (els.nextLevelText) els.nextLevelText.innerText = `${Math.floor(percentage)}%`;
     }
 
-    function updateTickerUI(rates) {
+    function updateTickerUI(rates) { 
         if (!els.ticker || !rates || rates.length === 0) return;
         let html = '';
         const loopRates = [...rates, ...rates, ...rates]; 
@@ -358,8 +376,8 @@
         });
         els.ticker.innerHTML = html;
     }
-
-    function renderSmartChart(changePercent) {
+    
+    function renderSmartChart(changePercent) { 
         const svg = document.getElementById('sparkline-svg');
         if (!svg) return;
         const existingPaths = svg.querySelectorAll('path');
@@ -386,9 +404,8 @@
         pathFill.setAttribute("d", dFill); pathFill.setAttribute("fill", fillUrl); pathFill.setAttribute("stroke", "none"); pathFill.style.opacity = "0.5";
         svg.appendChild(pathFill); svg.appendChild(pathLine);
     }
-
-    // ... (Effects & Interactions, KYC Badge, Support Functions - Unchanged) ...
-    function init3DCardEffect() {
+    
+    function init3DCardEffect() { 
         const card = document.querySelector('.premium-card');
         const container = document.querySelector('.main-content');
         if (!card) return;
@@ -447,6 +464,9 @@
         } catch (e) {}
     }
     
+    // ==========================================
+    // 6. Chat Functions (Full, as requested)
+    // ==========================================
     function startChatPolling() {
         if (chatPollInterval) clearInterval(chatPollInterval);
         chatPollInterval = setInterval(() => loadChatHistory(false), 3000);
@@ -569,5 +589,5 @@
 
     function scrollToBottom() { if (chatEls.container) chatEls.container.scrollTop = chatEls.container.scrollHeight; }
     function escapeHtml(text) { if (!text) return ""; return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
-    // NOTE: Removed unused showError function from original code block
+
 })();

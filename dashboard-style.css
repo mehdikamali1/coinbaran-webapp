@@ -1,4 +1,4 @@
-﻿/* webapp/dashboard-style.css (v92.0 - Wallet & Tab System Update) */
+﻿/* webapp/dashboard-style.css (v94.0 - FINAL COMPLETE LUXURY UI) */
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;300;400;500;700;800;900&family=Cinzel:wght@400;700;900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap');
 
@@ -8,6 +8,7 @@
     --gold-rich: #F0B90B;
     --gold-dark: #B8860B;
     --text-white: #ffffff;
+    --text-main: #ffffff;
     --text-muted: #888888;
     --glass-border: rgba(255, 255, 255, 0.08);
     --card-gradient: linear-gradient(145deg, #1c1c1e 0%, #000000 100%);
@@ -15,6 +16,7 @@
     --accent-green: #0ECB81; /* Success / Auto Deposit */
     --accent-red: #F6465D; /* Danger / Withdraw */
     --accent-blue: #3B82F6; /* Info / Manual Deposit */
+    --accent-yellow: #FFC000; /* Pending Deposit */
 
     --radius-xl: 24px;
     --radius-lg: 18px;
@@ -35,7 +37,7 @@ body {
 }
 
 /* =========================================
-    1. انیمیشن ورودی سریع (3.5 Seconds)
+    1. انیمیشن ورودی سریع
     ========================================= */
 #loader {
     position: fixed; inset: 0;
@@ -84,7 +86,7 @@ body {
 @keyframes load-bar { to { transform: translateX(0); } }
 
 /* =========================================
-    2. استایل‌های اصلی داشبورد
+    2. استایل‌های عمومی (Dashboard & Header)
     ========================================= */
 #app-container { max-width: 600px; margin: 0 auto; min-height: 100vh; position: relative; z-index: 2; display: flex; flex-direction: column; }
 .ambient-light { position: fixed; top: -100px; left: 50%; transform: translateX(-50%); width: 80%; height: 300px; background: radial-gradient(ellipse at center, rgba(255, 215, 0, 0.08), transparent 70%); z-index: 1; pointer-events: none; }
@@ -104,7 +106,7 @@ body {
 .user-info { display: flex; flex-direction: column; justify-content: center; }
 .user-info h2 { font-size: 0.95rem; margin: 0; color: #fff; font-weight: 700; line-height: 1.2; }
 
-/* --- استایل‌های جدید نوار XP --- */
+/* XP Bar */
 .xp-container { width: 100px; margin-top: 6px; }
 .xp-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
 .level-badge { 
@@ -117,14 +119,14 @@ body {
 .xp-bar-fill { 
     height: 100%; 
     background: linear-gradient(90deg, var(--gold-dark), var(--gold-primary)); 
-    width: 0%; /* با JS پر می‌شود */
+    width: 0%; 
     transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 0 10px var(--gold-primary);
 }
 
 .action-icon-btn { width: 40px; height: 40px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 12px; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
 
-/* Ticker (نوار قیمت) */
+/* Ticker */
 .ticker-wrap { width: 100%; background: #080808; border-bottom: 1px solid var(--glass-border); overflow: hidden; padding: 8px 0; }
 .ticker-move { display: inline-block; white-space: nowrap; animation: ticker 25s linear infinite; }
 .ticker-item { display: inline-block; padding: 0 20px; font-family: 'Roboto Mono'; font-size: 0.75rem; color: #888; }
@@ -133,7 +135,7 @@ body {
 
 .main-content { padding: 20px; overflow-y: auto; perspective: 1000px; }
 
-/* Premium Asset Card (3D) */
+/* Premium Asset Card */
 .premium-card {
     background: var(--card-gradient);
     border-radius: var(--radius-xl); padding: 24px; position: relative;
@@ -145,27 +147,21 @@ body {
     transition: transform 0.1s ease-out;
     will-change: transform;
 }
-
 .card-bg-texture { position: absolute; inset: 0; background: url('https://www.transparenttextures.com/patterns/carbon-fibre.png'); opacity: 0.05; pointer-events: none; transform: translateZ(0); }
 .card-shine {
     position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
     background: radial-gradient(circle, rgba(255, 215, 0, 0.05) 0%, transparent 60%);
     pointer-events: none; mix-blend-mode: overlay; transform: translateZ(1px);
 }
-
 .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; position: relative; z-index: 2; transform: translateZ(25px); }
 .chip-sim { font-size: 2.2rem; color: rgba(255,255,255,0.1); transform: rotate(90deg); text-shadow: 2px 4px 6px rgba(0,0,0,0.5); }
 .card-type { font-family: 'Cinzel'; font-size: 0.7rem; color: var(--gold-dark); letter-spacing: 2px; font-weight: 700; }
-
 .card-balance { text-align: right; margin-bottom: 15px; position: relative; z-index: 2; transform: translateZ(35px); }
 .balance-label { font-size: 0.8rem; color: #666; display: block; margin-bottom: 5px; }
 .balance-amount { display: flex; align-items: baseline; justify-content: flex-end; gap: 8px; }
-.balance-amount h1 { font-family: 'Roboto Mono'; font-size: 2.2rem; margin: 0; color: #fff; letter-spacing: -1px; text-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+.main-digit { font-family: 'Roboto Mono'; font-size: 2.2rem; margin: 0; color: #fff; letter-spacing: -1px; text-shadow: 0 5px 15px rgba(0,0,0,0.5); }
 .currency-symbol { color: var(--gold-primary); font-size: 1.2rem; }
-
 .mini-chart-container { height: 50px; width: 100%; margin-bottom: 20px; opacity: 0.8; position: relative; z-index: 2; transform: translateZ(15px); }
-.chart-svg { width: 100%; height: 100%; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); }
-
 .card-footer { background: rgba(255,255,255,0.03); border-radius: 12px; padding: 12px; display: flex; border: 1px solid rgba(255,255,255,0.05); position: relative; z-index: 2; transform: translateZ(20px); }
 .asset-row { display: flex; width: 100%; justify-content: space-around; align-items: center; }
 .asset-col { text-align: center; }
@@ -183,13 +179,40 @@ body {
 .deposit-color { color: var(--accent-green); } .withdraw-color { color: var(--accent-red); } .trade-color { color: var(--accent-blue); } .kyc-color { color: var(--gold-primary); }
 .glass-btn:active .btn-icon { transform: scale(0.95); background: rgba(255,255,255,0.05); }
 
+/* Services Grid (Dashboard Specific) */
+.services-grid-modern { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.service-card {
+    background: rgba(20, 20, 20, 0.5); border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md); padding: 16px; display: flex; align-items: center; gap: 15px;
+    cursor: pointer; transition: background 0.2s;
+}
+.service-card:active { background: rgba(255,255,255,0.05); }
+.service-icon { font-size: 1.6rem; width: 40px; text-align: center; }
+.gold-glow { color: #0ECB81; filter: drop-shadow(0 0 8px rgba(14,203,129,0.3)); }
+.pink-glow { color: #FF007A; filter: drop-shadow(0 0 8px rgba(255,0,122,0.3)); }
+.green-glow { color: #fff; filter: drop-shadow(0 0 8px rgba(255,255,255,0.3)); }
+.blue-glow { color: var(--gold-primary); filter: drop-shadow(0 0 8px rgba(255,215,0,0.3)); }
+.service-meta h4 { margin: 0 0 3px 0; font-size: 0.9rem; color: #e0e0e0; }
+.service-meta span { font-size: 0.7rem; color: #666; }
+
+/* Game Banner (Dashboard Specific) */
+.game-banner {
+    position: relative; height: 120px; border-radius: var(--radius-lg); overflow: hidden;
+    background: linear-gradient(135deg, #0f172a 0%, #000 100%); border: 1px solid rgba(59,130,246,0.3);
+    margin-bottom: 20px; display: flex; align-items: center; padding: 0 25px; cursor: pointer;
+}
+.banner-glow { position: absolute; right: -20px; top: -50%; width: 150px; height: 200%; background: rgba(59,130,246,0.2); filter: blur(40px); transform: rotate(15deg); }
+.banner-content { display: flex; justify-content: space-between; width: 100%; position: relative; z-index: 2; align-items: center; }
+.game-info h3 { margin: 0 0 5px 0; font-size: 1.2rem; color: #fff; }
+.game-info p { margin: 0; font-size: 0.8rem; color: #888; }
+.play-icon { width: 45px; height: 45px; border-radius: 50%; background: #3B82F6; display: flex; align-items: center; justify-content: center; color: #fff; box-shadow: 0 0 15px rgba(59,130,246,0.5); }
+
+
 /* =========================================
-    3. استایل‌های مشترک ولت و تراکنش‌ها
+    3. استایل‌های ولت و تراکنش‌ها (Refined)
     ========================================= */
 
-.main-scroll-area { padding: 20px; overflow-y: auto; }
-
-/* Tab System */
+/* Tab System (Wallet) */
 .tab-bar {
     display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
     margin-bottom: 25px;
@@ -215,7 +238,7 @@ body {
 }
 
 /* Transaction List Styling */
-.tx-container { padding-bottom: 80px; }
+.tx-container { padding-bottom: 20px; }
 .section-label { 
     font-size: 0.95rem; color: var(--text-white); margin-bottom: 15px; 
     display: flex; align-items: center; gap: 8px; font-weight: 800;
@@ -229,8 +252,9 @@ body {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--glass-border);
     cursor: pointer; transition: all 0.2s;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
-.tx-card:active { background: rgba(255, 255, 255, 0.06); transform: translateX(-3px); }
+.tx-card:active { background: rgba(255, 255, 255, 0.06); transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
 
 .tx-left { display: flex; align-items: center; gap: 14px; }
 .tx-icon-box {
@@ -242,12 +266,41 @@ body {
 .tx-details { display: flex; flex-direction: column; gap: 4px; }
 .tx-title { font-size: 0.9rem; font-weight: 700; color: #fff; }
 .tx-date { font-size: 0.75rem; color: var(--text-muted); font-family: 'Roboto Mono'; }
-
 .tx-amount { font-family: 'Roboto Mono'; font-weight: 700; font-size: 1rem; direction: ltr; }
 
-/* Deposit Modal Custom Styles */
+/* Pagination Styling */
+.pagination-controls {
+    display: flex; justify-content: center; align-items: center; gap: 15px;
+    margin-top: 20px;
+    padding: 10px;
+    margin-bottom: 40px;
+}
+.page-btn {
+    background: rgba(255,255,255,0.05);
+    color: var(--text-muted);
+    border: 1px solid var(--glass-border);
+    padding: 8px 15px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.2s;
+}
+.page-btn:hover:not(:disabled) {
+    background: var(--gold-rich);
+    color: #000;
+}
+.page-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.page-number {
+    font-size: 0.9rem;
+    color: var(--text-white);
+}
 
-.deposit-type-select {
+/* Deposit/Withdrawal Modal Styles */
+
+.deposit-type-select, .withdrawal-currency-select {
     display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
     margin-bottom: 25px;
 }
@@ -290,7 +343,7 @@ body {
 }
 .unique-amount-val {
     font-family: 'Roboto Mono';
-    font-size: 2.0rem; /* Made larger */
+    font-size: 2.0rem;
     font-weight: 900;
     color: var(--gold-primary);
     letter-spacing: -1px;
@@ -301,7 +354,7 @@ body {
     background: var(--gold-primary);
     color: #000;
     border: none;
-    padding: 10px 25px; /* Larger button */
+    padding: 10px 25px;
     border-radius: 12px;
     margin-top: 15px;
     font-size: 0.9rem;
@@ -313,16 +366,8 @@ body {
 .copy-btn-gold:active {
     transform: scale(0.95);
 }
-.card-details-box {
-    background: rgba(255,255,255,0.05); 
-    border: 1px solid rgba(255,255,255,0.1);
-    padding: 15px; 
-    border-radius: 12px; 
-    margin-top: 25px; 
-    text-align: center;
-}
 
-/* Modal Close Button (Globalized from wallet.html) */
+/* Modal Close Button (Globalized) */
 .btn-close-modal {
     background: var(--text-muted);
     color: #fff;
@@ -346,7 +391,7 @@ body {
 }
 
 /* =========================================
-    4. استایل‌های پشتیبانی (حفظ شده)
+    4. استایل‌های پشتیبانی (Support)
     ========================================= */
 .notif-dot-support {
     position: absolute; top: -3px; right: -3px; width: 9px; height: 9px;
@@ -368,6 +413,10 @@ body {
 .attach-btn { background: transparent; color: var(--gold-primary); }
 .send-btn { background: var(--gold-primary); color: #000; }
 
+
+/* =========================================
+    5. انیمیشن‌های عمومی
+    ========================================= */
 .hidden-content { opacity: 0; transform: translateY(20px); }
 .fade-in-active { opacity: 1; transform: translateY(0); transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .ripple-btn:active { transform: scale(0.96); opacity: 0.8; }

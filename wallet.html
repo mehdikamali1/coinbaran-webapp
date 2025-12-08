@@ -255,6 +255,9 @@
                 </div>
             </div>
         </div>
+        
+        <div id="pagination-controls" class="pagination-controls">
+            </div>
 
     </div>
 
@@ -345,7 +348,7 @@
                            <p style="color:var(--accent-green); font-size:0.9rem; font-weight:bold;">
                                بعد از واریز، منتظر پیام تأیید در تلگرام باشید. (نیاز به ارسال رسید نیست)
                            </p>
-                           <button class="btn-close-modal ripple-effect" style="width:100%;" onclick="closeDepositModal(); checkPendingDeposits(finalUniqueAmount);">
+                           <button class="btn-close-modal ripple-effect" style="width:100%;" onclick="closeDepositModal(); checkPendingDeposits();">
                                بستن و ادامه
                            </button>
                            <button class="btn-close-modal ripple-effect" style="width:100%; margin-top:10px; background:rgba(255,255,255,0.1); color:#fff;" onclick="goToDepositStep(1)">
@@ -518,18 +521,22 @@
 
                     transactionsData = data.transactions;
                     renderTx(data.transactions);
+                    
+                    // After fetching data, check pending status to update UI based on fresh balance
+                    checkPendingDeposits(); 
+                    
                     hideLoader(); 
                 }
             } catch (e) { console.error(e); hideLoader(); }
         }
         
-        async function checkPendingDeposits(uniqueAmount = null) {
-            // New Endpoint to check for pending requests
+        async function checkPendingDeposits() {
+            // Endpoint to check for pending requests
             try {
                 const res = await fetch(`${API_BASE_URL}/webapp/check_pending_deposits`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ initData: tg.initData, unique_amount: uniqueAmount })
+                    body: JSON.stringify({ initData: tg.initData })
                 });
                 const result = await res.json();
 
@@ -538,8 +545,13 @@
                 const introText = document.getElementById('deposit-intro-text');
 
                 if (result.status === 'pending') {
-                    const amountDisplay = result.amount.toLocaleString();
-                    document.getElementById('pending-status-text').innerHTML = `درخواست شما با مبلغ **${amountDisplay} تومان** در انتظار واریز است.`;
+                    const amountDisplay = result.unique_amount ? result.unique_amount.toLocaleString() : result.amount.toLocaleString();
+                    
+                    if (result.type === 'auto') {
+                         document.getElementById('pending-status-text').innerHTML = `درخواست واریز **اتوماتیک** شما با مبلغ **${amountDisplay} تومان** در انتظار واریز شماست.`;
+                    } else {
+                         document.getElementById('pending-status-text').innerHTML = `درخواست واریز **دستی** شما با مبلغ **${amountDisplay} تومان** در انتظار تایید ادمین است.`;
+                    }
                     
                     pendingStatusDiv.style.display = 'block';
                     depositBtn.style.display = 'none';
@@ -566,9 +578,6 @@
                 tg.showAlert("حداقل مبلغ واریز ۵۰,۰۰۰ تومان است."); 
                 return; 
             }
-            
-            // Check for existing pending request before generating unique amount
-            // Since we added checkPendingDeposits on load, this helps prevent multiple concurrent requests.
             
             const randomSuffix = Math.floor(Math.random() * 999) + 1;
             const baseAmount = Math.trunc(amount / 1000) * 1000;
@@ -643,7 +652,7 @@
                     tg.showAlert("✅ درخواست واریز دستی شما ثبت شد و در حال بررسی است.");
                     tg.HapticFeedback.notificationOccurred('success');
                     closeDepositModal();
-                    checkPendingDeposits(); // Check again to hide the deposit button
+                    checkPendingDeposits(); 
                 } else {
                     tg.showAlert(`❌ خطا در ثبت درخواست: ${result.message || 'نامشخص'}`);
                     tg.HapticFeedback.notificationOccurred('error');
@@ -732,10 +741,9 @@
             }
         }
         
-        // --- UI/Modal Management (with minor updates) ---
+        // --- UI/Modal Management ---
 
         function openDepositModal() { 
-            // Check for pending request before opening
             if (document.getElementById('deposit-pending-status').style.display !== 'none') {
                  tg.showAlert("شما در حال حاضر یک درخواست واریز معلق دارید. لطفاً آن را نهایی کنید.");
                  return;
@@ -748,6 +756,68 @@
 
         function closeDepositModal() { 
             document.getElementById('deposit-modal').classList.remove('active'); 
+        }
+
+        function openWithdrawalModal() {
+            selectWithdrawalType('toman'); 
+            document.getElementById('withdrawal-modal').classList.add('active');
+        }
+
+        function closeWithdrawalModal() {
+            document.getElementById('withdrawal-modal').classList.remove('active');
+        }
+
+        function selectWithdrawalType(type) {
+            selectedWithdrawalType = type;
+            document.getElementById('w-type-toman').classList.remove('active');
+            document.getElementById('w-type-usdt').classList.remove('active');
+            document.getElementById(`w-type-${type}`).classList.add('active');
+
+            const amountLabel = document.getElementById('w-amount-label');
+            const destLabel = document.getElementById('w-dest-label');
+            const minMax = document.getElementById('w-min-max');
+            const networkField = document.getElementById('withdrawal-network-field');
+            const destInput = document.getElementById('iban-or-address');
+
+            if (type === 'toman') {
+                amountLabel.innerText = 'مبلغ برداشت (تومان)';
+                destLabel.innerText = 'شماره شبا مقصد';
+                minMax.innerText = `حداقل برداشت: ۵۰,۰۰۰ تومان. موجودی شما: ${userBalances.toman.toLocaleString()} تومان`;
+                networkField.style.display = 'none';
+                destInput.placeholder = 'IRxxxxxxxxxxxxxxxxxxxxxxx';
+                destInput.dir = 'ltr';
+                destInput.style.textAlign = 'left';
+            } else { // usdt
+                amountLabel.innerText = 'مبلغ برداشت (UUSD)';
+                destLabel.innerText = 'آدرس کیف پول مقصد';
+                minMax.innerText = `حداقل برداشت: ۱۰ UUSD. موجودی شما: ${userBalances.uusd} $`;
+                networkField.style.display = 'block';
+                destInput.placeholder = '0x... یا T...';
+                destInput.dir = 'ltr';
+                destInput.style.textAlign = 'left';
+            }
+        }
+
+        function goToDepositStep(step) {
+            document.getElementById('deposit-step-0').style.display = 'none';
+            document.getElementById('deposit-step-1').style.display = 'none';
+            document.getElementById('deposit-step-2').style.display = 'none';
+            document.getElementById('deposit-step-manual').style.display = 'none';
+            
+            if (step === 0) {
+                document.getElementById('deposit-step-0').style.display = 'block';
+            } else if (step === 1) {
+                if (selectedDepositType === 'auto') {
+                    document.getElementById('step-1-title').innerText = 'درخواست واریز اتوماتیک ⚡️';
+                    document.getElementById('btn-submit-dep').style.background = 'var(--accent-green)';
+                    document.getElementById('btn-submit-dep').innerText = 'ثبت و دریافت مبلغ واریز یکتا';
+                    document.getElementById('deposit-step-1').style.display = 'block';
+                } else if (selectedDepositType === 'manual') {
+                    document.getElementById('deposit-step-manual').style.display = 'block';
+                }
+            } else if (step === 2) {
+                document.getElementById('deposit-step-2').style.display = 'block';
+            }
         }
 
         // --- Tab Management ---
@@ -797,39 +867,86 @@
                 return; 
             }
 
-            txs.forEach((tx, index) => {
-                const div = document.createElement('div');
-                div.className = 'tx-card ripple-btn';
-                div.onclick = () => { showDetail(index); tg.HapticFeedback.selectionChanged(); };
-                
-                let colorClass = '#fff';
-                let icon = '';
-                
-                if(tx.color === 'success') { 
-                    colorClass = 'var(--accent-green)'; 
-                    icon = '<i class="fas fa-arrow-down" style="color:var(--accent-green)"></i>'; 
-                }
-                else if(tx.color === 'danger') { 
-                    colorClass = 'var(--accent-red)'; 
-                    icon = '<i class="fas fa-arrow-up" style="color:var(--accent-red)"></i>'; 
-                }
-                else { 
-                    colorClass = 'var(--primary-gold)'; 
-                    icon = '<i class="fas fa-exchange-alt" style="color:var(--primary-gold)"></i>'; 
-                }
+            // Simple Pagination Placeholder for UX fix
+            const itemsPerPage = 5; 
+            let currentPage = 1;
+            const totalPages = Math.ceil(txs.length / itemsPerPage);
 
-                div.innerHTML = `
-                    <div class="tx-left">
-                        <div class="tx-icon-box">${icon}</div>
-                        <div class="tx-details">
-                            <span class="tx-title">${tx.title}</span>
-                            <span class="tx-date">${tx.date}</span>
+            function displayPage(page) {
+                const start = (page - 1) * itemsPerPage;
+                const end = start + itemsPerPage;
+                list.innerHTML = ''; // Clear existing list
+                
+                const pageTxs = txs.slice(start, end);
+
+                pageTxs.forEach((tx, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'tx-card ripple-btn';
+                    div.onclick = () => { showDetail(start + index); tg.HapticFeedback.selectionChanged(); };
+                    
+                    let colorClass = '#fff';
+                    let icon = '';
+                    
+                    if(tx.color === 'success') { 
+                        colorClass = 'var(--accent-green)'; 
+                        icon = '<i class="fas fa-arrow-down" style="color:var(--accent-green)"></i>'; 
+                    }
+                    else if(tx.color === 'danger') { 
+                        colorClass = 'var(--accent-red)'; 
+                        icon = '<i class="fas fa-arrow-up" style="color:var(--accent-red)"></i>'; 
+                    }
+                    else { 
+                        colorClass = 'var(--primary-gold)'; 
+                        icon = '<i class="fas fa-exchange-alt" style="color:var(--primary-gold)"></i>'; 
+                    }
+
+                    div.innerHTML = `
+                        <div class="tx-left">
+                            <div class="tx-icon-box">${icon}</div>
+                            <div class="tx-details">
+                                <span class="tx-title">${tx.title}</span>
+                                <span class="tx-date">${tx.date}</span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="tx-amount" style="color:${colorClass}">${tx.display_amount}</div>
-                `;
-                list.appendChild(div);
-            });
+                        <div class="tx-amount" style="color:${colorClass}">${tx.display_amount}</div>
+                    `;
+                    list.appendChild(div);
+                });
+                renderPaginationControls(page);
+            }
+            
+            function renderPaginationControls(page) {
+                const controls = document.getElementById('pagination-controls');
+                controls.innerHTML = '';
+                
+                if (totalPages <= 1) {
+                    controls.style.display = 'none';
+                    return;
+                }
+                controls.style.display = 'flex';
+
+                const prevBtn = document.createElement('button');
+                prevBtn.className = 'page-btn';
+                prevBtn.innerText = 'قبلی';
+                prevBtn.disabled = page === 1;
+                prevBtn.onclick = () => { currentPage--; displayPage(currentPage); };
+                
+                const nextBtn = document.createElement('button');
+                nextBtn.className = 'page-btn';
+                nextBtn.innerText = 'بعدی';
+                nextBtn.disabled = page === totalPages;
+                nextBtn.onclick = () => { currentPage++; displayPage(currentPage); };
+                
+                const pageNum = document.createElement('span');
+                pageNum.className = 'page-number';
+                pageNum.innerText = `صفحه ${page} از ${totalPages}`;
+
+                controls.appendChild(prevBtn);
+                controls.appendChild(pageNum);
+                controls.appendChild(nextBtn);
+            }
+
+            displayPage(currentPage);
         }
 
         function showDetail(index) {

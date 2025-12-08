@@ -93,6 +93,44 @@
             font-weight: bold; text-align: center; outline: none;
         }
         .glass-field:focus { border-color: var(--primary-gold); box-shadow: 0 0 15px rgba(240,185,11,0.1); }
+        
+        /* --- NEW: Unique Amount Display --- */
+        .unique-amount-box {
+            background: linear-gradient(145deg, #101010, #000);
+            border: 2px solid var(--accent-green);
+            border-radius: 18px;
+            padding: 20px;
+            text-align: center;
+            margin-top: 25px;
+            box-shadow: 0 10px 30px rgba(14, 203, 129, 0.2);
+        }
+        .unique-amount-box.waiting {
+             border-color: var(--primary-gold);
+             box-shadow: 0 10px 30px rgba(240, 185, 11, 0.2);
+        }
+        .unique-amount-val {
+            font-family: 'Roboto Mono';
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: var(--accent-green);
+            letter-spacing: -1px;
+            display: block;
+            margin-top: 10px;
+        }
+        .unique-amount-box.waiting .unique-amount-val {
+            color: var(--primary-gold);
+        }
+        .copy-btn {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
     </style>
 </head>
 <body class="loading-active">
@@ -181,32 +219,70 @@
 
     <div id="deposit-modal" class="modal-overlay">
         <div class="modal-content glass-panel">
-            <div class="modal-header">
-                <h3 style="color:var(--accent-green)">شارژ کیف پول ⚡️</h3>
-                <button onclick="closeDepositModal()" class="close-modal">✕</button>
-            </div>
-            <div class="modal-body">
-                <p style="text-align:center; color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">
-                    لطفاً مبلغ مورد نظر و تصویر فیش واریزی را وارد کنید.
-                </p>
-
-                <div style="margin-bottom:20px;">
-                    <label class="label-muted" style="margin-bottom:8px;">مبلغ (تومان)</label>
-                    <input type="number" id="deposit-amount" class="glass-field" placeholder="مثلاً ۱۰۰,۰۰۰" inputmode="numeric">
+            
+            <div id="deposit-step-1">
+                <div class="modal-header">
+                    <h3 style="color:var(--accent-green)">درخواست واریز 💵</h3>
+                    <button onclick="closeDepositModal()" class="close-modal">✕</button>
                 </div>
+                <div class="modal-body">
+                    <p style="text-align:center; color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">
+                        لطفاً مبلغ مورد نظر خود را وارد کنید.
+                    </p>
 
-                <div class="upload-area ripple-btn" onclick="document.getElementById('receipt-file').click()">
-                    <i class="fas fa-cloud-upload-alt upload-icon" id="up-icon"></i>
-                    <div class="upload-label" id="file-label">برای انتخاب تصویر فیش کلیک کنید</div>
-                    <input type="file" id="receipt-file" style="display:none" accept="image/*" onchange="updateFileLabel(this)">
+                    <div style="margin-bottom:20px;">
+                        <label class="label-muted" style="margin-bottom:8px;">مبلغ (تومان) - حداقل ۵۰,۰۰۰</label>
+                        <input type="number" id="deposit-amount" class="glass-field" placeholder="مثلاً ۱۰۰,۰۰۰" inputmode="numeric">
+                    </div>
+
+                    <button id="btn-submit-dep" class="btn-confirm-swap ripple-effect" 
+                        style="width:100%; margin-top:25px; background:var(--accent-green);" 
+                        onclick="startDepositProcess()">
+                        ثبت و دریافت مبلغ واریز
+                    </button>
                 </div>
-
-                <button id="btn-submit-dep" class="btn-confirm-swap ripple-effect" 
-                    style="width:100%; margin-top:25px; background:var(--accent-green);" 
-                    onclick="submitDeposit()">
-                    ارسال درخواست
-                </button>
             </div>
+
+            <div id="deposit-step-2" style="display:none;">
+                <div class="modal-header">
+                    <h3 style="color:var(--primary-gold)">تایید واریز یکتا 🔑</h3>
+                    <button onclick="closeDepositModal()" class="close-modal">✕</button>
+                </div>
+                <div class="modal-body">
+                    
+                    <p style="color:#888; font-size:0.85rem; text-align:center;">
+                        ✅ لطفا مبلغ زیر را **دقیقا** به کارت ما واریز کنید تا سیستم اتوماتیک شارژ شود.
+                        <br> ⚠️ در غیر این صورت واریز دستی خواهد بود.
+                    </p>
+                    
+                    <div class="unique-amount-box" id="unique-amount-display">
+                        <span style="font-size:0.75rem; color:#aaa;">مبلغ نهایی واریز:</span>
+                        <span class="unique-amount-val" id="final-unique-amount">0</span>
+                        <span class="currency-symbol" style="color:var(--text-muted)">تومان</span>
+                        <button class="copy-btn ripple-effect" onclick="copyFinalAmount()">
+                            <i class="fas fa-copy"></i> کپی مبلغ
+                        </button>
+                    </div>
+
+                    <div style="margin-top:25px; background:rgba(255,255,255,0.05); padding:15px; border-radius:12px;">
+                        <span style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:5px;">شماره کارت مقصد:</span>
+                        <span id="exchange-card-number" style="font-family:'Roboto Mono'; font-weight:700; color:#fff;">---</span>
+                        <button class="copy-btn ripple-effect" style="background:var(--primary-gold); color:#000; margin-top:10px;" onclick="copyCardNumber()">
+                            <i class="fas fa-copy"></i> کپی کارت
+                        </button>
+                    </div>
+
+                    <div style="margin-top:20px; text-align:center;">
+                         <p style="color:var(--accent-red); font-size:0.8rem; font-weight:bold;">
+                            منتظر شارژ اتوماتیک باشید. نیازی به ارسال رسید نیست.
+                         </p>
+                         <button class="btn-submit ripple-effect" style="width:100%; background:#2c2c2e; color:#fff;" onclick="closeDepositModal()">
+                            بستن
+                         </button>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -230,7 +306,20 @@
     <script>
         const tg = window.Telegram.WebApp;
         const API_BASE_URL = window.location.origin;
+        const EXCHANGE_CARD_NUMBER = '6219861987089975'; // Hardcoded for display from config
+        let transactionsData = [];
+        let finalUniqueAmount = 0; // Store the unique amount generated
 
+        window.onload = function() {
+            tg.ready(); tg.expand(); 
+            tg.setHeaderColor('#050505');
+            tg.setBackgroundColor('#050505');
+            
+            if (!tg.initData) tg.initData = "query_id=TEST_DEV";
+            fetchWalletData();
+        };
+
+        // --- Loader Functions (Re-used for completeness) ---
         function hideLoader() {
             const loader = document.getElementById('loader');
             const app = document.getElementById('app-container');
@@ -244,85 +333,89 @@
                 }, 500);
             }
         }
-
-        function openDepositModal() { document.getElementById('deposit-modal').classList.add('active'); }
-        function closeDepositModal() { document.getElementById('deposit-modal').classList.remove('active'); }
         
-        function updateFileLabel(input) {
-            const label = document.getElementById('file-label');
-            const icon = document.getElementById('up-icon');
-            if (input.files && input.files.length > 0) {
-                label.innerText = "✅ تصویر انتخاب شد: " + input.files[0].name;
-                label.style.color = "var(--accent-green)";
-                icon.style.color = "var(--accent-green)";
-                icon.className = "fas fa-check-circle upload-icon";
-            } else {
-                label.innerText = "برای انتخاب تصویر فیش کلیک کنید";
-                label.style.color = "var(--text-muted)";
-                icon.style.color = "var(--text-muted)";
-                icon.className = "fas fa-cloud-upload-alt upload-icon";
-            }
+        // --- Modal/UI Management ---
+        function openDepositModal() { 
+            // Reset to Step 1 on opening
+            document.getElementById('deposit-step-1').style.display = 'block';
+            document.getElementById('deposit-step-2').style.display = 'none';
+            document.getElementById('deposit-modal').classList.add('active'); 
+            document.getElementById('exchange-card-number').innerText = formatCardNumber(EXCHANGE_CARD_NUMBER);
+        }
+        function closeDepositModal() { 
+            document.getElementById('deposit-modal').classList.remove('active'); 
         }
 
-        async function submitDeposit() {
+        function formatCardNumber(cardNum) {
+            // Formats 6219861987089975 to 6219-8619-8708-9975
+            return cardNum.match(/.{1,4}/g).join('-');
+        }
+        
+        function copyFinalAmount() { 
+            navigator.clipboard.writeText(finalUniqueAmount);
+            tg.showAlert("✅ مبلغ واریز یکتا کپی شد!");
+        }
+
+        function copyCardNumber() {
+            navigator.clipboard.writeText(EXCHANGE_CARD_NUMBER);
+            tg.showAlert("✅ شماره کارت مقصد کپی شد!");
+        }
+        
+        // --- CORE FUNCTION: Start Deposit Process (Step 1 -> Step 2) ---
+        async function startDepositProcess() {
             const amountInput = document.getElementById('deposit-amount');
-            const fileInput = document.getElementById('receipt-file');
-            const btn = document.getElementById('btn-submit-dep');
             const amount = parseInt(amountInput.value);
+            
+            if (!amount || amount < 50000) { 
+                tg.showAlert("حداقل مبلغ واریز ۵۰,۰۰۰ تومان است."); 
+                return; 
+            }
+            
+            // 1. Generate Unique Amount (Toman only needs 3 random digits, 001-999)
+            const randomSuffix = Math.floor(Math.random() * 999) + 1; // 1 to 999
+            const baseAmount = amount - (amount % 1000); // Strip last 3 digits
+            finalUniqueAmount = baseAmount + randomSuffix; // 100000 -> 100123
 
-            if(!amount || amount < 50000) { tg.showAlert("حداقل مبلغ واریز ۵۰,۰۰۰ تومان است."); return; }
-            if(fileInput.files.length === 0) { tg.showAlert("لطفاً تصویر فیش واریزی را انتخاب کنید."); return; }
-
-            btn.disabled = true; btn.innerText = "در حال آپلود...";
-            tg.HapticFeedback.impactOccurred('light');
-
-            const formData = new FormData();
-            formData.append('initData', tg.initData);
-            formData.append('amount', amount);
-            formData.append('receipt', fileInput.files[0]);
+            // 2. Submit the request to backend (registering the unique amount)
+            const btn = document.getElementById('btn-submit-dep');
+            btn.disabled = true; btn.innerText = 'در حال ثبت...';
+            tg.HapticFeedback.impactOccurred('medium');
 
             try {
-                // FIXED: Added Ngrok Skip Header
-                const res = await fetch(`${API_BASE_URL}/webapp/submit_deposit`, { 
-                    method: 'POST', 
-                    body: formData,
-                    headers: {
-                        'ngrok-skip-browser-warning': 'true'
-                    }
+                const res = await fetch(`${API_BASE_URL}/webapp/submit_deposit_request`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ initData: tg.initData, requested_amount: amount, unique_amount: finalUniqueAmount })
                 });
-                
-                let result;
-                try { result = await res.json(); } catch { throw new Error("پاسخ سرور نامعتبر است"); }
 
+                const result = await res.json();
+                
                 if (res.ok && result.status === 'success') {
-                    tg.showAlert("✅ " + result.message);
-                    closeDepositModal();
-                    amountInput.value = ""; fileInput.value = "";
-                    updateFileLabel(fileInput);
-                    fetchWalletData(); 
+                    
+                    // 3. Move to Step 2 UI (Instructions)
+                    document.getElementById('final-unique-amount').innerText = finalUniqueAmount.toLocaleString();
+                    document.getElementById('deposit-step-1').style.display = 'none';
+                    document.getElementById('deposit-step-2').classList.add('active');
+                    document.getElementById('deposit-step-2').style.display = 'block';
+
                     tg.HapticFeedback.notificationOccurred('success');
+                    tg.showAlert("لطفاً مبلغ واریز یکتا را به صورت کارت به کارت انجام دهید.");
+
                 } else {
-                    tg.showAlert(`❌ خطا: ${result.message || "ناشناخته"}`);
+                    tg.showAlert(`❌ خطا در ثبت درخواست: ${result.message || 'نامشخص'}`);
                     tg.HapticFeedback.notificationOccurred('error');
                 }
-            } catch (e) { tg.showAlert("خطای ارتباط: " + e.message); } 
-            finally { btn.disabled = false; btn.innerText = "ارسال درخواست"; }
+
+            } catch (e) {
+                tg.showAlert("خطای شبکه در ثبت درخواست.");
+            } finally {
+                btn.disabled = false; btn.innerText = 'ثبت و دریافت مبلغ واریز';
+            }
         }
-
-        let transactionsData = [];
-
-        window.onload = function() {
-            tg.ready(); tg.expand(); 
-            tg.setHeaderColor('#050505');
-            tg.setBackgroundColor('#050505');
-            
-            if (!tg.initData) tg.initData = "query_id=TEST_DEV";
-            fetchWalletData();
-        };
-
+        
+        // --- Data Fetching and TX Rendering (Unchanged) ---
         async function fetchWalletData() {
             try {
-                // FIXED: Added Ngrok Skip Header
                 const res = await fetch(`${API_BASE_URL}/webapp/get_wallet_data`, {
                     method: 'POST', 
                     headers: {

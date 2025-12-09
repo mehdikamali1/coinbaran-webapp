@@ -1,4 +1,4 @@
-﻿/* webapp/game.js (v77.0 - FINAL: UX Fixes, Result Clarity, Leaderboard & History Modals) */
+﻿/* webapp/game.js (v78.0 - FINAL: Result Display FIX & Chart Clarity) */
 
 const tg = window.Telegram.WebApp;
 const API_BASE_URL = window.location.origin;
@@ -27,7 +27,7 @@ const CONFIG = {
     }
 };
 
-let chart, candleSeries, lineSeries; 
+let chart, candleSeries, lineSeries;
 let lastPrice = 0;
 let isFirstLoad = true;
 let lastCandleTime = 0; 
@@ -37,9 +37,10 @@ let currentUUSDBalance = 0;
 window.lastRoundId = null; 
 window.lastCandleOpenPrice = null;
 
-// --- آبجکت برای مدیریت خطوط قیمت شرط‌بندی (NEW) ---
+// --- آبجکت برای مدیریت خطوط قیمت شرط‌بندی ---
 let entryPriceLine = null;
 let closePriceLine = null;
+let isResultModalActive = false; // پرچم برای جلوگیری از نمایش چندباره مودال (NEW FIX)
 
 // --- سیستم صوتی ---
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -75,14 +76,12 @@ window.onload = function() {
     initChart();
     setupEventListeners();
     
-    // --- جایگزینی Polling با WebSocket ---
     initWebSocket(); 
     fetchInitialData(); 
 };
 
 // ==========================================
 // 1. WebSocket Setup (Real-time Core)
-// (این بخش بدون تغییر باقی می‌ماند تا Loader Fix از بین نرود)
 // ==========================================
 
 function initWebSocket() {
@@ -147,10 +146,11 @@ function handleWebSocketMessage(data) {
         updateGameStatus(data);
 
         // 2. به‌روزرسانی نمودار (Candlestick)
-        updateChartData(serverPrice, data.round.id, data.round.time_left); // تایم‌لفت برای حذف خط استفاده می‌شود
+        updateChartData(serverPrice, data.round.id, data.round.time_left);
 
-        // 3. نمایش نتیجه شرط‌بندی قبلی
-        if (data.last_result && data.last_result.round_id) {
+        // 3. نمایش نتیجه شرط‌بندی قبلی (FIXED LOGIC)
+        // مودال نتیجه فقط باید در پایان راند (time_left = 60s) و در صورت فعال نبودن نمایش داده شود
+        if (data.last_result && data.last_result.round_id && !isResultModalActive) {
             showResultModal(data.last_result);
         }
     }
@@ -276,7 +276,6 @@ function initChart() {
 
 function updateChartData(serverPrice, roundId, timeLeft) {
     const domPrice = document.getElementById('btc-price');
-    // برای چارت، زمان را به صورت دقیقه/ثانیه (Time in Seconds) می‌گیریم
     const now = Math.floor(Date.now() / 1000); 
 
     // 1. به‌روزرسانی نمایشگر قیمت اصلی
@@ -291,7 +290,6 @@ function updateChartData(serverPrice, roundId, timeLeft) {
     // 3. منطق Candlestick 
     
     if (isFirstLoad) {
-        // ایجاد اولین کندل ساختگی
         const initialTime = now - CONFIG.ROUND_DURATION;
         candleSeries.setData([
             { time: initialTime, open: serverPrice - 10, high: serverPrice + 10, low: serverPrice - 10, close: serverPrice }
@@ -305,7 +303,6 @@ function updateChartData(serverPrice, roundId, timeLeft) {
         // راند جدید: بستن کندل قبلی و شروع کندل جدید
         if (window.lastCandleOpenPrice) {
             // بستن کندل قبلی در زمان دقیق بسته شدن راند
-            // ما قیمت نهایی را قیمت فعلی سرور می‌گیریم
             candleSeries.update({
                 time: lastCandleTime,
                 open: window.lastCandleOpenPrice,
@@ -478,6 +475,9 @@ window.closeHistory = () => document.getElementById('history-modal').classList.r
 
 
 function showResultModal(result) {
+    // FIX: فعال کردن پرچم مودال
+    isResultModalActive = true; 
+    
     const elModal = document.getElementById('result-modal');
     const elTitle = document.getElementById('res-title');
     const elAmount = document.getElementById('res-amount');
@@ -486,7 +486,7 @@ function showResultModal(result) {
     document.getElementById('res-entry').innerText = `$${result.entry_price.toFixed(2)}`;
     document.getElementById('res-close').innerText = `$${result.close_price.toFixed(2)}`;
 
-    // افزودن خط قیمت نهایی به چارت برای وضوح (NEW)
+    // افزودن خط قیمت نهایی به چارت برای وضوح (FIXED: اضافه شدن خط پایانی)
     if(closePriceLine) lineSeries.removePriceLine(closePriceLine);
     closePriceLine = lineSeries.createPriceLine({
         price: result.close_price,
@@ -526,7 +526,12 @@ function showResultModal(result) {
         }
     }, 5000); 
 }
-window.closeResultModal = () => document.getElementById('result-modal').classList.remove('active');
+
+window.closeResultModal = () => {
+    // FIX: غیرفعال کردن پرچم مودال
+    isResultModalActive = false; 
+    document.getElementById('result-modal').classList.remove('active');
+};
 
 function showToast(msg) {
     const toast = document.getElementById('toast');
@@ -537,8 +542,7 @@ function showToast(msg) {
 
 
 // ==========================================
-// 5. Leaderboard & History Logic (NEW)
-// (این بخش شامل منطق تکمیل مودال‌ها است و بدون تغییر باقی می‌ماند)
+// 5. Leaderboard & History Logic
 // ==========================================
 
 async function fetchLeaderboard() {
@@ -553,6 +557,7 @@ async function fetchLeaderboard() {
         const data = await res.json();
 
         if (data.status === 'success') {
+            leaderboardList.innerHTML = ''; // پاک کردن لودر
             renderLeaderboard(data.xp_ranking, 'برترین‌های XP');
             renderLeaderboard(data.profit_ranking, 'برترین‌های سود');
         } else {
@@ -567,10 +572,6 @@ async function fetchLeaderboard() {
 function renderLeaderboard(rankingData, title) {
     const leaderboardList = document.getElementById('leaderboard-list');
     
-    if (leaderboardList.querySelector('.loader-spinner')) {
-        leaderboardList.innerHTML = ''; 
-    }
-
     let html = `<div class="ranking-group-title">${title}</div>`;
 
     if (rankingData.length === 0) {

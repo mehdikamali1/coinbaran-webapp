@@ -1,7 +1,8 @@
-﻿/* webapp/script.js (v112.0 - CRITICAL LOADING FIX & UI Refinement) */
+﻿/* webapp/script.js (v113.0 - FINAL BALANCE DISPLAY FIX & Luxury UI Complete) */
 (function () {
     'use strict';
 
+    // --- GLOBAL VARIABLES & CONFIG ---
     const tg = window.Telegram.WebApp;
     const API_BASE_URL = window.location.origin;
     
@@ -44,7 +45,7 @@
         attachBtn: document.getElementById('attach-btn')
     };
 
-    // --- LOGO MAPPING (برای بهینه سازی تیکر در صورت نیاز) ---
+    // --- LOGO MAPPING (برای بهینه سازی تیکر) ---
     const logoMap = {
         'USDT': { icon: '<i class="fas fa-dollar-sign"></i>', color: '#0ECB81' },
         'BTC': { icon: '<i class="fab fa-btc"></i>', color: '#F7931A' },
@@ -60,11 +61,40 @@
     window.addEventListener('pageshow', function(event) {
         if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
             console.log("Restored from cache - Forcing loader hide");
-            forceHideLoader(); // تضمین می‌کند که لودر سریعاً پنهان شود
+            forceHideLoader();
             document.body.style.overflow = 'auto';
         }
     });
+    
+    // --- UTILITIES ---
 
+    /**
+     * فرمت دهی صحیح اعداد برای نمایش
+     * تضمین می‌کند که کاماها حذف شده و اعداد به درستی به فرمت محلی تبدیل شوند.
+     * @param {*} num - مقدار ورودی (می‌تواند رشته‌ای با کاما یا عدد باشد)
+     * @param {number} decimals - تعداد ارقام اعشار
+     */
+    function formatNumber(num, decimals) {
+        if (num === null || num === undefined) return '0';
+        
+        // 1. حذف کاماها و تبدیل به رشته
+        let numStr = String(num);
+        numStr = numStr.replace(/,/g, ''); 
+        
+        // 2. تبدیل به عدد ممیز شناور
+        const numFloat = parseFloat(numStr);
+
+        if (isNaN(numFloat)) return '0';
+        
+        // 3. فرمت دهی با جداکننده هزارگان
+        const formatted = numFloat.toLocaleString('en-US', { 
+            minimumFractionDigits: decimals, 
+            maximumFractionDigits: decimals 
+        });
+
+        return formatted;
+    }
+    
     // ==========================================
     // 2. MAIN INITIALIZATION
     // ==========================================
@@ -93,13 +123,10 @@
                     const ratesFetch = fetchMarketRates(); 
 
                     // مطمئن می‌شویم که هم لودینگ کامل شود و هم APIها پاسخ دهند
-                    await Promise.allSettled([dataFetch, ratesFetch, splashTimer]); 
+                    const [dataResult, ratesResult] = await Promise.allSettled([dataFetch, ratesFetch, splashTimer]); 
                     
-                    const dataResult = await dataFetch;
-                    const ratesResult = await ratesFetch;
-
-                    updateDashboardUI(dataResult ? dataResult.value : null);
-                    handleMarketData(ratesResult ? ratesResult.value : null);
+                    updateDashboardUI(dataResult.value);
+                    handleMarketData(ratesResult.value);
                     
                     // CRITICAL FIX: لودر باید با انیمیشن پنهان شود تا UI نمایش داده شود
                     hideLoaderWithAnimation();
@@ -125,7 +152,6 @@
     };
     
     function setupTelegramUI() {
-        // تنظیمات رنگ هدر برای تمام صفحات
         tg.setHeaderColor('#050505');
         tg.setBackgroundColor('#000000');
         
@@ -150,7 +176,6 @@
             const usdt = ratesResult.rates.find(r => r.symbol === 'USDT');
             if(usdt) renderSmartChart(usdt.change);
         } else {
-            // اگر نرخ‌ها لود نشد، یک چارت پیش‌فرض نمایش بده
             renderSmartChart(0);
         }
     }
@@ -165,7 +190,7 @@
         }
         if (appContainer) {
             appContainer.classList.remove('hidden-content');
-            appContainer.classList.add('fade-in-active'); // اعمال انیمیشن ورود
+            appContainer.classList.add('fade-in-active'); 
             appContainer.style.opacity = '1';
             appContainer.style.transform = 'translateY(0)';
         }
@@ -221,39 +246,41 @@
     // ==========================================
     function updateDashboardUI(data, saveCache = true) {
         if (!data || data.status === 'error') {
-             // اگر داده‌ها نیامد، مقادیر پیش‌فرض را نشان بده
              if (els.welcomeName) els.welcomeName.innerText = "کاربر عزیز";
              return; 
         }
 
         if(saveCache) saveToCache(data);
 
-        userFirstName = data.first_name || "کاربر گرامی";
-        if (els.welcomeName) els.welcomeName.innerText = userFirstName;
-        
         // --- Balances ---
-        const toman = data.toman_balance ? data.toman_balance.replace(/,/g, '') : 0;
-        const uusd = data.uusd_balance || 0;
-        const xp = data.xp_balance ? data.xp_balance.replace(/,/g, '') : 0;
+        const tomanStr = data.toman_balance || 0;
+        const uusdStr = data.uusd_balance || 0;
+        const xpStr = data.xp_balance || 0;
+
+        currentTomanBalance = parseFloat(String(tomanStr).replace(/,/g, '') || 0);
+
+        if (els.welcomeName) els.welcomeName.innerText = data.first_name || "کاربر گرامی";
         
-        currentTomanBalance = parseFloat(toman);
+        if (els.tomanBalance) {
+            // موجودی تومان را بدون اعشار و با کاما نمایش می‌دهیم
+            els.tomanBalance.innerText = formatNumber(tomanStr, 0); 
+        }
 
-        if (els.tomanBalance) els.tomanBalance.innerText = formatNumber(toman, 0); 
-        if (els.uusdBalance) els.uusdBalance.innerHTML = `${formatNumber(uusd, 2)} <small>$</small>`;
-        if (els.xpBalance) els.xpBalance.innerHTML = `${formatNumber(xp, 0)} <small>XP</small>`;
+        if (els.uusdBalance) {
+            // موجودی دلار را با ۲ رقم اعشار نمایش می‌دهیم
+            els.uusdBalance.innerHTML = `${formatNumber(uusdStr, 2)} <small>$</small>`;
+        }
+        
+        if (els.xpBalance) {
+            // موجودی XP را بدون اعشار نمایش می‌دهیم
+            els.xpBalance.innerHTML = `${formatNumber(xpStr, 0)} <small>XP</small>`;
+        }
 
-        updateLevelProgress(parseFloat(xp));
+        updateLevelProgress(parseFloat(String(xpStr).replace(/,/g, '') || 0));
 
         if (tg.initDataUnsafe?.user?.photo_url && els.avatar) {
             els.avatar.src = tg.initDataUnsafe.user.photo_url;
         }
-    }
-
-    function formatNumber(num, decimals) {
-        // تبدیل به عدد و فرمت دهی با کاما
-        if (num === null || num === undefined) num = 0;
-        num = parseFloat(num);
-        return num.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
     }
 
     function updateLevelProgress(xp) {
@@ -350,7 +377,6 @@
     // 6. Effects & Interactions (Parallax)
     // ==========================================
     function init3DCardEffect() {
-        // منطق Parallax Card
         const card = els.premiumCard;
         const container = els.mainContent;
         const cardShine = document.querySelector('.card-shine');
@@ -358,7 +384,29 @@
         if (!card || !container) return;
 
         function handleMove(e) {
-            // ... (منطق حرکت کارت)
+            const rect = card.getBoundingClientRect();
+            const clientX = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : undefined);
+            const clientY = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : undefined);
+
+            if (clientX === undefined || clientY === undefined) return;
+
+            const cardCenterX = rect.left + rect.width / 2;
+            const cardCenterY = rect.top + rect.height / 2;
+            
+            const mouseX = clientX - cardCenterX;
+            const mouseY = clientY - cardCenterY;
+            
+            const rotateX = (mouseY / rect.height) * -8;
+            const rotateY = (mouseX / rect.width) * 8;
+            
+            const shineX = (mouseX / rect.width * 50) + 50;
+            const shineY = (mouseY / rect.height * 50) + 50;
+
+            card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+            if (cardShine) {
+                cardShine.style.setProperty('--shine-x', `${shineX}%`);
+                cardShine.style.setProperty('--shine-y', `${shineY}%`);
+            }
         }
 
         function handleLeave() { 
@@ -413,7 +461,8 @@
         } catch (e) {}
     }
     
-    // --- Chat Functions (بدون تغییر) ---
-    // ... (توابع چت که در فایل قبلی بودند و اینجا به دلیل حجم حذف شده‌اند اما در فایل اصلی باید وجود داشته باشند)
-
+    // --- Chat Functions (برای کامل بودن فایل) ---
+    // ... (توابع چت: loadChatHistory, setupChatListeners, renderMessage و ...)
+    // این توابع برای حفظ حجم پیام در چت اصلی حذف می‌شوند، اما باید در فایل واقعی شما وجود داشته باشند.
+    
 })();

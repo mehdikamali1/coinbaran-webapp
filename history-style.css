@@ -1,0 +1,109 @@
+/* webapp/history-style.css (v1.0 - Dedicated History Styles) */
+
+/* NOTE: This file assumes global.css has been imported first for variables and base styling. */
+
+/* --- Tabs --- */
+.tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 25px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 5px;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 12px;
+    text-align: center;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tab-btn.active {
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+#tab-xp.active {
+    background: var(--gold-primary);
+    color: #000;
+}
+
+#tab-game.active {
+    background: var(--accent-blue);
+    color: #fff;
+}
+
+/* --- History Card Styles (Reused from Wallet/Game aesthetics) --- */
+.history-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px;
+    margin-bottom: 10px;
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--glass-border);
+    transition: all 0.15s;
+}
+
+.history-card:active {
+    background: rgba(255, 255, 255, 0.05);
+    transform: translateY(-2px);
+}
+
+.card-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.card-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-main);
+}
+.card-meta {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+.card-date {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* --- Amount/Result Display --- */
+.card-right {
+    font-family: 'Roboto Mono', monospace;
+    font-weight: 700;
+    font-size: 1rem;
+    direction: ltr;
+    text-align: right;
+}
+
+.color-xp-add {
+    color: var(--gold-primary);
+}
+
+.color-xp-deduct {
+    color: var(--accent-red);
+}
+
+.color-bet-win {
+    color: var(--accent-green);
+}
+
+.color-bet-loss {
+    color: var(--accent-red);
+}
+
+.color-bet-entry {
+    color: var(--accent-blue);
+}

@@ -1,0 +1,54 @@
+﻿<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#050505">
+    <title>تاریخچه تراکنش‌ها | کوین باران</title>
+    
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <link rel="stylesheet" href="webapp/global.css?v=1.0">
+    <link rel="stylesheet" href="webapp/history-style.css?v=1.0">
+</head>
+<body>
+
+    <div class="ambient-glow glow-top"></div>
+    <div class="ambient-glow glow-bottom"></div>
+    <div class="grid-overlay"></div>
+
+    <header class="glass-header">
+        <div class="profile-section">
+            <div class="icon-btn ripple-btn" onclick="window.location.href='/'">
+                <i class="fas fa-arrow-right"></i>
+            </div>
+            <div style="font-weight:800; font-size:1.1rem; color: var(--text-main);">تاریخچه حساب</div>
+        </div>
+        <div class="icon-btn ripple-btn" onclick="fetchHistoryData()">
+            <i class="fas fa-sync-alt"></i>
+        </div>
+    </header>
+
+    <div class="main-scroll-area">
+        
+        <div class="tabs">
+            <div class="tab-btn active" onclick="switchTab('xp')" id="tab-xp">🏅 امتیازات (XP)</div>
+            <div class="tab-btn" onclick="switchTab('game')" id="tab-game">🎲 شرط‌بندی بازی</div>
+        </div>
+
+        <div class="history-container">
+            <div id="history-list" style="min-height: 300px;">
+                <div style="text-align:center; padding:50px; color:var(--text-muted); font-size:0.9rem;">
+                    <i class="fas fa-circle-notch fa-spin"></i> در حال بارگذاری تاریخچه...
+                </div>
+            </div>
+        </div>
+        
+        <div style="height: 40px;"></div>
+    </div>
+    
+    <script src="webapp/history-style.js?v=1.0"></script>
+    <script src="webapp/history.js?v=1.0"></script>
+</body>
+</html>

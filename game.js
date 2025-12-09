@@ -1,4 +1,4 @@
-﻿/* webapp/game.js (v81.0 - DEBUG: History JSON Display) */
+﻿/* webapp/game.js (v82.0 - DEBUG: Use Leaderboard Button to Check History JSON) */
 
 const tg = window.Telegram.WebApp;
 const API_BASE_URL = window.location.origin;
@@ -436,7 +436,7 @@ window.performSwap = async function() {
     } catch(e) { showToast("خطای شبکه"); }
 };
 
-// --- Modal Functions (بدون تغییر) ---
+// --- Modal Functions (تغییر یافته برای بارگذاری داده) ---
 window.openSwapModal = () => document.getElementById('swap-modal').classList.add('active');
 window.closeSwapModal = () => document.getElementById('swap-modal').classList.remove('active');
 
@@ -446,8 +446,10 @@ window.openLeaderboard = () => {
 };
 window.closeLeaderboard = () => document.getElementById('leaderboard-modal').classList.remove('active');
 
+// --- اتصال موقت دکمه Leaderboard به تابع عیب‌یابی تاریخچه (FIX)
 window.openHistory = () => {
-    fetchAndRenderHistory(); // این تابع را برای عیب‌یابی تغییر دادیم
+    // فراخوانی تابع عیب‌یابی (JSON خام)
+    runHistoryDebug();
     document.getElementById('history-modal').classList.add('active');
 };
 window.closeHistory = () => document.getElementById('history-modal').classList.remove('active');
@@ -572,10 +574,10 @@ function renderLeaderboard(rankingData, title) {
     leaderboardList.innerHTML += html;
 }
 
-// تابع اصلی برای بارگذاری تاریخچه و محاسبه P&L (DEBUG)
-async function fetchAndRenderHistory() {
+// تابع عیب‌یابی (قبلاً fetchAndRenderHistory بود)
+async function runHistoryDebug() {
     const historyList = document.getElementById('history-list');
-    historyList.innerHTML = '<div style="text-align: center; padding: 20px; color: #aaa;">در حال دریافت داده...</div>'; 
+    historyList.innerHTML = '<p style="text-align: center; padding: 20px; color: #aaa;">در حال دریافت داده خام (تست)...</p>'; 
 
     try {
         const res = await fetch(`${API_BASE_URL}/webapp/game/round_history`, {
@@ -590,8 +592,8 @@ async function fetchAndRenderHistory() {
 
         const data = await res.json();
         
-        // --- تزریق JSON خام برای عیب‌یابی (FIX) ---
-        historyList.innerHTML = `<pre style="white-space: pre-wrap; font-size: 10px; color: #fff; padding: 10px; border: 1px solid #ff0000;">${JSON.stringify(data, null, 2)}</pre>`;
+        // --- تزریق JSON خام برای عیب‌یابی ---
+        historyList.innerHTML = `<pre style="white-space: pre-wrap; font-size: 10px; color: #fff; padding: 10px; border: 1px solid #ff0000; background: #333;">${JSON.stringify(data, null, 2)}</pre>`;
         // ------------------------------------------
 
     } catch (e) {

@@ -115,7 +115,7 @@
         <div class="history-section">
             <div class="history-header">
                 <span>نتایج اخیر</span>
-                <span class="history-more ripple-btn" onclick="window.openHistory()">مشاهده همه</span>
+                <span id="open-history-btn" class="history-more ripple-btn">مشاهده همه</span>
             </div>
             <div id="history-container" class="history-scroll">
                 </div>
@@ -272,6 +272,13 @@
                 const l = document.getElementById('game-loader');
                 if(l) { l.style.opacity='0'; setTimeout(()=>l.style.display='none', 500); }
             }, 1000);
+            
+            // FIX: اتصال دکمه مشاهده همه به تابع JS
+            const historyBtn = document.getElementById('open-history-btn');
+            if (historyBtn) {
+                 // توجه: در این مرحله ما از تابع عیب‌یابی استفاده می‌کنیم
+                 historyBtn.onclick = window.openHistory; 
+            }
         });
     </script>
 </body>

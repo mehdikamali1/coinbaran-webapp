@@ -1,4 +1,4 @@
-﻿/* webapp/game.js (v79.0 - FINAL: Guaranteed History Display & Summary) */
+﻿/* webapp/game.js (v80.0 - FINAL: Guaranteed History Display & Summary) */
 
 const tg = window.Telegram.WebApp;
 const API_BASE_URL = window.location.origin;
@@ -520,7 +520,7 @@ function showToast(msg) {
 
 async function fetchLeaderboard() {
     const leaderboardList = document.getElementById('leaderboard-list');
-    leaderboardList.innerHTML = '<div class="loader-spinner"></div>'; 
+    leaderboardList.innerHTML = '<div style="text-align: center; padding: 20px;"><div class="loader-spinner"></div></div>'; 
 
     try {
         const res = await fetch(`${API_BASE_URL}/webapp/game/leaderboard`, {
@@ -534,23 +534,23 @@ async function fetchLeaderboard() {
             renderLeaderboard(data.xp_ranking, 'برترین‌های XP');
             renderLeaderboard(data.profit_ranking, 'برترین‌های سود');
         } else {
-            leaderboardList.innerHTML = '<p class="error-msg">❌ خطای بارگذاری رتبه‌بندی.</p>';
+            leaderboardList.innerHTML = '<p style="text-align: center; color: #f6465d; padding: 20px;">❌ خطای بارگذاری رتبه‌بندی.</p>';
             showToast("خطای سرور Leaderboard");
         }
     } catch (e) {
-        leaderboardList.innerHTML = '<p class="error-msg">❌ خطای شبکه.</p>';
+        leaderboardList.innerHTML = '<p style="text-align: center; color: #f6465d; padding: 20px;">❌ خطای شبکه.</p>';
     }
 }
 
 function renderLeaderboard(rankingData, title) {
     const leaderboardList = document.getElementById('leaderboard-list');
     
-    let html = `<div class="ranking-group-title">${title}</div>`;
+    let html = `<div class="ranking-group-title" style="margin-top: 15px; font-weight: bold; color: #fff;">${title}</div>`;
 
     if (rankingData.length === 0) {
-        html += '<p class="no-data-msg">هنوز داده‌ای برای نمایش وجود ندارد.</p>';
+        html += '<p class="no-data-msg" style="text-align: center; color: #aaa;">هنوز داده‌ای برای نمایش وجود ندارد.</p>';
     } else {
-        html += '<ul class="ranking-list">';
+        html += '<ul class="ranking-list" style="list-style: none; padding: 0;">';
         rankingData.forEach((item, index) => {
             const rank = index + 1;
             const trophyColor = CONFIG.TROPHY_COLORS[rank] || '#848E9C';
@@ -559,10 +559,10 @@ function renderLeaderboard(rankingData, title) {
             const rankIcon = rank <= 3 ? `<span style="color:${trophyColor}">🏆</span>` : `<span>${rank}</span>`;
             
             html += `
-                <li class="ranking-item ${isUser ? 'is-me' : ''}">
-                    <div class="rank-icon">${rankIcon}</div>
-                    <div class="user-name">${item.first_name || 'کاربر ناشناس'}</div>
-                    <div class="score">${value}</div>
+                <li class="ranking-item ${isUser ? 'is-me' : ''}" style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-radius: 5px; background: ${isUser ? 'rgba(255, 255, 255, 0.1)' : 'transparent'}; margin-bottom: 5px;">
+                    <div class="rank-icon" style="width: 30px; text-align: center; font-weight: bold;">${rankIcon}</div>
+                    <div class="user-name" style="flex-grow: 1;">${item.first_name || 'کاربر ناشناس'}</div>
+                    <div class="score" style="font-weight: bold; color: ${trophyColor};">${value}</div>
                 </li>
             `;
         });
@@ -575,7 +575,8 @@ function renderLeaderboard(rankingData, title) {
 // تابع اصلی برای بارگذاری تاریخچه و محاسبه P&L (FIXED)
 async function fetchAndRenderHistory() {
     const historyList = document.getElementById('history-list');
-    historyList.innerHTML = '<div style="text-align: center; padding: 20px;"><div class="loader-spinner"></div></div>'; // نمایش لودر
+    // نمایش لودر
+    historyList.innerHTML = '<div style="text-align: center; padding: 20px;"><div class="loader-spinner"></div></div>'; 
 
     try {
         const res = await fetch(`${API_BASE_URL}/webapp/game/round_history`, {
@@ -603,7 +604,7 @@ async function fetchAndRenderHistory() {
                 // 2. ساخت Summary Box (NEW UX)
                 const isOverallProfit = totalProfit >= 0;
                 const profitColor = isOverallProfit ? CONFIG.CHART_COLORS.up : CONFIG.CHART_COLORS.down;
-                const profitSign = isOverallProfit ? '+' : ''; // برد نیازی به + ندارد
+                const profitSign = isOverallProfit ? '+' : ''; 
                 
                 const summaryHtml = `
                     <div class="history-summary-box" style="margin-bottom: 20px; padding: 15px; background: rgba(255, 255, 255, 0.05); border-radius: 10px;">
@@ -634,9 +635,9 @@ async function fetchAndRenderHistory() {
                     listHtml += `
                         <li class="history-item ${statusClass}" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed rgba(255, 255, 255, 0.05);">
                             <div class="round-id-time" style="font-size: 0.8rem; color: #aaa;">#${r.round_id} <span class="time-stamp" style="font-size: 0.7rem;">${r.time}</span></div>
-                            <div class="prediction-info" style="font-weight: bold;">
+                            <div class="prediction-info" style="font-weight: bold; display: flex; align-items: center;">
                                 <span class="pred-type" style="color: ${color}; margin-right: 5px;">${r.prediction} ${icon}</span>
-                                <span class="bet-amount" style="color: #ccc;">$${r.amount.toFixed(2)}</span>
+                                <span class="bet-amount" style="color: #ccc; font-size: 0.9rem;">$${r.amount.toFixed(2)}</span>
                             </div>
                             <div class="profit-amount" style="font-weight: bold; color: ${color};">${itemProfitSign} $${Math.abs(r.profit).toFixed(2)}</div>
                         </li>
@@ -651,5 +652,6 @@ async function fetchAndRenderHistory() {
         }
     } catch (e) {
         historyList.innerHTML = '<p style="text-align: center; color: #f6465d; padding: 20px;">❌ خطای شبکه در بارگذاری تاریخچه.</p>';
+        console.error("History Fetch Error:", e);
     }
 }

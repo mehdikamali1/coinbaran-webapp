@@ -1,4 +1,4 @@
-﻿/* webapp/dashboard-style.css (v115.0 - FINAL USDT Logo Transparency Fix) */
+﻿/* webapp/dashboard-style.css (v116.0 - FINAL FIX: USDT Logo Concealment) */
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;300;400;500;700;800;900&family=Cinzel:wght@400;700;900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap');
 
@@ -227,6 +227,7 @@ body {
     justify-content: center;
     font-size: 1.6rem;
     color: var(--gold-primary);
+    /* کانتینر شفاف است */
     background: transparent !important; 
     border: none !important;
     box-shadow: none !important; 
@@ -237,16 +238,20 @@ body {
     object-fit: contain;
     background: transparent !important; 
     border-radius: 0 !important;
-    /* اعمال فیلتر برای کاهش سفیدی شدید در صورت عدم شفافیت PNG */
-    filter: brightness(1.1) contrast(1.1); 
+    
+    /* FIX: با اعمال clip-path و گرد کردن، هرگونه مربع ناخواسته پنهان می‌شود */
+    clip-path: circle(50% at 50% 50%); 
 }
 
+/* --- Style for the service card metadata (unchanged) --- */
 .gold-glow { color: var(--gold-primary); filter: drop-shadow(0 0 8px rgba(255, 204, 0, 0.5)); }
 .pink-glow { color: #FF007A; filter: drop-shadow(0 0 8px rgba(255,0,122,0.5)); }
 .green-glow { color: var(--accent-green); filter: drop-shadow(0 0 8px rgba(14,203,129,0.5)); }
 .blue-glow { color: var(--accent-blue); filter: drop-shadow(0 0 8px rgba(59,130,246,0.5)); }
 .service-meta h4 { margin: 0 0 3px 0; font-size: 0.9rem; color: var(--gold-primary); font-weight: 700; }
 .service-meta span { font-size: 0.7rem; color: #aaa; }
+
+/* ... (ادامه استایل‌ها) ... */
 
 /* Game Banner (Enhanced) */
 .game-banner {

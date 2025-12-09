@@ -1,4 +1,4 @@
-﻿/* webapp/game.js (v75.0 - WebSocket Real-Time Integration & Luxury Chart) */
+﻿/* webapp/game.js (v76.0 - FINAL: WebSocket, Luxury Chart, Leaderboard & History Modals) */
 
 const tg = window.Telegram.WebApp;
 const API_BASE_URL = window.location.origin;
@@ -19,6 +19,11 @@ const CONFIG = {
         areaTopDown: 'rgba(246, 70, 93, 0.5)',
         areaBottomDown: 'rgba(246, 70, 93, 0.01)',
         gold: '#FFCC00'
+    },
+    TROPHY_COLORS: {
+        1: '#FFD700', // Gold
+        2: '#C0C0C0', // Silver
+        3: '#CD7F32'  // Bronze
     }
 };
 
@@ -29,6 +34,8 @@ let lastCandleTime = 0; // زمان آخرین کندل بسته‌شده
 let gameWebSocket = null;
 let wsConnectAttempt = 0;
 let currentUUSDBalance = 0;
+window.lastRoundId = null; // برای پیگیری شروع راند جدید در منطق چارت
+window.lastCandleOpenPrice = null;
 
 // --- سیستم صوتی ---
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -54,6 +61,7 @@ const SoundFX = {
 };
 
 window.onload = function() {
+    // --- لودینگ اولیه ---
     tg.ready();
     tg.expand();
     tg.setHeaderColor('#050505'); 
@@ -65,8 +73,6 @@ window.onload = function() {
     
     // --- جایگزینی Polling با WebSocket ---
     initWebSocket(); 
-    // حذف: setInterval(fetchServerData, 1000);
-    // فراخوانی اولیه:
     fetchInitialData(); 
 };
 
@@ -80,10 +86,25 @@ function initWebSocket() {
     const url = `${WS_BASE_URL}/ws/game?init_data=${encodeURIComponent(tg.initData)}`;
     gameWebSocket = new WebSocket(url);
 
+    let connectionTimeout = setTimeout(() => {
+        if (gameWebSocket.readyState !== WebSocket.OPEN) {
+             showToast("⚠️ اتصال Real-time برقرار نشد. داده‌ها به روز نیستند.");
+             setConnectionStatus(false);
+             // اگر اتصال نشد، Loader را حذف کن (فرض می‌کنیم در HTML یک اسکریپت Loader را حذف می‌کند)
+             // اگر Loader در این فایل نیست، این خطای Loader Dashboard را ایجاد نمی‌کند.
+             const loaderEl = document.getElementById('game-loader');
+             if(loaderEl) loaderEl.style.display = 'none';
+        }
+    }, 5000); // 5 ثانیه تایم‌آوت
+
     gameWebSocket.onopen = () => {
+        clearTimeout(connectionTimeout);
         console.log("WebSocket connected.");
         wsConnectAttempt = 0;
         setConnectionStatus(true);
+        // حذف لودر در صورت اتصال موفق
+        const loaderEl = document.getElementById('game-loader');
+        if(loaderEl) { loaderEl.style.opacity='0'; setTimeout(()=>loaderEl.style.display='none', 500); }
     };
 
     gameWebSocket.onmessage = (event) => {
@@ -96,6 +117,7 @@ function initWebSocket() {
     };
 
     gameWebSocket.onclose = () => {
+        clearTimeout(connectionTimeout);
         console.log("WebSocket disconnected. Retrying...");
         gameWebSocket = null;
         setConnectionStatus(false);
@@ -103,15 +125,16 @@ function initWebSocket() {
             wsConnectAttempt++;
             setTimeout(initWebSocket, 2000 * wsConnectAttempt);
         } else {
-            showToast("❌ اتصال قطع شد. لطفاً صفحه را رفرش کنید.");
+            showToast("❌ اتصال قطع شد. لطفا صفحه را رفرش کنید.");
             console.error("Max WebSocket retries reached.");
         }
     };
 
     gameWebSocket.onerror = (error) => {
+        clearTimeout(connectionTimeout);
         console.error("WebSocket error:", error);
         showToast("⚠️ خطای WebSocket. در حال تلاش مجدد...");
-        gameWebSocket.close(); 
+        // gameWebSocket.close(); // این در onclose هندل می‌شود
     };
 }
 
@@ -136,8 +159,20 @@ function handleWebSocketMessage(data) {
 // 2. Data & UI Management
 // ==========================================
 
+function setConnectionStatus(isConnected) {
+    const el = document.getElementById('connection-status');
+    const txt = el.querySelector('.status-text');
+    const dot = el.querySelector('.status-dot');
+    if (isConnected) {
+        dot.style.background = CONFIG.CHART_COLORS.up; txt.style.color = CONFIG.CHART_COLORS.up; txt.innerText = 'متصل';
+    } else {
+        dot.style.background = CONFIG.CHART_COLORS.down; txt.style.color = CONFIG.CHART_COLORS.down; txt.innerText = 'قطع';
+    }
+}
+
+
 async function fetchInitialData() {
-    // فقط برای گرفتن بالانس اولیه و نرخ سواپ (اگر WebSocket هنوز وصل نشده باشد)
+    // فقط برای گرفتن بالانس اولیه (فال‌بک در صورت عدم اتصال WS)
     try {
         const res = await fetch(`${API_BASE_URL}/webapp/get_wallet_data`, {
             method: 'POST', headers: {'Content-Type': 'application/json'},
@@ -237,9 +272,7 @@ function updateChartData(serverPrice, roundId) {
 
     // 3. منطق Candlestick (برای راند جدید یا آپدیت کندل فعلی)
     
-    // اگر راند جدید شروع شده و نیاز به بستن کندل قبلی داریم
     if (isFirstLoad) {
-        // برای بار اول، یک کندل dummy 1 دقیقه‌ای ایجاد می‌کنیم تا چارت خالی نباشد
         const initialTime = now - CONFIG.ROUND_DURATION;
         candleSeries.setData([
             { time: initialTime, open: serverPrice - 10, high: serverPrice + 10, low: serverPrice - 10, close: serverPrice }
@@ -250,7 +283,6 @@ function updateChartData(serverPrice, roundId) {
     } 
 
     if (roundId !== window.lastRoundId) {
-        // راند جدید: بستن کندل قبلی (اگر باز باشد) و شروع کندل جدید
         if (window.lastCandleOpenPrice) {
             // بستن کندل قبلی در زمان بسته شدن راند
             candleSeries.update({
@@ -367,7 +399,6 @@ window.placeBet = async function(prediction) {
 
     tg.HapticFeedback.impactOccurred('heavy'); 
     try {
-        // این API همچنان فراخوانی می‌شود، اما به‌روزرسانی بالانس از طریق WebSocket می‌آید.
         const res = await fetch(`${API_BASE_URL}/webapp/game/bet`, {
             method: 'POST', headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ initData: tg.initData, amount: floatAmount, prediction: prediction })
@@ -376,7 +407,6 @@ window.placeBet = async function(prediction) {
         if (result.status === 'success') {
             SoundFX.success();
             showToast(`✅ سفارش ${prediction === 'UP' ? 'خرید' : 'فروش'} ثبت شد`);
-            // به‌روزرسانی فوری UI برای فیدبک سریع
             const elEntry = document.getElementById('entry-display');
             elEntry.classList.remove('hidden');
             elEntry.innerHTML = `<span style="color:${CONFIG.CHART_COLORS.gold}; font-weight:bold; margin-left:5px;">${prediction === 'UP' ? '▲ خرید' : '▼ فروش'}</span> <span class="mono-font">$${floatAmount.toLocaleString()}</span>`;
@@ -400,19 +430,27 @@ window.performSwap = async function() {
             showToast("✅ حساب شارژ شد"); 
             window.closeSwapModal(); 
             SoundFX.success(); 
-            // به‌روزرسانی بالانس توسط WebSocket انجام می‌شود
         }
         else { showToast(`❌ ${result.message}`); }
     } catch(e) { showToast("خطای شبکه"); }
 };
 
-// --- Modal Functions (بدون تغییر) ---
+// --- Modal Functions (تغییر یافته برای بارگذاری داده) ---
 window.openSwapModal = () => document.getElementById('swap-modal').classList.add('active');
 window.closeSwapModal = () => document.getElementById('swap-modal').classList.remove('active');
-window.openHistory = () => document.getElementById('history-modal').classList.add('active');
-window.closeHistory = () => document.getElementById('history-modal').classList.remove('active');
-window.openLeaderboard = () => document.getElementById('leaderboard-modal').classList.add('active');
+
+window.openLeaderboard = () => {
+    fetchLeaderboard();
+    document.getElementById('leaderboard-modal').classList.add('active');
+};
 window.closeLeaderboard = () => document.getElementById('leaderboard-modal').classList.remove('active');
+
+window.openHistory = () => {
+    fetchAndRenderHistory();
+    document.getElementById('history-modal').classList.add('active');
+};
+window.closeHistory = () => document.getElementById('history-modal').classList.remove('active');
+
 
 function showResultModal(result) {
     const elModal = document.getElementById('result-modal');
@@ -444,4 +482,115 @@ function showToast(msg) {
     toast.querySelector('.toast-message').innerText = msg;
     toast.classList.remove('hidden'); tg.HapticFeedback.impactOccurred('light');
     setTimeout(() => toast.classList.add('hidden'), 3000);
+}
+
+
+// ==========================================
+// 5. Leaderboard & History Logic (NEW)
+// ==========================================
+
+async function fetchLeaderboard() {
+    const leaderboardList = document.getElementById('leaderboard-list');
+    leaderboardList.innerHTML = '<div class="loader-spinner"></div>'; // نمایش لودر
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/webapp/game/leaderboard`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ initData: tg.initData })
+        });
+        const data = await res.json();
+
+        if (data.status === 'success') {
+            renderLeaderboard(data.xp_ranking, 'برترین‌های XP');
+            renderLeaderboard(data.profit_ranking, 'برترین‌های سود');
+        } else {
+            leaderboardList.innerHTML = '<p class="error-msg">❌ خطای بارگذاری رتبه‌بندی.</p>';
+            showToast("خطای سرور Leaderboard");
+        }
+    } catch (e) {
+        leaderboardList.innerHTML = '<p class="error-msg">❌ خطای شبکه.</p>';
+    }
+}
+
+function renderLeaderboard(rankingData, title) {
+    const leaderboardList = document.getElementById('leaderboard-list');
+    
+    // اگر بار اول است، لودر را پاک کن
+    if (leaderboardList.querySelector('.loader-spinner')) {
+        leaderboardList.innerHTML = ''; 
+    }
+
+    let html = `<div class="ranking-group-title">${title}</div>`;
+
+    if (rankingData.length === 0) {
+        html += '<p class="no-data-msg">هنوز داده‌ای برای نمایش وجود ندارد.</p>';
+    } else {
+        html += '<ul class="ranking-list">';
+        rankingData.forEach((item, index) => {
+            const rank = index + 1;
+            const trophyColor = CONFIG.TROPHY_COLORS[rank] || '#848E9C';
+            const value = item.xp !== undefined ? `${item.xp.toLocaleString()} XP` : `$${item.total_profit.toFixed(2)}`;
+            const isUser = item.user_id === tg.initDataUnsafe?.user?.id;
+            const rankIcon = rank <= 3 ? `<span style="color:${trophyColor}">🏆</span>` : `<span>${rank}</span>`;
+            
+            html += `
+                <li class="ranking-item ${isUser ? 'is-me' : ''}">
+                    <div class="rank-icon">${rankIcon}</div>
+                    <div class="user-name">${item.first_name || 'کاربر ناشناس'}</div>
+                    <div class="score">${value}</div>
+                </li>
+            `;
+        });
+        html += '</ul>';
+    }
+
+    leaderboardList.innerHTML += html;
+}
+
+async function fetchAndRenderHistory() {
+    const historyList = document.getElementById('history-list');
+    historyList.innerHTML = '<div class="loader-spinner"></div>'; 
+    
+    try {
+        const res = await fetch(`${API_BASE_URL}/webapp/game/round_history`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ initData: tg.initData })
+        });
+        const data = await res.json();
+
+        if (data.status === 'success' && data.history) {
+            let html = '';
+            if (data.history.length === 0) {
+                 html = '<p class="no-data-msg">هنوز هیچ شرطی ثبت نشده است.</p>';
+            } else {
+                html += '<ul class="history-list-items">';
+                data.history.forEach(r => {
+                    const statusClass = r.win ? 'win' : 'loss';
+                    const icon = r.win ? '▲' : '▼';
+                    const color = r.win ? CONFIG.CHART_COLORS.up : CONFIG.CHART_COLORS.down;
+                    const profitSign = r.profit >= 0 ? '+' : '-';
+
+                    html += `
+                        <li class="history-item ${statusClass}">
+                            <div class="round-id-time">#${r.round_id} <span class="time-stamp">${r.time}</span></div>
+                            <div class="prediction-info">
+                                <span class="pred-type" style="color: ${color};">${r.prediction} ${icon}</span>
+                                <span class="bet-amount">$${r.amount.toFixed(2)}</span>
+                            </div>
+                            <div class="price-action">
+                                <span class="entry-price">$${r.entry.toFixed(2)} -> $${r.close.toFixed(2)}</span>
+                            </div>
+                            <div class="profit-amount" style="color: ${color};">${profitSign}$${Math.abs(r.profit).toFixed(2)}</div>
+                        </li>
+                    `;
+                });
+                html += '</ul>';
+            }
+            historyList.innerHTML = html;
+        } else {
+            historyList.innerHTML = '<p class="error-msg">❌ خطای بارگذاری تاریخچه.</p>';
+        }
+    } catch (e) {
+        historyList.innerHTML = '<p class="error-msg">❌ خطای شبکه.</p>';
+    }
 }

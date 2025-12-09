@@ -1,140 +1,333 @@
-﻿/* webapp/dashboard-style.css (v91.0 - XP System & Luxury UI) */
-@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;300;400;500;700;800;900&family=Cinzel:wght@400;700;900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap');
+﻿/* webapp/dashboard-style.css (v92.0 - Dashboard Specific Styles) */
 
-:root {
-    --bg-deep: #000000;
-    --gold-primary: #FFD700;
-    --gold-rich: #F0B90B;
-    --gold-dark: #B8860B;
-    --text-white: #ffffff;
-    --text-muted: #888888;
-    --glass-border: rgba(255, 255, 255, 0.08);
-    --card-gradient: linear-gradient(145deg, #1c1c1e 0%, #000000 100%);
-    
-    --radius-xl: 24px;
-    --radius-lg: 18px;
-    --radius-md: 14px;
-    --safe-area-bottom: env(safe-area-inset-bottom, 20px);
-}
-
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; user-select: none; }
-
-body {
-    margin: 0; padding: 0;
-    font-family: 'Vazirmatn', sans-serif;
-    background-color: var(--bg-deep);
-    color: var(--text-white);
-    min-height: 100vh;
-    overflow-x: hidden;
-    direction: rtl;
-}
+/* NOTE: This file assumes global.css has been imported first for variables and base styling. */
 
 /* =========================================
-   1. انیمیشن ورودی سریع (3.5 Seconds)
-   ========================================= */
+    1. Loader (Specific to Dashboard Launch)
+    ========================================= */
 #loader {
-    position: fixed; inset: 0;
+    position: fixed;
+    inset: 0;
     background: radial-gradient(circle at center, #0a0a0a 0%, #000000 90%);
     z-index: 99999;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     transition: opacity 0.6s ease-in-out;
 }
 
-.infinity-wrapper { position: relative; width: 300px; height: 150px; display: flex; justify-content: center; align-items: center; }
+.infinity-wrapper {
+    position: relative;
+    width: 300px;
+    height: 150px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
-.infinity-svg { position: absolute; width: 100%; height: 100%; fill: none; }
+.infinity-svg {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    fill: none;
+}
+
 .infinity-path {
-    stroke: url(#goldGrad); stroke-width: 8; stroke-linecap: round;
-    stroke-dasharray: 900; stroke-dashoffset: 900;
+    stroke: url(#goldGrad);
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-dasharray: 900;
+    stroke-dashoffset: 900;
     animation: draw-line 2.5s ease-out forwards;
     filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.5));
 }
 
 .loader-logo {
-    width: 70px; height: 70px; border-radius: 50%; position: absolute; z-index: 10;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    position: absolute;
+    z-index: 10;
     box-shadow: 0 0 40px rgba(255, 215, 0, 0.2);
-    animation: logo-pop 1s ease-out forwards 0.5s; opacity: 0;
+    animation: logo-pop 1s ease-out forwards 0.5s;
+    opacity: 0;
 }
 
-.loader-text { margin-top: 40px; text-align: center; }
+.loader-text {
+    margin-top: 40px;
+    text-align: center;
+}
+
 .loading-title {
-    font-family: 'Cinzel', serif; font-size: 1.8rem; letter-spacing: 4px; color: var(--gold-primary);
-    opacity: 0; animation: fade-up 0.8s ease forwards 1s;
+    font-family: 'Cinzel', serif;
+    font-size: 1.8rem;
+    letter-spacing: 4px;
+    color: var(--gold-primary);
+    opacity: 0;
+    animation: fade-up 0.8s ease forwards 1s;
 }
+
 .loading-line {
-    width: 150px; height: 2px; background: rgba(255,255,255,0.1); margin: 15px auto;
-    position: relative; overflow: hidden;
+    width: 150px;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 15px auto;
+    position: relative;
+    overflow: hidden;
 }
+
 .loading-line::after {
-    content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    background: var(--gold-primary); transform: translateX(-100%);
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--gold-primary);
+    transform: translateX(-100%);
     animation: load-bar 2.5s ease-in-out forwards 0.5s;
 }
-.loading-status { font-family: 'Roboto Mono'; font-size: 0.65rem; color: #666; letter-spacing: 2px; }
 
-@keyframes draw-line { to { stroke-dashoffset: 0; } }
-@keyframes logo-pop { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-@keyframes fade-up { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-@keyframes load-bar { to { transform: translateX(0); } }
+.loading-status {
+    font-family: 'Roboto Mono';
+    font-size: 0.65rem;
+    color: #666;
+    letter-spacing: 2px;
+}
+
+@keyframes draw-line {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes logo-pop {
+    from {
+        transform: scale(0);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes fade-up {
+    from {
+        transform: translateY(10px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes load-bar {
+    to {
+        transform: translateX(0);
+    }
+}
 
 /* =========================================
-   2. استایل‌های اصلی داشبورد
-   ========================================= */
-#app-container { max-width: 600px; margin: 0 auto; min-height: 100vh; position: relative; z-index: 2; display: flex; flex-direction: column; }
-.ambient-light { position: fixed; top: -100px; left: 50%; transform: translateX(-50%); width: 80%; height: 300px; background: radial-gradient(ellipse at center, rgba(255, 215, 0, 0.08), transparent 70%); z-index: 1; pointer-events: none; }
-.grid-pattern { position: fixed; inset: 0; background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 20px 20px; z-index: 0; pointer-events: none; }
-
-/* Header */
-.glass-header {
-    padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;
-    background: rgba(5, 5, 5, 0.85); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-    border-bottom: 1px solid var(--glass-border); position: sticky; top: 0; z-index: 100;
+    2. Dashboard Layout and Atmosphere
+    ========================================= */
+#app-container {
+    max-width: 600px;
+    margin: 0 auto;
+    min-height: 100vh;
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
 }
-.profile-section { display: flex; align-items: center; gap: 12px; }
-.avatar-container { position: relative; width: 48px; height: 48px; padding: 2px; border: 1px solid rgba(255,215,0,0.3); border-radius: 14px; background: #111; }
-.avatar-img { width: 100%; height: 100%; border-radius: 11px; object-fit: cover; }
-.status-indicator { position: absolute; bottom: -2px; right: -2px; width: 10px; height: 10px; background: #0ECB81; border: 2px solid #000; border-radius: 50%; }
 
-.user-info { display: flex; flex-direction: column; justify-content: center; }
-.user-info h2 { font-size: 0.95rem; margin: 0; color: #fff; font-weight: 700; line-height: 1.2; }
-
-/* --- استایل‌های جدید نوار XP --- */
-.xp-container { width: 100px; margin-top: 6px; }
-.xp-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
-.level-badge { 
-    font-size: 0.6rem; font-weight: 800; color: #000; 
-    background: var(--gold-primary); padding: 1px 6px; border-radius: 4px; 
-    font-family: 'Roboto Mono'; letter-spacing: -0.5px;
+.ambient-light {
+    position: fixed;
+    top: -100px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    height: 300px;
+    background: radial-gradient(ellipse at center, rgba(255, 215, 0, 0.08), transparent 70%);
+    z-index: 1;
+    pointer-events: none;
 }
-.next-level { font-size: 0.6rem; color: #666; font-family: 'Roboto Mono'; }
-.xp-bar-bg { width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
-.xp-bar-fill { 
-    height: 100%; 
-    background: linear-gradient(90deg, var(--gold-dark), var(--gold-primary)); 
-    width: 0%; /* با JS پر می‌شود */
+
+.grid-pattern {
+    position: fixed;
+    inset: 0;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 20px 20px;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.main-content {
+    padding: 20px;
+    overflow-y: auto;
+    perspective: 1000px;
+}
+
+/* =========================================
+    3. Profile and XP Bar
+    ========================================= */
+
+.avatar-container {
+    position: relative;
+    width: 48px;
+    height: 48px;
+    padding: 2px;
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    border-radius: 14px;
+    background: #111;
+}
+
+.avatar-img {
+    width: 100%;
+    height: 100%;
+    border-radius: 11px;
+    object-fit: cover;
+}
+
+.status-indicator {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 10px;
+    height: 10px;
+    background: #0ECB81;
+    border: 2px solid #000;
+    border-radius: 50%;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.user-info h2 {
+    font-size: 0.95rem;
+    margin: 0;
+    color: #fff;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+/* XP Bar Styles */
+.xp-container {
+    width: 100px;
+    margin-top: 6px;
+}
+
+.xp-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3px;
+}
+
+.level-badge {
+    font-size: 0.6rem;
+    font-weight: 800;
+    color: #000;
+    background: var(--gold-primary);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-family: 'Roboto Mono';
+    letter-spacing: -0.5px;
+}
+
+.next-level {
+    font-size: 0.6rem;
+    color: #666;
+    font-family: 'Roboto Mono';
+}
+
+.xp-bar-bg {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.xp-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold-dark), var(--gold-primary));
+    width: 0%;
     transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 0 10px var(--gold-primary);
 }
 
-.action-icon-btn { width: 40px; height: 40px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 12px; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+.action-icon-btn {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+}
 
-/* Ticker (نوار قیمت) */
-.ticker-wrap { width: 100%; background: #080808; border-bottom: 1px solid var(--glass-border); overflow: hidden; padding: 8px 0; }
-.ticker-move { display: inline-block; white-space: nowrap; animation: ticker 25s linear infinite; }
-.ticker-item { display: inline-block; padding: 0 20px; font-family: 'Roboto Mono'; font-size: 0.75rem; color: #888; }
-.up { color: #0ECB81; } .down { color: #F6465D; }
-@keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(100%); } }
+/* =========================================
+    4. Ticker (Price Scroll)
+    ========================================= */
+.ticker-wrap {
+    width: 100%;
+    background: #080808;
+    border-bottom: 1px solid var(--glass-border);
+    overflow: hidden;
+    padding: 8px 0;
+}
 
-.main-content { padding: 20px; overflow-y: auto; perspective: 1000px; }
+.ticker-move {
+    display: inline-block;
+    white-space: nowrap;
+    animation: ticker 25s linear infinite;
+}
 
-/* Premium Asset Card (3D) */
+.ticker-item {
+    display: inline-block;
+    padding: 0 20px;
+    font-family: 'Roboto Mono';
+    font-size: 0.75rem;
+    color: #888;
+}
+
+.up {
+    color: var(--accent-green);
+}
+
+.down {
+    color: var(--accent-red);
+}
+
+@keyframes ticker {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+/* =========================================
+    5. Premium Asset Card (3D Styles)
+    ========================================= */
 .premium-card {
     background: var(--card-gradient);
-    border-radius: var(--radius-xl); padding: 24px; position: relative;
-    border: 1px solid rgba(255, 255, 255, 0.08); overflow: hidden;
-    box-shadow: 0 20px 50px -10px rgba(0,0,0,0.8);
+    border-radius: var(--radius-xl);
+    padding: 24px;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+    box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.8);
     margin-bottom: 30px;
     transform-style: preserve-3d;
     transform: rotateX(0deg) rotateY(0deg);
@@ -142,76 +335,355 @@ body {
     will-change: transform;
 }
 
-.card-bg-texture { position: absolute; inset: 0; background: url('https://www.transparenttextures.com/patterns/carbon-fibre.png'); opacity: 0.05; pointer-events: none; transform: translateZ(0); }
-.card-shine {
-    position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-    background: radial-gradient(circle, rgba(255, 215, 0, 0.05) 0%, transparent 60%);
-    pointer-events: none; mix-blend-mode: overlay; transform: translateZ(1px);
+.card-bg-texture {
+    position: absolute;
+    inset: 0;
+    background: url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
+    opacity: 0.05;
+    pointer-events: none;
+    transform: translateZ(0);
 }
 
-.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; position: relative; z-index: 2; transform: translateZ(25px); }
-.chip-sim { font-size: 2.2rem; color: rgba(255,255,255,0.1); transform: rotate(90deg); text-shadow: 2px 4px 6px rgba(0,0,0,0.5); }
-.card-type { font-family: 'Cinzel'; font-size: 0.7rem; color: var(--gold-dark); letter-spacing: 2px; font-weight: 700; }
+.card-shine {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 215, 0, 0.05) 0%, transparent 60%);
+    pointer-events: none;
+    mix-blend-mode: overlay;
+    transform: translateZ(1px);
+}
 
-.card-balance { text-align: right; margin-bottom: 15px; position: relative; z-index: 2; transform: translateZ(35px); }
-.balance-label { font-size: 0.8rem; color: #666; display: block; margin-bottom: 5px; }
-.balance-amount { display: flex; align-items: baseline; justify-content: flex-end; gap: 8px; }
-.balance-amount h1 { font-family: 'Roboto Mono'; font-size: 2.2rem; margin: 0; color: #fff; letter-spacing: -1px; text-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-.currency-symbol { color: var(--gold-primary); font-size: 1.2rem; }
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    position: relative;
+    z-index: 2;
+    transform: translateZ(25px);
+}
 
-.mini-chart-container { height: 50px; width: 100%; margin-bottom: 20px; opacity: 0.8; position: relative; z-index: 2; transform: translateZ(15px); }
-.chart-svg { width: 100%; height: 100%; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); }
+.chip-sim {
+    font-size: 2.2rem;
+    color: rgba(255, 255, 255, 0.1);
+    transform: rotate(90deg);
+    text-shadow: 2px 4px 6px rgba(0, 0, 0, 0.5);
+}
 
-.card-footer { background: rgba(255,255,255,0.03); border-radius: 12px; padding: 12px; display: flex; border: 1px solid rgba(255,255,255,0.05); position: relative; z-index: 2; transform: translateZ(20px); }
-.asset-row { display: flex; width: 100%; justify-content: space-around; align-items: center; }
-.asset-col { text-align: center; }
-.asset-title { display: block; font-size: 0.6rem; color: #555; letter-spacing: 1px; margin-bottom: 2px; }
-.asset-val { font-family: 'Roboto Mono'; font-size: 0.95rem; font-weight: 700; }
-.usd-color { color: #0ECB81; } .xp-color { color: var(--gold-primary); }
-.vertical-divider { width: 1px; height: 25px; background: rgba(255,255,255,0.1); }
+.card-type {
+    font-family: 'Cinzel';
+    font-size: 0.7rem;
+    color: var(--gold-dark);
+    letter-spacing: 2px;
+    font-weight: 700;
+}
 
-/* Quick Actions */
-.section-title { font-size: 0.9rem; font-weight: 700; color: #fff; margin-bottom: 15px; padding-right: 10px; border-right: 3px solid var(--gold-primary); }
-.quick-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 35px; }
-.glass-btn { display: flex; flex-direction: column; align-items: center; gap: 8px; background: transparent; border: none; cursor: pointer; }
-.btn-icon { width: 54px; height: 54px; border-radius: 18px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; transition: transform 0.2s, box-shadow 0.2s; }
-.glass-btn span { font-size: 0.75rem; color: #888; font-weight: 500; }
-.deposit-color { color: #0ECB81; } .withdraw-color { color: #F6465D; } .trade-color { color: #3B82F6; } .kyc-color { color: var(--gold-primary); }
-.glass-btn:active .btn-icon { transform: scale(0.95); background: rgba(255,255,255,0.05); }
+.card-balance {
+    text-align: right;
+    margin-bottom: 15px;
+    position: relative;
+    z-index: 2;
+    transform: translateZ(35px);
+}
+
+.balance-label {
+    font-size: 0.8rem;
+    color: #666;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.balance-amount {
+    display: flex;
+    align-items: baseline;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.balance-amount h1 {
+    font-family: 'Roboto Mono';
+    font-size: 2.2rem;
+    margin: 0;
+    color: #fff;
+    letter-spacing: -1px;
+    text-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+.currency-symbol {
+    color: var(--gold-primary);
+    font-size: 1.2rem;
+}
+
+.mini-chart-container {
+    height: 50px;
+    width: 100%;
+    margin-bottom: 20px;
+    opacity: 0.8;
+    position: relative;
+    z-index: 2;
+    transform: translateZ(15px);
+}
+
+.chart-svg {
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+}
+
+.card-footer {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    position: relative;
+    z-index: 2;
+    transform: translateZ(20px);
+}
+
+.asset-row {
+    display: flex;
+    width: 100%;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.asset-col {
+    text-align: center;
+}
+
+.asset-title {
+    display: block;
+    font-size: 0.6rem;
+    color: #555;
+    letter-spacing: 1px;
+    margin-bottom: 2px;
+}
+
+.asset-val {
+    font-family: 'Roboto Mono';
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.usd-color {
+    color: var(--accent-green);
+}
+
+.xp-color {
+    color: var(--gold-primary);
+}
+
+.vertical-divider {
+    width: 1px;
+    height: 25px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* =========================================
+    6. Quick Actions and Services Grid
+    ========================================= */
+.section-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 15px;
+    padding-right: 10px;
+    border-right: 3px solid var(--gold-primary);
+}
+
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 35px;
+}
+
+.glass-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-icon {
+    width: 54px;
+    height: 54px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.glass-btn span {
+    font-size: 0.75rem;
+    color: #888;
+    font-weight: 500;
+}
+
+.deposit-color {
+    color: var(--accent-green);
+}
+
+.withdraw-color {
+    color: var(--accent-red);
+}
+
+.trade-color {
+    color: var(--accent-blue);
+}
+
+.kyc-color {
+    color: var(--gold-primary);
+}
+
+.glass-btn:active .btn-icon {
+    transform: scale(0.95);
+    background: rgba(255, 255, 255, 0.05);
+}
 
 /* Services Grid */
-.services-grid-modern { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.service-card {
-    background: rgba(20, 20, 20, 0.5); border: 1px solid var(--glass-border);
-    border-radius: var(--radius-md); padding: 16px; display: flex; align-items: center; gap: 15px;
-    cursor: pointer; transition: background 0.2s;
+.services-grid-modern {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
 }
-.service-card:active { background: rgba(255,255,255,0.05); }
-.service-icon { font-size: 1.6rem; width: 40px; text-align: center; }
-.gold-glow { color: #0ECB81; filter: drop-shadow(0 0 8px rgba(14,203,129,0.3)); }
-.pink-glow { color: #FF007A; filter: drop-shadow(0 0 8px rgba(255,0,122,0.3)); }
-.green-glow { color: #fff; filter: drop-shadow(0 0 8px rgba(255,255,255,0.3)); }
-.blue-glow { color: var(--gold-primary); filter: drop-shadow(0 0 8px rgba(255,215,0,0.3)); }
-.service-meta h4 { margin: 0 0 3px 0; font-size: 0.9rem; color: #e0e0e0; }
-.service-meta span { font-size: 0.7rem; color: #666; }
+
+.service-card {
+    background: rgba(20, 20, 20, 0.5);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.service-card:active {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.service-icon {
+    font-size: 1.6rem;
+    width: 40px;
+    text-align: center;
+}
+
+.gold-glow {
+    color: var(--accent-green);
+    filter: drop-shadow(0 0 8px rgba(14, 203, 129, 0.3));
+}
+
+.pink-glow {
+    color: #FF007A;
+    filter: drop-shadow(0 0 8px rgba(255, 0, 122, 0.3));
+}
+
+.green-glow {
+    color: #fff;
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.3));
+}
+
+.blue-glow {
+    color: var(--gold-primary);
+    filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.3));
+}
+
+.service-meta h4 {
+    margin: 0 0 3px 0;
+    font-size: 0.9rem;
+    color: #e0e0e0;
+}
+
+.service-meta span {
+    font-size: 0.7rem;
+    color: #666;
+}
 
 /* Game Banner */
 .game-banner {
-    position: relative; height: 120px; border-radius: var(--radius-lg); overflow: hidden;
-    background: linear-gradient(135deg, #0f172a 0%, #000 100%); border: 1px solid rgba(59,130,246,0.3);
-    margin-bottom: 20px; display: flex; align-items: center; padding: 0 25px; cursor: pointer;
+    position: relative;
+    height: 120px;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: linear-gradient(135deg, #0f172a 0%, #000 100%);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    padding: 0 25px;
+    cursor: pointer;
 }
-.banner-glow { position: absolute; right: -20px; top: -50%; width: 150px; height: 200%; background: rgba(59,130,246,0.2); filter: blur(40px); transform: rotate(15deg); }
-.banner-content { display: flex; justify-content: space-between; width: 100%; position: relative; z-index: 2; align-items: center; }
-.game-info h3 { margin: 0 0 5px 0; font-size: 1.2rem; color: #fff; }
-.game-info p { margin: 0; font-size: 0.8rem; color: #888; }
-.play-icon { width: 45px; height: 45px; border-radius: 50%; background: #3B82F6; display: flex; align-items: center; justify-content: center; color: #fff; box-shadow: 0 0 15px rgba(59,130,246,0.5); }
 
-/* --- استایل‌های پشتیبانی (حفظ شده) --- */
+.banner-glow {
+    position: absolute;
+    right: -20px;
+    top: -50%;
+    width: 150px;
+    height: 200%;
+    background: rgba(59, 130, 246, 0.2);
+    filter: blur(40px);
+    transform: rotate(15deg);
+}
+
+.banner-content {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    position: relative;
+    z-index: 2;
+    align-items: center;
+}
+
+.game-info h3 {
+    margin: 0 0 5px 0;
+    font-size: 1.2rem;
+    color: #fff;
+}
+
+.game-info p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #888;
+}
+
+.play-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: var(--accent-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+}
+
+/* --- Support Styles (Retained for Dashboard use) --- */
 .notif-dot-support {
-    position: absolute; top: -3px; right: -3px; width: 9px; height: 9px;
-    background-color: #ff3b30; border-radius: 50%; border: 1.5px solid #1c1c1e;
-    display: none; z-index: 10; box-shadow: 0 0 4px rgba(255, 59, 48, 0.6);
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    width: 9px;
+    height: 9px;
+    background-color: #ff3b30;
+    border-radius: 50%;
+    border: 1.5px solid #1c1c1e;
+    display: none;
+    z-index: 10;
+    box-shadow: 0 0 4px rgba(255, 59, 48, 0.6);
 }
 .chat-layout { display: flex; flex-direction: column; height: 100vh; padding-top: 70px; }
 .chat-messages-area { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 90px; }

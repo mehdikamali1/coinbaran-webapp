@@ -1,0 +1,195 @@
+/* webapp/usdt-style.css (v1.0 - USDT Exchange Specific Styles) */
+
+/* NOTE: This file assumes global.css has been imported first for variables and base styling. */
+
+/* --- Ticker Card --- */
+.main-scroll-area {
+    padding-bottom: 150px !important; /* Vital: Ensure space for elements at the bottom */
+}
+
+.ticker-card {
+    background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(0,0,0,0.4) 100%);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    padding: 20px; 
+    margin-bottom: 25px;
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+    position: relative; 
+    overflow: hidden;
+}
+.ticker-col { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 5px; 
+    z-index: 2; 
+}
+.ticker-label { 
+    font-size: 0.75rem; 
+    color: var(--text-muted); 
+}
+.ticker-val { 
+    font-family: monospace; 
+    font-size: 1.3rem; 
+    font-weight: 800; 
+    letter-spacing: -0.5px; 
+}
+.col-buy { 
+    color: var(--accent-red); /* Admin sells (User buys) - RED */
+} 
+.col-sell { 
+    color: var(--accent-green); /* Admin buys (User sells) - GREEN */
+    text-shadow: 0 0 10px rgba(14, 203, 129, 0.3); 
+} 
+
+/* --- Tab Switch --- */
+.switch-tabs {
+    background: rgba(255,255,255,0.03); 
+    border: 1px solid var(--glass-border);
+    border-radius: 16px; 
+    padding: 5px; 
+    display: flex; 
+    margin-bottom: 25px;
+}
+.tab-btn {
+    flex: 1; 
+    padding: 12px; 
+    text-align: center; 
+    border-radius: 12px;
+    font-weight: 700; 
+    font-size: 0.9rem; 
+    color: var(--text-muted);
+    cursor: pointer; 
+    transition: all 0.3s;
+}
+.tab-btn.active.buy-mode { 
+    background: var(--accent-green); 
+    color: #000; 
+    box-shadow: 0 0 15px rgba(14, 203, 129, 0.3); 
+}
+.tab-btn.active.sell-mode { 
+    background: var(--accent-red); 
+    color: var(--text-main); 
+    box-shadow: 0 0 15px rgba(246, 70, 93, 0.3); 
+}
+
+/* --- Form Sections --- */
+.form-section { 
+    display: none; 
+    animation: fadeIn 0.3s ease-out; 
+}
+.form-section.active { 
+    display: block; 
+}
+@keyframes fadeIn { 
+    from { opacity:0; transform:translateY(10px); } 
+    to { opacity:1; transform:translateY(0); } 
+}
+
+.input-box { 
+    position: relative; 
+    margin-bottom: 20px; 
+}
+.inp-label { 
+    display: block; 
+    color: var(--text-muted); 
+    font-size: 0.85rem; 
+    margin-bottom: 8px; 
+}
+.glass-inp {
+    width: 100%; 
+    background: rgba(0,0,0,0.3); 
+    border: 1px solid var(--glass-border);
+    color: var(--text-main); 
+    padding: 16px; 
+    padding-left: 50px; 
+    border-radius: 16px;
+    font-size: 1.1rem; 
+    font-weight: 700; 
+    font-family: monospace; 
+    text-align: right; 
+    direction: ltr;
+}
+.glass-inp:focus { 
+    border-color: var(--gold-primary); 
+    background: rgba(0,0,0,0.5); 
+}
+.inp-icon { 
+    position: absolute; 
+    left: 16px; 
+    top: 48px; 
+    color: var(--text-muted); 
+    font-size: 1.1rem; 
+}
+ 
+.calc-row { 
+    display: flex; 
+    justify-content: space-between; 
+    padding: 0 5px; 
+    margin-top: -10px; 
+    margin-bottom: 20px; 
+}
+.calc-val { 
+    font-family: monospace; 
+    font-weight: 700; 
+    color: var(--gold-primary); 
+    font-size: 1rem; 
+}
+
+.btn-submit {
+    width: 100%; 
+    padding: 18px; 
+    border-radius: 18px; 
+    border: none;
+    font-size: 1.1rem; 
+    font-weight: 800; 
+    cursor: pointer; 
+    color: var(--text-main);
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    gap: 10px;
+    transition: transform 0.1s; 
+    margin-top: 30px;
+}
+.btn-submit:active { 
+    transform: scale(0.97); 
+}
+.bg-green { 
+    background: var(--accent-green); 
+    color: #000; 
+    box-shadow: 0 5px 20px rgba(14, 203, 129, 0.2); 
+}
+.bg-red { 
+    background: var(--accent-red); 
+    box-shadow: 0 5px 20px rgba(246, 70, 93, 0.2); 
+}
+
+/* --- Modal Styles --- */
+.modal-overlay {
+    position: fixed; 
+    inset: 0; 
+    background: rgba(0,0,0,0.85); 
+    backdrop-filter: blur(8px);
+    z-index: 999; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    opacity: 0; 
+    visibility: hidden; 
+    transition: all 0.3s;
+}
+.modal-overlay.active { 
+    opacity: 1; 
+    visibility: visible; 
+}
+.modal-box {
+    background: #111; 
+    border: 1px solid var(--glass-border); 
+    width: 85%; 
+    max-width: 350px;
+    border-radius: 24px; 
+    padding: 30px 20px; 
+    text-align: center;
+}

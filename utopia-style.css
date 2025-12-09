@@ -1,0 +1,112 @@
+/* webapp/utopia-style.css (v1.0 - Utopia Exchange Specific Styles) */
+
+/* NOTE: This file assumes global.css has been imported first for variables and base styling. */
+
+.utopia-ticker {
+    background: linear-gradient(135deg, rgba(255, 0, 122, 0.1) 0%, rgba(0,0,0,0) 100%);
+    border: 1px solid rgba(255, 0, 122, 0.3);
+    border-radius: var(--radius-lg);
+    padding: 20px; 
+    display: flex; 
+    justify-content: space-between;
+    margin-bottom: 25px;
+}
+ 
+.tick-item { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 5px; 
+}
+.tick-label { 
+    font-size: 0.75rem; 
+    color: var(--text-muted); 
+}
+.tick-val { 
+    font-family: monospace; 
+    font-size: 1.2rem; 
+    font-weight: 800; 
+}
+.c-buy { 
+    color: var(--accent-green); 
+} /* User Sells Voucher, Exchange Buys (Admin Buys) */
+.c-sell { 
+    color: var(--utopia-pink); 
+} /* User Buys Voucher, Exchange Sells (Admin Sells) */
+
+.u-tabs {
+    background: rgba(255,255,255,0.03); 
+    border: 1px solid var(--glass-border);
+    border-radius: 16px; 
+    padding: 5px; 
+    display: flex; 
+    margin-bottom: 25px;
+}
+.u-tab {
+    flex: 1; 
+    padding: 12px; 
+    text-align: center; 
+    border-radius: 12px;
+    font-weight: 700; 
+    font-size: 0.9rem; 
+    color: var(--text-muted);
+    cursor: pointer; 
+    transition: all 0.3s;
+}
+.u-tab.active { 
+    color: var(--text-main); 
+    background: var(--utopia-pink); 
+    box-shadow: 0 0 15px rgba(255,0,122,0.3); 
+}
+ 
+.section-box { 
+    display: none; 
+    animation: fadeIn 0.4s ease; 
+}
+.section-box.active { 
+    display: block; 
+}
+@keyframes fadeIn { 
+    from { opacity: 0; transform: translateY(10px); } 
+    to { opacity: 1; transform: translateY(0); } 
+}
+
+.glass-inp {
+    width: 100%; 
+    background: rgba(0,0,0,0.3); 
+    border: 1px solid var(--glass-border);
+    color: var(--text-main); 
+    padding: 16px; 
+    border-radius: 16px;
+    font-size: 1.1rem; 
+    font-weight: 700; 
+    font-family: monospace; 
+    text-align: center;
+}
+ 
+.btn-pink { 
+    width: 100%; 
+    padding: 18px; 
+    border-radius: 18px; 
+    border: none;
+    font-size: 1.1rem; 
+    font-weight: 800; 
+    cursor: pointer; 
+    color: var(--text-main);
+    background: var(--utopia-pink); 
+    box-shadow: 0 5px 20px rgba(255, 0, 122, 0.3);
+    margin-top: 20px;
+}
+ 
+.btn-green {
+    width: 100%; 
+    padding: 18px; 
+    border-radius: 18px; 
+    border: none;
+    font-size: 1.1rem; 
+    font-weight: 800; 
+    cursor: pointer; 
+    color: #000;
+    background: var(--accent-green); 
+    box-shadow: 0 5px 20px rgba(14, 203, 129, 0.3);
+    margin-top: 20px;
+}

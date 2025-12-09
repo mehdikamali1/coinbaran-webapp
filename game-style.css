@@ -1,30 +1,13 @@
-﻿/* webapp/game-style.css (v70.0 - Ultra Luxury Edition) */
+﻿/* webapp/game-style.css (v72.0 - Optimized Luxury Edition) */
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700;800&family=Roboto+Mono:wght@400;500;700&display=swap');
 
+/* NOTE: This file now imports only its specific styles. Global variables are from global.css. */
+
 :root {
-    /* --- پالت رنگی هسته --- */
-    --bg-deep: #050505;       /* مشکی مطلق برای عمق */
-    --bg-surface: #121212;    /* سطح کارت‌ها */
-    --glass-bg: rgba(20, 20, 20, 0.6);
-    --glass-border: rgba(255, 255, 255, 0.08);
-    
-    --primary-gold: #F0B90B;
+    /* --- Overrides needed for game file (using global vars for consistency) --- */
+    --primary-gold: var(--gold-primary);
     --accent-green: #0ECB81;
     --accent-red: #F6465D;
-    
-    --text-main: #FFFFFF;
-    --text-muted: #848E9C;
-
-    /* --- افکت‌ها --- */
-    --glow-green: 0 0 20px rgba(14, 203, 129, 0.4);
-    --glow-red: 0 0 20px rgba(246, 70, 93, 0.4);
-    --glow-gold: 0 0 25px rgba(240, 185, 11, 0.25);
-    
-    --radius-xl: 24px;
-    --radius-lg: 16px;
-    --radius-md: 12px;
-    
-    --safe-area-bottom: env(safe-area-inset-bottom, 20px);
 }
 
 * {
@@ -34,53 +17,54 @@
     user-select: none;
 }
 
-body {
-    margin: 0; padding: 0;
-    font-family: 'Vazirmatn', sans-serif;
-    background-color: var(--bg-deep);
-    color: var(--text-main);
-    height: 100vh;
-    height: 100dvh;
-    overflow: hidden;
-    direction: rtl;
+/* --- Crucial Persian Font Overrides (Extracted from inline style) --- */
+body { 
+    font-family: 'Vazirmatn', sans-serif !important; 
 }
-
-#app-container {
-    display: flex; flex-direction: column;
-    height: 100%; width: 100%;
-    max-width: 600px; margin: 0 auto;
-    position: relative;
-    z-index: 2;
+.main-price { 
+    letter-spacing: 0; 
+} 
+.btn-title { 
+    font-size: 1.1rem; 
+}
+.btn-rate { 
+    font-family: 'Roboto Mono'; 
+    font-size: 0.8rem; 
+    opacity: 0.9; 
 }
 
 /* =========================================
-   1. پس‌زمینه و اتمسفر (Ambient)
-   ========================================= */
+    1. پس‌زمینه و اتمسفر (Ambient)
+    ========================================= */
 .ambient-glow {
     position: fixed;
-    width: 300px; height: 300px;
+    width: 300px;
+    height: 300px;
     border-radius: 50%;
     filter: blur(100px);
-    z-index: 1; opacity: 0.4;
+    z-index: 1;
+    opacity: 0.4;
     pointer-events: none;
 }
-.glow-top { top: -100px; left: -50px; background: radial-gradient(circle, rgba(240,185,11,0.2) 0%, transparent 70%); }
-.glow-bottom { bottom: -100px; right: -50px; background: radial-gradient(circle, rgba(14,203,129,0.1) 0%, transparent 70%); }
+.glow-top { background: radial-gradient(circle, rgba(240,185,11,0.2) 0%, transparent 70%); }
+.glow-bottom { background: radial-gradient(circle, rgba(14,203,129,0.1) 0%, transparent 70%); }
 
 .grid-overlay {
-    position: fixed; inset: 0;
-    background-image: 
+    position: fixed;
+    inset: 0;
+    background-image:
         linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
     background-size: 40px 40px;
-    z-index: 1; pointer-events: none;
+    z-index: 1;
+    pointer-events: none;
     mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
     -webkit-mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
 }
 
 /* =========================================
-   2. هدر شیشه‌ای
-   ========================================= */
+    2. هدر شیشه‌ای
+    ========================================= */
 .glass-panel {
     background: var(--glass-bg);
     backdrop-filter: blur(20px);
@@ -90,7 +74,9 @@ body {
 
 .game-header {
     height: 64px;
-    display: flex; align-items: center; justify-content: space-between;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     padding: 0 16px;
     border-bottom-left-radius: var(--radius-lg);
     border-bottom-right-radius: var(--radius-lg);
@@ -99,56 +85,89 @@ body {
 }
 
 .icon-btn {
-    background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
-    color: var(--text-main); width: 40px; height: 40px;
-    border-radius: 12px; display: flex; align-items: center; justify-content: center;
-    cursor: pointer; transition: all 0.2s;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--glass-border);
+    color: var(--text-main);
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
 }
 .icon-btn:active { transform: scale(0.92); background: rgba(255,255,255,0.1); }
 
 .wallet-badge {
-    background: rgba(0,0,0,0.3); border: 1px solid var(--primary-gold);
-    border-radius: 20px; padding: 4px 6px 4px 12px;
-    display: flex; align-items: center; gap: 8px;
-    cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--primary-gold);
+    border-radius: 20px;
+    padding: 4px 6px 4px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
 #user-balance-display { font-family: 'Roboto Mono'; font-weight: 700; font-size: 0.95rem; }
 .wallet-currency { font-size: 0.7rem; color: var(--primary-gold); font-weight: 800; }
 .wallet-add-btn {
-    width: 22px; height: 22px; background: var(--primary-gold);
-    color: #000; border-radius: 50%; font-size: 16px; font-weight: bold;
-    display: flex; align-items: center; justify-content: center;
+    width: 22px;
+    height: 22px;
+    background: var(--primary-gold);
+    color: #000;
+    border-radius: 50%;
+    font-size: 16px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .pair-badge {
-    display: flex; align-items: center; gap: 6px;
-    background: rgba(255,255,255,0.05); padding: 6px 12px; border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,0.05);
+    padding: 6px 12px;
+    border-radius: 12px;
 }
 .pair-icon { color: #F7931A; font-size: 1.1rem; }
 .pair-name { font-family: 'Roboto Mono'; font-weight: 700; letter-spacing: 0.5px; }
 
 /* =========================================
-   3. مارکت و تایمر (بخش حیاتی)
-   ========================================= */
+    3. مارکت و تایمر (بخش حیاتی)
+    ========================================= */
 .market-stats {
     padding: 20px 24px;
-    display: flex; justify-content: space-between; align-items: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .price-header { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
 .price-label { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
 
 .status-pill {
-    display: flex; align-items: center; gap: 5px;
-    padding: 2px 8px; border-radius: 10px;
-    background: rgba(14, 203, 129, 0.1); border: 1px solid rgba(14, 203, 129, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: rgba(14, 203, 129, 0.1);
+    border: 1px solid rgba(14, 203, 129, 0.2);
 }
 .status-dot { width: 6px; height: 6px; background: var(--accent-green); border-radius: 50%; box-shadow: 0 0 8px var(--accent-green); animation: blink 2s infinite; }
 .status-text { font-size: 0.65rem; color: var(--accent-green); font-weight: 700; text-transform: uppercase; }
 
 .main-price {
-    font-family: 'Roboto Mono', monospace; font-size: 2.2rem; font-weight: 700;
-    color: var(--text-main); margin: 0; line-height: 1;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 0;
+    line-height: 1;
     text-shadow: 0 0 20px rgba(255,255,255,0.05);
 }
 
@@ -157,56 +176,85 @@ body {
 .timer-svg { transform: rotate(-90deg); width: 100%; height: 100%; overflow: visible; }
 .timer-bg { fill: none; stroke: rgba(255,255,255,0.05); stroke-width: 4; }
 .timer-progress {
-    fill: none; stroke: var(--primary-gold); stroke-width: 4; stroke-linecap: round;
-    stroke-dasharray: 283; stroke-dashoffset: 0;
+    fill: none;
+    stroke: var(--primary-gold);
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-dasharray: 283;
+    stroke-dashoffset: 0;
     transition: stroke-dashoffset 1s linear;
     filter: drop-shadow(0 0 4px var(--primary-gold));
 }
 .timer-text-box {
-    position: absolute; inset: 0;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 #timer-text { font-family: 'Roboto Mono'; font-weight: bold; font-size: 1.1rem; line-height: 1; }
 .timer-label { font-size: 0.5rem; color: var(--text-muted); margin-top: 2px; }
 
 /* =========================================
-   4. چارت
-   ========================================= */
+    4. چارت
+    ========================================= */
 .chart-section {
-    flex: 1; margin: 0 10px; border-radius: var(--radius-lg);
-    position: relative; overflow: hidden;
+    flex: 1;
+    margin: 0 10px;
+    border-radius: var(--radius-lg);
+    position: relative;
+    overflow: hidden;
 }
 .chart-box { position: absolute; inset: 0; direction: ltr; }
 
 .chart-loader {
-    position: absolute; inset: 0; background: rgba(5,5,5,0.8); backdrop-filter: blur(5px);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px;
-    z-index: 10; transition: opacity 0.5s;
+    position: absolute;
+    inset: 0;
+    background: rgba(5,5,5,0.8);
+    backdrop-filter: blur(5px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    z-index: 10;
+    transition: opacity 0.5s;
 }
 .chart-loader.fade-out { opacity: 0; pointer-events: none; }
 .spinner-premium {
-    width: 40px; height: 40px;
+    width: 40px;
+    height: 40px;
     border: 3px solid rgba(240, 185, 11, 0.1);
-    border-top-color: var(--primary-gold); border-radius: 50%;
-    animation: spin 0.8s ease-in-out infinite; box-shadow: var(--glow-gold);
+    border-top-color: var(--primary-gold);
+    border-radius: 50%;
+    animation: spin 0.8s ease-in-out infinite;
+    box-shadow: 0 0 25px rgba(240, 185, 11, 0.25);
 }
 .loader-text { font-size: 0.8rem; color: var(--primary-gold); letter-spacing: 1px; }
 
 /* =========================================
-   5. تاریخچه و کنترل‌ها
-   ========================================= */
+    5. تاریخچه و کنترل‌ها
+    ========================================= */
 .history-section {
-    margin: 10px 0; padding: 0 20px;
+    margin: 10px 0;
+    padding: 0 20px;
 }
 .history-header { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.8rem; color: var(--text-muted); }
 .history-more { color: var(--primary-gold); cursor: pointer; }
 .history-scroll {
-    display: flex; gap: 6px; overflow-x: auto; padding-bottom: 5px;
-    direction: ltr; scrollbar-width: none;
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 5px;
+    direction: ltr;
+    scrollbar-width: none;
 }
 .history-scroll::-webkit-scrollbar { display: none; }
 .hist-pill {
-    min-width: 8px; height: 24px; border-radius: 4px;
+    min-width: 8px;
+    height: 24px;
+    border-radius: 4px;
     background: rgba(255,255,255,0.1);
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
@@ -215,14 +263,22 @@ body {
 .hist-pill.win { min-width: 28px; display: flex; align-items: center; justify-content: center; color: #000; font-weight: bold; font-size: 10px; }
 
 /* فوتر شناور (Floating Footer) */
-.glass-panel-top {
+.trading-controls {
     background: rgba(18, 18, 18, 0.85);
-    backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
     border-top: 1px solid var(--glass-border);
-    border-top-left-radius: 24px; border-top-right-radius: 24px;
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
     padding: 20px 20px var(--safe-area-bottom) 20px;
-    position: fixed; bottom: 0; left: 0; right: 0; max-width: 600px; margin: 0 auto;
-    z-index: 100; box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-width: 600px;
+    margin: 0 auto;
+    z-index: 100;
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
 }
 
 .control-header { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 0.85rem; }
@@ -231,20 +287,35 @@ body {
 
 .amount-selector { margin-bottom: 15px; }
 .input-group {
-    position: relative; background: rgba(0,0,0,0.3);
-    border: 1px solid var(--glass-border); border-radius: 12px;
-    display: flex; align-items: center; margin-bottom: 10px;
+    position: relative;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
 }
 .input-currency { padding-left: 15px; color: var(--primary-gold); font-family: 'Roboto Mono'; font-weight: bold; font-size: 1.2rem; }
 #bet-amount {
-    width: 100%; padding: 14px; background: transparent; border: none;
-    color: var(--text-main); font-family: 'Roboto Mono'; font-size: 1.4rem; font-weight: 700;
+    width: 100%;
+    padding: 14px;
+    background: transparent;
+    border: none;
+    color: var(--text-main);
+    font-family: 'Roboto Mono';
+    font-size: 1.4rem;
+    font-weight: 700;
 }
 .chips-scroll { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
 .chip {
-    background: rgba(255,255,255,0.05); border: 1px solid transparent;
-    color: var(--text-muted); padding: 8px 16px; border-radius: 8px;
-    font-family: 'Roboto Mono'; font-weight: 600; white-space: nowrap;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid transparent;
+    color: var(--text-muted);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-family: 'Roboto Mono';
+    font-weight: 600;
+    white-space: nowrap;
     transition: all 0.2s;
 }
 .chip.active { background: rgba(240, 185, 11, 0.15); border-color: var(--primary-gold); color: var(--primary-gold); box-shadow: 0 0 10px rgba(240,185,11,0.1); }
@@ -252,8 +323,12 @@ body {
 /* دکمه‌های ترید (The Stars of the Show) */
 .action-buttons { display: flex; gap: 12px; height: 56px; }
 .trade-btn {
-    flex: 1; position: relative; overflow: hidden;
-    border: none; border-radius: 14px; cursor: pointer;
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
     transition: transform 0.1s;
 }
 .trade-btn:active { transform: scale(0.96); }
@@ -262,41 +337,73 @@ body {
 .btn-short { background: linear-gradient(135deg, #F6465D 0%, #c92a40 100%); box-shadow: 0 4px 20px rgba(246, 70, 93, 0.3); }
 
 .btn-content {
-    position: relative; z-index: 2; display: flex; align-items: center; justify-content: center; gap: 10px; height: 100%;
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    height: 100%;
 }
 .btn-icon { font-size: 1.2rem; }
 .btn-text { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.1; }
 .btn-title { font-weight: 800; font-size: 1rem; color: #fff; letter-spacing: 0.5px; }
 .btn-rate { font-size: 0.7rem; color: rgba(255,255,255,0.9); font-weight: 600; font-family: 'Roboto Mono'; }
 .btn-glow {
-    position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
     background: linear-gradient(45deg, transparent, rgba(255,255,255,0.2), transparent);
-    transform: rotate(45deg); animation: shine 3s infinite;
+    transform: rotate(45deg);
+    animation: shine 3s infinite;
 }
 
 /* =========================================
-   6. مودال نتیجه (Result Modal)
-   ========================================= */
+    6. مودال نتیجه (Result Modal)
+    ========================================= */
 .result-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px);
-    z-index: 2000; display: flex; align-items: center; justify-content: center;
-    opacity: 0; visibility: hidden; transition: all 0.4s ease;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(10px);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.4s ease;
 }
 .result-overlay.active { opacity: 1; visibility: visible; }
 
 .result-card {
-    background: #151515; border: 1px solid rgba(255,255,255,0.1);
-    width: 85%; max-width: 340px; border-radius: 24px; padding: 30px;
-    text-align: center; position: relative;
-    transform: scale(0.8) translateY(20px); transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    background: #151515;
+    border: 1px solid rgba(255,255,255,0.1);
+    width: 85%;
+    max-width: 340px;
+    border-radius: 24px;
+    padding: 30px;
+    text-align: center;
+    position: relative;
+    transform: scale(0.8) translateY(20px);
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
     box-shadow: 0 20px 50px rgba(0,0,0,0.6);
 }
 .result-overlay.active .result-card { transform: scale(1) translateY(0); }
 
 .result-icon { font-size: 4.5rem; margin-bottom: 10px; position: relative; z-index: 2; text-shadow: 0 10px 20px rgba(0,0,0,0.3); }
 .result-icon-glow {
-    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    width: 80px; height: 80px; border-radius: 50%; filter: blur(30px); z-index: 1;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    filter: blur(30px);
+    z-index: 1;
 }
 
 #res-title { margin: 0; font-size: 1.8rem; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; position: relative; z-index: 2; }
@@ -315,27 +422,48 @@ body {
 .res-loss { color: var(--accent-red); text-shadow: 0 0 20px rgba(246,70,93,0.3); }
 
 .btn-continue {
-    background: var(--text-main); color: #000; border: none; width: 100%;
-    padding: 14px; border-radius: 14px; font-weight: 800; font-size: 1rem;
-    cursor: pointer; box-shadow: 0 4px 15px rgba(255,255,255,0.1);
+    background: var(--text-main);
+    color: #000;
+    border: none;
+    width: 100%;
+    padding: 14px;
+    border-radius: 14px;
+    font-weight: 800;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(255,255,255,0.1);
 }
 
 /* =========================================
-   7. مودال‌های عمومی (Swap, Leaderboard)
-   ========================================= */
+    7. مودال‌های عمومی (Swap, Leaderboard)
+    ========================================= */
 .modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
-    z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.3s;
-    display: flex; align-items: flex-end; /* Bottom sheet on mobile */
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(5px);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s;
+    display: flex;
+    align-items: flex-end; /* Bottom sheet on mobile */
     justify-content: center;
 }
 .modal-overlay.active { opacity: 1; visibility: visible; }
 .modal-content {
-    background: #181818; width: 100%; max-width: 500px;
-    border-top-left-radius: 24px; border-top-right-radius: 24px;
-    border: 1px solid var(--glass-border); border-bottom: none;
-    transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-    max-height: 85vh; display: flex; flex-direction: column;
+    background: #181818;
+    width: 100%;
+    max-width: 500px;
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
+    border: 1px solid var(--glass-border);
+    border-bottom: none;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
 }
 .modal-overlay.active .modal-content { transform: translateY(0); }
 

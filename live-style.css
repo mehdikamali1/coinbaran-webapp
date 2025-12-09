@@ -1,0 +1,239 @@
+/* webapp/live-style.css (v1.0 - Live Stadium Specific Styles) */
+
+/* NOTE: This file assumes global.css has been imported first for variables and base styling. */
+
+/* --- Connection Status Pill (Floating) --- */
+#connection-status {
+    position: fixed; 
+    top: 80px; 
+    left: 50%; 
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.8); 
+    border: 1px solid var(--glass-border);
+    padding: 6px 14px; 
+    border-radius: 20px;
+    font-size: 0.75rem; 
+    display: flex; 
+    align-items: center; 
+    gap: 8px;
+    z-index: 90; 
+    transition: all 0.3s; 
+    opacity: 0; 
+    pointer-events: none;
+    backdrop-filter: blur(5px);
+}
+#connection-status.visible { 
+    opacity: 1; 
+    top: 90px; 
+}
+.status-dot { 
+    width: 8px; 
+    height: 8px; 
+    border-radius: 50%; 
+    background: var(--text-muted); 
+    transition: background 0.3s; 
+}
+.status-dot.active { 
+    background: var(--accent-green); 
+    box-shadow: 0 0 10px var(--accent-green); 
+}
+
+/* --- Scoreboard Card --- */
+.scoreboard-card {
+    background: linear-gradient(180deg, rgba(30,30,30,0.8) 0%, rgba(10,10,10,0.9) 100%);
+    border: 1px solid var(--glass-border); 
+    border-radius: var(--radius-xl); /* Adjusted to match dashboard radius */
+    padding: 25px 15px; 
+    margin: 10px 0 30px 0;
+    position: relative; 
+    overflow: hidden;
+    box-shadow: 0 15px 40px -10px rgba(0,0,0,0.8);
+}
+/* Stadium Spotlight Effect */
+.stadium-light {
+    position: absolute; 
+    top: -60%; 
+    left: 50%; 
+    transform: translateX(-50%);
+    width: 80%; 
+    height: 150px; 
+    background: var(--accent-green);
+    filter: blur(90px); 
+    opacity: 0.2; 
+    pointer-events: none;
+}
+
+.teams-row { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    position: relative; 
+    z-index: 2; 
+}
+ 
+.team-box { 
+    flex: 1; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    gap: 12px; 
+    text-align: center;
+}
+.team-avatar {
+    width: 60px; 
+    height: 60px; 
+    border-radius: var(--radius-md); 
+    background: rgba(255,255,255,0.05); 
+    border: 1px solid var(--glass-border);
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    font-size: 1.8rem; 
+    color: var(--text-main); 
+    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+}
+.team-name { 
+    font-size: 0.9rem; 
+    font-weight: 700; 
+    color: var(--text-main); 
+    max-width: 90px; 
+    line-height: 1.4; 
+}
+
+.score-box { 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    width: 110px; 
+}
+.score-display {
+    font-family: 'Roboto Mono', monospace; 
+    font-size: 2.4rem; 
+    font-weight: 900;
+    color: var(--gold-primary); 
+    text-shadow: 0 0 25px rgba(240, 185, 11, 0.4);
+    letter-spacing: 2px; 
+    line-height: 1;
+}
+.match-timer {
+    font-size: 0.8rem; 
+    color: var(--accent-green); 
+    margin-top: 8px;
+    font-family: 'Vazirmatn'; 
+    font-weight: 700;
+    background: rgba(14, 203, 129, 0.1); 
+    padding: 4px 10px; 
+    border-radius: 8px;
+    border: 1px solid rgba(14, 203, 129, 0.2);
+}
+.match-timer.blink { 
+    animation: pulse-green 1.5s infinite; 
+}
+
+/* --- Polls Section --- */
+.polls-section { 
+    margin-top: 20px; 
+}
+.polls-title {
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between;
+    font-size: 1rem; 
+    font-weight: 800; 
+    color: var(--text-main);
+    margin-bottom: 15px; 
+    border-right: 4px solid var(--accent-blue); 
+    padding-right: 12px;
+}
+
+/* Poll Card */
+.poll-card {
+    background: rgba(255,255,255,0.03); 
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md); 
+    padding: 18px; 
+    margin-bottom: 15px;
+    animation: slideIn 0.4s ease-out; 
+    position: relative; 
+    overflow: hidden;
+}
+.poll-card::before {
+    content: ''; 
+    position: absolute; 
+    top: 0; 
+    left: 0; 
+    width: 4px; 
+    height: 100%;
+    background: var(--accent-blue);
+}
+.poll-card.new { 
+    border-color: var(--gold-primary); 
+    box-shadow: 0 0 20px rgba(240,185,11,0.15); 
+}
+.poll-card.closed { 
+    opacity: 0.6; 
+    filter: grayscale(1); 
+    pointer-events: none; 
+}
+
+.poll-header {
+    display: flex; 
+    justify-content: space-between; 
+    align-items: flex-start; 
+    margin-bottom: 20px;
+}
+.poll-question { 
+    font-size: 0.95rem; 
+    color: var(--text-main); 
+    font-weight: 700; 
+    line-height: 1.5; 
+    flex: 1; 
+    margin-left: 10px; 
+}
+.poll-timer { 
+    font-family: 'Roboto Mono'; 
+    font-size: 0.9rem; 
+    color: var(--gold-primary); 
+    background: rgba(0,0,0,0.4); 
+    padding: 4px 8px; 
+    border-radius: 6px; 
+    font-weight: bold; 
+    border: 1px solid var(--glass-border);
+}
+
+.poll-options { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 12px; 
+}
+.poll-btn {
+    background: rgba(255,255,255,0.05); 
+    border: 1px solid var(--glass-border);
+    color: var(--text-muted); 
+    padding: 14px; 
+    border-radius: var(--radius-md); 
+    font-size: 0.9rem; 
+    font-weight: 700; 
+    cursor: pointer; 
+    transition: all 0.2s;
+    font-family: 'Vazirmatn';
+}
+.poll-btn:active { 
+    transform: scale(0.96); 
+}
+.poll-btn.selected {
+    background: var(--accent-blue); 
+    color: var(--text-main); 
+    border-color: var(--accent-blue);
+    box-shadow: 0 4px 20px rgba(59,130,246,0.4);
+}
+
+@keyframes pulse-green { 
+    0% { opacity: 1; } 
+    50% { opacity: 0.5; } 
+    100% { opacity: 1; } 
+}
+@keyframes slideIn { 
+    from { transform: translateY(20px); opacity: 0; } 
+    to { transform: translateY(0); opacity: 1; } 
+}

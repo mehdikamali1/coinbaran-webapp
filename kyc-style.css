@@ -1,0 +1,279 @@
+/* webapp/kyc-style.css (v1.0 - KYC Specific Styles) */
+
+/* NOTE: This file assumes global.css has been imported first for variables and base styling. */
+
+/* --- General Layout & Animations --- */
+body { 
+    padding-bottom: 110px; /* Ensure space for fixed footer */
+}
+.level-container { 
+    animation: fadeIn 0.4s ease; 
+    min-height: 300px; 
+    position: relative; 
+}
+@keyframes fadeIn { 
+    from { opacity: 0; transform: translateY(10px); } 
+    to { opacity: 1; transform: translateY(0); } 
+}
+@keyframes zoomIn { 
+    from { opacity: 0; transform: scale(0.9); } 
+    to { opacity: 1; transform: scale(1); } 
+}
+@keyframes pulse { 
+    0% { transform: scale(1); opacity: 1; } 
+    50% { transform: scale(1.1); opacity: 0.8; } 
+    100% { transform: scale(1); opacity: 1; } 
+}
+
+
+/* --- Tabs --- */
+.tabs { 
+    display: flex; 
+    gap: 10px; 
+    margin-bottom: 20px; 
+    background: rgba(255,255,255,0.05); 
+    padding: 5px; 
+    border-radius: 14px; 
+}
+.tab-btn {
+    flex: 1; 
+    padding: 12px; 
+    border-radius: 10px; 
+    color: var(--text-muted); 
+    border: none; 
+    cursor: pointer; 
+    transition: all 0.3s;
+    font-size: 0.85rem; 
+    text-align: center; 
+    font-weight: 700;
+}
+.tab-btn.active {
+    background: var(--gold-rich); /* Use a rich gold global var */
+    color: #000; 
+    box-shadow: 0 4px 15px rgba(240, 185, 11, 0.3);
+}
+
+
+/* --- Status Cards (Pending / Success) --- */
+.status-card {
+    border-radius: 20px; 
+    padding: 30px 20px; 
+    text-align: center;
+    margin-bottom: 20px; 
+    display: none; 
+}
+.status-card.show { 
+    display: block !important; 
+    animation: zoomIn 0.4s ease; 
+}
+
+.card-pending { 
+    background: rgba(240, 185, 11, 0.1); 
+    border: 1px dashed var(--gold-primary); 
+}
+.pending-icon { 
+    font-size: 3.5rem; 
+    color: var(--gold-primary); 
+    margin-bottom: 15px; 
+    animation: pulse 2s infinite; 
+}
+
+.card-success { 
+    background: rgba(16, 185, 129, 0.1); 
+    border: 1px solid var(--accent-green); 
+}
+.success-icon { 
+    font-size: 3.5rem; 
+    color: var(--accent-green); 
+    margin-bottom: 15px; 
+}
+
+/* --- Badges and Text Boxes --- */
+.level-badge {
+    background: rgba(240, 185, 11, 0.1); 
+    color: var(--gold-primary);
+    padding: 5px 14px; 
+    border-radius: 20px; 
+    font-size: 0.75rem; 
+    font-weight: 800;
+    border: 1px solid var(--gold-primary); 
+    display: inline-block; 
+    margin-bottom: 12px;
+}
+
+.script-box {
+    background: rgba(255, 255, 255, 0.03); 
+    border: 1px dashed rgba(255, 255, 255, 0.2);
+    border-radius: 16px; 
+    padding: 15px; 
+    margin: 20px 0; 
+    text-align: center;
+}
+.script-text { 
+    color: var(--text-main); 
+    font-weight: 700; 
+    font-size: 0.9rem; 
+}
+
+/* --- Upload Boxes (Level 1) --- */
+.upload-area {
+    border: 2px dashed rgba(255,255,255,0.2); 
+    border-radius: var(--radius-lg);
+    padding: 20px; 
+    background: rgba(0,0,0,0.2); 
+    margin-bottom: 12px;
+    display: flex; 
+    align-items: center; 
+    gap: 15px; 
+    cursor: pointer; 
+    transition: all 0.3s;
+}
+.upload-area.active { 
+    border-color: var(--accent-green); 
+    background: rgba(16, 185, 129, 0.1); 
+}
+.upload-icon { 
+    font-size: 1.5rem; 
+    color: var(--text-muted); 
+    width: 50px; 
+    height: 50px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    background: rgba(255,255,255,0.05); 
+    border-radius: 12px;
+}
+.upload-area.active .upload-icon { 
+    color: var(--text-main); 
+    background: var(--accent-green); 
+}
+.upload-texts { 
+    text-align: right; 
+}
+.upload-title { 
+    font-size: 0.95rem; 
+    color: var(--text-main); 
+    font-weight: bold; 
+}
+.upload-desc { 
+    font-size: 0.75rem; 
+    color: var(--text-muted); 
+}
+
+/* --- Fixed Footer and Submit Button --- */
+.fixed-footer {
+    position: fixed; 
+    bottom: 0; 
+    left: 0; 
+    right: 0;
+    padding: 15px 20px 25px 20px;
+    background: rgba(10, 10, 10, 0.95); 
+    border-top: 1px solid rgba(255,255,255,0.1);
+    z-index: 1000; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 10px;
+}
+.btn-luxury-submit {
+    background: linear-gradient(135deg, var(--gold-rich) 0%, var(--gold-dark) 100%);
+    color: #000; 
+    border: none; 
+    border-radius: 16px; 
+    padding: 16px;
+    width: 100%; 
+    font-size: 1.1rem; 
+    font-weight: 800; 
+    cursor: pointer;
+    opacity: 0.5; 
+    pointer-events: none; 
+    filter: grayscale(1); 
+    transition: all 0.3s;
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    gap: 8px;
+}
+.btn-luxury-submit.ready { 
+    opacity: 1; 
+    pointer-events: all; 
+    filter: grayscale(0); 
+    box-shadow: 0 4px 20px rgba(240, 185, 11, 0.3); 
+}
+
+/* --- Inputs and Upload Grid (Level 2) --- */
+.input-group { 
+    margin-bottom: 15px; 
+    text-align: right; 
+}
+.input-label { 
+    display: block; 
+    color: var(--text-muted); 
+    font-size: 0.85rem; 
+    margin-bottom: 8px; 
+}
+.glass-input {
+    width: 100%; 
+    padding: 14px; 
+    background: rgba(255,255,255,0.05); 
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px; 
+    color: var(--text-main); 
+    font-size: 1rem; 
+    outline: none; 
+    text-align: center;
+}
+.glass-input:focus { 
+    border-color: var(--gold-primary); 
+}
+
+.upload-grid { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 10px; 
+    margin-top: 20px; 
+}
+.mini-upload {
+    background: rgba(255,255,255,0.03); 
+    border: 1px dashed rgba(255,255,255,0.2);
+    border-radius: 12px; 
+    padding: 15px; 
+    text-align: center; 
+    cursor: pointer;
+    height: 110px; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center;
+}
+.mini-upload.active { 
+    border-color: var(--accent-green); 
+    background: rgba(16, 185, 129, 0.05); 
+}
+.mini-icon { 
+    font-size: 1.5rem; 
+    color: var(--text-muted); 
+    margin-bottom: 8px; 
+}
+.mini-label { 
+    font-size: 0.7rem; 
+    color: #aaa; 
+}
+.mini-upload.active .mini-label { 
+    color: var(--accent-green); 
+}
+
+/* --- Lock Overlay --- */
+.lock-overlay {
+    position: absolute; 
+    inset: 0; 
+    background: rgba(0,0,0,0.85); 
+    backdrop-filter: blur(5px);
+    z-index: 10; 
+    border-radius: 16px; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center;
+    text-align: center; 
+    padding: 20px;
+}

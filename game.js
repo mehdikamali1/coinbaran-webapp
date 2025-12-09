@@ -1,4 +1,4 @@
-﻿/* webapp/game.js (v78.0 - FINAL: Result Display FIX & Chart Clarity) */
+﻿/* webapp/game.js (v78.1 - FINAL: Full History & Total P/L Summary) */
 
 const tg = window.Telegram.WebApp;
 const API_BASE_URL = window.location.origin;
@@ -37,10 +37,9 @@ let currentUUSDBalance = 0;
 window.lastRoundId = null; 
 window.lastCandleOpenPrice = null;
 
-// --- آبجکت برای مدیریت خطوط قیمت شرط‌بندی ---
 let entryPriceLine = null;
 let closePriceLine = null;
-let isResultModalActive = false; // پرچم برای جلوگیری از نمایش چندباره مودال (NEW FIX)
+let isResultModalActive = false;
 
 // --- سیستم صوتی ---
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -66,7 +65,6 @@ const SoundFX = {
 };
 
 window.onload = function() {
-    // --- لودینگ اولیه ---
     tg.ready();
     tg.expand();
     tg.setHeaderColor('#050505'); 
@@ -82,6 +80,7 @@ window.onload = function() {
 
 // ==========================================
 // 1. WebSocket Setup (Real-time Core)
+// (بدون تغییر)
 // ==========================================
 
 function initWebSocket() {
@@ -142,14 +141,10 @@ function handleWebSocketMessage(data) {
     if (data.type === 'GAME_UPDATE') {
         const serverPrice = data.current_price;
 
-        // 1. به‌روزرسانی وضعیت بازی (تایمر، راند و بالانس)
         updateGameStatus(data);
 
-        // 2. به‌روزرسانی نمودار (Candlestick)
         updateChartData(serverPrice, data.round.id, data.round.time_left);
 
-        // 3. نمایش نتیجه شرط‌بندی قبلی (FIXED LOGIC)
-        // مودال نتیجه فقط باید در پایان راند (time_left = 60s) و در صورت فعال نبودن نمایش داده شود
         if (data.last_result && data.last_result.round_id && !isResultModalActive) {
             showResultModal(data.last_result);
         }
@@ -189,13 +184,11 @@ async function fetchInitialData() {
 }
 
 function updateGameStatus(data) {
-    // بالانس
     if (data.user_balance !== undefined) {
         document.getElementById('user-balance-display').innerText = data.user_balance.toLocaleString('en-US', {minimumFractionDigits: 2});
         currentUUSDBalance = data.user_balance;
     }
     
-    // راند و تایمر
     if (data.round) {
         updateTimerVisuals(data.round.time_left);
         document.getElementById('round-id').innerText = `#${data.round.id}`;
@@ -204,7 +197,6 @@ function updateGameStatus(data) {
         toggleTradeButtons(isLocked || hasBet);
     }
     
-    // شرط ثبت شده (و نمایش خط ورودی در چارت)
     const elEntry = document.getElementById('entry-display');
     if (data.user_bet && data.user_bet.entry_price) {
         elEntry.classList.remove('hidden');
@@ -214,7 +206,6 @@ function updateGameStatus(data) {
         const text = isUp ? 'خرید' : 'فروش';
         elEntry.innerHTML = `<span style="color:${color}; font-weight:bold; margin-left:5px;">${icon} ${text}</span> <span class="mono-font">$${data.user_bet.entry_price.toLocaleString()}</span>`;
         
-        // نمایش خط قیمت ورودی در چارت
         if(!entryPriceLine) {
              entryPriceLine = lineSeries.createPriceLine({
                  price: data.user_bet.entry_price,
@@ -234,12 +225,12 @@ function updateGameStatus(data) {
         }
     }
 
-    // تاریخچه
     if (data.history) updateHistoryRibbon(data.history);
 }
 
 // ==========================================
 // 3. Chart Logic (Upgraded to Candlestick)
+// (بدون تغییر)
 // ==========================================
 
 function initChart() {
@@ -278,17 +269,13 @@ function updateChartData(serverPrice, roundId, timeLeft) {
     const domPrice = document.getElementById('btc-price');
     const now = Math.floor(Date.now() / 1000); 
 
-    // 1. به‌روزرسانی نمایشگر قیمت اصلی
     const isUp = serverPrice >= lastPrice; 
     const color = isUp ? CONFIG.CHART_COLORS.up : CONFIG.CHART_COLORS.down;
     domPrice.style.color = color; 
     domPrice.innerText = serverPrice.toLocaleString('en-US', {minimumFractionDigits: 2});
     
-    // 2. به‌روزرسانی سری خط (نمایشگر لحظه‌ای قیمت)
     lineSeries.update({ time: now, value: serverPrice });
 
-    // 3. منطق Candlestick 
-    
     if (isFirstLoad) {
         const initialTime = now - CONFIG.ROUND_DURATION;
         candleSeries.setData([
@@ -300,9 +287,7 @@ function updateChartData(serverPrice, roundId, timeLeft) {
     } 
 
     if (roundId !== window.lastRoundId) {
-        // راند جدید: بستن کندل قبلی و شروع کندل جدید
         if (window.lastCandleOpenPrice) {
-            // بستن کندل قبلی در زمان دقیق بسته شدن راند
             candleSeries.update({
                 time: lastCandleTime,
                 open: window.lastCandleOpenPrice,
@@ -312,14 +297,12 @@ function updateChartData(serverPrice, roundId, timeLeft) {
             });
         }
         
-        // شروع کندل جدید
         lastCandleTime = now;
         window.lastCandleOpenPrice = serverPrice;
         window.lastCandleHigh = serverPrice;
         window.lastCandleLow = serverPrice;
         
     } else {
-        // راند فعلی: آپدیت کندل جاری (O, H, L)
         if (window.lastCandleOpenPrice) {
             window.lastCandleHigh = Math.max(window.lastCandleHigh, serverPrice);
             window.lastCandleLow = Math.min(window.lastCandleLow, serverPrice);
@@ -334,7 +317,6 @@ function updateChartData(serverPrice, roundId, timeLeft) {
         }
     }
     
-    // پاک کردن خط قیمت نهایی (close price) در شروع راند جدید
     if (timeLeft > 55 && closePriceLine) {
         lineSeries.removePriceLine(closePriceLine);
         closePriceLine = null;
@@ -347,6 +329,7 @@ function updateChartData(serverPrice, roundId, timeLeft) {
 
 // ==========================================
 // 4. Game Logic & Utilities
+// (بدون تغییر)
 // ==========================================
 
 function updateTimerVisuals(timeLeft) {
@@ -356,12 +339,11 @@ function updateTimerVisuals(timeLeft) {
     const offset = 283 - (timeLeft / CONFIG.ROUND_DURATION) * 283;
     elCircle.style.strokeDashoffset = offset;
     
-    // 10 ثانیه آخر: حالت هشدار
     if (timeLeft <= 10 && timeLeft > 0) {
         elCircle.style.stroke = CONFIG.CHART_COLORS.down; elText.style.color = CONFIG.CHART_COLORS.down;
         if (!window[`tick_${timeLeft}`]) { SoundFX.tick(); tg.HapticFeedback.impactOccurred('soft'); window[`tick_${timeLeft}`] = true; }
     } else {
-        elCircle.style.stroke = CONFIG.CHART_COLORS.gold; elText.style.color = CONFIG.CHART_COLORS.gold; // تغییر رنگ به گلد
+        elCircle.style.stroke = CONFIG.CHART_COLORS.gold; elText.style.color = CONFIG.CHART_COLORS.gold;
         for(let i=1; i<=10; i++) window[`tick_${i}`] = false;
     }
 }
@@ -387,7 +369,7 @@ function updateHistoryRibbon(history) {
     });
 }
 
-// --- Event Handlers ---
+// --- Event Handlers (بدون تغییر) ---
 function setupEventListeners() {
     document.querySelectorAll('button').forEach(btn => {
         btn.addEventListener('click', () => { if(!btn.disabled) { SoundFX.click(); tg.HapticFeedback.impactOccurred('light'); } });
@@ -475,7 +457,6 @@ window.closeHistory = () => document.getElementById('history-modal').classList.r
 
 
 function showResultModal(result) {
-    // FIX: فعال کردن پرچم مودال
     isResultModalActive = true; 
     
     const elModal = document.getElementById('result-modal');
@@ -486,7 +467,6 @@ function showResultModal(result) {
     document.getElementById('res-entry').innerText = `$${result.entry_price.toFixed(2)}`;
     document.getElementById('res-close').innerText = `$${result.close_price.toFixed(2)}`;
 
-    // افزودن خط قیمت نهایی به چارت برای وضوح (FIXED: اضافه شدن خط پایانی)
     if(closePriceLine) lineSeries.removePriceLine(closePriceLine);
     closePriceLine = lineSeries.createPriceLine({
         price: result.close_price,
@@ -497,7 +477,6 @@ function showResultModal(result) {
         title: 'قیمت پایانی'
     });
     
-    // حذف خط قیمت ورودی
     if(entryPriceLine) {
         lineSeries.removePriceLine(entryPriceLine);
         entryPriceLine = null;
@@ -526,9 +505,7 @@ function showResultModal(result) {
         }
     }, 5000); 
 }
-
 window.closeResultModal = () => {
-    // FIX: غیرفعال کردن پرچم مودال
     isResultModalActive = false; 
     document.getElementById('result-modal').classList.remove('active');
 };
@@ -542,7 +519,7 @@ function showToast(msg) {
 
 
 // ==========================================
-// 5. Leaderboard & History Logic
+// 5. Leaderboard & History Logic (FINAL FIX)
 // ==========================================
 
 async function fetchLeaderboard() {
@@ -557,7 +534,7 @@ async function fetchLeaderboard() {
         const data = await res.json();
 
         if (data.status === 'success') {
-            leaderboardList.innerHTML = ''; // پاک کردن لودر
+            leaderboardList.innerHTML = ''; 
             renderLeaderboard(data.xp_ranking, 'برترین‌های XP');
             renderLeaderboard(data.profit_ranking, 'برترین‌های سود');
         } else {
@@ -599,6 +576,7 @@ function renderLeaderboard(rankingData, title) {
     leaderboardList.innerHTML += html;
 }
 
+// تابع اصلی برای بارگذاری تاریخچه و محاسبه P&L (FIXED)
 async function fetchAndRenderHistory() {
     const historyList = document.getElementById('history-list');
     historyList.innerHTML = '<div class="loader-spinner"></div>'; 
@@ -611,16 +589,50 @@ async function fetchAndRenderHistory() {
         const data = await res.json();
 
         if (data.status === 'success' && data.history) {
+            let totalProfit = 0;
+            let totalBets = data.history.length;
+            let totalWins = 0;
+
             let html = '';
             if (data.history.length === 0) {
                  html = '<p class="no-data-msg">هنوز هیچ شرطی ثبت نشده است.</p>';
             } else {
+                // 1. محاسبه خلاصه P&L
+                data.history.forEach(r => {
+                    totalProfit += r.profit;
+                    if (r.win) totalWins++;
+                });
+
+                // 2. ساخت Summary Box (NEW UX)
+                const isOverallProfit = totalProfit >= 0;
+                const profitColor = isOverallProfit ? CONFIG.CHART_COLORS.up : CONFIG.CHART_COLORS.down;
+                const profitSign = isOverallProfit ? '+' : '-';
+                
+                const summaryHtml = `
+                    <div class="history-summary-box glass-panel-summary">
+                        <div class="summary-item">
+                            <span>تعداد راند:</span>
+                            <span class="value">${totalBets}</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>بردهای شما:</span>
+                            <span class="value">${totalWins} (${((totalWins / totalBets) * 100).toFixed(1)}%)</span>
+                        </div>
+                        <div class="summary-item total-pl" style="color: ${profitColor};">
+                            <span>سود/زیان کل:</span>
+                            <span class="value">${profitSign} $${Math.abs(totalProfit).toFixed(2)}</span>
+                        </div>
+                    </div>
+                `;
+                html += summaryHtml;
+
+                // 3. ساخت لیست آیتم‌های تاریخچه
                 html += '<ul class="history-list-items">';
                 data.history.forEach(r => {
                     const statusClass = r.win ? 'win' : 'loss';
                     const icon = r.win ? '▲' : '▼';
                     const color = r.win ? CONFIG.CHART_COLORS.up : CONFIG.CHART_COLORS.down;
-                    const profitSign = r.profit >= 0 ? '+' : '-';
+                    const itemProfitSign = r.profit >= 0 ? '+' : '-';
 
                     html += `
                         <li class="history-item ${statusClass}">
@@ -630,9 +642,9 @@ async function fetchAndRenderHistory() {
                                 <span class="bet-amount">$${r.amount.toFixed(2)}</span>
                             </div>
                             <div class="price-action">
-                                <span class="entry-price">$${r.entry.toFixed(2)} -> $${r.close.toFixed(2)}</span>
+                                <span class="entry-price">$${r.entry.toFixed(2)} → $${r.close.toFixed(2)}</span>
                             </div>
-                            <div class="profit-amount" style="color: ${color};">${profitSign}$${Math.abs(r.profit).toFixed(2)}</div>
+                            <div class="profit-amount" style="color: ${color};">${itemProfitSign}$${Math.abs(r.profit).toFixed(2)}</div>
                         </li>
                     `;
                 });

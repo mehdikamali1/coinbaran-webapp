@@ -1,13 +1,17 @@
-﻿/* webapp/kyc.js (v102.0) */
+﻿/* webapp/kyc.js (v111.0 - Luxury KYC UI & Enhanced UX) */
 (function () {
     'use strict';
 
-    // --- GLOBAL ERROR TRAP (برای کشف باگ موبایل) ---
-    // اگر خطایی رخ دهد، به جای کرش کردن و ریست شدن صفحه، یک آلرت با جزئیات نمایش می‌دهد
+    // --- GLOBAL ERROR TRAP ---
     window.onerror = function(msg, url, line, col, error) {
         var extra = !col ? '' : '\ncolumn: ' + col;
         extra += !error ? '' : '\nerror: ' + error;
-        alert("⚠️ CRITICAL ERROR:\n" + msg + "\nurl: " + url + "\nline: " + line + extra);
+        // به جای alert، از showAlert تلگرام استفاده می‌کنیم
+        if(window.Telegram && window.Telegram.WebApp) {
+            window.Telegram.WebApp.showAlert("⚠️ CRITICAL ERROR:\n" + msg + "\nline: " + line);
+        } else {
+             console.error("Critical JS Error:", error);
+        }
         return false;
     };
 
@@ -16,8 +20,8 @@
     
     // متغیرهای وضعیت سراسری
     let currentTab = 'lvl1'; 
-    let userKycLevel = 1;     // 1: مهمان, 2: ویدیو تایید شده, 3: کامل
-    let kycStatus = 'none';   // وضعیت دقیق
+    let userKycLevel = 1; 
+    let kycStatus = 'none'; 
 
     // المان‌های اصلی رابط کاربری
     const btnSubmit = document.getElementById('main-submit-btn');
@@ -32,6 +36,11 @@
             tg.expand();
             tg.setHeaderColor('#050505'); 
             tg.setBackgroundColor('#050505'); 
+            
+            // فعال سازی دکمه برگشت
+            tg.BackButton.show();
+            tg.BackButton.onClick(() => window.location.href = 'dashboard.html');
+
         } catch (e) {
             console.log("Not inside Telegram WebApp (or Ready Error):", e);
         }
@@ -41,7 +50,30 @@
         
         // 2. مخفی کردن لودر
         if(loader) loader.style.display = 'none';
+
+        // 3. تنظیم هندلرهای ورودی برای آپدیت لحظه‌ای وضعیت
+        setupInputHandlers();
     };
+
+    // --- توابع کمکی ---
+    function setupInputHandlers() {
+        // برای Level 2 Inputs
+        const inputs = ['full_name', 'national_id', 'birth_date', 'phone_number'];
+        inputs.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', updateFooterState);
+                el.addEventListener('focus', () => tg.HapticFeedback.impactOccurred('light'));
+            }
+        });
+
+        // Haptic Feedback برای کلیک‌های اصلی
+        document.querySelectorAll('.tab-btn, .mini-upload, .upload-area').forEach(el => {
+            el.addEventListener('click', () => {
+                 try { tg.HapticFeedback.selectionChanged(); } catch(e){}
+            });
+        });
+    }
 
     // --- دریافت وضعیت از سرور ---
     async function fetchUserStatus() {
@@ -50,7 +82,6 @@
         }
         
         try {
-            // استفاده از پارامتر زمان برای جلوگیری از کش شدن درخواست
             const timestamp = new Date().getTime();
             const res = await fetch(`${API_BASE_URL}/webapp/get_user_data?t=${timestamp}`, {
                 method: 'POST',
@@ -64,21 +95,21 @@
             const data = await res.json();
             
             if (data.status === 'success') {
-                // اطمینان از اینکه مقادیر null نیستند
                 userKycLevel = parseInt(data.kyc_level) || 1;
                 kycStatus = data.kyc_status_code || 'none';
 
-                console.log("User Status Loaded:", userKycLevel, kycStatus);
-
-                // رندر کردن صفحه بر اساس وضعیت
+                // اگر سطح ۲ تایید شده بود، تب را روی سطح ۲ می‌گذاریم.
+                if (userKycLevel >= 3) {
+                     currentTab = 'lvl2';
+                     document.getElementById('tab-lvl2').classList.add('active');
+                }
+                
                 renderPageBasedOnStatus();
             } else {
-                console.error("API Error:", data.message);
                 tg.showAlert("خطا در دریافت اطلاعات: " + data.message);
             }
 
         } catch (e) {
-            console.error("Error fetching user status:", e);
             tg.showAlert("خطا در ارتباط با سرور. لطفاً اینترنت خود را چک کنید.");
         }
     }
@@ -93,79 +124,81 @@
             const lock2 = document.getElementById('lvl2-lock');
             const f2 = document.getElementById('lvl2-form');
 
-            // اگر المان‌ها در صفحه نباشند (مثلاً فایل HTML کش شده باشد) ارور ندهد
-            if(!f1 || !p1 || !s1 || !lock2 || !f2) {
-                console.error("DOM Elements missing! Check HTML version.");
-                return;
+            // --- Reset All ---
+            [f1, p1, s1, lock2, f2].forEach(el => { if (el) el.style.display = 'none'; });
+            [s1, p1].forEach(el => { if (el) el.classList.remove('show'); });
+
+            // 1. نمایش محتوای تب فعال
+            if (currentTab === 'lvl1') {
+                document.getElementById('lvl1-content').style.display = 'block';
+                document.getElementById('lvl2-content').style.display = 'none';
+            } else { // lvl2
+                document.getElementById('lvl1-content').style.display = 'none';
+                document.getElementById('lvl2-content').style.display = 'block';
             }
 
-            // سناریو ۱: کاربر سطح ۱ را پاس کرده است
+
+            // --- تعیین وضعیت Tab 1 (Lite KYC) ---
             if (userKycLevel >= 2) {
-                // --- وضعیت تب ۱ ---
-                f1.style.display = 'none';
-                p1.classList.remove('show');
-                s1.classList.add('show'); 
-                
-                // --- وضعیت تب ۲ ---
-                lock2.style.display = 'none'; // قفل باز است
-                
+                // تایید شده
+                s1.classList.add('show');
+                s1.style.display = 'block';
+            } else if (kycStatus === 'pending_lite' || kycStatus === 'pending') {
+                // در حال بررسی
+                p1.classList.add('show'); 
+                p1.style.display = 'block';
+            } else {
+                // فرم اولیه (نیاز به ارسال)
+                f1.style.display = 'block';
+            }
+
+            // --- تعیین وضعیت Tab 2 (Full KYC) ---
+            if (userKycLevel >= 2) {
+                // قفل باز است
+                lock2.style.display = 'none'; 
                 if (userKycLevel === 3) {
-                    // سطح ۳ کامل شده
+                    // سطح ۳ کامل شده - نمایش پیام تبریک نهایی
                     f2.innerHTML = `
-                        <div class="status-card card-success show">
-                            <i class="fas fa-gem success-icon"></i>
+                        <div class="status-card card-success show" style="border-color:#FFCC00; background:rgba(255, 204, 0, 0.1);">
+                            <i class="fas fa-gem success-icon" style="color:#FFCC00;"></i>
                             <h2 style="color:#fff; margin-bottom:10px;">تایید نهایی شد 💎</h2>
-                            <p style="color:#eee; font-size:0.9rem;">تبریک! حساب شما کاملاً وریفای شده است.</p>
+                            <p style="color:#eee; font-size:0.9rem;">تبریک! حساب شما کاملاً وریفای شده است و محدودیتی ندارید.</p>
                         </div>`;
+                    f2.style.display = 'block';
                     if(footer) footer.style.display = 'none';
-                } 
-                else if (kycStatus === 'pending_full') {
+                } else if (kycStatus === 'pending_full') {
                     // سطح ۲ ارسال شده و منتظر تایید است
                     f2.innerHTML = `
                         <div class="status-card card-pending show">
                             <i class="fas fa-hourglass-half pending-icon"></i>
-                            <h2 style="color:#fff; margin-bottom:10px;">مدارک در حال بررسی...</h2>
-                            <p style="color:#ddd; font-size:0.9rem;">مدارک کامل شما دریافت شد.</p>
+                            <h2 style="color:#fff; margin-bottom:10px;">مدارک کامل در حال بررسی...</h2>
+                            <p style="color:#ddd; font-size:0.9rem;">به محض تایید، دسترسی نامحدود خواهید داشت.</p>
                         </div>`;
-                    if(footer) footer.style.display = 'none';
-                } 
-                else {
+                     f2.style.display = 'block';
+                     if(footer) footer.style.display = 'none';
+                } else {
                     // سطح ۲ باز است و باید پر شود
                     f2.style.display = 'block';
-                    if(currentTab === 'lvl2') {
-                        if(footer) footer.style.display = 'flex';
-                        updateFooterState();
-                    } else {
-                        if(footer) footer.style.display = 'none';
-                    }
                 }
-            }
-            
-            // سناریو ۲: کاربر منتظر تایید سطح ۱ است
-            else if (kycStatus === 'pending_lite' || kycStatus === 'pending') {
-                f1.style.display = 'none';
-                s1.classList.remove('show');
-                p1.classList.add('show'); 
+            } else {
+                // قفل است
                 lock2.style.display = 'flex'; 
-                if(footer) footer.style.display = 'none'; 
+                f2.style.display = 'none';
             }
             
-            // سناریو ۳: حالت اولیه
-            else {
-                f1.style.display = 'block';
-                p1.classList.remove('show');
-                s1.classList.remove('show');
-                lock2.style.display = 'flex';
-                
-                if (currentTab === 'lvl1') {
-                    if(footer) footer.style.display = 'flex';
-                } else {
-                    if(footer) footer.style.display = 'none';
-                }
+            // مدیریت نمایش فوتر (دکمه ارسال)
+            if (currentTab === 'lvl1' && userKycLevel < 2 && kycStatus !== 'pending_lite') {
+                if(footer) footer.style.display = 'flex';
+                updateFooterState(); // برای آپدیت دکمه بر اساس پر بودن فرم ۱
+            } else if (currentTab === 'lvl2' && userKycLevel >= 2 && kycStatus !== 'pending_full' && userKycLevel < 3) {
+                 if(footer) footer.style.display = 'flex';
+                 updateFooterState(); // برای آپدیت دکمه بر اساس پر بودن فرم ۲
+            } else {
+                if(footer) footer.style.display = 'none';
             }
+
         } catch(e) {
             console.error("Render Error:", e);
-            alert("Render Error: " + e.message);
         }
     }
 
@@ -173,30 +206,9 @@
     window.switchTab = function(tab) {
         currentTab = tab;
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`tab-${tab}`).classList.add('active');
         
-        if (tab === 'lvl1') {
-            document.getElementById('tab-lvl1').classList.add('active');
-            document.getElementById('lvl1-content').style.display = 'block';
-            document.getElementById('lvl2-content').style.display = 'none';
-            
-            if (userKycLevel < 2 && kycStatus !== 'pending_lite') {
-                if(footer) footer.style.display = 'flex';
-                updateFooterState();
-            } else {
-                if(footer) footer.style.display = 'none';
-            }
-        } else {
-            document.getElementById('tab-lvl2').classList.add('active');
-            document.getElementById('lvl1-content').style.display = 'none';
-            document.getElementById('lvl2-content').style.display = 'block';
-            
-            if (userKycLevel >= 2 && kycStatus !== 'pending_full' && userKycLevel < 3) {
-                if(footer) footer.style.display = 'flex';
-                updateFooterState();
-            } else {
-                if(footer) footer.style.display = 'none';
-            }
-        }
+        renderPageBasedOnStatus();
         
         try { tg.HapticFeedback.selectionChanged(); } catch(e){}
     }
@@ -205,7 +217,7 @@
     window.updateFooterState = function() {
         if(!btnSubmit || !statusText) return;
 
-        if (currentTab === 'lvl1') {
+        if (currentTab === 'lvl1' && userKycLevel < 2 && kycStatus !== 'pending_lite') {
             const vidInput = document.getElementById('video-file');
             const cardInput = document.getElementById('card-file');
             
@@ -218,13 +230,12 @@
                 disableBtn('مدارک ناقص ⚠️', 'ارسال مدارک');
             }
         } 
-        else if (currentTab === 'lvl2') {
+        else if (currentTab === 'lvl2' && userKycLevel >= 2 && kycStatus !== 'pending_full' && userKycLevel < 3) {
             const nameEl = document.getElementById('full_name');
             const nidEl = document.getElementById('national_id');
             const birthEl = document.getElementById('birth_date');
             const phoneEl = document.getElementById('phone_number');
             
-            // جلوگیری از خطا اگر المان‌ها وجود نداشتند
             if(!nameEl || !nidEl || !birthEl || !phoneEl) return;
 
             const name = nameEl.value.trim();
@@ -238,19 +249,24 @@
             const f4 = document.getElementById('selfie_2').files.length > 0;
             
             if (name && nid.length >= 10 && birth && phone.length >= 10 && f1 && f2 && f3 && f4) {
-                enableBtn('ارسال برای بررسی نهایی 💎', 'تکمیل شده');
+                enableBtn('ارسال برای بررسی نهایی 💎', 'تکمیل شده', '#3B82F6');
             } else {
                 disableBtn('فرم ناقص 📝', 'تکمیل فرم سطح ۲');
             }
+        } else {
+            // اگر در وضعیتی غیرقابل ارسال هستیم، دکمه را غیرفعال نمایش بده
+            disableBtn('در حال بررسی/تایید شده', 'وضعیت نهایی');
         }
     }
 
-    function enableBtn(text, statusMsg) {
+    function enableBtn(text, statusMsg, color = "#F0B90B") {
         btnSubmit.classList.add('ready'); 
         btnSubmit.disabled = false;
         btnSubmit.innerHTML = `<span>${text}</span><i class="fas fa-paper-plane"></i>`;
         statusText.innerText = statusMsg; 
-        statusText.style.color = "#10b981"; 
+        statusText.style.color = color; 
+        btnSubmit.style.background = `linear-gradient(135deg, ${color} 0%, ${color.replace('#', '#99')} 100%)`;
+        btnSubmit.style.boxShadow = `0 4px 20px ${color.replace('#', 'rgba(')}${', 0.5)'}`;
     }
 
     function disableBtn(statusMsg, text) {
@@ -259,6 +275,8 @@
         btnSubmit.innerHTML = `<span>${text}</span><i class="fas fa-arrow-up"></i>`;
         statusText.innerText = statusMsg; 
         statusText.style.color = "#888"; 
+        btnSubmit.style.background = 'rgba(255, 204, 0, 0.1)';
+        btnSubmit.style.boxShadow = 'none';
     }
 
     // --- هندلر انتخاب فایل ---
@@ -266,14 +284,18 @@
         if (input.files && input.files[0]) {
             const file = input.files[0];
             
+            // چک کردن حجم برای ویدیو (25MB)
             if (type === 'vid' && file.size > 25 * 1024 * 1024) {
                 tg.showAlert("حجم ویدیو زیاد است (حداکثر ۲۵ مگابایت).");
-                input.value = ""; return;
+                input.value = ""; 
+                try { tg.HapticFeedback.notificationOccurred('error'); } catch(e){}
+                return;
             }
             
             const area = input.parentElement;
             area.classList.add('active');
             
+            // تغییر آیکون و متن
             const icon = area.querySelector(lvl === 1 ? '.upload-icon' : '.mini-icon');
             const title = area.querySelector(lvl === 1 ? '.upload-title' : '.mini-label');
             
@@ -296,6 +318,7 @@
 
     // --- هندلر کلیک دکمه اصلی ---
     window.handleSubmit = function() {
+         try { tg.HapticFeedback.impactOccurred('heavy'); } catch(e){}
         if (currentTab === 'lvl1') submitLevel1();
         else submitLevel2();
     }

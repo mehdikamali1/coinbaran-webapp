@@ -9,55 +9,55 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    <link rel="stylesheet" href="webapp/dashboard-style.css?v=77.4"> <style>
-        /* --- Wallet Specific Styles --- */
-        
+    <link rel="stylesheet" href="webapp/dashboard-style.css?v=111.0"> 
+
+    <style>
+        /* --- تعریف متغیرهای تم در اینجا برای استفاده در استایل‌های داخلی --- */
         :root {
-            --primary-gold: #FFC000; /* Striking gold color */
-            --luxury-bg: rgba(255, 255, 255, 0.05); /* Light glass effect for sections */
-            --accent-yellow: #FFD700;
+            --primary-gold: #FFCC00;
+            --accent-green: #0ECB81;
+            --accent-red: #F6465D;
+            --text-muted: #888888;
+            --glass-border: rgba(255, 204, 0, 0.1);
         }
         
-        .tab-bar {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-            margin-bottom: 25px;
-            padding: 5px;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: var(--radius-lg);
+        /* --- Wallet Specific Styles --- */
+        .wallet-actions {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
+            margin-bottom: 30px;
+        }
+        .w-btn {
+            padding: 20px; border-radius: var(--radius-lg);
             border: 1px solid var(--glass-border);
-        }
-        .tab-item {
-            padding: 12px 10px;
-            text-align: center;
-            font-weight: 700;
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            cursor: pointer;
-            border-radius: var(--radius-md);
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+            cursor: pointer; position: relative; overflow: hidden;
             transition: all 0.2s;
+            background: rgba(255, 255, 255, 0.03);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
-        .tab-item.active {
-            background: var(--primary-gold);
-            color: #000;
-            box-shadow: 0 4px 15px rgba(255, 192, 0, 0.3);
-        }
+        .w-btn:active { transform: scale(0.96); background: rgba(255, 255, 255, 0.05); }
+        
+        .btn-deposit i { color: var(--accent-green); font-size: 1.8rem; filter: drop-shadow(0 0 5px rgba(14,203,129,0.5)); }
+        .btn-withdraw i { color: var(--accent-red); font-size: 1.8rem; filter: drop-shadow(0 0 5px rgba(246,70,93,0.5)); }
+        .w-btn span { color: #fff; font-weight: 700; font-size: 0.95rem; }
 
         .tx-container { padding-bottom: 80px; }
         .section-label { 
-            font-size: 0.95rem; color: var(--text-main); margin-bottom: 15px; 
+            font-size: 1rem; color: #fff; margin-bottom: 15px; 
             display: flex; align-items: center; gap: 8px; font-weight: 800;
+            padding-right: 10px; border-right: 4px solid var(--primary-gold);
+            text-shadow: 0 0 3px rgba(255, 204, 0, 0.5);
         }
-        .section-label::before { content: ''; width: 4px; height: 16px; background: var(--primary-gold); border-radius: 2px; }
 
         .tx-card {
             display: flex; justify-content: space-between; align-items: center;
             padding: 16px; margin-bottom: 12px;
             border-radius: var(--radius-md);
-            background: var(--luxury-bg); /* Use defined variable */
+            background: rgba(255, 255, 255, 0.02);
             border: 1px solid var(--glass-border);
             cursor: pointer; transition: all 0.2s;
         }
-        .tx-card:active { background: rgba(255, 255, 255, 0.08); transform: translateX(-5px); }
+        .tx-card:active { background: rgba(255, 255, 255, 0.05); transform: translateX(-5px); }
 
         .tx-left { display: flex; align-items: center; gap: 14px; }
         .tx-icon-box {
@@ -71,29 +71,20 @@
         .tx-date { font-size: 0.75rem; color: var(--text-muted); font-family: 'Roboto Mono'; }
         
         .tx-amount { font-family: 'Roboto Mono'; font-weight: 700; font-size: 1rem; direction: ltr; }
-        
-        /* --- Deposit/Withdrawal Specific Modal Styles (Refined) --- */
 
-        .deposit-type-select, .withdrawal-currency-select {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-            margin-bottom: 25px;
+        .upload-area {
+            border: 2px dashed var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 30px; text-align: center;
+            background: rgba(0,0,0,0.2);
+            cursor: pointer; transition: all 0.3s;
+            position: relative; overflow: hidden;
+            margin-top: 15px;
         }
-        .type-btn {
-            padding: 15px; border-radius: 12px;
-            border: 2px solid var(--glass-border);
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-weight: 700;
-            color: var(--text-muted);
-        }
-        .type-btn.active {
-            border-color: var(--primary-gold);
-            background: rgba(255, 192, 0, 0.05);
-            color: var(--primary-gold);
-            box-shadow: 0 0 10px rgba(255, 192, 0, 0.2);
-        }
-        .type-btn i { margin-left: 5px; }
+        .upload-area:active { background: rgba(255,255,255,0.02); border-color: var(--primary-gold); }
+        .upload-icon { font-size: 2.5rem; color: var(--text-muted); margin-bottom: 15px; transition: color 0.3s; }
+        .upload-area.active { border-color: var(--accent-green); }
+        .upload-area.active .upload-icon { color: var(--accent-green); }
 
         .glass-field {
             width: 100%; padding: 16px;
@@ -103,50 +94,83 @@
         }
         .glass-field:focus { border-color: var(--primary-gold); box-shadow: 0 0 15px rgba(240,185,11,0.1); }
         
-        /* NEW LUXURY: Unique Amount Display */
-        .unique-amount-box {
-            background: linear-gradient(145deg, #101010, #000);
-            border: 2px solid var(--primary-gold);
-            border-radius: 18px;
-            padding: 20px;
-            text-align: center;
-            margin-top: 25px;
-            box-shadow: 0 10px 30px rgba(255, 192, 0, 0.2);
+        /* --- Asset Card Luxury Styling --- */
+        .asset-card {
+            background: radial-gradient(circle at top right, #1e1e1e 0%, #000 100%);
+            border-radius: 30px; padding: 28px;
+            border: 2px solid rgba(255, 204, 0, 0.15); 
+            box-shadow: 0 15px 40px rgba(0,0,0,0.8);
+            margin-bottom: 30px;
+            position: relative; overflow: hidden;
         }
-        .unique-amount-val {
-            font-family: 'Roboto Mono';
-            font-size: 2.0rem; /* Made larger */
-            font-weight: 900;
-            color: var(--primary-gold);
-            letter-spacing: -1px;
-            display: block;
-            margin-top: 10px;
+        .card-mesh { position: absolute; inset: 0; background: url('https://www.transparenttextures.com/patterns/carbon-fibre.png'); opacity: 0.05; }
+        .card-shine-effect { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 100% 0%, rgba(255,255,255,0.05) 0%, transparent 40%); }
+        .chip-icon { font-size: 1.5rem; color: var(--primary-gold); }
+        .card-top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .card-brand-text { color: var(--primary-gold); font-size: 0.75rem; letter-spacing: 1px; font-weight: 700; opacity: 0.7; }
+        .label-muted { color: #aaa; font-size: 0.8rem; display: block; margin-bottom: 5px; }
+        .amount-row { display: flex; align-items: baseline; justify-content: flex-end; gap: 8px; }
+        .main-digit { 
+            font-size: 2.5rem; font-family: 'Roboto Mono'; margin: 0; letter-spacing: -1px;
+            background: -webkit-linear-gradient(45deg, #eee, var(--primary-gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.3);
         }
-        .copy-btn-gold {
-            background: var(--primary-gold);
-            color: #000;
-            border: none;
-            padding: 10px 25px; /* Larger button */
-            border-radius: 12px;
-            margin-top: 15px;
-            font-size: 0.9rem;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 5px 15px rgba(255, 192, 0, 0.5);
+        .currency-symbol { color: var(--primary-gold); font-size: 1.4rem; }
+        .card-footer-row { display: flex; justify-content: space-around; margin-top: 25px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .stat-item { text-align: center; }
+        .stat-label { font-size: 0.7rem; color: #888; display: block; margin-bottom: 2px; }
+        .stat-value { font-size: 1rem; font-weight: 700; font-family: 'Roboto Mono'; }
+        .color-usd { color: var(--accent-green); }
+        .color-xp { color: var(--primary-gold); }
+        .stat-divider { width: 1px; height: 20px; background: rgba(255,255,255,0.1); }
+        
+        /* --- Modal Styling --- */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px);
+            z-index: 1000; display: none; align-items: center; justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            background: #111; border: 1px solid var(--glass-border); border-radius: 24px;
+            padding: 25px; width: 90%; max-width: 400px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            transform: scale(0.95); opacity: 0; transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .modal-overlay.active .modal-content { transform: scale(1); opacity: 1; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .close-modal { background: none; border: none; color: #888; font-size: 1.2rem; cursor: pointer; }
+        .btn-confirm-swap { 
+            border-radius: 16px; padding: 16px; font-weight: 800; font-size: 1.1rem;
+            color: #000; border: none; cursor: pointer; transition: background 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        /* --- Tabs for Deposit Modal --- */
+        .deposit-tabs { display: flex; margin-bottom: 20px; background: rgba(255,255,255,0.05); border-radius: 12px; padding: 5px; }
+        .dep-tab-btn {
+            flex: 1; padding: 10px; border-radius: 8px; text-align: center;
+            font-size: 0.9rem; font-weight: 600; color: #aaa; cursor: pointer;
             transition: all 0.2s;
         }
-        .copy-btn-gold:active {
-            transform: scale(0.95);
+        .dep-tab-btn.active {
+            background: #0ECB81; color: #000; box-shadow: 0 2px 10px rgba(14, 203, 129, 0.4);
         }
-        .card-details-box {
-            background: rgba(255,255,255,0.05); 
-            border: 1px solid rgba(255,255,255,0.1);
-            padding: 15px; 
-            border-radius: 12px; 
-            margin-top: 25px; 
-            text-align: center;
+        .tab-content { display: none; padding-top: 10px; }
+        .tab-content.active { display: block; }
+
+        /* --- Withdraw Section --- */
+        .withdraw-section {
+            background: #1c1c1e; border: 1px solid rgba(255,255,255,0.1); border-radius: 18px; padding: 20px; margin-bottom: 20px;
         }
-        
+        .bank-info { padding: 15px; border: 1px dashed var(--primary-gold); border-radius: 12px; margin-top: 15px; background: rgba(255, 204, 0, 0.05); }
+        .info-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; }
+        .info-label { color: #aaa; }
+        .info-value { color: #fff; font-weight: 700; }
+
+        .btn-warning-red { background: var(--accent-red); color: #000; }
+
     </style>
 </head>
 <body class="loading-active">
@@ -156,26 +180,22 @@
     <div class="grid-overlay"></div>
 
     <div id="loader">
-        <div class="loader-content">
-            <img src="webapp/images/logo-gold.png" alt="Coin Baran" class="main-logo-img">
-            <div class="brand-text">کـویـن بـاران</div>
-            <p class="loading-status">در حال دریافت اطلاعات کیف پول...</p>
-        </div>
+        <i class="fas fa-circle-notch fa-spin" style="font-size: 3rem; color: var(--primary-gold);"></i>
     </div>
 
     <header class="glass-header">
         <div class="profile-section">
-            <div class="icon-btn ripple-btn" onclick="window.location.href='/'">
+            <div class="action-icon-btn ripple-btn" onclick="window.location.href='/'">
                 <i class="fas fa-arrow-right"></i>
             </div>
-            <div style="font-weight:800; font-size:1.1rem; color: #fff;">مدیریت دارایی</div>
+            <div style="font-weight:800; font-size:1.15rem; color: #fff;">مدیریت دارایی</div>
         </div>
-        <div class="icon-btn ripple-btn" onclick="fetchWalletData()">
+        <div class="action-icon-btn ripple-btn" onclick="fetchWalletData()">
             <i class="fas fa-sync-alt"></i>
         </div>
     </header>
 
-    <div id="app-container" class="main-scroll-area hidden-content">
+    <div id="app-container" class="main-scroll-area hidden-content" style="padding: 20px;">
         
         <div class="asset-card">
             <div class="card-mesh"></div>
@@ -187,10 +207,10 @@
             </div>
 
             <div class="balance-display">
-                <span class="label-muted">موجودی قابل برداشت</span>
+                <span class="label-muted">موجودی قابل برداشت (تومان)</span>
                 <div class="amount-row">
                     <h1 id="balance-toman" class="main-digit">---</h1>
-                    <span class="currency-symbol">تومان</span>
+                    <span class="currency-symbol">T</span>
                 </div>
             </div>
 
@@ -207,263 +227,124 @@
             </div>
         </div>
 
-        <div class="tab-bar">
-            <div class="tab-item active" id="tab-deposit" onclick="showWalletTab('deposit')">
-                <i class="fas fa-money-bill-transfer"></i> واریز وجه
+        <div class="wallet-actions">
+            <div class="w-btn btn-deposit ripple-effect" onclick="openDepositModal('toman')">
+                <div class="action-icon deposit-theme"><i class="fas fa-arrow-down"></i></div>
+                <span>شارژ کیف پول</span>
             </div>
-            <div class="tab-item" id="tab-withdraw" onclick="showWalletTab('withdraw')">
-                <i class="fas fa-money-bill-wave"></i> برداشت وجه
+            <div class="w-btn btn-withdraw ripple-effect" onclick="switchContent('withdraw')">
+                <div class="action-icon withdraw-theme"><i class="fas fa-arrow-up"></i></div>
+                <span>برداشت وجه</span>
             </div>
         </div>
-        
-        <div id="deposit-content">
+
+        <div id="main-content">
             <div class="tx-container">
-                <div class="section-label">عملیات واریز</div>
-                
-                <div id="deposit-pending-status" style="display:none; text-align:center; padding:15px; margin-bottom:20px; border-radius:12px; border:1px solid var(--accent-yellow); background:rgba(255,215,0,0.1);">
-                    <i class="fas fa-clock fa-spin" style="color:var(--accent-yellow); margin-left:8px;"></i> 
-                    <span id="pending-status-text" style="font-weight:700; font-size:0.9rem; color:#fff;">درخواست شما با مبلغ --- تومان در انتظار واریز است.</span>
-                    <p style="font-size:0.75rem; color:var(--text-muted); margin-top:5px;">لطفاً مبلغ را دقیقاً واریز کنید تا سیستم به صورت خودکار شارژ کند.</p>
+                <div class="section-label"><i class="fas fa-list-alt" style="color:#fff;"></i> تاریخچه تراکنش‌ها</div>
+                <div id="tx-list">
+                    <div style="text-align:center; padding:40px; color:var(--text-muted); font-size:0.9rem; opacity: 0.7;">
+                        <i class="fas fa-circle-notch fa-spin"></i> در حال همگام‌سازی اطلاعات...
+                    </div>
                 </div>
-                
-                <p id="deposit-intro-text" style="color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">
-                    برای شارژ حساب خود، روش واریز را انتخاب کنید.
-                </p>
-                <button id="btn-open-deposit-modal" class="btn-confirm-swap ripple-effect" style="width:100%; background:var(--accent-green);" onclick="openDepositModal()">
-                    <i class="fas fa-bolt"></i> شروع واریز اتوماتیک / دستی
-                </button>
             </div>
         </div>
 
         <div id="withdraw-content" style="display:none;">
-             <div class="tx-container">
-                <div class="section-label">درخواست برداشت وجه 💸</div>
-                <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">
-                    با استفاده از فرم زیر، درخواست برداشت خود را ثبت نمایید.
-                </p>
-                <button class="btn-confirm-swap ripple-effect" style="width:100%; background:var(--accent-red);" onclick="openWithdrawalModal()">
-                    <i class="fas fa-hand-holding-dollar"></i> ثبت درخواست برداشت
+            <div class="section-label" style="border-right-color: var(--accent-red);"><i class="fas fa-arrow-up" style="color:var(--accent-red)"></i> برداشت وجه</div>
+            <div class="withdraw-section">
+                <div style="color:var(--text-muted); font-size:0.9rem; margin-bottom:15px;">
+                    لطفاً مبلغ برداشت و شماره کارت مقصد را وارد کنید. (فقط کارت‌های تأیید شده)
+                </div>
+                
+                <div class="input-group" style="margin-bottom:20px;">
+                    <label class="label-muted" style="margin-bottom:8px;">مبلغ برداشت (تومان)</label>
+                    <input type="number" id="withdraw-amount" class="glass-field" placeholder="حداقل ۵۰,۰۰۰ تومان" inputmode="numeric">
+                </div>
+
+                <div class="input-group" style="margin-bottom:20px;">
+                    <label class="label-muted" style="margin-bottom:8px;">شماره کارت مقصد (۶۰۳۷۹۹...)</label>
+                    <input type="tel" id="withdraw-card" class="glass-field" placeholder="شماره کارت ۱۶ رقمی" maxlength="16">
+                </div>
+
+                <div class="bank-info">
+                    <div class="info-row"><span class="info-label">موجودی قابل برداشت:</span> <span class="info-value" id="current-toman-for-withdraw">---</span></div>
+                    <div class="info-row"><span class="info-label">کارمزد برداشت:</span> <span class="info-value" id="withdraw-fee">۵,۰۰۰ T</span></div>
+                    <div class="info-row" style="margin-top:10px;"><span class="info-label">مبلغ دریافتی نهایی:</span> <span class="info-value" id="final-receive" style="color:var(--accent-green)">---</span></div>
+                </div>
+
+                <button id="btn-submit-withdraw" class="btn-confirm-swap ripple-effect"  
+                    style="width:100%; margin-top:25px; background:var(--accent-red);" 
+                    onclick="submitWithdrawal()">
+                    ثبت درخواست برداشت 💰
                 </button>
             </div>
+            <button class="btn-confirm-swap ripple-effect" style="width:100%; margin-top:10px; background:rgba(255,255,255,0.1); color:#fff;" onclick="switchContent('history')">
+                بازگشت به تاریخچه
+            </button>
         </div>
-
-        <div class="tx-container">
-            <div class="section-label">تاریخچه تراکنش‌ها</div>
-            <div id="tx-list">
-                <div style="text-align:center; padding:40px; color:var(--text-muted); font-size:0.9rem; opacity: 0.7;">
-                    <i class="fas fa-circle-notch fa-spin"></i> در حال همگام‌سازی اطلاعات...
-                </div>
-            </div>
-        </div>
-        
-        <div id="pagination-controls" class="pagination-controls">
-            </div>
 
     </div>
 
     <div id="deposit-modal" class="modal-overlay">
         <div class="modal-content glass-panel">
-            
-            <div id="deposit-step-0"> <div class="modal-header">
-                    <h3 style="color:var(--primary-gold)">روش واریز را انتخاب کنید</h3>
-                    <button onclick="closeDepositModal()" class="close-modal">✕</button>
-                </div>
-                <div class="modal-body">
-                    <div class="deposit-type-select">
-                        <div class="type-btn active" id="type-auto" onclick="selectDepositType('auto')">
-                            <i class="fas fa-bolt"></i> اتوماتیک (توصیه شده)
-                        </div>
-                        <div class="type-btn" id="type-manual" onclick="selectDepositType('manual')">
-                            <i class="fas fa-upload"></i> دستی (آپلود رسید)
-                        </div>
-                    </div>
-                    
-                    <button id="btn-next-dep" class="btn-confirm-swap ripple-effect" 
-                        style="width:100%; margin-top:25px; background:var(--primary-gold); color:#000;" 
-                        onclick="goToDepositStep(1)">
-                        <i class="fas fa-angle-left"></i> ادامه
-                    </button>
-                    <p style="color:var(--text-muted); font-size:0.8rem; margin-top:15px; text-align:center;">
-                        واریز اتوماتیک با تشخیص هوشمند پیامک بانک انجام می‌شود.
-                    </p>
-                </div>
-            </div>
-
-            <div id="deposit-step-1" style="display:none;"> <div class="modal-header">
-                    <h3 id="step-1-title" style="color:var(--accent-green)">درخواست شارژ کیف پول ⚡️</h3>
-                    <button onclick="closeDepositModal()" class="close-modal">✕</button>
-                </div>
-                <div class="modal-body">
-                    <p style="text-align:center; color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">
-                        لطفاً مبلغ مورد نظر خود را وارد کنید.
-                    </p>
-
-                    <div style="margin-bottom:20px;">
-                        <label class="label-muted" style="margin-bottom:8px;">مبلغ (تومان) - حداقل ۵۰,۰۰۰</label>
-                        <input type="number" id="deposit-amount" class="glass-field" placeholder="مثلاً ۱۰۰,۰۰۰" inputmode="numeric">
-                    </div>
-
-                    <button id="btn-submit-dep" class="btn-confirm-swap ripple-effect" 
-                        style="width:100%; margin-top:25px; background:var(--accent-green);" 
-                        onclick="startDepositProcess()">
-                        <i class="fas fa-key"></i> ثبت و دریافت مبلغ واریز یکتا
-                    </button>
-                    <button id="btn-back-to-type" class="btn-confirm-swap ripple-effect" 
-                        style="width:100%; margin-top:10px; background:rgba(255,255,255,0.1); color:#fff;" 
-                        onclick="goToDepositStep(0)">
-                        <i class="fas fa-arrow-right"></i> بازگشت
-                    </button>
-                </div>
-            </div>
-
-            <div id="deposit-step-2" style="display:none;"> <div class="modal-header">
-                    <h3 style="color:var(--primary-gold)">جزئیات واریز اتوماتیک 🔑</h3>
-                    <button onclick="closeDepositModal()" class="close-modal">✕</button>
-                </div>
-                <div class="modal-body">
-                    
-                    <p style="color:#eee; font-size:0.85rem; text-align:center;">
-                        ✅ لطفا مبلغ زیر را **دقیقا** به شماره کارت صرافی واریز کنید.
-                        <br> ⚠️ سیستم هوشمند ما با **همین مبلغ یکتا** حساب شما را شارژ می‌کند.
-                    </p>
-                    
-                    <div class="unique-amount-box" id="unique-amount-display">
-                        <span style="font-size:0.8rem; color:#ccc;">مبلغ نهایی واریز شما:</span>
-                        <span class="unique-amount-val" id="final-unique-amount">0</span>
-                        <span class="currency-symbol" style="color:#aaa; font-weight:bold; display:block;">تومان</span>
-                        <button class="copy-btn-gold ripple-effect" onclick="copyFinalAmount()">
-                            <i class="fas fa-copy"></i> کپی مبلغ
-                        </button>
-                    </div>
-
-                    <div class="card-details-box">
-                        <span style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:10px;">شماره کارت مقصد (کوین باران):</span>
-                        <span id="exchange-card-number" style="font-family:'Roboto Mono'; font-weight:700; color:var(--primary-gold); font-size:1.1rem;">---</span>
-                        <button class="copy-btn-gold ripple-effect" style="margin-top:15px;" onclick="copyCardNumber()">
-                            <i class="fas fa-copy"></i> کپی شماره کارت
-                        </button>
-                    </div>
-
-                    <div style="margin-top:30px; text-align:center;">
-                           <p style="color:var(--accent-green); font-size:0.9rem; font-weight:bold;">
-                               بعد از واریز، منتظر پیام تأیید در تلگرام باشید. (نیاز به ارسال رسید نیست)
-                           </p>
-                           <button class="btn-close-modal ripple-effect" style="width:100%;" onclick="closeDepositModal(); checkPendingDeposits();">
-                               بستن و ادامه
-                           </button>
-                           <button class="btn-close-modal ripple-effect" style="width:100%; margin-top:10px; background:rgba(255,255,255,0.1); color:#fff;" onclick="goToDepositStep(1)">
-                               تغییر مبلغ واریزی
-                           </button>
-                    </div>
-                </div>
-            </div>
-
-            <div id="deposit-step-manual" style="display:none;"> <div class="modal-header">
-                    <h3 style="color:var(--accent-blue)">واریز دستی 📎</h3>
-                    <button onclick="closeDepositModal()" class="close-modal">✕</button>
-                </div>
-                <div class="modal-body">
-                    <p style="text-align:center; color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">
-                        لطفاً مبلغ واریزی را وارد کرده و رسید بانکی را آپلود نمایید.
-                    </p>
-                    
-                    <div style="margin-bottom:20px;">
-                        <label class="label-muted" style="margin-bottom:8px;">مبلغ واریزی (تومان)</label>
-                        <input type="number" id="manual-deposit-amount" class="glass-field" placeholder="مبلغ دقیق واریزی" inputmode="numeric">
-                    </div>
-
-                    <div style="margin-bottom:20px;">
-                        <label class="label-muted" style="margin-bottom:8px;">شماره پیگیری / مرجع (اختیاری)</label>
-                        <input type="text" id="manual-deposit-ref" class="glass-field" placeholder="شماره پیگیری" style="font-size:1rem;">
-                    </div>
-
-                    <div style="margin-bottom:30px;">
-                        <label class="label-muted" style="margin-bottom:8px;">آپلود رسید بانکی (تصویر)</label>
-                        <input type="file" id="manual-deposit-receipt" accept="image/*" style="display:block; width:100%; color:#fff; padding:10px; border:1px solid var(--glass-border); border-radius:12px;">
-                    </div>
-
-                    <button id="btn-submit-manual-dep" class="btn-confirm-swap ripple-effect" 
-                        style="width:100%; background:var(--accent-blue);" 
-                        onclick="submitManualDeposit()">
-                        <i class="fas fa-upload"></i> ثبت درخواست واریز دستی
-                    </button>
-                    <button class="btn-close-modal ripple-effect" style="width:100%; margin-top:10px; background:rgba(255,255,255,0.1); color:#fff;" onclick="goToDepositStep(0)">
-                        بازگشت
-                    </button>
-                </div>
-            </div>
-
-
-        </div>
-    </div>
-    
-    <div id="withdrawal-modal" class="modal-overlay">
-        <div class="modal-content glass-panel">
             <div class="modal-header">
-                <h3 style="color:var(--accent-red)">درخواست برداشت وجه 💸</h3>
-                <button onclick="closeWithdrawalModal()" class="close-modal">✕</button>
+                <h3 style="color:var(--accent-green)">شارژ کیف پول ⚡️</h3>
+                <button onclick="closeDepositModal()" class="close-modal">✕</button>
             </div>
             <div class="modal-body">
-
-                <div class="withdrawal-currency-select">
-                    <div class="type-btn active" id="w-type-toman" onclick="selectWithdrawalType('toman')">
-                        <i class="fas fa-rial-sign"></i> برداشت تومان
-                    </div>
-                    <div class="type-btn" id="w-type-usdt" onclick="selectWithdrawalType('usdt')">
-                        <i class="fas fa-dollar-sign"></i> برداشت UUSD
-                    </div>
+                
+                <div class="deposit-tabs">
+                    <div class="dep-tab-btn active" onclick="switchDepositTab('automatic')" id="tab-automatic">💳 واریز آنی (کارت به کارت)</div>
+                    <div class="dep-tab-btn" onclick="switchDepositTab('manual')" id="tab-manual">📄 واریز دستی (فیش)</div>
                 </div>
 
-                <div style="margin-bottom:20px;">
-                    <label class="label-muted" style="margin-bottom:8px;" id="w-amount-label">مبلغ برداشت (تومان)</label>
-                    <input type="number" id="withdrawal-amount" class="glass-field" placeholder="مثلاً ۵۰,۰۰۰" inputmode="numeric">
-                    <p id="w-min-max" style="color:var(--text-muted); font-size:0.75rem; margin-top:10px; text-align:center;">
-                        حداقل برداشت: ۵۰,۰۰۰ تومان
+                <div id="content-automatic" class="tab-content active">
+                    <p style="text-align:center; color:var(--text-muted); font-size:0.85rem; margin-bottom:20px;">
+                        انتقال وجه از کارت بانکی تایید شده به شماره کارت صرافی جهت شارژ آنی.
                     </p>
-                </div>
-                
-                <div id="withdrawal-destination-fields">
-                    <div style="margin-bottom:20px;">
-                        <label class="label-muted" style="margin-bottom:8px;" id="w-dest-label">شماره شبا مقصد</label>
-                        <input type="text" id="iban-or-address" class="glass-field" placeholder="IRxxxxxxxxxxxxxxxxxxxxxxx" style="font-size:1rem; text-align: left;" dir="ltr">
+                     <div class="bank-info" style="margin-bottom:20px;">
+                        <div class="info-row"><span class="info-label">شماره کارت مقصد:</span> <span class="info-value" id="exchange-card-number">---</span> <i class="fas fa-copy ripple-btn" style="color:var(--primary-gold); cursor:pointer;" onclick="copyToClipboard(document.getElementById('exchange-card-number').innerText)"></i></div>
+                        <div class="info-row"><span class="info-label">نام صاحب کارت:</span> <span class="info-value" id="exchange-card-holder">---</span></div>
                     </div>
+                    
+                    <div style="margin-bottom:20px;">
+                        <label class="label-muted" style="margin-bottom:8px;">مبلغ (تومان)</label>
+                        <input type="number" id="deposit-amount-auto" class="glass-field" placeholder="حداقل ۱۰۰,۰۰۰ تومان" inputmode="numeric">
+                    </div>
+                    
+                    <button id="btn-submit-dep-auto" class="btn-confirm-swap ripple-effect" 
+                        style="width:100%; margin-top:10px; background:var(--accent-green);" 
+                        onclick="submitDepositAutomatic()">
+                        دریافت درگاه واریز
+                    </button>
                 </div>
-                
-                <div id="withdrawal-network-field" style="display:none; margin-bottom:20px;">
-                    <label class="label-muted" style="margin-bottom:8px;">شبکه انتقال</label>
-                    <select id="withdrawal-network" class="glass-field" style="text-align:right; font-size:1rem; padding:12px;">
-                        <option value="TRC20">USDT - TRC20 (کم هزینه)</option>
-                        <option value="ERC20">USDT - ERC20</option>
-                    </select>
+
+                <div id="content-manual" class="tab-content">
+                    <p style="text-align:center; color:var(--text-muted); font-size:0.85rem; margin-bottom:20px;">
+                        لطفاً مبلغ مورد نظر و تصویر فیش واریزی را وارد کنید. (بررسی توسط مدیریت)
+                    </p>
+
+                    <div style="margin-bottom:20px;">
+                        <label class="label-muted" style="margin-bottom:8px;">مبلغ (تومان)</label>
+                        <input type="number" id="deposit-amount-manual" class="glass-field" placeholder="مثلاً ۱۰۰,۰۰۰" inputmode="numeric">
+                    </div>
+
+                    <div class="upload-area ripple-btn" onclick="document.getElementById('receipt-file').click()">
+                        <i class="fas fa-cloud-upload-alt upload-icon" id="up-icon"></i>
+                        <div class="upload-label" id="file-label">برای انتخاب تصویر فیش کلیک کنید</div>
+                        <input type="file" id="receipt-file" style="display:none" accept="image/*" onchange="updateFileLabel(this)">
+                    </div>
+
+                    <button id="btn-submit-dep-manual" class="btn-confirm-swap ripple-effect" 
+                        style="width:100%; margin-top:25px; background:var(--primary-gold); color:#000;" 
+                        onclick="submitDepositManual()">
+                        ارسال درخواست واریز دستی
+                    </button>
                 </div>
-                
-                <p style="color:var(--accent-red); font-size:0.8rem; text-align:center; margin-bottom:20px;">
-                    ⚠️ در برداشت USDT، مسئولیت صحت آدرس و شبکه به عهده شماست.
-                </p>
-
-                <button id="btn-submit-withdrawal" class="btn-confirm-swap ripple-effect" 
-                    style="width:100%; background:var(--accent-red); color:#fff;" 
-                    onclick="submitWithdrawal()">
-                    <i class="fas fa-paper-plane"></i> ثبت درخواست برداشت
-                </button>
-                <button class="btn-close-modal ripple-effect" style="width:100%; margin-top:10px; background:rgba(255,255,255,0.1); color:#fff;" onclick="closeWithdrawalModal()">
-                    انصراف
-                </button>
-
             </div>
         </div>
     </div>
-    <div id="status-modal" class="modal-overlay">
-        <div class="modal-content glass-panel" style="text-align:center; padding:30px;">
-             <i id="status-icon" class="fas fa-check-circle" style="font-size:3rem; margin-bottom:20px; color:var(--accent-green);"></i>
-             <h3 id="status-title" style="color:#fff; margin-top:0;">تایید شد!</h3>
-             <p id="status-message" style="color:var(--text-muted); font-size:0.9rem; line-height:1.6;">مبلغ ۶۰,۵۰۲ تومان با موفقیت به حساب شما افزوده شد.</p>
-             <button class="btn-close-modal ripple-effect" style="width:100%; margin-top:30px; background:var(--accent-green); color:#000;" onclick="closeStatusModal()">
-                 بستن و ادامه
-             </button>
-        </div>
-    </div>
-    
+
     <div id="detail-modal" class="modal-overlay">
         <div class="modal-content glass-panel">
             <div class="modal-header">
@@ -473,7 +354,7 @@
             <div class="modal-body">
                 <div id="detail-content"></div>
                 
-                <button class="btn-continue" style="margin-top:20px; background:rgba(255,255,255,0.1); color:#fff;" 
+                <button class="btn-continue ripple-effect" style="width:100%; margin-top:20px; background:rgba(255,255,255,0.1); color:#fff;" 
                     onclick="document.getElementById('detail-modal').classList.remove('active')">
                     بستن
                 </button>
@@ -483,98 +364,229 @@
 
     <script>
         const tg = window.Telegram.WebApp;
-        // Use wss for secure websocket connection over HTTPS
-        const WS_PROTOCOL = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const API_BASE_URL = window.location.origin;
-        const WS_URL = `${WS_PROTOCOL}//${window.location.host}/ws/wallet/${tg.initData}`;
-        const EXCHANGE_CARD_NUMBER = '6219861987089975'; 
+        const EXCHANGE_CARD_NUMBER = "6219861987089975"; // از config.py
+        const EXCHANGE_CARD_HOLDER = "الهام قاجاری"; // از config.py
         let transactionsData = [];
-        let finalUniqueAmount = 0;
-        let selectedDepositType = 'auto'; 
-        let selectedWithdrawalType = 'toman'; 
-        let userBalances = { toman: 0, uusd: 0 };
-        let ws; 
+        let currentTomanBalance = 0;
+        const WITHDRAWAL_FEE = 5000; // کارمزد ثابت (از config.py)
 
+        // --- UI & Modal Handlers ---
 
+        function hideLoader() {
+            const loader = document.getElementById('loader');
+            const app = document.getElementById('app-container');
+            if(loader) {
+                loader.style.opacity = '0';
+                loader.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                    app.classList.remove('hidden-content');
+                    app.style.opacity = '1';
+                }, 500);
+            }
+        }
+
+        function switchContent(target) {
+            document.getElementById('main-content').style.display = 'none';
+            document.getElementById('withdraw-content').style.display = 'none';
+
+            if (target === 'withdraw') {
+                document.getElementById('withdraw-content').style.display = 'block';
+                // به‌روزرسانی موجودی و کارمزد در بخش برداشت
+                updateWithdrawalInfo();
+            } else {
+                document.getElementById('main-content').style.display = 'block';
+            }
+            tg.HapticFeedback.selectionChanged();
+        }
+
+        function updateWithdrawalInfo() {
+            document.getElementById('current-toman-for-withdraw').innerText = currentTomanBalance.toLocaleString() + ' T';
+            document.getElementById('withdraw-fee').innerText = WITHDRAWAL_FEE.toLocaleString() + ' T';
+            
+            const amountInput = document.getElementById('withdraw-amount');
+            const finalReceiveEl = document.getElementById('final-receive');
+
+            const updateFinalAmount = () => {
+                let amount = parseInt(amountInput.value) || 0;
+                let finalAmount = Math.max(0, amount - WITHDRAWAL_FEE);
+                finalReceiveEl.innerText = finalAmount.toLocaleString() + ' T';
+                if (amount > currentTomanBalance) {
+                    finalReceiveEl.style.color = 'var(--accent-red)';
+                } else {
+                    finalReceiveEl.style.color = 'var(--accent-green)';
+                }
+            };
+
+            amountInput.oninput = updateFinalAmount;
+            updateFinalAmount(); // اجرای اولیه
+        }
+
+        function openDepositModal() { 
+            document.getElementById('deposit-modal').classList.add('active'); 
+            // نمایش اطلاعات کارت مقصد
+            document.getElementById('exchange-card-number').innerText = EXCHANGE_CARD_NUMBER;
+            document.getElementById('exchange-card-holder').innerText = EXCHANGE_CARD_HOLDER;
+            switchDepositTab('automatic'); // شروع با تب آنی
+            tg.HapticFeedback.impactOccurred('medium');
+        }
+        function closeDepositModal() { 
+            document.getElementById('deposit-modal').classList.remove('active'); 
+            tg.HapticFeedback.impactOccurred('light');
+        }
+
+        function switchDepositTab(tab) {
+            document.getElementById('tab-automatic').classList.remove('active');
+            document.getElementById('tab-manual').classList.remove('active');
+            document.getElementById('content-automatic').classList.remove('active');
+            document.getElementById('content-manual').classList.remove('active');
+
+            if (tab === 'automatic') {
+                document.getElementById('tab-automatic').classList.add('active');
+                document.getElementById('content-automatic').classList.add('active');
+            } else {
+                document.getElementById('tab-manual').classList.add('active');
+                document.getElementById('content-manual').classList.add('active');
+            }
+            tg.HapticFeedback.selectionChanged();
+        }
+
+        function updateFileLabel(input) {
+            const label = document.getElementById('file-label');
+            const icon = document.getElementById('up-icon');
+            if (input.files && input.files.length > 0) {
+                label.innerText = "✅ تصویر انتخاب شد: " + input.files[0].name;
+                label.style.color = "var(--accent-green)";
+                icon.className = "fas fa-check-circle upload-icon";
+                icon.style.color = "var(--accent-green)";
+                input.parentElement.classList.add('active');
+            } else {
+                label.innerText = "برای انتخاب تصویر فیش کلیک کنید";
+                label.style.color = "var(--text-muted)";
+                icon.className = "fas fa-cloud-upload-alt upload-icon";
+                icon.style.color = "var(--text-muted)";
+                input.parentElement.classList.remove('active');
+            }
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                tg.showAlert("✅ شماره کارت کپی شد!");
+                tg.HapticFeedback.notificationOccurred('success');
+            }).catch(err => {
+                tg.showAlert("❌ خطا در کپی کردن: " + err);
+            });
+        }
+        
+        // --- API & Submission Handlers ---
+
+        async function submitDepositAutomatic() {
+             tg.showAlert("⚠️ درگاه پرداخت آنی هنوز پیاده سازی نشده است. لطفاً از بخش واریز دستی استفاده کنید.");
+             tg.HapticFeedback.notificationOccurred('warning');
+        }
+
+        async function submitDepositManual() {
+            const amountInput = document.getElementById('deposit-amount-manual');
+            const fileInput = document.getElementById('receipt-file');
+            const btn = document.getElementById('btn-submit-dep-manual');
+            const amount = parseInt(amountInput.value);
+
+            if(!amount || amount < 10000) { tg.showAlert("حداقل مبلغ واریز ۱۰,۰۰۰ تومان است."); return; }
+            if(fileInput.files.length === 0) { tg.showAlert("لطفاً تصویر فیش واریزی را انتخاب کنید."); return; }
+
+            btn.disabled = true; btn.innerText = "در حال آپلود...";
+            tg.HapticFeedback.impactOccurred('light');
+
+            const formData = new FormData();
+            formData.append('initData', tg.initData);
+            formData.append('amount', amount);
+            formData.append('receipt', fileInput.files[0]);
+
+            try {
+                // این endpoint در sms_webhook_server.py وجود ندارد و باید اضافه شود
+                const res = await fetch(`${API_BASE_URL}/webapp/submit_deposit_manual`, { 
+                    method: 'POST', 
+                    body: formData,
+                    headers: { 'ngrok-skip-browser-warning': 'true' }
+                });
+                
+                let result;
+                try { result = await res.json(); } catch { throw new Error("پاسخ سرور نامعتبر است"); }
+
+                if (res.ok && result.status === 'success') {
+                    tg.showAlert("✅ " + result.message);
+                    closeDepositModal();
+                    amountInput.value = ""; fileInput.value = "";
+                    updateFileLabel(fileInput);
+                    fetchWalletData(); 
+                    tg.HapticFeedback.notificationOccurred('success');
+                } else {
+                    tg.showAlert(`❌ خطا: ${result.message || "ناشناخته"}`);
+                    tg.HapticFeedback.notificationOccurred('error');
+                }
+            } catch (e) { tg.showAlert("خطای ارتباط: " + e.message); } 
+            finally { btn.disabled = false; btn.innerText = "ارسال درخواست واریز دستی"; }
+        }
+
+        async function submitWithdrawal() {
+            const amountInput = document.getElementById('withdraw-amount');
+            const cardInput = document.getElementById('withdraw-card');
+            const btn = document.getElementById('btn-submit-withdraw');
+            const amount = parseInt(amountInput.value);
+            const card = cardInput.value.trim();
+
+            if (!amount || amount < 50000) { tg.showAlert("حداقل مبلغ برداشت ۵۰,۰۰۰ تومان است."); return; }
+            if (amount > currentTomanBalance) { tg.showAlert("موجودی شما کافی نیست."); return; }
+            if (card.length !== 16) { tg.showAlert("شماره کارت ۱۶ رقمی را صحیح وارد کنید."); return; }
+
+            btn.disabled = true; btn.innerText = "در حال ثبت...";
+            tg.HapticFeedback.impactOccurred('medium');
+
+            const finalAmount = amount - WITHDRAWAL_FEE;
+            
+            try {
+                const res = await fetch(`${API_BASE_URL}/webapp/submit_withdrawal`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
+                    body: JSON.stringify({ initData: tg.initData, amount: amount, card_number: card, fee: WITHDRAWAL_FEE })
+                });
+
+                let result;
+                try { result = await res.json(); } catch { throw new Error("پاسخ سرور نامعتبر است"); }
+
+                if (res.ok && result.status === 'success') {
+                    tg.showAlert(`✅ درخواست برداشت ${finalAmount.toLocaleString()} T ثبت شد.`);
+                    fetchWalletData(); 
+                    amountInput.value = '';
+                    cardInput.value = '';
+                    updateWithdrawalInfo();
+                    switchContent('history');
+                    tg.HapticFeedback.notificationOccurred('success');
+                } else {
+                    tg.showAlert(`❌ خطا: ${result.message || "ناشناخته"}`);
+                    tg.HapticFeedback.notificationOccurred('error');
+                }
+            } catch (e) { tg.showAlert("خطای ارتباط: " + e.message); }
+            finally { btn.disabled = false; btn.innerText = "ثبت درخواست برداشت 💰"; }
+        }
+
+        // --- Initial Load & Data Fetch ---
+        
         window.onload = function() {
             tg.ready(); tg.expand(); 
             tg.setHeaderColor('#050505');
             tg.setBackgroundColor('#050505');
             
-            if (!tg.initData) tg.initData = "query_id=TEST_DEV";
-            
+            // Check for initial tab query parameter (e.g., wallet?tab=withdraw)
             const urlParams = new URLSearchParams(window.location.search);
             const initialTab = urlParams.get('tab');
-            if (initialTab) {
-                showWalletTab(initialTab);
-            }
-            fetchWalletData();
-            checkPendingDeposits(); 
-            connectWebSocket(); // NEW: Start WebSocket connection
+
+            if (!tg.initData) tg.initData = "query_id=TEST_DEV";
+            fetchWalletData(initialTab);
         };
-        
-        function connectWebSocket() {
-            if (ws && ws.readyState === WebSocket.OPEN) return;
 
-            ws = new WebSocket(WS_URL);
-
-            ws.onopen = () => {
-                console.log("WebSocket connected successfully.");
-            };
-
-            ws.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                console.log("WS Message Received:", data);
-                
-                if (data.type === 'deposit_status') {
-                    // Display status to user
-                    showStatusModal(data.status, data.amount, data.message);
-                    
-                    // Clear pending status and refresh data
-                    checkPendingDeposits();
-                    fetchWalletData(); 
-                }
-            };
-
-            ws.onclose = () => {
-                console.log("WebSocket connection closed. Reconnecting in 5s...");
-                setTimeout(connectWebSocket, 5000); // Reconnect logic
-            };
-
-            ws.onerror = (error) => {
-                console.error("WebSocket Error:", error);
-            };
-        }
-
-        function showStatusModal(status, amount, message) {
-            const modal = document.getElementById('status-modal');
-            const icon = document.getElementById('status-icon');
-            const title = document.getElementById('status-title');
-            const msg = document.getElementById('status-message');
-            const btn = modal.querySelector('button');
-            
-            const isSuccess = status === 'approved' || status === 'success';
-
-            icon.className = isSuccess ? 'fas fa-check-circle' : 'fas fa-times-circle';
-            icon.style.color = isSuccess ? 'var(--accent-green)' : 'var(--accent-red)';
-            btn.style.background = isSuccess ? 'var(--accent-green)' : 'var(--accent-red)';
-            btn.style.color = isSuccess ? '#000' : '#fff';
-            
-            title.innerText = isSuccess ? 'تایید موفق!' : 'تایید نشد.';
-            msg.innerHTML = message;
-            
-            modal.classList.add('active');
-            tg.HapticFeedback.notificationOccurred(isSuccess ? 'success' : 'error');
-        }
-        
-        function closeStatusModal() {
-            document.getElementById('status-modal').classList.remove('active');
-        }
-
-        // --- Core Functions (fetch/checkPendingDeposits) ---
-        
-        async function fetchWalletData() {
-            // ... (Logic remains the same) ...
+        async function fetchWalletData(initialTab) {
             try {
                 const res = await fetch(`${API_BASE_URL}/webapp/get_wallet_data`, {
                     method: 'POST', 
@@ -586,436 +598,78 @@
                 });
                 const data = await res.json();
                 if (data.status === 'success') {
-                    const tomanBalance = parseInt(data.balances.toman.replace(/,/g, ''));
-                    const uusdBalance = parseFloat(data.balances.uusd);
-                    userBalances.toman = tomanBalance;
-                    userBalances.uusd = uusdBalance;
-
-                    document.getElementById('balance-toman').innerText = tomanBalance.toLocaleString();
-                    document.getElementById('balance-uusd').innerText = `${uusdBalance} $`;
-
+                    const toman = parseInt(data.balances.toman.replace(/,/g, '') || 0);
+                    currentTomanBalance = toman;
+                    document.getElementById('balance-toman').innerText = toman.toLocaleString();
+                    document.getElementById('balance-uusd').innerText = `${data.balances.uusd} $`;
+                    
                     transactionsData = data.transactions;
                     renderTx(data.transactions);
-                    
-                    checkPendingDeposits(); 
-                    
                     hideLoader(); 
+                    
+                    if (initialTab === 'withdraw') {
+                        switchContent('withdraw');
+                    } else {
+                        switchContent('history');
+                    }
+                    
                 }
             } catch (e) { console.error(e); hideLoader(); }
         }
-        
-        async function checkPendingDeposits() {
-            try {
-                const res = await fetch(`${API_BASE_URL}/webapp/check_pending_deposits`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ initData: tg.initData })
-                });
-                const result = await res.json();
 
-                const pendingStatusDiv = document.getElementById('deposit-pending-status');
-                const depositBtn = document.getElementById('btn-open-deposit-modal');
-                const introText = document.getElementById('deposit-intro-text');
+        // --- Transaction Rendering ---
 
-                if (result.status === 'pending') {
-                    const amountDisplay = result.unique_amount ? result.unique_amount.toLocaleString() : result.amount.toLocaleString();
-                    
-                    if (result.type === 'auto') {
-                         document.getElementById('pending-status-text').innerHTML = `درخواست واریز **اتوماتیک** شما با مبلغ **${amountDisplay} تومان** در انتظار واریز شماست.`;
-                    } else {
-                         document.getElementById('pending-status-text').innerHTML = `درخواست واریز **دستی** شما با مبلغ **${amountDisplay} تومان** در انتظار تایید ادمین است.`;
-                    }
-                    
-                    pendingStatusDiv.style.display = 'block';
-                    depositBtn.style.display = 'none';
-                    introText.style.display = 'none';
-                } else {
-                    pendingStatusDiv.style.display = 'none';
-                    depositBtn.style.display = 'block';
-                    introText.style.display = 'block';
-                }
-            } catch (e) {
-                console.error("Error checking pending deposits:", e);
-            }
-        }
-        
-        // --- Deposit/Withdrawal Logic (Unchanged core logic) ---
-        
-        async function startDepositProcess() {
-            // ... (Unchanged logic) ...
-            if (selectedDepositType === 'manual') return;
-
-            const amountInput = document.getElementById('deposit-amount');
-            const amount = parseInt(amountInput.value);
-            
-            if (!amount || amount < 50000) { 
-                tg.showAlert("حداقل مبلغ واریز ۵۰,۰۰۰ تومان است."); 
-                return; 
-            }
-            
-            const randomSuffix = Math.floor(Math.random() * 999) + 1;
-            const baseAmount = Math.trunc(amount / 1000) * 1000;
-            finalUniqueAmount = baseAmount + randomSuffix;
-
-            const btn = document.getElementById('btn-submit-dep');
-            btn.disabled = true; btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> در حال ثبت...';
-            tg.HapticFeedback.impactOccurred('medium');
-
-            try {
-                const res = await fetch(`${API_BASE_URL}/webapp/submit_deposit_request`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ initData: tg.initData, requested_amount: amount, unique_amount: finalUniqueAmount, type: 'auto' })
-                });
-
-                const result = await res.json();
-                
-                if (res.ok && result.status === 'success') {
-                    document.getElementById('final-unique-amount').innerText = finalUniqueAmount.toLocaleString();
-                    goToDepositStep(2);
-                    tg.HapticFeedback.notificationOccurred('success');
-                } else {
-                    tg.showAlert(`❌ خطا در ثبت درخواست: ${result.message || 'نامشخص'}`);
-                    tg.HapticFeedback.notificationOccurred('error');
-                }
-
-            } catch (e) {
-                tg.showAlert("خطای شبکه در ثبت درخواست.");
-            } finally {
-                btn.disabled = false; btn.innerHTML = '<i class="fas fa-key"></i> ثبت و دریافت مبلغ واریز یکتا';
-            }
-        }
-        
-        async function submitManualDeposit() {
-            // ... (Unchanged logic) ...
-            const amountInput = document.getElementById('manual-deposit-amount');
-            const refInput = document.getElementById('manual-deposit-ref');
-            const fileInput = document.getElementById('manual-deposit-receipt');
-            
-            const amount = parseInt(amountInput.value);
-            const receiptFile = fileInput.files[0];
-
-            if (!amount || amount < 50000) {
-                tg.showAlert("حداقل مبلغ واریز ۵۰,۰۰۰ تومان است.");
-                return;
-            }
-            if (!receiptFile) {
-                tg.showAlert("لطفاً تصویر رسید بانکی را آپلود کنید.");
-                return;
-            }
-
-            const btn = document.getElementById('btn-submit-manual-dep');
-            btn.disabled = true; btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> در حال ارسال...';
-            tg.HapticFeedback.impactOccurred('medium');
-
-            const formData = new FormData();
-            formData.append('initData', tg.initData);
-            formData.append('requested_amount', amount); 
-            formData.append('tracking_code', refInput.value || 'N/A');
-            formData.append('receipt_file', receiptFile);
-            formData.append('deposit_type', 'manual'); 
-
-            try {
-                const res = await fetch(`${API_BASE_URL}/webapp/submit_deposit_request`, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const result = await res.json();
-                
-                if (res.ok && result.status === 'success') {
-                    tg.showAlert("✅ درخواست واریز دستی شما ثبت شد و در حال بررسی است.");
-                    tg.HapticFeedback.notificationOccurred('success');
-                    closeDepositModal();
-                    checkPendingDeposits(); 
-                } else {
-                    tg.showAlert(`❌ خطا در ثبت درخواست: ${result.message || 'نامشخص'}`);
-                    tg.HapticFeedback.notificationOccurred('error');
-                }
-
-            } catch (e) {
-                tg.showAlert("خطای شبکه در ثبت درخواست.");
-            } finally {
-                btn.disabled = false; btn.innerHTML = '<i class="fas fa-upload"></i> ثبت درخواست واریز دستی';
-            }
-        }
-        
-        async function submitWithdrawal() {
-            // ... (Unchanged logic) ...
-            const amountInput = document.getElementById('withdrawal-amount');
-            const destInput = document.getElementById('iban-or-address');
-            const networkInput = document.getElementById('withdrawal-network');
-
-            const amount = parseFloat(amountInput.value);
-            const destination = destInput.value.trim();
-            const type = selectedWithdrawalType;
-
-            // 1. Client-Side Validation
-            if (!amount || amount <= 0) {
-                tg.showAlert("لطفاً مبلغ معتبری وارد کنید.");
-                return;
-            }
-
-            if (type === 'toman') {
-                if (amount < 50000) {
-                    tg.showAlert("حداقل برداشت تومان ۵۰,۰۰۰ تومان است."); return;
-                }
-                if (userBalances.toman < amount) {
-                    tg.showAlert("موجودی تومان شما کافی نیست."); return;
-                }
-                if (!destination.startsWith('IR') || destination.length < 24) {
-                    tg.showAlert("شماره شبا نامعتبر است."); return;
-                }
-            } else { // usdt
-                if (amount < 10) {
-                    tg.showAlert("حداقل برداشت UUSD، ۱۰ واحد است."); return;
-                }
-                if (userBalances.uusd < amount) {
-                    tg.showAlert("موجودی UUSD شما کافی نیست."); return;
-                }
-                if (destination.length < 20) {
-                    tg.showAlert("آدرس کیف پول نامعتبر است."); return;
-                }
-            }
-
-            const btn = document.getElementById('btn-submit-withdrawal');
-            btn.disabled = true; 
-            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> در حال ارسال...';
-            tg.HapticFeedback.impactOccurred('medium');
-
-            try {
-                const payload = {
-                    initData: tg.initData,
-                    amount: amount,
-                    withdrawal_type: type,
-                    iban_or_address: destination,
-                    network: type === 'usdt' ? networkInput.value : null
-                };
-
-                const res = await fetch(`${API_BASE_URL}/webapp/submit_withdrawal_request`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                const result = await res.json();
-                
-                if (res.ok && result.status === 'success') {
-                    tg.showAlert("✅ درخواست برداشت شما ثبت شد. پس از تایید مدیر، واریز انجام می‌شود.");
-                    tg.HapticFeedback.notificationOccurred('success');
-                    closeWithdrawalModal();
-                    fetchWalletData(); 
-                } else {
-                    tg.showAlert(`❌ خطا در ثبت درخواست: ${result.message || 'نامشخص'}`);
-                    tg.HapticFeedback.notificationOccurred('error');
-                }
-
-            } catch (e) {
-                tg.showAlert("خطای شبکه در ثبت درخواست.");
-            } finally {
-                btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> ثبت درخواست برداشت';
-            }
-        }
-        
-        // --- UI/Modal Management (Unchanged) ---
-
-        function openDepositModal() { 
-            if (document.getElementById('deposit-pending-status').style.display !== 'none') {
-                 tg.showAlert("شما در حال حاضر یک درخواست واریز معلق دارید. لطفاً آن را نهایی کنید.");
-                 return;
-            }
-            selectDepositType('auto');
-            goToDepositStep(0);
-            document.getElementById('deposit-modal').classList.add('active'); 
-            document.getElementById('exchange-card-number').innerText = formatCardNumber(EXCHANGE_CARD_NUMBER);
-        }
-
-        function closeDepositModal() { 
-            document.getElementById('deposit-modal').classList.remove('active'); 
-        }
-
-        function openWithdrawalModal() {
-            selectWithdrawalType('toman'); 
-            document.getElementById('withdrawal-modal').classList.add('active');
-        }
-
-        function closeWithdrawalModal() {
-            document.getElementById('withdrawal-modal').classList.remove('active');
-        }
-
-        function selectWithdrawalType(type) {
-            selectedWithdrawalType = type;
-            document.getElementById('w-type-toman').classList.remove('active');
-            document.getElementById('w-type-usdt').classList.remove('active');
-            document.getElementById(`w-type-${type}`).classList.add('active');
-
-            const amountLabel = document.getElementById('w-amount-label');
-            const destLabel = document.getElementById('w-dest-label');
-            const minMax = document.getElementById('w-min-max');
-            const networkField = document.getElementById('withdrawal-network-field');
-            const destInput = document.getElementById('iban-or-address');
-
-            if (type === 'toman') {
-                amountLabel.innerText = 'مبلغ برداشت (تومان)';
-                destLabel.innerText = 'شماره شبا مقصد';
-                minMax.innerText = `حداقل برداشت: ۵۰,۰۰۰ تومان. موجودی شما: ${userBalances.toman.toLocaleString()} تومان`;
-                networkField.style.display = 'none';
-                destInput.placeholder = 'IRxxxxxxxxxxxxxxxxxxxxxxx';
-                destInput.dir = 'ltr';
-                destInput.style.textAlign = 'left';
-            } else { // usdt
-                amountLabel.innerText = 'مبلغ برداشت (UUSD)';
-                destLabel.innerText = 'آدرس کیف پول مقصد';
-                minMax.innerText = `حداقل برداشت: ۱۰ UUSD. موجودی شما: ${userBalances.uusd} $`;
-                networkField.style.display = 'block';
-                destInput.placeholder = '0x... یا T...';
-                destInput.dir = 'ltr';
-                destInput.style.textAlign = 'left';
-            }
-        }
-
-        function goToDepositStep(step) {
-            document.getElementById('deposit-step-0').style.display = 'none';
-            document.getElementById('deposit-step-1').style.display = 'none';
-            document.getElementById('deposit-step-2').style.display = 'none';
-            document.getElementById('deposit-step-manual').style.display = 'none';
-            
-            if (step === 0) {
-                document.getElementById('deposit-step-0').style.display = 'block';
-            } else if (step === 1) {
-                if (selectedDepositType === 'auto') {
-                    document.getElementById('step-1-title').innerText = 'درخواست واریز اتوماتیک ⚡️';
-                    document.getElementById('btn-submit-dep').style.background = 'var(--accent-green)';
-                    document.getElementById('btn-submit-dep').innerText = 'ثبت و دریافت مبلغ واریز یکتا';
-                    document.getElementById('deposit-step-1').style.display = 'block';
-                } else if (selectedDepositType === 'manual') {
-                    document.getElementById('deposit-step-manual').style.display = 'block';
-                }
-            } else if (step === 2) {
-                document.getElementById('deposit-step-2').style.display = 'block';
-            }
-        }
-
-        // --- Tab Management (Unchanged) ---
-        function showWalletTab(tab) {
-            document.getElementById('tab-deposit').classList.remove('active');
-            document.getElementById('tab-withdraw').classList.remove('active');
-            document.getElementById('deposit-content').style.display = 'none';
-            document.getElementById('withdraw-content').style.display = 'none';
-
-            if (tab === 'deposit') {
-                document.getElementById('tab-deposit').classList.add('active');
-                document.getElementById('deposit-content').style.display = 'block';
-            } else if (tab === 'withdraw') {
-                document.getElementById('tab-withdraw').classList.add('active');
-                document.getElementById('withdraw-content').style.display = 'block';
-                selectWithdrawalType(selectedWithdrawalType);
-            }
-        }
-        
-        // --- Utility Functions (Unchanged) ---
-
-        function hideLoader() {
-            const loader = document.getElementById('loader');
-            const app = document.getElementById('app-container');
-            if(loader) {
-                loader.style.opacity = '0';
-                loader.style.pointerEvents = 'none';
-                document.body.classList.remove('loading-active');
-                setTimeout(() => {
-                    loader.style.display = 'none';
-                    app.classList.remove('hidden-content');
-                    app.classList.add('fade-in-active');
-                }, 500);
-            }
-        }
-        
-        function formatCardNumber(cardNum) {
-            return cardNum.match(/.{1,4}/g).join('-');
-        }
-
-        // --- Transaction Rendering (with Pagination Placeholder) ---
         function renderTx(txs) {
             const list = document.getElementById('tx-list');
-            const itemsPerPage = 5; 
-            let currentPage = 1;
-            const totalPages = Math.ceil(txs.length / itemsPerPage);
-
-            function displayPage(page) {
-                const start = (page - 1) * itemsPerPage;
-                const end = start + itemsPerPage;
-                list.innerHTML = ''; 
-                
-                const pageTxs = txs.slice(start, end);
-
-                pageTxs.forEach((tx, index) => {
-                    const div = document.createElement('div');
-                    div.className = 'tx-card ripple-btn';
-                    div.onclick = () => { showDetail(start + index); tg.HapticFeedback.selectionChanged(); };
-                    
-                    let colorClass = '#fff';
-                    let icon = '';
-                    
-                    if(tx.color === 'success') { 
-                        colorClass = 'var(--accent-green)'; 
-                        icon = '<i class="fas fa-arrow-down" style="color:var(--accent-green)"></i>'; 
-                    }
-                    else if(tx.color === 'danger') { 
-                        colorClass = 'var(--accent-red)'; 
-                        icon = '<i class="fas fa-arrow-up" style="color:var(--accent-red)"></i>'; 
-                    }
-                    else { 
-                        colorClass = 'var(--primary-gold)'; 
-                        icon = '<i class="fas fa-exchange-alt" style="color:var(--primary-gold)"></i>'; 
-                    }
-
-                    div.innerHTML = `
-                        <div class="tx-left">
-                            <div class="tx-icon-box">${icon}</div>
-                            <div class="tx-details">
-                                <span class="tx-title">${tx.title}</span>
-                                <span class="tx-date">${tx.date}</span>
-                            </div>
-                        </div>
-                        <div class="tx-amount" style="color:${colorClass}">${tx.display_amount}</div>
-                    `;
-                    list.appendChild(div);
-                });
-                renderPaginationControls(page);
+            list.innerHTML = '';
+            if (txs.length === 0) { 
+                list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:0.8rem">هنوز تراکنشی ثبت نشده است</div>'; 
+                return; 
             }
-            
-            function renderPaginationControls(page) {
-                const controls = document.getElementById('pagination-controls');
-                controls.innerHTML = '';
+
+            txs.forEach((tx, index) => {
+                const div = document.createElement('div');
+                div.className = 'tx-card ripple-btn';
+                div.onclick = () => { showDetail(index); tg.HapticFeedback.selectionChanged(); };
                 
-                if (totalPages <= 1) {
-                    controls.style.display = 'none';
-                    return;
+                let colorClass = '#fff';
+                let iconHtml = '';
+                let iconBg = 'rgba(255,255,255,0.05)';
+                
+                if(tx.color === 'success') { 
+                    colorClass = 'var(--accent-green)'; 
+                    iconHtml = '<i class="fas fa-plus" style="color:var(--accent-green)"></i>'; 
+                    iconBg = 'rgba(14, 203, 129, 0.1)';
                 }
-                controls.style.display = 'flex';
+                else if(tx.color === 'danger') { 
+                    colorClass = 'var(--accent-red)'; 
+                    iconHtml = '<i class="fas fa-minus" style="color:var(--accent-red)"></i>'; 
+                    iconBg = 'rgba(246, 70, 93, 0.1)';
+                }
+                else { 
+                    colorClass = 'var(--primary-gold)'; 
+                    iconHtml = '<i class="fas fa-clock" style="color:var(--primary-gold)"></i>'; 
+                    iconBg = 'rgba(255, 204, 0, 0.1)';
+                }
+                // اگر نوع تراکنش یوتوپیا بود، آیکون یوتوپیا (بر اساس نوع)
+                if (tx.type.includes('UTOPIA')) {
+                    iconHtml = '<img src="webapp/images/utopia_logo.png" style="width:24px;height:24px;border-radius:4px;">';
+                    iconBg = 'rgba(255, 204, 0, 0.15)';
+                }
 
-                const prevBtn = document.createElement('button');
-                prevBtn.className = 'page-btn';
-                prevBtn.innerText = 'قبلی';
-                prevBtn.disabled = page === 1;
-                prevBtn.onclick = () => { currentPage--; displayPage(currentPage); };
-                
-                const nextBtn = document.createElement('button');
-                nextBtn.className = 'page-btn';
-                nextBtn.innerText = 'بعدی';
-                nextBtn.disabled = page === totalPages;
-                nextBtn.onclick = () => { currentPage++; displayPage(currentPage); };
-                
-                const pageNum = document.createElement('span');
-                pageNum.className = 'page-number';
-                pageNum.innerText = `صفحه ${page} از ${totalPages}`;
 
-                controls.appendChild(prevBtn);
-                controls.appendChild(pageNum);
-                controls.appendChild(nextBtn);
-            }
-
-            displayPage(currentPage);
+                div.innerHTML = `
+                    <div class="tx-left">
+                        <div class="tx-icon-box" style="background:${iconBg}; border-color:${colorClass.replace('var(--', 'rgba(').replace(')', ',0.3)')};">${iconHtml}</div>
+                        <div class="tx-details">
+                            <span class="tx-title">${tx.title}</span>
+                            <span class="tx-date">${tx.date}</span>
+                        </div>
+                    </div>
+                    <div class="tx-amount" style="color:${colorClass}">${tx.display_amount}</div>
+                `;
+                list.appendChild(div);
+            });
         }
 
         function showDetail(index) {
@@ -1039,17 +693,17 @@
                 </div>
                 <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
                     <span style="color:var(--text-muted); font-size:0.9rem">وضعیت</span>
-                    <span style="color:${statusColor}; font-weight:bold">${tx.status}</span>
+                    <span style="color:${statusColor}; font-weight:bold">${tx.status.toUpperCase().replace('_', ' ')}</span>
                 </div>
             `;
 
             if (tx.type === 'UTOPIA_BUY' && tx.detail) {
                 html += `
-                    <div class="voucher-display">
+                    <div class="voucher-display" style="background:rgba(255,255,255,0.05); border:1px dashed var(--primary-gold); padding:15px; border-radius:12px; margin-top:20px;">
                         <div style="color:var(--text-muted); font-size:0.8rem; margin-bottom:8px;">کد ووچر خریداری شده:</div>
-                        <div class="v-code">${tx.detail}</div>
+                        <div class="v-code" style="font-family:'Roboto Mono'; font-size:1.1rem; color:var(--primary-gold); letter-spacing:1px; word-break:break-all; font-weight:bold;">${tx.detail}</div>
                         <div class="ripple-btn" style="color:var(--accent-blue); font-size:0.85rem; margin-top:12px; cursor:pointer; padding:5px;" 
-                             onclick="navigator.clipboard.writeText('${tx.detail}'); tg.showAlert('کد کپی شد!'); tg.HapticFeedback.notificationOccurred('success');">
+                            onclick="copyToClipboard('${tx.detail}')">
                             <i class="fas fa-copy"></i> کپی کردن کد
                         </div>
                     </div>

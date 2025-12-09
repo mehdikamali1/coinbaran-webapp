@@ -1,12 +1,14 @@
-﻿/* webapp/script.js (v113.0 - FINAL BALANCE DISPLAY FIX & Luxury UI Complete) */
+﻿/* webapp/script.js (v114.0 - FULL WebSocket Integration & XP Luxury) */
 (function () {
     'use strict';
 
     // --- GLOBAL VARIABLES & CONFIG ---
     const tg = window.Telegram.WebApp;
+    // تغییر آدرس اتصال برای WebSocket (اگر از http استفاده شود، ws و اگر از https استفاده شود، wss)
     const API_BASE_URL = window.location.origin;
+    const WS_BASE_URL = API_BASE_URL.replace('http', 'ws');
     
-    let MIN_SPLASH_TIME = 1500; // کاهش زمان لودینگ به 1.5 ثانیه
+    let MIN_SPLASH_TIME = 1500; 
 
     const loader = document.getElementById('loader');
     const appContainer = document.getElementById('app-container');
@@ -17,7 +19,11 @@
     let chatPollInterval = null;
     let lastMessageCount = 0;
     let isSending = false;
-    let currentTomanBalance = 0; // برای استفاده در منطق شرط‌بندی/سواپ
+    let currentUUSDBalance = 0; // استفاده از UUSD به جای تومان برای بازی
+
+    // --- WebSocket State ---
+    let gameWebSocket = null;
+    let wsConnectAttempt = 0;
 
     // المنت‌های اصلی داشبورد
     const els = {
@@ -28,11 +34,20 @@
         avatar: document.querySelector('.avatar-img'),
         supportNotif: document.getElementById('support-notif'),
         ticker: document.getElementById('price-ticker'),
+        
+        // XP Luxury Elements
         xpFill: document.getElementById('xp-progress-fill'),
         levelBadge: document.getElementById('level-badge'),
         nextLevelText: document.getElementById('next-level-text'),
+        levelRingFill: document.getElementById('level-ring-fill'), // NEW
+        currentXPText: document.getElementById('current-xp-text'), // NEW
+
         premiumCard: document.querySelector('.premium-card'),
-        mainContent: document.querySelector('.main-content')
+        mainContent: document.querySelector('.main-content'),
+        
+        // Game Price Display (NEW - برای نمایش قیمت لحظه‌ای در داشبورد)
+        gamePriceDisplay: document.getElementById('game-price-display'), // فرض می‌کنیم در داشبورد نیز المان قیمت نمایش داده شود
+        gameTimer: document.getElementById('game-timer'), 
     };
 
     // المنت‌های صفحه چت
@@ -54,6 +69,11 @@
         'NOT': { icon: '⭐', color: '#FFCC00' },
         'DEFAULT': { icon: '', color: '#fff' }
     };
+    
+    // --- XP LEVEL CONFIG (از config.py برداشته شده برای منطق کلاینت) ---
+    const LEVEL_THRESHOLDS = [0, 500, 1500, 3500, 7000, 15000, 30000];
+    const LEVEL_NAMES = ["GUEST", "BRONZE", "SILVER", "GOLD", "PLATINUM", "DIAMOND", "LEGEND"];
+
 
     // ==========================================
     // 1. GLOBAL FIX: BFCache Handler 
@@ -63,30 +83,26 @@
             console.log("Restored from cache - Forcing loader hide");
             forceHideLoader();
             document.body.style.overflow = 'auto';
+            if (isDashboard) {
+                // ری‌کانکت کردن WebSocket در صورت بازگشت از کش
+                initWebSocket(); 
+            }
         }
     });
     
     // --- UTILITIES ---
 
-    /**
-     * فرمت دهی صحیح اعداد برای نمایش
-     * تضمین می‌کند که کاماها حذف شده و اعداد به درستی به فرمت محلی تبدیل شوند.
-     * @param {*} num - مقدار ورودی (می‌تواند رشته‌ای با کاما یا عدد باشد)
-     * @param {number} decimals - تعداد ارقام اعشار
-     */
     function formatNumber(num, decimals) {
         if (num === null || num === undefined) return '0';
         
-        // 1. حذف کاماها و تبدیل به رشته
         let numStr = String(num);
         numStr = numStr.replace(/,/g, ''); 
         
-        // 2. تبدیل به عدد ممیز شناور
         const numFloat = parseFloat(numStr);
 
         if (isNaN(numFloat)) return '0';
         
-        // 3. فرمت دهی با جداکننده هزارگان
+        // استفاده از فرمت‌دهی محلی برای کاما
         const formatted = numFloat.toLocaleString('en-US', { 
             minimumFractionDigits: decimals, 
             maximumFractionDigits: decimals 
@@ -112,26 +128,28 @@
                     loadFromCache();
                     forceHideLoader(); 
                     initDashboardEffects();
-                    // آپدیت دیتا در پس‌زمینه
+                    // در داشبورد، ابتدا داده‌های اولیه را می‌گیریم
                     fetchDashboardData().then(data => { if(data) updateDashboardUI(data); });
                     fetchMarketRates().then(handleMarketData);
                     checkUnreadSupportMessages();
+                    // سپس WebSocket را برای داده‌های Real-time بازی وصل می‌کنیم
+                    initWebSocket(); 
                 } else {
                     sessionStorage.setItem('splash_shown', 'true');
                     const splashTimer = new Promise(resolve => setTimeout(resolve, MIN_SPLASH_TIME));
                     const dataFetch = fetchDashboardData();
                     const ratesFetch = fetchMarketRates(); 
 
-                    // مطمئن می‌شویم که هم لودینگ کامل شود و هم APIها پاسخ دهند
                     const [dataResult, ratesResult] = await Promise.allSettled([dataFetch, ratesFetch, splashTimer]); 
                     
                     updateDashboardUI(dataResult.value);
                     handleMarketData(ratesResult.value);
                     
-                    // CRITICAL FIX: لودر باید با انیمیشن پنهان شود تا UI نمایش داده شود
                     hideLoaderWithAnimation();
                     setTimeout(initDashboardEffects, 800); 
-
+                    
+                    // اتصال WebSocket پس از نمایش اولیه
+                    initWebSocket();
                 }
             } else if (isSupportPage) {
                 forceHideLoader(); 
@@ -144,9 +162,8 @@
                 initHapticFeedback();
             }
 
-        } catch (error) {
+        } catch (error) { 
             console.error("Critical Init Error:", error);
-            // FAIL-SAFE: اگر خطایی در Init رخ داد، محتوا را نمایش بده تا کاربر گیر نکند.
             forceHideLoader(); 
         }
     };
@@ -160,7 +177,7 @@
         } else {
             tg.BackButton.show();
             tg.BackButton.onClick(function() {
-                window.location.href = 'dashboard.html';
+                window.history.back(); // بازگشت به صفحه قبل (داشبورد)
             });
         }
     }
@@ -174,7 +191,7 @@
         if(ratesResult && ratesResult.status === 'success') {
             updateTickerUI(ratesResult.rates);
             const usdt = ratesResult.rates.find(r => r.symbol === 'USDT');
-            if(usdt) renderSmartChart(usdt.change);
+            if(usdt) renderSmartChart(parseFloat(usdt.change));
         } else {
             renderSmartChart(0);
         }
@@ -182,6 +199,7 @@
 
     // ==========================================
     // 3. Loader Functions (Critical Fix applied here)
+    // (توابع لودر بدون تغییر باقی می‌مانند)
     // ==========================================
     function forceHideLoader() {
         document.body.classList.remove('loading-active'); 
@@ -193,6 +211,7 @@
             appContainer.classList.add('fade-in-active'); 
             appContainer.style.opacity = '1';
             appContainer.style.transform = 'translateY(0)';
+            document.body.style.overflow = 'auto'; // مهم
         }
     }
 
@@ -212,9 +231,123 @@
     }
 
     // ==========================================
-    // 4. Data Fetching
+    // 4. WebSocket & Real-time Game Logic (NEW)
+    // ==========================================
+
+    function initWebSocket() {
+        if (gameWebSocket && gameWebSocket.readyState === WebSocket.OPEN) return;
+        
+        const url = `${WS_BASE_URL}/ws/game?init_data=${encodeURIComponent(tg.initData)}`;
+        gameWebSocket = new WebSocket(url);
+
+        gameWebSocket.onopen = () => {
+            console.log("WebSocket connected.");
+            wsConnectAttempt = 0; // ریست کردن تلاش‌ها
+        };
+
+        gameWebSocket.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                handleWebSocketMessage(data);
+            } catch (e) {
+                console.error("Failed to parse WS message:", e);
+            }
+        };
+
+        gameWebSocket.onclose = () => {
+            console.log("WebSocket disconnected. Retrying...");
+            gameWebSocket = null;
+            if (wsConnectAttempt < 5) {
+                wsConnectAttempt++;
+                setTimeout(initWebSocket, 2000 * wsConnectAttempt); // تلاش مجدد با تأخیر تصاعدی
+            } else {
+                console.error("Max WebSocket retries reached.");
+            }
+        };
+
+        gameWebSocket.onerror = (error) => {
+            console.error("WebSocket error:", error);
+            gameWebSocket.close(); 
+        };
+    }
+    
+    function handleWebSocketMessage(data) {
+        if (!isDashboard) return;
+
+        if (data.type === 'GAME_UPDATE') {
+            // آپدیت عمومی بازی (قیمت و زمان)
+            updateGameUI(data);
+
+            // آپدیت بالانس و نتیجه شخصی (فقط در صورتی که در پیام باشد)
+            if (data.user_balance !== undefined) {
+                 // به‌روزرسانی بالانس UUSD و XP در زمان واقعی
+                const balanceData = {
+                    toman_balance: currentTomanBalance, // تومان از API اصلی می‌آید
+                    uusd_balance: data.user_balance,
+                    xp_balance: data.user_xp || els.xpBalance.innerText.replace(/\D/g, '') // اگر XP در پیام نبود، از مقدار فعلی استفاده کن
+                };
+                updateDashboardUI({ status: 'success', ...balanceData }, true);
+            }
+
+            // نمایش نتیجه شرط‌بندی قبلی
+            if (data.last_result && data.last_result.round_id) {
+                showGameResult(data.last_result);
+                // پس از نمایش، XP و بالانس به‌روزرسانی می‌شود (توسط فیدبک Real-time)
+            }
+        }
+    }
+
+    function updateGameUI(data) {
+        // --- Game Price/Timer (در صورت وجود المنت‌های مربوط به بازی در داشبورد) ---
+        if (els.gamePriceDisplay) {
+            els.gamePriceDisplay.innerText = formatNumber(data.current_price, 2) + " $";
+        }
+        
+        // --- Game Timer ---
+        if (els.gameTimer) {
+            els.gameTimer.innerText = data.round.time_left;
+        }
+
+        // --- History / Chart Update ---
+        if (data.history && data.history.length > 0) {
+            // رندر چارت کوچک با استفاده از داده‌های تاریخچه
+            // (ما از نرخ‌های Wallex استفاده می‌کردیم، اما برای لاکچری‌سازی بهتر است از تاریخچه بازی استفاده کنیم)
+            const lastPrice = data.history[data.history.length - 1].end_price;
+            const secondLastPrice = data.history.length > 1 ? data.history[data.history.length - 2].end_price : lastPrice;
+            const change = ((lastPrice - secondLastPrice) / secondLastPrice) * 100;
+            renderSmartChart(change);
+        }
+    }
+
+    function showGameResult(result) {
+        let title, message, color;
+
+        if (result.status === 'WIN') {
+            title = '🎉 شرط شما برنده شد!';
+            message = `شما ${formatNumber(result.payout, 2)}$ بردید و ${result.xp_reward} XP جایزه گرفتید.`;
+            color = tg.themeParams.buttonColor || '#0ECB81'; // سبز
+            try { tg.HapticFeedback.notificationOccurred('success'); } catch(e){}
+        } else {
+            title = '❌ شرط شما باخت';
+            message = `مبلغ ${formatNumber(result.bet_amount, 2)}$ از دست رفت.`;
+            color = tg.themeParams.secondaryBackgroundColor || '#F6465D'; // قرمز
+            try { tg.HapticFeedback.notificationOccurred('error'); } catch(e){}
+        }
+        
+        tg.showPopup({
+            title: title,
+            message: message,
+            buttons: [{id: 'ok', type: 'ok', text: 'باشه'}]
+        }, (btnId) => {
+            // می‌توانیم اکشن‌های بعد از بستن پاپ‌آپ را اینجا هندل کنیم
+        });
+    }
+
+    // ==========================================
+    // 5. Data Fetching (Reduced usage)
     // ==========================================
     async function fetchDashboardData() {
+        // این تابع فقط برای بارگذاری اولیه استفاده می‌شود (Toman Balance و XP/UUSD اولیه)
         try {
             const response = await fetch(`${API_BASE_URL}/webapp/get_user_data`, {
                 method: 'POST',
@@ -232,6 +365,7 @@
     }
 
     async function fetchMarketRates() {
+        // این تابع برای تیکر بالا و چارت استفاده می‌شود
         try {
             const response = await fetch(`${API_BASE_URL}/webapp/market/rates`, {
                 headers: { 'ngrok-skip-browser-warning': 'true' }
@@ -242,7 +376,7 @@
     }
 
     // ==========================================
-    // 5. UI Updaters (Refined)
+    // 6. UI Updaters (Refined)
     // ==========================================
     function updateDashboardUI(data, saveCache = true) {
         if (!data || data.status === 'error') {
@@ -257,22 +391,24 @@
         const uusdStr = data.uusd_balance || 0;
         const xpStr = data.xp_balance || 0;
 
-        currentTomanBalance = parseFloat(String(tomanStr).replace(/,/g, '') || 0);
+        currentUUSDBalance = parseFloat(String(uusdStr).replace(/,/g, '') || 0);
+        
+        // نمایش وضعیت KYC
+        if (document.getElementById('kyc-status-display')) {
+             document.getElementById('kyc-status-display').innerText = `KYC LVL ${data.kyc_level || 1} (${data.kyc_status_code || 'NONE'})`;
+        }
 
         if (els.welcomeName) els.welcomeName.innerText = data.first_name || "کاربر گرامی";
         
         if (els.tomanBalance) {
-            // موجودی تومان را بدون اعشار و با کاما نمایش می‌دهیم
             els.tomanBalance.innerText = formatNumber(tomanStr, 0); 
         }
 
         if (els.uusdBalance) {
-            // موجودی دلار را با ۲ رقم اعشار نمایش می‌دهیم
             els.uusdBalance.innerHTML = `${formatNumber(uusdStr, 2)} <small>$</small>`;
         }
         
         if (els.xpBalance) {
-            // موجودی XP را بدون اعشار نمایش می‌دهیم
             els.xpBalance.innerHTML = `${formatNumber(xpStr, 0)} <small>XP</small>`;
         }
 
@@ -285,16 +421,14 @@
 
     function updateLevelProgress(xp) {
         if (!els.xpFill || !els.levelBadge) return;
-        const levels = [0, 500, 1500, 3500, 7000, 15000, 30000]; 
-        const levelNames = ["GUEST", "BRONZE", "SILVER", "GOLD", "PLATINUM", "DIAMOND", "LEGEND"];
 
         let currentLevelIndex = 0; 
-        for (let i = 0; i < levels.length; i++) {
-            if (xp >= levels[i]) { currentLevelIndex = i; } else { break; }
+        for (let i = 0; i < LEVEL_THRESHOLDS.length; i++) {
+            if (xp >= LEVEL_THRESHOLDS[i]) { currentLevelIndex = i; } else { break; }
         }
 
-        const currentThreshold = levels[currentLevelIndex];
-        const nextThreshold = levels[currentLevelIndex + 1];
+        const currentThreshold = LEVEL_THRESHOLDS[currentLevelIndex];
+        const nextThreshold = LEVEL_THRESHOLDS[currentLevelIndex + 1];
         
         let percentage = 0;
         if (nextThreshold) {
@@ -305,18 +439,27 @@
 
         percentage = Math.min(100, Math.max(0, percentage));
 
+        // --- XP Bar and Text ---
         els.xpFill.style.width = `${percentage}%`;
         els.levelBadge.innerText = `VIP ${currentLevelIndex + 1}`; 
+        if (els.currentXPText) els.currentXPText.innerText = `${formatNumber(xp, 0)} XP`; // NEW
+
+        // --- XP Ring (Luxury) ---
+        if (els.levelRingFill) {
+            // از percentage برای fill-arc استفاده می‌کنیم
+            els.levelRingFill.style.background = `conic-gradient(var(--xp-color) ${percentage}%, #555 ${percentage}%)`;
+        }
         
         if (els.nextLevelText) {
             if (nextThreshold) {
-                 els.nextLevelText.innerText = `NEXT: ${levelNames[currentLevelIndex + 1]} (${Math.ceil(nextThreshold - xp).toLocaleString()} XP)`;
+                 els.nextLevelText.innerText = `NEXT: ${LEVEL_NAMES[currentLevelIndex + 1]} (${Math.ceil(nextThreshold - xp).toLocaleString()} XP)`;
             } else {
                 els.nextLevelText.innerText = "MAX LEVEL";
             }
         }
     }
-
+    
+    // (توابع updateTickerUI و renderSmartChart بدون تغییر باقی می‌مانند)
     function updateTickerUI(rates) {
         if (!els.ticker || !rates || rates.length === 0) return;
         
@@ -333,7 +476,6 @@
             html += `<div class="ticker-item">${rate.symbol} ${icon} <span class="${colorClass}">${rate.price} ${arrow} <small>(${rate.change}%)</small></span></div>`;
         });
         els.ticker.innerHTML = html;
-        // ریست انیمیشن
         els.ticker.style.animation = 'none';
         void els.ticker.offsetWidth;
         els.ticker.style.animation = 'ticker 25s linear infinite';
@@ -374,7 +516,8 @@
     }
 
     // ==========================================
-    // 6. Effects & Interactions (Parallax)
+    // 7. Effects & Interactions (Parallax)
+    // (توابع افکت‌ها بدون تغییر باقی می‌مانند)
     // ==========================================
     function init3DCardEffect() {
         const card = els.premiumCard;

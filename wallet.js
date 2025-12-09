@@ -1,4 +1,4 @@
-﻿/* webapp/wallet.js (v1.0 - Wallet Logic Module) */
+﻿/* webapp/wallet.js (v2.0 - UPGRADE: URL Hash Routing Fix) */
 (function () {
     'use strict';
 
@@ -32,6 +32,20 @@
     window.closeDepositModal = function() { 
         document.getElementById('deposit-modal').classList.remove('active'); 
     };
+
+    // UPGRADE: New function to handle withdrawal redirection/modal
+    window.openWithdrawalModal = function() {
+        const withdrawModal = document.getElementById('withdraw-modal'); // Assuming a withdraw modal ID
+        if (withdrawModal) {
+             withdrawModal.classList.add('active');
+             tg.HapticFeedback.impactOccurred('medium');
+        } else {
+             // Fallback: Show a general alert or redirect to a page with the withdraw form
+             tg.showAlert("بخش برداشت وجه در حال بارگذاری است.");
+             // If this function is intended to redirect to a different page containing the withdraw form:
+             // window.location.href = 'withdraw.html'; 
+        }
+    }
     
     window.updateFileLabel = function(input) {
         const label = document.getElementById('file-label');
@@ -52,6 +66,19 @@
         }
     };
 
+    // UPGRADE: Function to check URL hash for internal routing
+    function checkUrlHash() {
+        const hash = window.location.hash.substring(1); // Get hash without '#'
+        if (hash === 'withdraw') {
+            // Check if the page was loaded with #withdraw
+            window.openWithdrawalModal(); 
+        }
+        // If we want to clean the hash after processing (optional but good UX):
+        if(window.location.hash) {
+             history.replaceState(null, null, ' '); // Clears the hash without reloading the page
+        }
+    }
+
     // --- Data Fetching and Initialization ---
 
     window.onload = function() {
@@ -62,7 +89,11 @@
         tg.setBackgroundColor('#050505');
         
         if (!tg.initData) tg.initData = "query_id=TEST_DEV";
-        fetchWalletData();
+        
+        fetchWalletData().then(() => {
+            // UPGRADE: Check URL hash AFTER data and UI are loaded
+            checkUrlHash();
+        });
     };
 
     window.fetchWalletData = async function() {
@@ -85,8 +116,8 @@
                 renderTx(data.transactions);
                 hideLoader(); 
             } else {
-                 console.error("Wallet Data Fetch Error:", data.message);
-                 hideLoader();
+                console.error("Wallet Data Fetch Error:", data.message);
+                hideLoader();
             }
         } catch (e) { 
             console.error("Network Error fetching wallet data:", e); 

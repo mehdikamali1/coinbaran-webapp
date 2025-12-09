@@ -10,7 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
-        <link rel="stylesheet" href="/webapp/game-style.css?v=71.1">
+        <link rel="stylesheet" href="webapp/game-style.css?v=71.2">
     
     <style>
         body { font-family: 'Vazirmatn', sans-serif !important; }
@@ -19,16 +19,14 @@
         .btn-rate { font-family: 'Roboto Mono'; font-size: 0.8rem; opacity: 0.9; }
 
         /* ------------------------------------------------ */
-        /* ✅ FIX: تضمین قابلیت کلیک دکمه مشاهده همه (History) */
+        /* ✅ FIX: تضمین قابلیت کلیک دکمه مشاهده همه (حفظ شده) */
         /* ------------------------------------------------ */
         
-        /* اولویت دهی به هدر که دکمه در آن قرار دارد */
         .history-header {
             position: relative;
             z-index: 10;
         }
         
-        /* استایل نهایی دکمه */
         #open-history-btn {
             pointer-events: auto !important; 
             cursor: pointer;
@@ -105,6 +103,7 @@
                     </div>
                 </div>
                 <h1 id="btc-price" class="main-price">00,000.00</h1>
+                <p style="color: red; font-size: 0.7rem;">⚠️ اگر صفحه بهم ریخته است، مشکل از بارگذاری فایل game-style.css است.</p>
             </div>
             
             <div class="timer-container">
@@ -124,6 +123,7 @@
                         <span class="timer-label">ثانیه</span>
                     </div>
                 </div>
+                
             </div>
         </div>
 
@@ -246,6 +246,7 @@
                     <label style="color:#888; font-size:0.8rem;">مبلغ به تومان</label>
                     <div class="swap-input-wrapper">
                         <input type="text" id="swap-input-toman" placeholder="مثلاً 100,000" inputmode="numeric">
+                        <span class="currency-tag">تومان</span>
                     </div>
                 </div>
 
@@ -287,6 +288,7 @@
     <div id="toast" class="toast hidden">
         <div class="toast-icon">ℹ️</div>
         <div class="toast-message">پیام سیستم</div>
+        
     </div>
 
     <script src="webapp/game.js?v=79.0"></script>

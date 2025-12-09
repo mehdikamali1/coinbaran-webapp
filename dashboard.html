@@ -9,7 +9,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    <link rel="stylesheet" href="webapp/dashboard-style.css?v=111.0">
+    <link rel="stylesheet" href="webapp/dashboard-style.css?v=117.0">
 </head>
 <body class="loading-active">
 
@@ -98,16 +98,16 @@
                     <svg viewBox="0 0 300 50" class="chart-svg" id="sparkline-svg">
                         <defs>
                             <linearGradient id="gradNeutral" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stop-color="#FFD700" stop-opacity="0.4"/>
-                                <stop offset="100%" stop-color="#FFD700" stop-opacity="0"/>
+                                <stop offset="0%" style="stop-color:#FFD700;stop-opacity:0.4"/>
+                                <stop offset="100%" style="stop-color:#FFD700;stop-opacity:0"/>
                             </linearGradient>
                             <linearGradient id="gradUp" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stop-color="#0ECB81" stop-opacity="0.4"/>
-                                <stop offset="100%" stop-color="#0ECB81" stop-opacity="0"/>
+                                <stop offset="0%" style="stop-color:#0ECB81;stop-opacity:0.4"/>
+                                <stop offset="100%" style="stop-color:#0ECB81;stop-opacity:0"/>
                             </linearGradient>
                             <linearGradient id="gradDown" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stop-color="#F6465D" stop-opacity="0.4"/>
-                                <stop offset="100%" stop-color="#F6465D" stop-opacity="0"/>
+                                <stop offset="0%" style="stop-color:#F6465D;stop-opacity:0.4"/>
+                                <stop offset="100%" style="stop-color:#F6465D;stop-opacity:0"/>
                             </linearGradient>
                         </defs>
                     </svg>
@@ -165,8 +165,8 @@
 
             <div class="services-grid-modern">
                 <div class="service-card ripple-btn" onclick="window.location.href='usdt'">
-                    <div class="service-icon">
-                        <img src="webapp/images/usdt_logo.png" class="utopia-icon-img" alt="USDT">
+                    <div class="service-icon green-glow">
+                        <i class="fas fa-dollar-sign service-icon"></i>
                     </div>
                     <div class="service-meta">
                         <h4>تتر / تومان</h4>

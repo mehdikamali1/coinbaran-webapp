@@ -1,10 +1,10 @@
-﻿/* webapp/game.js (v80.0 - FINAL: Guaranteed History Display & Summary) */
+﻿/* webapp/game.js (v81.0 - DEBUG: History JSON Display) */
 
 const tg = window.Telegram.WebApp;
 const API_BASE_URL = window.location.origin;
 const WS_BASE_URL = API_BASE_URL.replace('http', 'ws');
 
-// تنظیمات سراسری
+// تنظیمات سراسری (بدون تغییر)
 const CONFIG = {
     ROUND_DURATION: 60,
     EST_USDT_RATE: 90000, 
@@ -41,7 +41,7 @@ let entryPriceLine = null;
 let closePriceLine = null;
 let isResultModalActive = false;
 
-// --- سیستم صوتی ---
+// --- سیستم صوتی (بدون تغییر) ---
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 const SoundFX = {
     playTone: (freq, type, duration, vol = 0.1) => {
@@ -79,7 +79,7 @@ window.onload = function() {
 };
 
 // ==========================================
-// 1. WebSocket Setup (Real-time Core)
+// 1. WebSocket Setup (Real-time Core) - (بدون تغییر)
 // ==========================================
 
 function initWebSocket() {
@@ -151,7 +151,7 @@ function handleWebSocketMessage(data) {
 }
 
 // ==========================================
-// 2. Data & UI Management
+// 2. Data & UI Management - (بدون تغییر)
 // ==========================================
 
 function setConnectionStatus(isConnected) {
@@ -228,7 +228,7 @@ function updateGameStatus(data) {
 }
 
 // ==========================================
-// 3. Chart Logic (Upgraded to Candlestick)
+// 3. Chart Logic (Upgraded to Candlestick) - (بدون تغییر)
 // ==========================================
 
 function initChart() {
@@ -326,7 +326,7 @@ function updateChartData(serverPrice, roundId, timeLeft) {
 }
 
 // ==========================================
-// 4. Game Logic & Utilities
+// 4. Game Logic & Utilities - (بدون تغییر)
 // ==========================================
 
 function updateTimerVisuals(timeLeft) {
@@ -447,7 +447,7 @@ window.openLeaderboard = () => {
 window.closeLeaderboard = () => document.getElementById('leaderboard-modal').classList.remove('active');
 
 window.openHistory = () => {
-    fetchAndRenderHistory();
+    fetchAndRenderHistory(); // این تابع را برای عیب‌یابی تغییر دادیم
     document.getElementById('history-modal').classList.add('active');
 };
 window.closeHistory = () => document.getElementById('history-modal').classList.remove('active');
@@ -515,7 +515,7 @@ function showToast(msg) {
 
 
 // ==========================================
-// 5. Leaderboard & History Logic (FINAL FIX)
+// 5. Leaderboard & History Logic (DEBUG)
 // ==========================================
 
 async function fetchLeaderboard() {
@@ -572,86 +572,30 @@ function renderLeaderboard(rankingData, title) {
     leaderboardList.innerHTML += html;
 }
 
-// تابع اصلی برای بارگذاری تاریخچه و محاسبه P&L (FIXED)
+// تابع اصلی برای بارگذاری تاریخچه و محاسبه P&L (DEBUG)
 async function fetchAndRenderHistory() {
     const historyList = document.getElementById('history-list');
-    // نمایش لودر
-    historyList.innerHTML = '<div style="text-align: center; padding: 20px;"><div class="loader-spinner"></div></div>'; 
+    historyList.innerHTML = '<div style="text-align: center; padding: 20px; color: #aaa;">در حال دریافت داده...</div>'; 
 
     try {
         const res = await fetch(`${API_BASE_URL}/webapp/game/round_history`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ initData: tg.initData })
         });
-        const data = await res.json();
-
-        if (data.status === 'success' && data.history) {
-            let totalProfit = 0;
-            let totalBets = data.history.length;
-            let totalWins = 0;
-
-            let contentHtml = ''; 
-
-            if (data.history.length === 0) {
-                 contentHtml = '<p style="text-align: center; color: #aaa; padding: 20px;">هیچ شرطی ثبت نشده است.</p>';
-            } else {
-                // 1. محاسبه خلاصه P&L
-                data.history.forEach(r => {
-                    totalProfit += r.profit;
-                    if (r.win) totalWins++;
-                });
-
-                // 2. ساخت Summary Box (NEW UX)
-                const isOverallProfit = totalProfit >= 0;
-                const profitColor = isOverallProfit ? CONFIG.CHART_COLORS.up : CONFIG.CHART_COLORS.down;
-                const profitSign = isOverallProfit ? '+' : ''; 
-                
-                const summaryHtml = `
-                    <div class="history-summary-box" style="margin-bottom: 20px; padding: 15px; background: rgba(255, 255, 255, 0.05); border-radius: 10px;">
-                        <div class="summary-item" style="display: flex; justify-content: space-between; margin-bottom: 5px; color: #ccc;">
-                            <span>تعداد راند:</span>
-                            <span class="value">${totalBets}</span>
-                        </div>
-                        <div class="summary-item" style="display: flex; justify-content: space-between; margin-bottom: 5px; color: #ccc;">
-                            <span>بردهای شما:</span>
-                            <span class="value">${totalWins} (${((totalWins / totalBets) * 100).toFixed(1)}%)</span>
-                        </div>
-                        <div class="summary-item total-pl" style="display: flex; justify-content: space-between; font-weight: bold; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
-                            <span style="color: #fff;">سود/زیان کل:</span>
-                            <span class="value" style="color: ${profitColor};">${profitSign} $${Math.abs(totalProfit).toFixed(2)}</span>
-                        </div>
-                    </div>
-                `;
-                contentHtml += summaryHtml;
-
-                // 3. ساخت لیست آیتم‌های تاریخچه
-                let listHtml = '<ul class="history-list-items" style="list-style: none; padding: 0;">';
-                data.history.forEach(r => {
-                    const statusClass = r.win ? 'win' : 'loss';
-                    const icon = r.win ? '▲' : '▼';
-                    const color = r.win ? CONFIG.CHART_COLORS.up : CONFIG.CHART_COLORS.down;
-                    const itemProfitSign = r.profit >= 0 ? '+' : '-';
-
-                    listHtml += `
-                        <li class="history-item ${statusClass}" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed rgba(255, 255, 255, 0.05);">
-                            <div class="round-id-time" style="font-size: 0.8rem; color: #aaa;">#${r.round_id} <span class="time-stamp" style="font-size: 0.7rem;">${r.time}</span></div>
-                            <div class="prediction-info" style="font-weight: bold; display: flex; align-items: center;">
-                                <span class="pred-type" style="color: ${color}; margin-right: 5px;">${r.prediction} ${icon}</span>
-                                <span class="bet-amount" style="color: #ccc; font-size: 0.9rem;">$${r.amount.toFixed(2)}</span>
-                            </div>
-                            <div class="profit-amount" style="font-weight: bold; color: ${color};">${itemProfitSign} $${Math.abs(r.profit).toFixed(2)}</div>
-                        </li>
-                    `;
-                });
-                listHtml += '</ul>';
-                contentHtml += listHtml;
-            }
-            historyList.innerHTML = contentHtml;
-        } else {
-            historyList.innerHTML = '<p style="text-align: center; color: #f6465d; padding: 20px;">❌ خطای بارگذاری تاریخچه.</p>';
+        
+        if (!res.ok) {
+            historyList.innerHTML = `<p style="text-align: center; color: #ff0000; padding: 20px;">❌ خطا در API: کد ${res.status}.</p>`;
+            return;
         }
+
+        const data = await res.json();
+        
+        // --- تزریق JSON خام برای عیب‌یابی (FIX) ---
+        historyList.innerHTML = `<pre style="white-space: pre-wrap; font-size: 10px; color: #fff; padding: 10px; border: 1px solid #ff0000;">${JSON.stringify(data, null, 2)}</pre>`;
+        // ------------------------------------------
+
     } catch (e) {
-        historyList.innerHTML = '<p style="text-align: center; color: #f6465d; padding: 20px;">❌ خطای شبکه در بارگذاری تاریخچه.</p>';
+        historyList.innerHTML = `<p style="text-align: center; color: #ff0000; padding: 20px;">❌ خطای شبکه/جاوااسکریپت: ${e.message}</p>`;
         console.error("History Fetch Error:", e);
     }
 }

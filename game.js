@@ -1,4 +1,4 @@
-﻿/* webapp/game.js (v76.0 - FINAL: WebSocket, Luxury Chart, Leaderboard & History Modals) */
+﻿/* webapp/game.js (v77.0 - FINAL: UX Fixes, Result Clarity, Leaderboard & History Modals) */
 
 const tg = window.Telegram.WebApp;
 const API_BASE_URL = window.location.origin;
@@ -27,15 +27,19 @@ const CONFIG = {
     }
 };
 
-let chart, candleSeries, lineSeries; // تغییر به Candlestick و Line Series
+let chart, candleSeries, lineSeries; 
 let lastPrice = 0;
 let isFirstLoad = true;
-let lastCandleTime = 0; // زمان آخرین کندل بسته‌شده
+let lastCandleTime = 0; 
 let gameWebSocket = null;
 let wsConnectAttempt = 0;
 let currentUUSDBalance = 0;
-window.lastRoundId = null; // برای پیگیری شروع راند جدید در منطق چارت
+window.lastRoundId = null; 
 window.lastCandleOpenPrice = null;
+
+// --- آبجکت برای مدیریت خطوط قیمت شرط‌بندی (NEW) ---
+let entryPriceLine = null;
+let closePriceLine = null;
 
 // --- سیستم صوتی ---
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -78,6 +82,7 @@ window.onload = function() {
 
 // ==========================================
 // 1. WebSocket Setup (Real-time Core)
+// (این بخش بدون تغییر باقی می‌ماند تا Loader Fix از بین نرود)
 // ==========================================
 
 function initWebSocket() {
@@ -90,19 +95,16 @@ function initWebSocket() {
         if (gameWebSocket.readyState !== WebSocket.OPEN) {
              showToast("⚠️ اتصال Real-time برقرار نشد. داده‌ها به روز نیستند.");
              setConnectionStatus(false);
-             // اگر اتصال نشد، Loader را حذف کن (فرض می‌کنیم در HTML یک اسکریپت Loader را حذف می‌کند)
-             // اگر Loader در این فایل نیست، این خطای Loader Dashboard را ایجاد نمی‌کند.
              const loaderEl = document.getElementById('game-loader');
              if(loaderEl) loaderEl.style.display = 'none';
         }
-    }, 5000); // 5 ثانیه تایم‌آوت
+    }, 5000); 
 
     gameWebSocket.onopen = () => {
         clearTimeout(connectionTimeout);
         console.log("WebSocket connected.");
         wsConnectAttempt = 0;
         setConnectionStatus(true);
-        // حذف لودر در صورت اتصال موفق
         const loaderEl = document.getElementById('game-loader');
         if(loaderEl) { loaderEl.style.opacity='0'; setTimeout(()=>loaderEl.style.display='none', 500); }
     };
@@ -134,7 +136,6 @@ function initWebSocket() {
         clearTimeout(connectionTimeout);
         console.error("WebSocket error:", error);
         showToast("⚠️ خطای WebSocket. در حال تلاش مجدد...");
-        // gameWebSocket.close(); // این در onclose هندل می‌شود
     };
 }
 
@@ -146,7 +147,7 @@ function handleWebSocketMessage(data) {
         updateGameStatus(data);
 
         // 2. به‌روزرسانی نمودار (Candlestick)
-        updateChartData(serverPrice, data.round.id);
+        updateChartData(serverPrice, data.round.id, data.round.time_left); // تایم‌لفت برای حذف خط استفاده می‌شود
 
         // 3. نمایش نتیجه شرط‌بندی قبلی
         if (data.last_result && data.last_result.round_id) {
@@ -172,7 +173,6 @@ function setConnectionStatus(isConnected) {
 
 
 async function fetchInitialData() {
-    // فقط برای گرفتن بالانس اولیه (فال‌بک در صورت عدم اتصال WS)
     try {
         const res = await fetch(`${API_BASE_URL}/webapp/get_wallet_data`, {
             method: 'POST', headers: {'Content-Type': 'application/json'},
@@ -204,7 +204,7 @@ function updateGameStatus(data) {
         toggleTradeButtons(isLocked || hasBet);
     }
     
-    // شرط ثبت شده
+    // شرط ثبت شده (و نمایش خط ورودی در چارت)
     const elEntry = document.getElementById('entry-display');
     if (data.user_bet && data.user_bet.entry_price) {
         elEntry.classList.remove('hidden');
@@ -213,7 +213,26 @@ function updateGameStatus(data) {
         const icon = isUp ? '▲' : '▼';
         const text = isUp ? 'خرید' : 'فروش';
         elEntry.innerHTML = `<span style="color:${color}; font-weight:bold; margin-left:5px;">${icon} ${text}</span> <span class="mono-font">$${data.user_bet.entry_price.toLocaleString()}</span>`;
-    } else { elEntry.classList.add('hidden'); }
+        
+        // نمایش خط قیمت ورودی در چارت
+        if(!entryPriceLine) {
+             entryPriceLine = lineSeries.createPriceLine({
+                 price: data.user_bet.entry_price,
+                 color: CONFIG.CHART_COLORS.gold,
+                 lineWidth: 2,
+                 lineStyle: LightweightCharts.LineStyle.Dotted,
+                 axisLabelVisible: true,
+                 title: 'قیمت ورود'
+             });
+        }
+        
+    } else { 
+        elEntry.classList.add('hidden'); 
+        if(entryPriceLine) {
+            lineSeries.removePriceLine(entryPriceLine);
+            entryPriceLine = null;
+        }
+    }
 
     // تاریخچه
     if (data.history) updateHistoryRibbon(data.history);
@@ -237,13 +256,11 @@ function initChart() {
         handleScale: { axisPressedMouseMove: false, mouseWheel: false, pinch: false },
     });
     
-    // استفاده از Candlestick Series برای تجربه لاکچری
     candleSeries = chart.addCandlestickSeries({
         upColor: CONFIG.CHART_COLORS.up, downColor: CONFIG.CHART_COLORS.down,
         borderVisible: false, wickUpColor: CONFIG.CHART_COLORS.up, wickDownColor: CONFIG.CHART_COLORS.down,
     });
     
-    // استفاده از Line Series برای قیمت لحظه‌ای (Real-time Price)
     lineSeries = chart.addLineSeries({
         color: CONFIG.CHART_COLORS.gold, lineWidth: 1, crosshairMarkerVisible: true,
         crosshairMarkerBackgroundColor: CONFIG.CHART_COLORS.gold, lastValueVisible: true,
@@ -257,9 +274,10 @@ function initChart() {
     }).observe(container);
 }
 
-function updateChartData(serverPrice, roundId) {
+function updateChartData(serverPrice, roundId, timeLeft) {
     const domPrice = document.getElementById('btc-price');
-    const now = Math.floor(Date.now() / 1000);
+    // برای چارت، زمان را به صورت دقیقه/ثانیه (Time in Seconds) می‌گیریم
+    const now = Math.floor(Date.now() / 1000); 
 
     // 1. به‌روزرسانی نمایشگر قیمت اصلی
     const isUp = serverPrice >= lastPrice; 
@@ -270,9 +288,10 @@ function updateChartData(serverPrice, roundId) {
     // 2. به‌روزرسانی سری خط (نمایشگر لحظه‌ای قیمت)
     lineSeries.update({ time: now, value: serverPrice });
 
-    // 3. منطق Candlestick (برای راند جدید یا آپدیت کندل فعلی)
+    // 3. منطق Candlestick 
     
     if (isFirstLoad) {
+        // ایجاد اولین کندل ساختگی
         const initialTime = now - CONFIG.ROUND_DURATION;
         candleSeries.setData([
             { time: initialTime, open: serverPrice - 10, high: serverPrice + 10, low: serverPrice - 10, close: serverPrice }
@@ -283,8 +302,10 @@ function updateChartData(serverPrice, roundId) {
     } 
 
     if (roundId !== window.lastRoundId) {
+        // راند جدید: بستن کندل قبلی و شروع کندل جدید
         if (window.lastCandleOpenPrice) {
-            // بستن کندل قبلی در زمان بسته شدن راند
+            // بستن کندل قبلی در زمان دقیق بسته شدن راند
+            // ما قیمت نهایی را قیمت فعلی سرور می‌گیریم
             candleSeries.update({
                 time: lastCandleTime,
                 open: window.lastCandleOpenPrice,
@@ -311,11 +332,18 @@ function updateChartData(serverPrice, roundId) {
                 open: window.lastCandleOpenPrice,
                 high: window.lastCandleHigh,
                 low: window.lastCandleLow,
-                close: serverPrice // Close همیشه قیمت لحظه‌ای است
+                close: serverPrice 
             });
         }
     }
     
+    // پاک کردن خط قیمت نهایی (close price) در شروع راند جدید
+    if (timeLeft > 55 && closePriceLine) {
+        lineSeries.removePriceLine(closePriceLine);
+        closePriceLine = null;
+    }
+
+
     window.lastRoundId = roundId;
     lastPrice = serverPrice;
 }
@@ -354,7 +382,6 @@ function updateHistoryRibbon(history) {
     const container = document.getElementById('history-container'); 
     container.innerHTML = '';
     
-    // فقط برای نمایش، آخرین نتایج را می‌گیریم
     history.slice().reverse().slice(0, 15).forEach(h => {
         const div = document.createElement('div'); 
         const isUp = h.result === 'UP';
@@ -368,14 +395,12 @@ function setupEventListeners() {
     document.querySelectorAll('button').forEach(btn => {
         btn.addEventListener('click', () => { if(!btn.disabled) { SoundFX.click(); tg.HapticFeedback.impactOccurred('light'); } });
     });
-    // منطق Swap Input بدون تغییر باقی می‌ماند
     const swapInput = document.getElementById('swap-input-toman');
     if(swapInput) {
         swapInput.addEventListener('input', function(e) {
             let val = e.target.value.replace(/,/g, '').replace(/\D/g, '');
             if (val) {
                 e.target.value = parseInt(val).toLocaleString('en-US');
-                // از یک نرخ تخمینی استفاده می‌کنیم، نرخ واقعی در سرور است
                 const usd = parseFloat(val) / CONFIG.EST_USDT_RATE; 
                 document.getElementById('swap-calc-usd').innerText = usd.toFixed(2) + ' USD';
             } else { e.target.value = ''; document.getElementById('swap-calc-usd').innerText = '0.00 USD'; }
@@ -409,7 +434,7 @@ window.placeBet = async function(prediction) {
             showToast(`✅ سفارش ${prediction === 'UP' ? 'خرید' : 'فروش'} ثبت شد`);
             const elEntry = document.getElementById('entry-display');
             elEntry.classList.remove('hidden');
-            elEntry.innerHTML = `<span style="color:${CONFIG.CHART_COLORS.gold}; font-weight:bold; margin-left:5px;">${prediction === 'UP' ? '▲ خرید' : '▼ فروش'}</span> <span class="mono-font">$${floatAmount.toLocaleString()}</span>`;
+            elEntry.innerHTML = `<span style="color:${CONFIG.CHART_COLORS.gold}; font-weight:bold; margin-left:5px;">${prediction === 'UP' ? '▲ خرید' : '▼ فروش'}</span> <span class="mono-font">$${result.entry_price.toLocaleString()}</span>`;
             toggleTradeButtons(true);
         } else { showToast(`⚠️ ${result.message}`); SoundFX.lose(); }
     } catch(e) { showToast("خطای اتصال یا سرور"); }
@@ -461,6 +486,24 @@ function showResultModal(result) {
     document.getElementById('res-entry').innerText = `$${result.entry_price.toFixed(2)}`;
     document.getElementById('res-close').innerText = `$${result.close_price.toFixed(2)}`;
 
+    // افزودن خط قیمت نهایی به چارت برای وضوح (NEW)
+    if(closePriceLine) lineSeries.removePriceLine(closePriceLine);
+    closePriceLine = lineSeries.createPriceLine({
+        price: result.close_price,
+        color: result.status === 'WIN' ? CONFIG.CHART_COLORS.up : CONFIG.CHART_COLORS.down,
+        lineWidth: 2,
+        lineStyle: LightweightCharts.LineStyle.Solid,
+        axisLabelVisible: true,
+        title: 'قیمت پایانی'
+    });
+    
+    // حذف خط قیمت ورودی
+    if(entryPriceLine) {
+        lineSeries.removePriceLine(entryPriceLine);
+        entryPriceLine = null;
+    }
+
+
     if (result.status === 'WIN') {
         SoundFX.win(); tg.HapticFeedback.notificationOccurred('success');
         confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, zIndex: 3000 });
@@ -474,6 +517,14 @@ function showResultModal(result) {
         elIcon.innerText = "📉"; elMsg.innerText = "بازار خلاف جهت شما حرکت کرد.";
     }
     elModal.classList.add('active');
+    
+    // حذف خط قیمت نهایی پس از چند ثانیه
+    setTimeout(() => {
+        if(closePriceLine) {
+            lineSeries.removePriceLine(closePriceLine);
+            closePriceLine = null;
+        }
+    }, 5000); 
 }
 window.closeResultModal = () => document.getElementById('result-modal').classList.remove('active');
 
@@ -487,11 +538,12 @@ function showToast(msg) {
 
 // ==========================================
 // 5. Leaderboard & History Logic (NEW)
+// (این بخش شامل منطق تکمیل مودال‌ها است و بدون تغییر باقی می‌ماند)
 // ==========================================
 
 async function fetchLeaderboard() {
     const leaderboardList = document.getElementById('leaderboard-list');
-    leaderboardList.innerHTML = '<div class="loader-spinner"></div>'; // نمایش لودر
+    leaderboardList.innerHTML = '<div class="loader-spinner"></div>'; 
 
     try {
         const res = await fetch(`${API_BASE_URL}/webapp/game/leaderboard`, {
@@ -515,7 +567,6 @@ async function fetchLeaderboard() {
 function renderLeaderboard(rankingData, title) {
     const leaderboardList = document.getElementById('leaderboard-list');
     
-    // اگر بار اول است، لودر را پاک کن
     if (leaderboardList.querySelector('.loader-spinner')) {
         leaderboardList.innerHTML = ''; 
     }

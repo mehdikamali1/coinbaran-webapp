@@ -9,46 +9,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    <link rel="stylesheet" href="webapp/dashboard-style.css?v=117.0">
-    <style>
-        /* CSS اختصاصی برای Level Ring و Level up indicator */
-        .level-ring-container {
-            width: 45px;
-            height: 45px;
-            position: relative;
-            margin-left: 10px;
-        }
-        .level-ring {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            border: 2px solid #555;
-            background: conic-gradient(var(--xp-color) 0%, transparent 0%);
-            transition: background 0.5s ease-in-out;
-        }
-        .level-badge {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 10px;
-            font-weight: bold;
-            color: var(--gold-color);
-            text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
-            z-index: 10;
-        }
-        .level-up-glow {
-            animation: pulse-glow 2s infinite;
-        }
-        @keyframes pulse-glow {
-            0% { box-shadow: 0 0 5px var(--gold-color), 0 0 10px var(--gold-color-semi-trans); }
-            50% { box-shadow: 0 0 15px var(--gold-color), 0 0 30px var(--gold-color-semi-trans); }
-            100% { box-shadow: 0 0 5px var(--gold-color), 0 0 10px var(--gold-color-semi-trans); }
-        }
-    </style>
+    <link rel="stylesheet" href="webapp/dashboard-style.css?v=91.0">
 </head>
 <body class="loading-active">
 
@@ -80,21 +41,17 @@
         
         <header class="glass-header">
             <div class="profile-section">
-                <div class="level-ring-container ripple-effect" id="level-ring-area">
-                    <div class="level-ring" id="level-ring-fill"></div>
-                    <div class="avatar-container">
-                        <img src="webapp/images/logo-gold.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'" alt="User" class="avatar-img">
-                        <div class="status-indicator"></div>
-                    </div>
-                    <span id="level-badge" class="level-badge">LVL 1</span>
+                <div class="avatar-container ripple-effect">
+                    <img src="webapp/images/logo-gold.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'" alt="User" class="avatar-img">
+                    <div class="status-indicator"></div>
                 </div>
                 <div class="user-info">
                     <h2 id="welcome-name">Loading...</h2>
                     
                     <div class="xp-container">
                         <div class="xp-meta">
-                            <span id="current-xp-text" class="current-xp">0 XP</span>
-                            <span id="next-level-text" class="next-level">Next: Silver</span>
+                            <span id="level-badge" class="level-badge">LVL 1</span>
+                            <span id="next-level-text" class="next-level">Guest</span>
                         </div>
                         <div class="xp-bar-bg">
                             <div class="xp-bar-fill" id="xp-progress-fill" style="width: 0%"></div>
@@ -126,7 +83,7 @@
                     <div class="chip-sim">
                         <i class="fas fa-microchip"></i>
                     </div>
-                    <span class="card-type" id="kyc-status-display">KYC Status</span>
+                    <span class="card-type">VIP MEMBER</span>
                 </div>
 
                 <div class="card-balance">
@@ -141,19 +98,19 @@
                     <svg viewBox="0 0 300 50" class="chart-svg" id="sparkline-svg">
                         <defs>
                             <linearGradient id="gradNeutral" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" style="stop-color:#FFD700;stop-opacity:0.4"/>
-                                <stop offset="100%" style="stop-color:#FFD700;stop-opacity:0"/>
+                                <stop offset="0%" stop-color="#FFD700" stop-opacity="0.4"/>
+                                <stop offset="100%" stop-color="#FFD700" stop-opacity="0"/>
                             </linearGradient>
                             <linearGradient id="gradUp" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" style="stop-color:#0ECB81;stop-opacity:0.4"/>
-                                <stop offset="100%" style="stop-color:#0ECB81;stop-opacity:0"/>
+                                <stop offset="0%" stop-color="#0ECB81" stop-opacity="0.4"/>
+                                <stop offset="100%" stop-color="#0ECB81" stop-opacity="0"/>
                             </linearGradient>
                             <linearGradient id="gradDown" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" style="stop-color:#F6465D;stop-opacity:0.4"/>
-                                <stop offset="100%" style="stop-color:#F6465D;stop-opacity:0"/>
+                                <stop offset="0%" stop-color="#F6465D" stop-opacity="0.4"/>
+                                <stop offset="100%" stop-color="#F6465D" stop-opacity="0"/>
                             </linearGradient>
                         </defs>
-                        </svg>
+                    </svg>
                 </div>
 
                 <div class="card-footer">
@@ -197,7 +154,7 @@
                 <div class="banner-glow"></div>
                 <div class="banner-content">
                     <div class="game-info">
-                        <h3>بازی کندل 🚀 (LIVE)</h3>
+                        <h3>بازی کندل 🚀</h3>
                         <p>پیش‌بینی کن و دلار ببر!</p>
                     </div>
                     <div class="play-icon">
@@ -208,9 +165,7 @@
 
             <div class="services-grid-modern">
                 <div class="service-card ripple-btn" onclick="window.location.href='usdt'">
-                    <div class="service-icon green-glow">
-                        <i class="fas fa-dollar-sign service-icon"></i>
-                    </div>
+                    <i class="fas fa-coins service-icon gold-glow"></i>
                     <div class="service-meta">
                         <h4>تتر / تومان</h4>
                         <span>نرخ لحظه‌ای</span>
@@ -218,9 +173,7 @@
                 </div>
 
                 <div class="service-card ripple-btn" onclick="window.location.href='utopia'">
-                    <div class="service-icon gold-glow">
-                        <img src="webapp/images/utopia_logo.png" class="utopia-icon-img" alt="UTOP">
-                    </div>
+                    <i class="fas fa-ticket-alt service-icon pink-glow"></i>
                     <div class="service-meta">
                         <h4>یوتوپیا</h4>
                         <span>خرید و فروش</span>
@@ -251,6 +204,6 @@
         </main>
     </div>
     
-    <script src="webapp/script.js?v=115.0"></script> 
+    <script src="webapp/script.js?v=91.0"></script>
 </body>
 </html>

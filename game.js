@@ -436,7 +436,7 @@ window.performSwap = async function() {
     } catch(e) { showToast("خطای شبکه"); }
 };
 
-// --- Modal Functions (تغییر یافته برای بارگذاری داده) ---
+// --- Modal Functions (بدون تغییر) ---
 window.openSwapModal = () => document.getElementById('swap-modal').classList.add('active');
 window.closeSwapModal = () => document.getElementById('swap-modal').classList.remove('active');
 
@@ -575,8 +575,8 @@ function renderLeaderboard(rankingData, title) {
 // تابع اصلی برای بارگذاری تاریخچه و محاسبه P&L (FIXED)
 async function fetchAndRenderHistory() {
     const historyList = document.getElementById('history-list');
-    historyList.innerHTML = '<div class="loader-spinner"></div>'; 
-    
+    historyList.innerHTML = '<div style="text-align: center; padding: 20px;"><div class="loader-spinner"></div></div>'; // نمایش لودر
+
     try {
         const res = await fetch(`${API_BASE_URL}/webapp/game/round_history`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -589,10 +589,10 @@ async function fetchAndRenderHistory() {
             let totalBets = data.history.length;
             let totalWins = 0;
 
-            let contentHtml = ''; // استفاده از متغیر جداگانه برای محتوا
+            let contentHtml = ''; 
 
             if (data.history.length === 0) {
-                 contentHtml = '<p class="no-data-msg">هیچ شرطی ثبت نشده است.</p>';
+                 contentHtml = '<p style="text-align: center; color: #aaa; padding: 20px;">هیچ شرطی ثبت نشده است.</p>';
             } else {
                 // 1. محاسبه خلاصه P&L
                 data.history.forEach(r => {
@@ -603,20 +603,20 @@ async function fetchAndRenderHistory() {
                 // 2. ساخت Summary Box (NEW UX)
                 const isOverallProfit = totalProfit >= 0;
                 const profitColor = isOverallProfit ? CONFIG.CHART_COLORS.up : CONFIG.CHART_COLORS.down;
-                const profitSign = isOverallProfit ? '+' : '-';
+                const profitSign = isOverallProfit ? '+' : ''; // برد نیازی به + ندارد
                 
                 const summaryHtml = `
                     <div class="history-summary-box" style="margin-bottom: 20px; padding: 15px; background: rgba(255, 255, 255, 0.05); border-radius: 10px;">
-                        <div class="summary-item" style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                            <span style="color: #ccc;">تعداد راند:</span>
+                        <div class="summary-item" style="display: flex; justify-content: space-between; margin-bottom: 5px; color: #ccc;">
+                            <span>تعداد راند:</span>
                             <span class="value">${totalBets}</span>
                         </div>
-                        <div class="summary-item" style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                            <span style="color: #ccc;">بردهای شما:</span>
+                        <div class="summary-item" style="display: flex; justify-content: space-between; margin-bottom: 5px; color: #ccc;">
+                            <span>بردهای شما:</span>
                             <span class="value">${totalWins} (${((totalWins / totalBets) * 100).toFixed(1)}%)</span>
                         </div>
                         <div class="summary-item total-pl" style="display: flex; justify-content: space-between; font-weight: bold; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
-                            <span>سود/زیان کل:</span>
+                            <span style="color: #fff;">سود/زیان کل:</span>
                             <span class="value" style="color: ${profitColor};">${profitSign} $${Math.abs(totalProfit).toFixed(2)}</span>
                         </div>
                     </div>
@@ -638,7 +638,7 @@ async function fetchAndRenderHistory() {
                                 <span class="pred-type" style="color: ${color}; margin-right: 5px;">${r.prediction} ${icon}</span>
                                 <span class="bet-amount" style="color: #ccc;">$${r.amount.toFixed(2)}</span>
                             </div>
-                            <div class="profit-amount" style="font-weight: bold; color: ${color};">${itemProfitSign}$${Math.abs(r.profit).toFixed(2)}</div>
+                            <div class="profit-amount" style="font-weight: bold; color: ${color};">${itemProfitSign} $${Math.abs(r.profit).toFixed(2)}</div>
                         </li>
                     `;
                 });
@@ -647,9 +647,9 @@ async function fetchAndRenderHistory() {
             }
             historyList.innerHTML = contentHtml;
         } else {
-            historyList.innerHTML = '<p class="error-msg">❌ خطای بارگذاری تاریخچه.</p>';
+            historyList.innerHTML = '<p style="text-align: center; color: #f6465d; padding: 20px;">❌ خطای بارگذاری تاریخچه.</p>';
         }
     } catch (e) {
-        historyList.innerHTML = '<p class="error-msg">❌ خطای شبکه.</p>';
+        historyList.innerHTML = '<p style="text-align: center; color: #f6465d; padding: 20px;">❌ خطای شبکه در بارگذاری تاریخچه.</p>';
     }
 }

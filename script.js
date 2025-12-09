@@ -1,601 +1,503 @@
-﻿/* webapp/script.js (v111.0 - Luxury UI & Parallax Enabled) */
+﻿/* webapp/script.js (v111.0 - Dashboard UI Logic with Fixed Logos) */
 (function () {
     'use strict';
 
+    // --- GLOBAL VARIABLES ---
     const tg = window.Telegram.WebApp;
     const API_BASE_URL = window.location.origin;
-    
-    // تنظیم زمان اسپلش اسکرین (کاهش داده شد برای لود سریع‌تر)
-    let MIN_SPLASH_TIME = 2000; 
+    let userFirstName = "کاربر";
+    let isInitialized = false;
+    let currentTomanBalance = "---";
 
-    const loader = document.getElementById('loader');
-    const appContainer = document.getElementById('app-container');
-    
-    const isDashboard = !!document.getElementById('toman-balance');
-    const isSupportPage = !!document.getElementById('messages-container');
-
-    let chatPollInterval = null;
-    let lastMessageCount = 0;
-    let isSending = false;
-
-    // المنت‌های اصلی داشبورد
-    const els = {
-        welcomeName: document.getElementById('welcome-name'),
-        tomanBalance: document.getElementById('toman-balance'),
-        uusdBalance: document.getElementById('uusd-balance'),
-        xpBalance: document.getElementById('xp-balance'),
-        // kycText: document.getElementById('kyc-text'), // در داشبورد حذف شد
-        avatar: document.querySelector('.avatar-img'),
-        supportNotif: document.getElementById('support-notif'),
-        ticker: document.getElementById('price-ticker'),
-        xpFill: document.getElementById('xp-progress-fill'),
-        levelBadge: document.getElementById('level-badge'),
-        nextLevelText: document.getElementById('next-level-text')
-    };
-
-    // المنت‌های صفحه چت
-    const chatEls = {
-        container: document.getElementById('messages-container'),
-        input: document.getElementById('message-input'),
-        sendBtn: document.getElementById('send-btn'),
-        optionsBtn: document.getElementById('chat-options-btn'),
-        fileInput: document.getElementById('file-input'),
-        attachBtn: document.getElementById('attach-btn')
-    };
-
-    // ==========================================
-    // 1. GLOBAL FIX: BFCache Handler (The Magic Fix)
-    // ==========================================
-    window.addEventListener('pageshow', function(event) {
-        if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
-            console.log("Restored from cache - Forcing loader hide");
-            forceHideLoader();
-            document.body.style.overflow = 'auto';
+    // --- LOGO MAPPING (اصلاح شده برای تفکیک USDT و UTOPIA) ---
+    const logoMap = {
+        'USDT': {
+            src: 'webapp/images/usdt_logo.png', // آیکون تتر (USDT)
+            alt: 'Tether Logo',
+            color: '#50af95'
+        },
+        'BTC': {
+            src: 'webapp/images/btc_logo.png',
+            alt: 'Bitcoin Logo',
+            color: '#f7931a'
+        },
+        'ETH': {
+            src: 'webapp/images/eth_logo.png',
+            alt: 'Ethereum Logo',
+            color: '#627EEA'
+        },
+        'TON': {
+            src: 'webapp/images/ton_logo.png',
+            alt: 'Toncoin Logo',
+            color: '#0098EA'
+        },
+        'NOT': {
+            src: 'webapp/images/not_logo.png',
+            alt: 'Notcoin Logo',
+            color: '#FFCC00'
+        },
+        // فرض می‌کنیم یوتوپیا نیز یک Asset است
+        'UTOPIA': {
+            src: 'webapp/images/utopia_logo.png', // آیکون یوتوپیا
+            alt: 'Utopia Coin',
+            color: '#FFCC00'
+        },
+        // برای سایر موارد
+        'DEFAULT': {
+            src: 'webapp/images/default_coin.png',
+            alt: 'Coin',
+            color: '#999'
         }
-    });
+    };
 
-    // ==========================================
-    // 2. MAIN INITIALIZATION
-    // ==========================================
-    window.onload = async function() {
+    // --- UTILITIES ---
+
+    function showLoader() { document.getElementById('loader').style.display = 'flex'; }
+    function hideLoader() { 
+        document.getElementById('loader').style.opacity = '0';
+        document.getElementById('loader').style.pointerEvents = 'none';
+        document.getElementById('app-container').style.opacity = '1';
+        setTimeout(() => { document.getElementById('loader').style.display = 'none'; }, 500);
+    }
+    
+    function formatToman(value) {
+        if (!value) return '0';
+        return parseInt(String(value).replace(/,/g, '')).toLocaleString('fa-IR');
+    }
+
+    // --- INITIALIZATION ---
+    window.onload = function() {
+        if (!tg.initData) tg.initData = "query_id=TEST_DEV";
+        
         try {
             tg.ready();
             tg.expand();
-            
-            // تنظیمات BackButton و رنگ تم
-            setupTelegramUI();
-
-            if (!tg.initData) {
-                console.warn("Using Test Data");
-                tg.initData = "query_id=TEST_DEV_MODE"; 
-            }
-
-            const hasSeenSplash = sessionStorage.getItem('splash_shown');
-
-            // --- منطق لودینگ داشبورد ---
-            if (isDashboard) {
-                if (hasSeenSplash) {
-                    // بازگشت مجدد به داشبورد (سریع)
-                    loadFromCache();
-                    forceHideLoader();
-                    
-                    initDashboardEffects();
-
-                    fetchDashboardData().then(data => { if(data) updateDashboardUI(data); });
-                    fetchMarketRates().then(handleMarketData);
-                    checkUnreadSupportMessages();
-
-                } else {
-                    // ورود اول (با انیمیشن)
-                    sessionStorage.setItem('splash_shown', 'true');
-                    
-                    const splashTimer = new Promise(resolve => setTimeout(resolve, MIN_SPLASH_TIME));
-                    const dataFetch = fetchDashboardData();
-                    const ratesFetch = fetchMarketRates(); 
-
-                    const [dataResult, ratesResult] = await Promise.all([dataFetch, ratesFetch, splashTimer]);
-
-                    if (dataResult) {
-                        updateDashboardUI(dataResult);
-                        handleMarketData(ratesResult);
-                        checkUnreadSupportMessages();
-                        
-                        hideLoaderWithAnimation();
-                        
-                        // اطمینان از فعال‌سازی افکت‌ها بعد از نمایش UI
-                        setTimeout(initDashboardEffects, 800); 
-                    } else {
-                        forceHideLoader(); // fail-safe
-                    }
-                }
-            } else if (isSupportPage) {
-                // --- منطق صفحه پشتیبانی ---
-                forceHideLoader(); 
-                setupChatListeners();
-                await loadChatHistory(true); 
-                startChatPolling();
-                initHapticFeedback();
-            } else {
-                // --- سایر صفحات ---
-                forceHideLoader();
-                initHapticFeedback();
-            }
-
-        } catch (error) {
-            console.error("Critical Init Error:", error);
-            forceHideLoader(); 
-        }
-    };
-    
-    function setupTelegramUI() {
-        if (isDashboard) {
             tg.setHeaderColor('#050505'); 
             tg.setBackgroundColor('#050505');
-            tg.BackButton.hide();
-        } else {
-            tg.setHeaderColor('#050505');
-            tg.setBackgroundColor('#000000');
-            tg.BackButton.show();
-            tg.BackButton.onClick(function() {
-                window.location.href = 'dashboard.html';
+        } catch (e) {
+            console.log("Not inside Telegram WebApp:", e);
+        }
+
+        // فعال‌سازی دکمه‌های ریپل افکت
+        document.querySelectorAll('.ripple-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                const rect = btn.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                const x = e.clientX - rect.left - size / 2;
+                const y = e.clientY - rect.top - size / 2;
+
+                const ripple = document.createElement('span');
+                ripple.style.width = ripple.style.height = size + 'px';
+                ripple.style.left = x + 'px';
+                ripple.style.top = y + 'px';
+                ripple.className = 'ripple';
+
+                btn.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 600);
             });
-        }
-    }
-
-    function initDashboardEffects() {
-        init3DCardEffect();
-        initHapticFeedback();
-    }
+        });
+        
+        // شروع بارگذاری داده‌ها
+        fetchUserData();
+        fetchMarketRates();
+        fetchGameState();
+        
+        // تنظیم اینتروال برای به‌روزرسانی نرخ‌ها
+        setInterval(fetchMarketRates, 15000); // هر 15 ثانیه
+        setInterval(fetchGameState, 1000);   // هر 1 ثانیه
+    };
     
-    function handleMarketData(ratesResult) {
-        if(ratesResult && ratesResult.status === 'success') {
-            updateTickerUI(ratesResult.rates);
-            const usdt = ratesResult.rates.find(r => r.symbol === 'USDT');
-            if(usdt) renderSmartChart(usdt.change);
-        } else {
-            renderSmartChart(0);
-        }
-    }
-
-    // ==========================================
-    // Caching Logic
-    // ==========================================
-    function saveToCache(data) {
-        try { localStorage.setItem('dashboard_cache', JSON.stringify(data)); } catch (e) {}
-    }
-
-    function loadFromCache() {
+    // --- DATA FETCHING ---
+    
+    async function fetchUserData() {
         try {
-            const cached = localStorage.getItem('dashboard_cache');
-            if (cached) {
-                const data = JSON.parse(cached);
-                updateDashboardUI(data, false);
-            }
-        } catch (e) {}
-    }
-
-    // ==========================================
-    // Loader Functions (Optimized)
-    // ==========================================
-    function forceHideLoader() {
-        document.body.classList.remove('loading-active'); 
-        if (loader) {
-            loader.style.display = 'none';
-            loader.style.opacity = '0';
-        }
-        if (appContainer) {
-            appContainer.classList.remove('hidden-content');
-            appContainer.style.opacity = '1';
-            appContainer.style.transform = 'translateY(0)';
-        }
-    }
-
-    function hideLoaderWithAnimation() {
-        document.body.classList.remove('loading-active');
-        if (loader) {
-            loader.style.opacity = '0';
-            loader.style.pointerEvents = 'none';
-            // زمان بندی انیمیشن‌ها را با زمان CSS هماهنگ می‌کنیم
-            setTimeout(() => {
-                loader.style.display = 'none';
-                if (appContainer) {
-                    appContainer.classList.remove('hidden-content');
-                    appContainer.classList.add('fade-in-active');
-                }
-            }, 500); 
-        }
-    }
-
-    // ==========================================
-    // Data Fetching
-    // ==========================================
-    async function fetchDashboardData() {
-        try {
-            const response = await fetch(`${API_BASE_URL}/webapp/get_user_data`, {
+            const res = await fetch(`${API_BASE_URL}/webapp/get_user_data`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
                 body: JSON.stringify({ initData: tg.initData })
             });
-            if (!response.ok) throw new Error("Server Error");
-            const data = await response.json();
-            if(data.status === 'success') saveToCache(data);
-            return data;
-        } catch (error) { return null; }
-    }
+            const data = await res.json();
+            
+            if (data.status === 'success') {
+                userFirstName = data.first_name || "کاربر";
+                currentTomanBalance = data.toman_balance;
+                
+                document.getElementById('user-name').innerText = ` ${userFirstName}، خوش آمدید`;
+                document.getElementById('balance-toman-main').innerText = data.toman_balance;
+                document.getElementById('balance-uusd-main').innerText = data.uusd_balance;
+                document.getElementById('balance-xp-main').innerText = data.xp_balance;
 
+                // نمایش وضعیت KYC
+                const kycStatusElement = document.getElementById('kyc-status');
+                const kycLevel = parseInt(data.kyc_level);
+                let statusText = "";
+                let statusIcon = "";
+                let statusClass = "";
+
+                if (kycLevel === 3) {
+                    statusText = "VIP طلایی 💎";
+                    statusIcon = "fas fa-gem";
+                    statusClass = "status-gold";
+                } else if (kycLevel === 2) {
+                    statusText = "تایید کامل ✅";
+                    statusIcon = "fas fa-check-circle";
+                    statusClass = "status-success";
+                } else if (data.kyc_status_code && data.kyc_status_code.startsWith('pending')) {
+                    statusText = "در حال بررسی ⏳";
+                    statusIcon = "fas fa-hourglass-half";
+                    statusClass = "status-pending";
+                } else {
+                    statusText = "سطح ۱ (ناقص) ⚠️";
+                    statusIcon = "fas fa-exclamation-triangle";
+                    statusClass = "status-warning";
+                }
+                
+                kycStatusElement.innerHTML = `<i class="${statusIcon}"></i> ${statusText}`;
+                kycStatusElement.className = `stat-value ${statusClass}`;
+            }
+            
+            if (!isInitialized) {
+                hideLoader();
+                isInitialized = true;
+            }
+        } catch (e) {
+            console.error("User data fetch error:", e);
+            if (!isInitialized) hideLoader();
+        }
+    }
+    
     async function fetchMarketRates() {
         try {
-            // اضافه کردن هدر برای ngrok
-            const response = await fetch(`${API_BASE_URL}/webapp/market/rates`, {
+            const res = await fetch(`${API_BASE_URL}/webapp/market/rates`, {
                 headers: { 'ngrok-skip-browser-warning': 'true' }
             });
-            if (!response.ok) return null;
-            return await response.json();
-        } catch (e) { return null; }
+            const data = await res.json();
+            
+            if (data.status === 'success' && data.rates) {
+                renderAssetCards(data.rates);
+            }
+        } catch (e) {
+            console.error("Market rate fetch error:", e);
+        }
     }
 
-    // ==========================================
-    // UI Updaters
-    // ==========================================
-    function updateDashboardUI(data, saveCache = true) {
-        if (!data || data.status === 'error') return;
-        if(saveCache) saveToCache(data);
+    // --- GAME STATE ---
+    
+    async function fetchGameState() {
+         try {
+            const res = await fetch(`${API_BASE_URL}/webapp/game/state`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
+                body: JSON.stringify({ initData: tg.initData })
+            });
+            const data = await res.json();
 
-        if (els.welcomeName) els.welcomeName.innerText = data.first_name || "کاربر گرامی";
-        // استفاده از toLocaleString برای نمایش تومان
-        if (els.tomanBalance) els.tomanBalance.innerText = data.toman_balance.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-        if (els.uusdBalance) els.uusdBalance.innerHTML = `${data.uusd_balance} <small>$</small>`;
-        if (els.xpBalance) els.xpBalance.innerHTML = `${data.xp_balance} <small>XP</small>`;
+            if (data.current_price) {
+                // نمایش قیمت لحظه‌ای
+                document.getElementById('btc-current-price').innerText = data.current_price.toFixed(2).toLocaleString('fa-IR');
+                // نمایش زمان باقی‌مانده
+                document.getElementById('round-time-left').innerText = data.round.time_left;
+                
+                // به‌روزرسانی تاریخچه
+                renderGameHistory(data.history);
+                
+                // نمایش نتیجه شرط قبلی
+                renderLastResult(data.last_result);
+                
+                // نمایش شرط کاربر در دور فعلی
+                renderUserBet(data.user_bet);
 
-        // مقدار xp_balance ممکن است با کاما باشد، آن را پاک می‌کنیم
-        const rawXp = parseInt((data.xp_balance || "0").replace(/,/g, '')) || 0;
-        updateLevelProgress(rawXp);
-
-        if (tg.initDataUnsafe?.user?.photo_url && els.avatar) {
-            els.avatar.src = tg.initDataUnsafe.user.photo_url;
+                // به‌روزرسانی موجودی کاربر
+                document.getElementById('game-user-balance').innerText = data.user_balance.toLocaleString('fa-IR', {minimumFractionDigits: 2});
+            }
+        } catch (e) {
+            console.error("Game state fetch error:", e);
         }
-        // updateKycBadge(data.kyc_status_code); // در داشبورد حذف شد
     }
 
-    function updateLevelProgress(xp) {
-        if (!els.xpFill || !els.levelBadge) return;
-        // تعریف سطوح با توجه به config.py
-        const levels = [0, 500, 1500, 3500, 7000, 15000, 30000]; 
-        const levelNames = ["GUEST", "BRONZE", "SILVER", "GOLD", "PLATINUM", "DIAMOND", "LEGEND"];
+    // --- RENDERING FUNCTIONS ---
 
-        let currentLevelIndex = 0; 
-        for (let i = 0; i < levels.length; i++) {
-            if (xp >= levels[i]) { currentLevelIndex = i; } else { break; }
-        }
-
-        const currentThreshold = levels[currentLevelIndex];
-        const nextThreshold = levels[currentLevelIndex + 1];
+    function renderAssetCards(rates) {
+        const container = document.getElementById('asset-cards-container');
+        container.innerHTML = '';
         
-        let percentage = 0;
-        if (nextThreshold) {
-            percentage = ((xp - currentThreshold) / (nextThreshold - currentThreshold)) * 100;
+        rates.forEach(rate => {
+            // دریافت اطلاعات لوگو از Map
+            const logoInfo = logoMap[rate.symbol] || logoMap['DEFAULT'];
+            
+            // تعیین کلاس رنگ بر اساس تغییرات ۲۴ ساعته
+            const change = parseFloat(rate.change);
+            let changeClass = 'change-neutral';
+            if (change > 0) {
+                changeClass = 'change-up';
+            } else if (change < 0) {
+                changeClass = 'change-down';
+            }
+            
+            const card = document.createElement('div');
+            card.className = 'asset-card ripple-effect';
+            card.innerHTML = `
+                <div class="asset-icon" style="background-color: ${logoInfo.color.replace(')', ', 0.1)')}; border: 1px solid ${logoInfo.color.replace(')', ', 0.2)')};">
+                    <img src="${logoInfo.src}" alt="${logoInfo.alt}">
+                </div>
+                <div class="asset-details">
+                    <span class="asset-symbol">${rate.symbol}</span>
+                    <span class="asset-price">${rate.price}</span>
+                </div>
+                <div class="asset-change ${changeClass}">
+                    ${change.toFixed(2)}%
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function renderGameHistory(history) {
+        const container = document.getElementById('game-history-container');
+        container.innerHTML = '';
+        
+        // نمایش فقط 5 نتیجه آخر
+        const recentHistory = history.slice(-5).reverse(); 
+
+        recentHistory.forEach(round => {
+            const isUp = round.result === 'UP';
+            const resultClass = isUp ? 'up-result' : 'down-result';
+            const resultIcon = isUp ? '<i class="fas fa-arrow-up"></i>' : '<i class="fas fa-arrow-down"></i>';
+            
+            const item = document.createElement('div');
+            item.className = `history-item ${resultClass}`;
+            item.title = `قیمت بسته شدن: ${round.end_price.toFixed(2)}`;
+            item.innerHTML = resultIcon; 
+            
+            container.appendChild(item);
+        });
+    }
+
+    function renderLastResult(result) {
+        const container = document.getElementById('last-result-container');
+        if (result) {
+            const isWin = result.status === 'WIN';
+            const statusText = isWin ? `🥳 ${formatToman(result.payout)} $` : `😓 ${formatToman(result.bet_amount)} $`;
+            const statusClass = isWin ? 'result-win' : 'result-loss';
+            
+            container.innerHTML = `<span class="${statusClass}">${statusText}</span>`;
+            // نمایش هشدار تلگرام برای نتیجه
+            if (isInitialized) {
+                 tg.HapticFeedback.notificationOccurred(isWin ? 'success' : 'error');
+            }
         } else {
-            percentage = 100; // بالاترین سطح
+            container.innerHTML = `<span class="result-none">نتیجه قبلی</span>`;
         }
+    }
 
-        percentage = Math.min(100, Math.max(0, percentage));
-
-        els.xpFill.style.width = `${percentage}%`;
-        els.levelBadge.innerText = `VIP ${currentLevelIndex + 1}`; 
+    function renderUserBet(bet) {
+        const btnBetUp = document.getElementById('btn-bet-up');
+        const btnBetDown = document.getElementById('btn-bet-down');
         
-        if (els.nextLevelText) {
-            if (nextThreshold) {
-                 els.nextLevelText.innerText = `NEXT: ${levelNames[currentLevelIndex + 1]} (${Math.ceil(nextThreshold - xp)} XP)`;
+        btnBetUp.classList.remove('bet-active');
+        btnBetDown.classList.remove('bet-active');
+
+        if (bet) {
+            const activeBtn = bet.prediction === 'UP' ? btnBetUp : btnBetDown;
+            activeBtn.classList.add('bet-active');
+            activeBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${bet.amount.toLocaleString()} $`;
+        } else {
+             btnBetUp.innerHTML = `<i class="fas fa-arrow-up"></i> بالا`;
+             btnBetDown.innerHTML = `<i class="fas fa-arrow-down"></i> پایین`;
+        }
+    }
+
+    // --- GAME INTERACTION ---
+    
+    // متغیرهای موقتی برای نگهداری مبلغ و جهت شرط
+    let betAmount = 0.0;
+    let betDirection = null;
+
+    window.setBetAmount = function(amount) {
+        betAmount = amount;
+        document.querySelectorAll('.amount-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(`btn-amount-${amount}`).classList.add('active');
+        updateBetFooter();
+    }
+    
+    window.selectBetDirection = function(direction) {
+        betDirection = direction;
+        document.querySelectorAll('.direction-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(`btn-direction-${direction}`).classList.add('active');
+        updateBetFooter();
+    }
+
+    function updateBetFooter() {
+        const footer = document.getElementById('bet-footer');
+        const submitBtn = document.getElementById('btn-submit-bet');
+        const swapBtn = document.getElementById('btn-swap-usd');
+        
+        if (betAmount > 0 && betDirection) {
+            submitBtn.style.display = 'block';
+            swapBtn.style.display = 'none';
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = `ثبت شرط ${betAmount.toLocaleString()} $ (جهت: ${betDirection === 'UP' ? 'بالا' : 'پایین'})`;
+            footer.style.backgroundColor = 'var(--primary-gold)';
+            submitBtn.style.color = '#000';
+            tg.HapticFeedback.selectionChanged();
+        } else {
+             // اگر شرط ناقص بود یا مبلغ ۰ بود، دکمه تبدیل را نمایش دهید.
+            if (currentTomanBalance.replace(/,/g, '') > 50000 && betAmount === 0) {
+                 submitBtn.style.display = 'none';
+                 swapBtn.style.display = 'block';
+                 footer.style.backgroundColor = 'rgba(255,255,255,0.1)';
+                 swapBtn.style.color = '#fff';
             } else {
-                els.nextLevelText.innerText = "MAX LEVEL";
+                 submitBtn.style.display = 'block';
+                 swapBtn.style.display = 'none';
+                 submitBtn.disabled = true;
+                 submitBtn.innerHTML = `مبلغ و جهت را انتخاب کنید`;
+                 footer.style.backgroundColor = 'rgba(255,255,255,0.1)';
+                 submitBtn.style.color = '#aaa';
             }
         }
-    }
-
-    function updateTickerUI(rates) {
-        if (!els.ticker || !rates || rates.length === 0) return;
-        // افزایش تعداد آیتم‌های تکراری برای ایجاد حرکت روان‌تر
-        let html = '';
-        const loopRates = [...rates, ...rates, ...rates, ...rates]; 
-        loopRates.forEach(rate => {
-            const changeClass = rate.change >= 0 ? 'up' : 'down';
-            const arrow = rate.change > 0 ? '▲' : (rate.change < 0 ? '▼' : '');
-            const colorClass = rate.change === 0 ? '' : changeClass;
-            // نمایش آیکون در کنار قیمت
-            const icon = rate.symbol === 'USDT' ? '<i class="fas fa-dollar-sign"></i>' : (rate.symbol === 'BTC' ? '<i class="fab fa-btc"></i>' : (rate.symbol === 'ETH' ? '<i class="fab fa-ethereum"></i>' : (rate.symbol === 'TON' ? '💎' : '')));
-            
-            html += `<div class="ticker-item">${rate.symbol} ${icon} <span class="${colorClass}">${rate.price} ${arrow} <small>(${rate.change}%)</small></span></div>`;
-        });
-        els.ticker.innerHTML = html;
-        // شروع دوباره انیمیشن با تنظیم مجدد
-        els.ticker.style.animation = 'none';
-        void els.ticker.offsetWidth; // Force reflow
-        els.ticker.style.animation = 'ticker 25s linear infinite';
-    }
-
-    function renderSmartChart(changePercent) {
-        const svg = document.getElementById('sparkline-svg');
-        if (!svg) return;
-        const existingPaths = svg.querySelectorAll('path');
-        existingPaths.forEach(p => p.remove());
-        const width = 300; const height = 50; const pointsCount = 20; 
-        const points = []; const trendFactor = changePercent * 2; 
-        for (let i = 0; i <= pointsCount; i++) {
-            const x = (i / pointsCount) * width;
-            const noise = (Math.random() - 0.5) * 15;
-            const trend = (i / pointsCount) * -trendFactor; 
-            let y = (height / 2) + trend + noise;
-            y = Math.max(5, Math.min(height - 5, y));
-            points.push({x, y});
-        }
-        let d = `M ${points[0].x},${points[0].y}`;
-        for (let i = 1; i < points.length; i++) { d += ` L ${points[i].x},${points[i].y}`; }
-        let strokeColor = '#FFCC00'; let fillUrl = 'url(#gradNeutral)';
-        if (changePercent > 0) { strokeColor = '#0ECB81'; fillUrl = 'url(#gradUp)'; } 
-        else if (changePercent < 0) { strokeColor = '#F6465D'; fillUrl = 'url(#gradDown)'; }
-        
-        const pathLine = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        pathLine.setAttribute("d", d); pathLine.setAttribute("fill", "none"); pathLine.setAttribute("stroke", strokeColor); pathLine.setAttribute("stroke-width", "2"); pathLine.setAttribute("stroke-linecap", "round"); pathLine.setAttribute("stroke-linejoin", "round");
-        
-        const dFill = d + ` V ${height} H 0 Z`;
-        const pathFill = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        pathFill.setAttribute("d", dFill); pathFill.setAttribute("fill", fillUrl); pathFill.setAttribute("stroke", "none"); pathFill.style.opacity = "0.5";
-        
-        svg.appendChild(pathFill); svg.appendChild(pathLine);
-    }
-
-    // ==========================================
-    // Effects & Interactions (Parallax)
-    // ==========================================
-    function init3DCardEffect() {
-        const card = document.querySelector('.premium-card');
-        const container = document.querySelector('.main-content');
-        const cardShine = document.querySelector('.card-shine');
-
-        if (!card || !container) return;
-
-        function handleMove(e) {
-            const rect = card.getBoundingClientRect();
-            // محاسبه موقعیت ماوس نسبت به مرکز کارت
-            const clientX = e.clientX || e.touches[0].clientX;
-            const clientY = e.clientY || e.touches[0].clientY;
-
-            const cardCenterX = rect.left + rect.width / 2;
-            const cardCenterY = rect.top + rect.height / 2;
-            
-            const mouseX = clientX - cardCenterX;
-            const mouseY = clientY - cardCenterY;
-            
-            // تعیین درجه چرخش (کمتر برای نرمی بیشتر)
-            const rotateX = (mouseY / rect.height) * -8;
-            const rotateY = (mouseX / rect.width) * 8;
-            
-            // حرکت Shine Effect
-            const shineX = (mouseX / rect.width * 50) + 50;
-            const shineY = (mouseY / rect.height * 50) + 50;
-
-            card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-            if (cardShine) {
-                cardShine.style.setProperty('--shine-x', `${shineX}%`);
-                cardShine.style.setProperty('--shine-y', `${shineY}%`);
-            }
-        }
-
-        function handleLeave() { 
-            card.style.transform = `rotateX(0deg) rotateY(0deg)`; 
-            if (cardShine) {
-                cardShine.style.setProperty('--shine-x', `50%`);
-                cardShine.style.setProperty('--shine-y', `50%`);
-            }
-        }
-
-        // Mouse Events for Desktop/WebApp Dev
-        container.addEventListener('mousemove', handleMove);
-        container.addEventListener('mouseleave', handleLeave);
-
-        // Touch Events for Mobile
-        container.addEventListener('touchstart', (e) => { 
-            handleMove(e); 
-            e.stopPropagation();
-        }, {passive: true});
-        container.addEventListener('touchmove', (e) => { 
-            handleMove(e); 
-            e.stopPropagation();
-        }, {passive: true});
-        container.addEventListener('touchend', handleLeave);
-
-        // Device Orientation (اختیاری)
-        if (window.DeviceOrientationEvent) {
-            let tiltActive = false;
-            window.addEventListener("deviceorientation", (event) => {
-                if (window.innerWidth < 600) return; // فقط برای دستگاه‌های بزرگتر یا دسکتاپ
-
-                let rotateY = event.gamma; 
-                let rotateX = event.beta; 
-                
-                if (rotateY > 20 || rotateY < -20 || rotateX > 50 || rotateX < 20) {
-                    // اگر چرخش زیاد بود یا در حالت عمودی نبود، غیرفعال کن
-                    handleLeave();
-                    tiltActive = false;
-                    return;
-                }
-                
-                tiltActive = true;
-                const maxAngle = 10;
-                
-                // مقیاس‌بندی چرخش‌ها
-                rotateX = (rotateX - 35) * -1; // نرمال‌سازی برای نگه داشتن موبایل
-                rotateY = rotateY * -1;
-                
-                // محدود کردن
-                rotateX = Math.max(-maxAngle, Math.min(maxAngle, rotateX * 0.5)); 
-                rotateY = Math.max(-maxAngle, Math.min(maxAngle, rotateY * 0.5)); 
-
-                card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-
-            }, false);
-            
-            // اگر سنسور غیرفعال شد، به حالت عادی برگردان
-            window.addEventListener('orientationchange', handleLeave);
-
-        }
-    }
-
-    function initHapticFeedback() {
-        const interactives = document.querySelectorAll('.ripple-btn, .glass-btn, .service-card, .game-banner, .action-icon-btn, .attach-btn, .send-btn');
-        interactives.forEach(el => {
-            el.addEventListener('touchstart', () => { 
-                try { tg.HapticFeedback.impactOccurred('light'); } catch(e){} 
-            }, {passive: true});
-            el.addEventListener('click', () => { 
-                // برای جلوگیری از فیدبک مضاعف در دستگاه‌های تاچ، فقط در دسکتاپ یا هنگام کلیک واقعی اجرا شود
-                if(tg.platform === 'tdesktop' || tg.platform === 'macos') { 
-                    try { tg.HapticFeedback.impactOccurred('light'); } catch(e){} 
-                } 
-            });
-        });
-    }
-
-    // --- توابع پشتیبانی (Chat Functions) ---
-    // این توابع بدون تغییر و برای حفظ عملکرد کپی شده‌اند
-
-    function startChatPolling() {
-        if (chatPollInterval) clearInterval(chatPollInterval);
-        chatPollInterval = setInterval(() => loadChatHistory(false), 3000);
     }
     
-    async function loadChatHistory(isFirstLoad = false) {
-        if (!chatEls.container) return;
+    window.submitBet = async function() {
+        if (!betAmount || !betDirection) return;
+        
+        const btn = document.getElementById('btn-submit-bet');
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> در حال ارسال...`;
+        tg.HapticFeedback.impactOccurred('heavy');
+
         try {
-            const response = await fetch(`${API_BASE_URL}/webapp/support/get_history`, {
+            const res = await fetch(`${API_BASE_URL}/webapp/game/bet`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ initData: tg.initData })
+                headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
+                body: JSON.stringify({ initData: tg.initData, amount: betAmount, prediction: betDirection })
             });
-            if (response.ok) {
-                const data = await response.json();
-                if (isFirstLoad) {
-                    chatEls.container.innerHTML = '<div class="date-separator">گفتگوی امن</div>';
-                    lastMessageCount = 0;
-                }
-                const messages = data.messages || [];
-                if (messages.length > lastMessageCount) {
-                    const newMessages = messages.slice(lastMessageCount);
-                    newMessages.forEach(msg => renderMessage(msg));
-                    lastMessageCount = messages.length;
-                    scrollToBottom();
-                } else if (messages.length === 0 && isFirstLoad) {
-                    renderSystemMessage("هنوز پیامی ندارید. اولین پیام را ارسال کنید.");
-                }
+            
+            const data = await res.json();
+
+            if (data.status === 'success') {
+                tg.showAlert(`✅ شرط ${betAmount}$ در قیمت ${data.entry_price.toFixed(2)} ثبت شد!`);
+                tg.HapticFeedback.notificationOccurred('success');
+                // ری‌رندر برای نمایش شرط کاربر
+                fetchGameState();
+                // ریست UI
+                betAmount = 0; betDirection = null;
+                document.querySelectorAll('.amount-btn').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.direction-btn').forEach(btn => btn.classList.remove('active'));
+            } else {
+                tg.showAlert(`❌ خطا در ثبت شرط: ${data.message}`);
+                tg.HapticFeedback.notificationOccurred('error');
             }
         } catch (e) {
-            if (isFirstLoad) renderSystemMessage("خطا در بارگذاری تاریخچه.");
-        }
-    }
-
-    function setupChatListeners() {
-        if (!chatEls.sendBtn || !chatEls.input) return;
-        const newSendBtn = chatEls.sendBtn.cloneNode(true);
-        chatEls.sendBtn.parentNode.replaceChild(newSendBtn, chatEls.sendBtn);
-        chatEls.sendBtn = newSendBtn;
-        chatEls.sendBtn.addEventListener('click', sendMessage);
-        chatEls.input.addEventListener('keypress', function (e) { if (e.key === 'Enter') sendMessage(); });
-        if (chatEls.attachBtn && chatEls.fileInput) {
-            chatEls.attachBtn.addEventListener('click', () => { chatEls.fileInput.click(); });
-            chatEls.fileInput.addEventListener('change', handleFileUpload);
-        }
-        if (chatEls.optionsBtn) {
-            chatEls.optionsBtn.addEventListener('click', () => {
-                tg.showPopup({ title: 'پشتیبانی', message: 'آیا می‌خواهید تیکت را ببندید؟', buttons: [{id: 'close', type: 'destructive', text: 'بله'}, {type: 'cancel'}] }, (btnId) => { if (btnId === 'close') tg.close(); });
-            });
-        }
-    }
-
-    async function handleFileUpload(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        if (file.size > 5 * 1024 * 1024) { tg.showAlert("حجم فایل نباید بیشتر از ۵ مگابایت باشد."); chatEls.fileInput.value = ''; return; }
-        renderMessage({ sender: 'user', text: '📷 در حال آپلود تصویر...', is_me: true, type: 'text' });
-        scrollToBottom();
-        const formData = new FormData();
-        formData.append('initData', tg.initData);
-        formData.append('file', file);
-        try {
-            const response = await fetch(`${API_BASE_URL}/webapp/support/upload_file`, { method: 'POST', body: formData });
-            const result = await response.json();
-            if (response.ok && result.status === 'success') { chatEls.fileInput.value = ''; await loadChatHistory(false); } 
-            else { tg.showAlert("خطا در آپلود: " + (result.message || "نامشخص")); chatEls.fileInput.value = ''; }
-        } catch (e) { tg.showAlert("عدم اتصال به سرور."); chatEls.fileInput.value = ''; }
-    }
-
-    async function sendMessage() {
-        if (isSending) return;
-        const text = chatEls.input.value.trim();
-        if (!text) return;
-        isSending = true;
-        chatEls.sendBtn.style.opacity = '0.5';
-        renderMessage({ sender: 'user', text: text, timestamp: '...', is_me: true });
-        lastMessageCount++;
-        chatEls.input.value = '';
-        scrollToBottom();
-        try {
-            const response = await fetch(`${API_BASE_URL}/webapp/support/send_message`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ initData: tg.initData, message: text, type: 'text' })
-            });
-            const result = await response.json();
-            if (!response.ok || result.status !== 'success') throw new Error(result.message || "خطا");
-            await loadChatHistory(false);
-        } catch (e) {
-            tg.showAlert("خطا در ارسال پیام.");
-            chatEls.input.value = text;
-            lastMessageCount--;
-            const bubbles = document.querySelectorAll('.message-wrapper');
-            if(bubbles.length > 0) bubbles[bubbles.length - 1].remove();
+            tg.showAlert("خطای ارتباط با سرور.");
         } finally {
-            isSending = false;
-            chatEls.sendBtn.style.opacity = '1';
-            chatEls.input.focus();
+            btn.disabled = false;
+            updateBetFooter();
         }
     }
 
-    function renderMessage(msg) {
-        const isUser = msg.sender === 'user' || msg.is_me; 
-        const wrapperClass = isUser ? 'msg-user' : 'msg-admin';
-        const checkIcon = isUser ? '<i class="fas fa-check msg-status-icon"></i>' : '';
-        let contentHtml = '';
-        if (msg.type === 'photo' && msg.file_url) { contentHtml = `<img src="${msg.file_url}" style="max-width: 100%; border-radius: 12px; margin-bottom: 5px; display: block;" alt="Photo">`; if (msg.text) contentHtml += `<span>${escapeHtml(msg.text)}</span>`; } 
-        else { contentHtml = escapeHtml(msg.text); }
-        const html = `<div class="message-wrapper ${wrapperClass}"><div class="bubble">${contentHtml}</div><div class="msg-meta"><span>${msg.timestamp || ''}</span>${checkIcon}</div></div>`;
-        chatEls.container.insertAdjacentHTML('beforeend', html);
-    }
-
-    function renderSystemMessage(text) {
-        const html = `<div style="text-align:center; font-size:0.75rem; color:#666; margin:15px 0; background:rgba(255,255,255,0.05); padding:5px; border-radius:10px; display:inline-block; margin-left:auto; margin-right:auto;">${text}</div>`;
-        const wrapper = document.createElement('div');
-        wrapper.style.textAlign = 'center';
-        wrapper.innerHTML = html;
-        chatEls.container.appendChild(wrapper);
-    }
-
-    function scrollToBottom() { if (chatEls.container) chatEls.container.scrollTop = chatEls.container.scrollHeight; }
-    function escapeHtml(text) { if (!text) return ""; return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
-    // --- پایان توابع پشتیبانی ---
-
-    async function checkUnreadSupportMessages() {
-        if (!els.supportNotif) return;
-        try {
-            const response = await fetch(`${API_BASE_URL}/webapp/support/check_unread`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ initData: tg.initData })
-            });
-            const data = await response.json();
-            if (data.has_unread) els.supportNotif.style.display = 'block';
-        } catch (e) {}
+    // --- SWAP MODAL ---
+    
+    window.openSwapModal = function() {
+        document.getElementById('swap-modal').classList.add('active');
+        document.getElementById('swap-toman-input').value = '';
+        document.getElementById('swap-usd-output').innerText = '۰.۰۰';
+        document.getElementById('swap-rate').innerText = 'در حال دریافت...';
+        tg.HapticFeedback.impactOccurred('medium');
+        fetchSwapRate();
     }
     
-    // توابع show/hide error حذف شدند زیرا از tg.showAlert استفاده می‌شود
+    window.closeSwapModal = function() {
+        document.getElementById('swap-modal').classList.remove('active');
+        tg.HapticFeedback.impactOccurred('light');
+    }
+    
+    let currentSwapRate = 0;
+
+    async function fetchSwapRate() {
+        try {
+            // فرض می‌کنیم USDT/TMN نرخ فروش است
+            const res = await fetch(`${API_BASE_URL}/webapp/get_tether_price_sell`); 
+            const rateData = await res.json();
+            
+            if (rateData.status === 'success') {
+                currentSwapRate = rateData.rate;
+                document.getElementById('swap-rate').innerText = currentSwapRate.toLocaleString('fa-IR');
+            } else {
+                 document.getElementById('swap-rate').innerText = 'خطا در نرخ';
+            }
+        } catch(e) {
+             document.getElementById('swap-rate').innerText = 'خطا در شبکه';
+        }
+    }
+    
+    window.updateSwapOutput = function(input) {
+        const tomanAmount = parseInt(input.value) || 0;
+        const usdOutput = document.getElementById('swap-usd-output');
+        const submitBtn = document.getElementById('btn-confirm-swap');
+        
+        if (currentSwapRate > 0 && tomanAmount > 0) {
+            const usdAmount = (tomanAmount / currentSwapRate).toFixed(2);
+            usdOutput.innerText = usdAmount.toLocaleString('fa-IR', {minimumFractionDigits: 2});
+            
+            // اعتبارسنجی
+            const currentToman = parseInt(currentTomanBalance.replace(/,/g, ''));
+            if (tomanAmount < 50000) {
+                 submitBtn.disabled = true;
+                 submitBtn.innerText = 'حداقل مبلغ ۵۰,۰۰۰ تومان است';
+            } else if (tomanAmount > currentToman) {
+                 submitBtn.disabled = true;
+                 submitBtn.innerText = 'موجودی تومان کافی نیست';
+            } else {
+                 submitBtn.disabled = false;
+                 submitBtn.innerText = `تبدیل به ${usdAmount} $`;
+            }
+        } else {
+            usdOutput.innerText = '۰.۰۰';
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'مبلغ را وارد کنید';
+        }
+    }
+    
+    window.submitSwap = async function() {
+        const tomanAmount = parseInt(document.getElementById('swap-toman-input').value) || 0;
+        if (!tomanAmount || tomanAmount < 50000) return;
+        
+        const btn = document.getElementById('btn-confirm-swap');
+        btn.disabled = true;
+        btn.innerText = 'در حال پردازش...';
+        tg.HapticFeedback.impactOccurred('heavy');
+        
+        try {
+            const res = await fetch(`${API_BASE_URL}/webapp/game/swap-to-usd`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
+                body: JSON.stringify({ initData: tg.initData, amount_toman: tomanAmount })
+            });
+            
+            const data = await res.json();
+            
+            if (data.status === 'success') {
+                tg.showAlert(`✅ ${data.message}`);
+                tg.HapticFeedback.notificationOccurred('success');
+                closeSwapModal();
+                fetchUserData(); 
+                fetchGameState(); // برای آپدیت بالانس بازی
+            } else {
+                tg.showAlert(`❌ خطا: ${data.message}`);
+                tg.HapticFeedback.notificationOccurred('error');
+            }
+        } catch (e) {
+            tg.showAlert("خطای ارتباط با سرور.");
+        } finally {
+            btn.disabled = false;
+            btn.innerText = 'تایید تبدیل';
+            updateSwapOutput(document.getElementById('swap-toman-input'));
+        }
+    }
+    
+    // --- Initial Call to set footer state ---
+    // این تابع باید بعد از لود اولیه داده ها فراخوانی شود
+    setTimeout(() => updateBetFooter(), 1500);
 
 })();

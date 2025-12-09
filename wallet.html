@@ -19,6 +19,7 @@
             --accent-red: #F6465D;
             --text-muted: #888888;
             --glass-border: rgba(255, 204, 0, 0.1);
+            --usdt-color: #50af95; /* رنگ خاص برای تتر */
         }
         
         /* --- Wallet Specific Styles --- */
@@ -65,6 +66,7 @@
             display: flex; align-items: center; justify-content: center;
             font-size: 1.2rem; background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border);
         }
+        .tx-icon-box img { max-width: 24px; max-height: 24px; }
         
         .tx-details { display: flex; flex-direction: column; gap: 4px; }
         .tx-title { font-size: 0.9rem; font-weight: 700; color: #fff; }
@@ -635,26 +637,38 @@
                 let colorClass = '#fff';
                 let iconHtml = '';
                 let iconBg = 'rgba(255,255,255,0.05)';
+                let txType = tx.type || ''; // برای اطمینان از وجود نوع تراکنش
                 
+                // --- 1. تعیین رنگ پیش‌فرض و آیکون (برای تراکنش‌های تومان/عمومی) ---
                 if(tx.color === 'success') { 
                     colorClass = 'var(--accent-green)'; 
-                    iconHtml = '<i class="fas fa-plus" style="color:var(--accent-green)"></i>'; 
+                    iconHtml = '<i class="fas fa-wallet" style="color:var(--accent-green)"></i>'; // آیکون تومان واریزی
                     iconBg = 'rgba(14, 203, 129, 0.1)';
                 }
                 else if(tx.color === 'danger') { 
                     colorClass = 'var(--accent-red)'; 
-                    iconHtml = '<i class="fas fa-minus" style="color:var(--accent-red)"></i>'; 
+                    iconHtml = '<i class="fas fa-bank" style="color:var(--accent-red)"></i>'; // آیکون تومان برداشتی
                     iconBg = 'rgba(246, 70, 93, 0.1)';
                 }
                 else { 
                     colorClass = 'var(--primary-gold)'; 
-                    iconHtml = '<i class="fas fa-clock" style="color:var(--primary-gold)"></i>'; 
+                    iconHtml = '<i class="fas fa-clock" style="color:var(--primary-gold)"></i>'; // آیکون در انتظار
                     iconBg = 'rgba(255, 204, 0, 0.1)';
                 }
-                // اگر نوع تراکنش یوتوپیا بود، آیکون یوتوپیا (بر اساس نوع)
-                if (tx.type.includes('UTOPIA')) {
+
+                // --- 2. اصلاح: آیکون تتر (USDT) ---
+                if (txType.includes('USDT') || txType.includes('TETHER')) {
+                    iconHtml = '<img src="webapp/images/usdt_logo.png" style="width:24px;height:24px;border-radius:4px;">';
+                    iconBg = 'rgba(80, 175, 149, 0.2)'; // Greenish/Dark background for USDT
+                    // اگر تراکنش USD بود، رنگ مبلغ را سبز نگه میداریم
+                    colorClass = (tx.color === 'success' || tx.color === 'danger') ? colorClass : 'var(--usdt-color)';
+                }
+                
+                // --- 3. اصلاح: آیکون یوتوپیا (UTOPIA) ---
+                else if (txType.includes('UTOPIA')) {
                     iconHtml = '<img src="webapp/images/utopia_logo.png" style="width:24px;height:24px;border-radius:4px;">';
                     iconBg = 'rgba(255, 204, 0, 0.15)';
+                    colorClass = 'var(--primary-gold)'; // یوتوپیا طلایی
                 }
 
 

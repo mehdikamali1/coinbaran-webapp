@@ -1,4 +1,4 @@
-﻿/* webapp/game.js (v78.1 - FINAL: Full History & Total P/L Summary) */
+﻿/* webapp/game.js (v79.0 - FINAL: Guaranteed History Display & Summary) */
 
 const tg = window.Telegram.WebApp;
 const API_BASE_URL = window.location.origin;
@@ -80,7 +80,6 @@ window.onload = function() {
 
 // ==========================================
 // 1. WebSocket Setup (Real-time Core)
-// (بدون تغییر)
 // ==========================================
 
 function initWebSocket() {
@@ -230,7 +229,6 @@ function updateGameStatus(data) {
 
 // ==========================================
 // 3. Chart Logic (Upgraded to Candlestick)
-// (بدون تغییر)
 // ==========================================
 
 function initChart() {
@@ -329,7 +327,6 @@ function updateChartData(serverPrice, roundId, timeLeft) {
 
 // ==========================================
 // 4. Game Logic & Utilities
-// (بدون تغییر)
 // ==========================================
 
 function updateTimerVisuals(timeLeft) {
@@ -497,7 +494,6 @@ function showResultModal(result) {
     }
     elModal.classList.add('active');
     
-    // حذف خط قیمت نهایی پس از چند ثانیه
     setTimeout(() => {
         if(closePriceLine) {
             lineSeries.removePriceLine(closePriceLine);
@@ -593,9 +589,10 @@ async function fetchAndRenderHistory() {
             let totalBets = data.history.length;
             let totalWins = 0;
 
-            let html = '';
+            let contentHtml = ''; // استفاده از متغیر جداگانه برای محتوا
+
             if (data.history.length === 0) {
-                 html = '<p class="no-data-msg">هنوز هیچ شرطی ثبت نشده است.</p>';
+                 contentHtml = '<p class="no-data-msg">هیچ شرطی ثبت نشده است.</p>';
             } else {
                 // 1. محاسبه خلاصه P&L
                 data.history.forEach(r => {
@@ -609,48 +606,46 @@ async function fetchAndRenderHistory() {
                 const profitSign = isOverallProfit ? '+' : '-';
                 
                 const summaryHtml = `
-                    <div class="history-summary-box glass-panel-summary">
-                        <div class="summary-item">
-                            <span>تعداد راند:</span>
+                    <div class="history-summary-box" style="margin-bottom: 20px; padding: 15px; background: rgba(255, 255, 255, 0.05); border-radius: 10px;">
+                        <div class="summary-item" style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span style="color: #ccc;">تعداد راند:</span>
                             <span class="value">${totalBets}</span>
                         </div>
-                        <div class="summary-item">
-                            <span>بردهای شما:</span>
+                        <div class="summary-item" style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span style="color: #ccc;">بردهای شما:</span>
                             <span class="value">${totalWins} (${((totalWins / totalBets) * 100).toFixed(1)}%)</span>
                         </div>
-                        <div class="summary-item total-pl" style="color: ${profitColor};">
+                        <div class="summary-item total-pl" style="display: flex; justify-content: space-between; font-weight: bold; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
                             <span>سود/زیان کل:</span>
-                            <span class="value">${profitSign} $${Math.abs(totalProfit).toFixed(2)}</span>
+                            <span class="value" style="color: ${profitColor};">${profitSign} $${Math.abs(totalProfit).toFixed(2)}</span>
                         </div>
                     </div>
                 `;
-                html += summaryHtml;
+                contentHtml += summaryHtml;
 
                 // 3. ساخت لیست آیتم‌های تاریخچه
-                html += '<ul class="history-list-items">';
+                let listHtml = '<ul class="history-list-items" style="list-style: none; padding: 0;">';
                 data.history.forEach(r => {
                     const statusClass = r.win ? 'win' : 'loss';
                     const icon = r.win ? '▲' : '▼';
                     const color = r.win ? CONFIG.CHART_COLORS.up : CONFIG.CHART_COLORS.down;
                     const itemProfitSign = r.profit >= 0 ? '+' : '-';
 
-                    html += `
-                        <li class="history-item ${statusClass}">
-                            <div class="round-id-time">#${r.round_id} <span class="time-stamp">${r.time}</span></div>
-                            <div class="prediction-info">
-                                <span class="pred-type" style="color: ${color};">${r.prediction} ${icon}</span>
-                                <span class="bet-amount">$${r.amount.toFixed(2)}</span>
+                    listHtml += `
+                        <li class="history-item ${statusClass}" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed rgba(255, 255, 255, 0.05);">
+                            <div class="round-id-time" style="font-size: 0.8rem; color: #aaa;">#${r.round_id} <span class="time-stamp" style="font-size: 0.7rem;">${r.time}</span></div>
+                            <div class="prediction-info" style="font-weight: bold;">
+                                <span class="pred-type" style="color: ${color}; margin-right: 5px;">${r.prediction} ${icon}</span>
+                                <span class="bet-amount" style="color: #ccc;">$${r.amount.toFixed(2)}</span>
                             </div>
-                            <div class="price-action">
-                                <span class="entry-price">$${r.entry.toFixed(2)} → $${r.close.toFixed(2)}</span>
-                            </div>
-                            <div class="profit-amount" style="color: ${color};">${itemProfitSign}$${Math.abs(r.profit).toFixed(2)}</div>
+                            <div class="profit-amount" style="font-weight: bold; color: ${color};">${itemProfitSign}$${Math.abs(r.profit).toFixed(2)}</div>
                         </li>
                     `;
                 });
-                html += '</ul>';
+                listHtml += '</ul>';
+                contentHtml += listHtml;
             }
-            historyList.innerHTML = html;
+            historyList.innerHTML = contentHtml;
         } else {
             historyList.innerHTML = '<p class="error-msg">❌ خطای بارگذاری تاریخچه.</p>';
         }

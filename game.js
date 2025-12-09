@@ -1,4 +1,4 @@
-﻿/* webapp/game.js (v82.0 - DEBUG: Use Leaderboard Button to Check History JSON) */
+﻿/* webapp/game.js (v83.0 - DEBUG: Restore Leaderboard Button, Activate History Debug) */
 
 const tg = window.Telegram.WebApp;
 const API_BASE_URL = window.location.origin;
@@ -368,6 +368,12 @@ function updateHistoryRibbon(history) {
 
 // --- Event Handlers (بدون تغییر) ---
 function setupEventListeners() {
+    // FIX: اتصال دکمه 'مشاهده همه'
+    const historyBtn = document.getElementById('open-history-btn');
+    if (historyBtn) {
+         historyBtn.onclick = window.openHistory; 
+    }
+    
     document.querySelectorAll('button').forEach(btn => {
         btn.addEventListener('click', () => { if(!btn.disabled) { SoundFX.click(); tg.HapticFeedback.impactOccurred('light'); } });
     });
@@ -446,10 +452,9 @@ window.openLeaderboard = () => {
 };
 window.closeLeaderboard = () => document.getElementById('leaderboard-modal').classList.remove('active');
 
-// --- اتصال موقت دکمه Leaderboard به تابع عیب‌یابی تاریخچه (FIX)
+// FIX: بازگشت به فراخوانی اصلی (سالم)
 window.openHistory = () => {
-    // فراخوانی تابع عیب‌یابی (JSON خام)
-    runHistoryDebug();
+    fetchAndRenderHistory();
     document.getElementById('history-modal').classList.add('active');
 };
 window.closeHistory = () => document.getElementById('history-modal').classList.remove('active');
@@ -517,7 +522,7 @@ function showToast(msg) {
 
 
 // ==========================================
-// 5. Leaderboard & History Logic (DEBUG)
+// 5. Leaderboard & History Logic (FINAL FIX)
 // ==========================================
 
 async function fetchLeaderboard() {
@@ -574,10 +579,11 @@ function renderLeaderboard(rankingData, title) {
     leaderboardList.innerHTML += html;
 }
 
-// تابع عیب‌یابی (قبلاً fetchAndRenderHistory بود)
-async function runHistoryDebug() {
+// تابع اصلی برای بارگذاری تاریخچه و محاسبه P&L (FINAL FIX)
+async function fetchAndRenderHistory() {
     const historyList = document.getElementById('history-list');
-    historyList.innerHTML = '<p style="text-align: center; padding: 20px; color: #aaa;">در حال دریافت داده خام (تست)...</p>'; 
+    // FIX: استفاده از یک تگ ساده برای اطمینان از دیده شدن لودر
+    historyList.innerHTML = '<p style="text-align: center; padding: 20px; color: #aaa;">در حال دریافت داده...</p>'; 
 
     try {
         const res = await fetch(`${API_BASE_URL}/webapp/game/round_history`, {
@@ -586,18 +592,77 @@ async function runHistoryDebug() {
         });
         
         if (!res.ok) {
-            historyList.innerHTML = `<p style="text-align: center; color: #ff0000; padding: 20px;">❌ خطا در API: کد ${res.status}.</p>`;
+            const errData = await res.json();
+            historyList.innerHTML = `<p style="text-align: center; color: #ff0000; padding: 20px;">❌ خطا در API: ${errData.message || res.status}.</p>`;
             return;
         }
 
         const data = await res.json();
         
-        // --- تزریق JSON خام برای عیب‌یابی ---
-        historyList.innerHTML = `<pre style="white-space: pre-wrap; font-size: 10px; color: #fff; padding: 10px; border: 1px solid #ff0000; background: #333;">${JSON.stringify(data, null, 2)}</pre>`;
-        // ------------------------------------------
+        if (data.status === 'success' && data.history) {
+            let totalProfit = 0;
+            let totalBets = data.history.length;
+            let totalWins = 0;
 
+            let contentHtml = ''; 
+
+            if (data.history.length === 0) {
+                 contentHtml = '<p style="text-align: center; color: #aaa; padding: 20px;">هیچ شرطی ثبت نشده است.</p>';
+            } else {
+                data.history.forEach(r => {
+                    totalProfit += r.profit;
+                    if (r.win) totalWins++;
+                });
+
+                const isOverallProfit = totalProfit >= 0;
+                const profitColor = isOverallProfit ? CONFIG.CHART_COLORS.up : CONFIG.CHART_COLORS.down;
+                const profitSign = isOverallProfit ? '+' : ''; 
+                
+                const summaryHtml = `
+                    <div class="history-summary-box" style="margin-bottom: 20px; padding: 15px; background: rgba(255, 255, 255, 0.05); border-radius: 10px;">
+                        <div class="summary-item" style="display: flex; justify-content: space-between; margin-bottom: 5px; color: #ccc;">
+                            <span>تعداد راند:</span>
+                            <span class="value">${totalBets}</span>
+                        </div>
+                        <div class="summary-item" style="display: flex; justify-content: space-between; margin-bottom: 5px; color: #ccc;">
+                            <span>بردهای شما:</span>
+                            <span class="value">${totalWins} (${((totalWins / totalBets) * 100).toFixed(1)}%)</span>
+                        </div>
+                        <div class="summary-item total-pl" style="display: flex; justify-content: space-between; font-weight: bold; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                            <span style="color: #fff;">سود/زیان کل:</span>
+                            <span class="value" style="color: ${profitColor};">${profitSign} $${Math.abs(totalProfit).toFixed(2)}</span>
+                        </div>
+                    </div>
+                `;
+                contentHtml += summaryHtml;
+
+                let listHtml = '<ul class="history-list-items" style="list-style: none; padding: 0;">';
+                data.history.forEach(r => {
+                    const statusClass = r.win ? 'win' : 'loss';
+                    const icon = r.win ? '▲' : '▼';
+                    const color = r.win ? CONFIG.CHART_COLORS.up : CONFIG.CHART_COLORS.down;
+                    const itemProfitSign = r.profit >= 0 ? '+' : '-';
+
+                    listHtml += `
+                        <li class="history-item ${statusClass}" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed rgba(255, 255, 255, 0.05);">
+                            <div class="round-id-time" style="font-size: 0.8rem; color: #aaa;">#${r.round_id} <span class="time-stamp" style="font-size: 0.7rem;">${r.time}</span></div>
+                            <div class="prediction-info" style="font-weight: bold; display: flex; align-items: center;">
+                                <span class="pred-type" style="color: ${color}; margin-right: 5px;">${r.prediction} ${icon}</span>
+                                <span class="bet-amount" style="color: #ccc; font-size: 0.9rem;">$${r.amount.toFixed(2)}</span>
+                            </div>
+                            <div class="profit-amount" style="font-weight: bold; color: ${color};">${itemProfitSign} $${Math.abs(r.profit).toFixed(2)}</div>
+                        </li>
+                    `;
+                });
+                listHtml += '</ul>';
+                contentHtml += listHtml;
+            }
+            historyList.innerHTML = contentHtml;
+        } else {
+            historyList.innerHTML = '<p style="text-align: center; color: #f6465d; padding: 20px;">❌ خطای بارگذاری تاریخچه.</p>';
+        }
     } catch (e) {
-        historyList.innerHTML = `<p style="text-align: center; color: #ff0000; padding: 20px;">❌ خطای شبکه/جاوااسکریپت: ${e.message}</p>`;
+        historyList.innerHTML = `<p style="text-align: center; color: #ff0000; padding: 20px;">❌ خطای شبکه در بارگذاری تاریخچه. ${e.name}: ${e.message}</p>`;
         console.error("History Fetch Error:", e);
     }
 }

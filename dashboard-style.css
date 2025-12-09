@@ -1,4 +1,4 @@
-﻿/* webapp/dashboard-style.css (v111.0 - LUXURY & INTERACTIVE UI) */
+﻿/* webapp/dashboard-style.css (v114.0 - FINAL LUXURY UI & USDT Logo FIX) */
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;300;400;500;700;800;900&family=Cinzel:wght@400;700;900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap');
 
@@ -98,25 +98,26 @@ body {
 .profile-section { display: flex; align-items: center; gap: 12px; }
 .avatar-container { position: relative; width: 48px; height: 48px; padding: 2px; border: 2px solid var(--gold-primary); border-radius: 14px; background: #181818; box-shadow: 0 0 10px rgba(255, 204, 0, 0.2); }
 .avatar-img { width: 100%; height: 100%; border-radius: 11px; object-fit: cover; }
-.status-indicator { background: var(--accent-green); border-color: #000; box-shadow: 0 0 5px var(--accent-green); }
+.status-indicator { position: absolute; bottom: -2px; right: -2px; width: 10px; height: 10px; background: var(--accent-green); border: 2px solid #000; border-radius: 50%; box-shadow: 0 0 5px var(--accent-green); }
 
+.user-info { display: flex; flex-direction: column; justify-content: center; }
 .user-info h2 { font-size: 1rem; margin: 0; color: var(--gold-primary); font-weight: 700; line-height: 1.2; text-shadow: 0 0 5px rgba(255, 204, 0, 0.2); }
 
 /* XP Bar */
 .xp-container { width: 100px; margin-top: 6px; }
 .xp-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
-.level-badge { 
-    font-size: 0.6rem; font-weight: 800; color: #000; 
+.level-badge {	
+    font-size: 0.6rem; font-weight: 800; color: #000;	
     background: linear-gradient(45deg, var(--gold-primary), var(--gold-rich)); 
-    padding: 1px 6px; border-radius: 4px; 
+    padding: 1px 6px; border-radius: 4px;	
     font-family: 'Roboto Mono'; letter-spacing: -0.5px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.5);
 }
 .next-level { font-size: 0.6rem; color: #aaa; font-family: 'Roboto Mono'; }
 .xp-bar-bg { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
-.xp-bar-fill { 
-    height: 100%; 
-    background: linear-gradient(90deg, var(--gold-dark), var(--gold-primary)); 
+.xp-bar-fill {	
+    height: 100%;	
+    background: linear-gradient(90deg, var(--gold-dark), var(--gold-primary));	
     width: 0%; 
     transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 0 15px var(--gold-primary);
@@ -208,7 +209,7 @@ body {
 .glass-btn:active { transform: scale(0.96); opacity: 0.8; }
 .glass-btn:active .btn-icon { transform: scale(0.9); box-shadow: 0 2px 5px rgba(0,0,0,0.7), 0 0 20px rgba(255, 204, 0, 0.3); }
 
-/* Services Grid */
+/* Services Grid & Icon Fix */
 .services-grid-modern { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 .service-card {
     background: rgba(15, 15, 15, 0.7); border: 1px solid rgba(255, 255, 255, 0.05);
@@ -218,16 +219,26 @@ body {
 }
 .service-card:active { background: rgba(25, 25, 25, 0.9); transform: translateY(1px); }
 
-/* --- استایل جدید لوگوی یوتوپیا --- */
-.service-icon { font-size: 1.6rem; width: 40px; height: 40px; text-align: center; }
-
-.utopia-icon-img {
-    width: 40px; height: 40px; background-size: cover; 
-    border-radius: 8px; /* شیک‌تر و مدرن‌تر */
-    box-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
-    transition: all 0.3s;
+/* CRITICAL FIX: حذف هرگونه پس‌زمینه ناخواسته دور لوگو */
+.service-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    color: var(--gold-primary);
+    background: transparent !important; 
+    border: none !important;
+    box-shadow: none !important; 
 }
-/* --- پایان استایل جدید لوگوی یوتوپیا --- */
+.utopia-icon-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: transparent !important; /* اطمینان از شفاف بودن پس‌زمینه خود تصویر */
+    border-radius: 0 !important;
+}
 
 .gold-glow { color: var(--gold-primary); filter: drop-shadow(0 0 8px rgba(255, 204, 0, 0.5)); }
 .pink-glow { color: #FF007A; filter: drop-shadow(0 0 8px rgba(255,0,122,0.5)); }
@@ -257,7 +268,7 @@ body {
     100% { border-color: rgba(255, 204, 0, 0.5); }
 }
 
-/* --- Support Section Styles (Minimal Change) --- */
+/* --- Support Section Styles --- */
 .notif-dot-support { background-color: var(--accent-red); border: 1.5px solid #1c1c1e; box-shadow: 0 0 4px rgba(246, 70, 93, 0.6); }
 .msg-user .bubble { background: linear-gradient(135deg, var(--gold-primary), var(--gold-rich)); color: #000; }
 .msg-admin .bubble { background: #1c1c1e; border: 1px solid rgba(255,255,255,0.1); }
@@ -269,7 +280,6 @@ body {
 
 /* --- استایل‌های صفحات داخلی (Wallet/KYC) --- */
 .glass-field {
-    /* بازنویسی برای هماهنگی با تم طلایی جدید */
     border: 1px solid rgba(255, 204, 0, 0.1); 
     font-family: 'Vazirmatn';
 }

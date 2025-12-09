@@ -1,4 +1,4 @@
-﻿/* webapp/script.js (v95.0 - Final Fix: BFCache & Navigation) */
+﻿/* webapp/script.js (v96.0 - UPGRADE: XP PROGRESSION) */
 (function () {
     'use strict';
 
@@ -253,7 +253,10 @@
         if (els.uusdBalance) els.uusdBalance.innerHTML = `${data.uusd_balance} <small>$</small>`;
         if (els.xpBalance) els.xpBalance.innerHTML = `${data.xp_balance} <small>XP</small>`;
 
-        updateLevelProgress(parseInt((data.xp_balance || "0").replace(/,/g, '')) || 0);
+        // UPGRADE: Parse XP balance correctly before calling progression update
+        const rawXpString = (data.xp_balance || "0").replace(/,/g, '');
+        const currentXp = parseInt(rawXpString) || 0;
+        updateLevelProgress(currentXp);
 
         if (tg.initDataUnsafe?.user?.photo_url && els.avatar) {
             els.avatar.src = tg.initDataUnsafe.user.photo_url;
@@ -263,17 +266,55 @@
 
     function updateLevelProgress(xp) {
         if (!els.xpFill || !els.levelBadge) return;
-        const levels = [0, 500, 1500, 3500, 7000, 15000, 30000]; 
-        let currentLevel = 1; let prevThreshold = 0; let nextThreshold = 500;
-        for (let i = 0; i < levels.length; i++) {
-            if (xp >= levels[i]) { currentLevel = i + 1; prevThreshold = levels[i]; nextThreshold = levels[i+1] || (levels[i] * 2); } else { break; }
+        
+        // UPGRADE: New Leveling Logic (Exponential progression for 5 levels, using 2^N * 500)
+        const BASE_XP = 500;
+        const MAX_LEVEL = 5;
+        let currentLevel = 1; 
+        let prevThreshold = 0; 
+        let nextThreshold = BASE_XP;
+        
+        // Calculate current level and thresholds
+        for (let i = 1; i <= MAX_LEVEL; i++) {
+            const threshold = BASE_XP * Math.pow(2, i - 1); // 500, 1000, 2000, 4000, 8000
+            if (xp >= threshold) {
+                currentLevel = i + 1;
+                prevThreshold = threshold;
+                nextThreshold = BASE_XP * Math.pow(2, i);
+            } else {
+                nextThreshold = threshold;
+                break;
+            }
         }
+        
+        // Cap the max level appearance
+        if (currentLevel > MAX_LEVEL) {
+            currentLevel = MAX_LEVEL;
+            prevThreshold = BASE_XP * Math.pow(2, MAX_LEVEL - 1);
+            nextThreshold = prevThreshold; // Stay at max level
+        }
+
         let percentage = 0;
-        if (nextThreshold > prevThreshold) percentage = ((xp - prevThreshold) / (nextThreshold - prevThreshold)) * 100;
+        if (nextThreshold > prevThreshold) {
+            percentage = ((xp - prevThreshold) / (nextThreshold - prevThreshold)) * 100;
+        } else if (currentLevel === MAX_LEVEL && xp >= prevThreshold) {
+            percentage = 100; // Max level is full
+        }
+        
         percentage = Math.min(100, Math.max(0, percentage));
+        
+        // UPGRADE: Update UI elements
         els.xpFill.style.width = `${percentage}%`;
         els.levelBadge.innerText = `VIP ${currentLevel}`;
-        if (els.nextLevelText) els.nextLevelText.innerText = `${Math.floor(percentage)}%`;
+        
+        if (els.nextLevelText) {
+            if (currentLevel === MAX_LEVEL && percentage === 100) {
+                 els.nextLevelText.innerText = `MAX`;
+            } else {
+                 const remaining = nextThreshold - xp;
+                 els.nextLevelText.innerText = `${remaining.toLocaleString()} XP to LVL ${currentLevel + 1}`;
+            }
+        }
     }
 
     function updateTickerUI(rates) {
@@ -306,9 +347,9 @@
         }
         let d = `M ${points[0].x},${points[0].y}`;
         for (let i = 1; i < points.length; i++) { d += ` L ${points[i].x},${points[i].y}`; }
-        let strokeColor = '#FFD700'; let fillUrl = 'url(#gradNeutral)';
-        if (changePercent > 0) { strokeColor = '#0ECB81'; fillUrl = 'url(#gradUp)'; } 
-        else if (changePercent < 0) { strokeColor = '#F6465D'; fillUrl = 'url(#gradDown)'; }
+        let strokeColor = 'var(--gold-primary)'; let fillUrl = 'url(#gradNeutral)'; // Use global variable
+        if (changePercent > 0) { strokeColor = 'var(--accent-green)'; fillUrl = 'url(#gradUp)'; } // Use global variable
+        else if (changePercent < 0) { strokeColor = 'var(--accent-red)'; fillUrl = 'url(#gradDown)'; } // Use global variable
         const pathLine = document.createElementNS("http://www.w3.org/2000/svg", "path");
         pathLine.setAttribute("d", d); pathLine.setAttribute("fill", "none"); pathLine.setAttribute("stroke", strokeColor); pathLine.setAttribute("stroke-width", "2"); pathLine.setAttribute("stroke-linecap", "round"); pathLine.setAttribute("stroke-linejoin", "round");
         const dFill = d + ` V ${height} H 0 Z`;
@@ -359,10 +400,10 @@
 
     function updateKycBadge(status) {
         if (!els.kycText) return;
-        let text = "Guest", color = "#848E9C", bg = "rgba(255,255,255,0.05)", border = "rgba(255,255,255,0.1)";
-        if (status === 'verified') { text = "Verified ✅"; color = "#0ECB81"; bg = "rgba(14, 203, 129, 0.1)"; border = "rgba(14, 203, 129, 0.3)"; }
-        else if (status === 'pending') { text = "Pending ⏳"; color = "#F0B90B"; bg = "rgba(240, 185, 11, 0.1)"; border = "rgba(240, 185, 11, 0.3)"; }
-        else if (status === 'rejected') { text = "Action Req ❌"; color = "#F6465D"; bg = "rgba(246, 70, 93, 0.1)"; border = "rgba(246, 70, 93, 0.3)"; }
+        let text = "Guest", color = "var(--text-muted)", bg = "rgba(255,255,255,0.05)", border = "rgba(255,255,255,0.1)"; // Use global vars
+        if (status === 'verified') { text = "Verified ✅"; color = "var(--accent-green)"; bg = "rgba(14, 203, 129, 0.1)"; border = "rgba(14, 203, 129, 0.3)"; }
+        else if (status === 'pending') { text = "Pending ⏳"; color = "var(--gold-primary)"; bg = "rgba(240, 185, 11, 0.1)"; border = "rgba(240, 185, 11, 0.3)"; }
+        else if (status === 'rejected') { text = "Action Req ❌"; color = "var(--accent-red)"; bg = "rgba(246, 70, 93, 0.1)"; border = "rgba(246, 70, 93, 0.3)"; }
         els.kycText.innerText = text; els.kycText.style.color = color; els.kycText.style.background = bg; els.kycText.style.borderColor = border;
     }
 
@@ -495,7 +536,7 @@
     }
 
     function renderSystemMessage(text) {
-        const html = `<div style="text-align:center; font-size:0.75rem; color:#666; margin:15px 0; background:rgba(255,255,255,0.05); padding:5px; border-radius:10px; display:inline-block; margin-left:auto; margin-right:auto;">${text}</div>`;
+        const html = `<div style="text-align:center; font-size:0.75rem; color:var(--text-muted); opacity:0.8; margin:15px 0; background:rgba(255,255,255,0.05); padding:5px; border-radius:10px; display:inline-block; margin-left:auto; margin-right:auto;">${text}</div>`;
         const wrapper = document.createElement('div');
         wrapper.style.textAlign = 'center';
         wrapper.innerHTML = html;
@@ -504,5 +545,5 @@
 
     function scrollToBottom() { if (chatEls.container) chatEls.container.scrollTop = chatEls.container.scrollHeight; }
     function escapeHtml(text) { if (!text) return ""; return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
-    function showError(msg) { if (loader) { loader.style.opacity = '1'; loader.style.display = 'flex'; loader.innerHTML = `<div class="loader-content"><p style="color:#F6465D;">${msg}</p><button onclick="window.location.reload()">تلاش مجدد</button></div>`; } }
+    function showError(msg) { if (loader) { loader.style.opacity = '1'; loader.style.display = 'flex'; loader.innerHTML = `<div class="loader-content"><p style="color:var(--accent-red);">${msg}</p><button onclick="window.location.reload()">تلاش مجدد</button></div>`; } }
 })();

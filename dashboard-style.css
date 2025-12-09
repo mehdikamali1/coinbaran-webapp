@@ -1,4 +1,4 @@
-﻿/* webapp/dashboard-style.css (v116.0 - FINAL FIX: USDT Logo Concealment) */
+﻿/* webapp/dashboard-style.css (v117.0 - FINAL USDT Logo Circle FIX) */
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;300;400;500;700;800;900&family=Cinzel:wght@400;700;900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap');
 
@@ -250,8 +250,6 @@ body {
 .blue-glow { color: var(--accent-blue); filter: drop-shadow(0 0 8px rgba(59,130,246,0.5)); }
 .service-meta h4 { margin: 0 0 3px 0; font-size: 0.9rem; color: var(--gold-primary); font-weight: 700; }
 .service-meta span { font-size: 0.7rem; color: #aaa; }
-
-/* ... (ادامه استایل‌ها) ... */
 
 /* Game Banner (Enhanced) */
 .game-banner {

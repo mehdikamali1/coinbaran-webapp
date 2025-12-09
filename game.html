@@ -10,19 +10,40 @@
     <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
-    <link rel="stylesheet" href="webapp/game-style.css?v=71.0">
+        <link rel="stylesheet" href="/webapp/game-style.css?v=71.3">
     
     <style>
         body { font-family: 'Vazirmatn', sans-serif !important; }
         .main-price { letter-spacing: 0; } 
         .btn-title { font-size: 1.1rem; }
         .btn-rate { font-family: 'Roboto Mono'; font-size: 0.8rem; opacity: 0.9; }
+
+        /* ------------------------------------------------ */
+        /* ✅ FIX: تضمین قابلیت کلیک دکمه مشاهده همه (حفظ شده) */
+        /* ------------------------------------------------ */
+        
+        .history-header {
+            position: relative;
+            z-index: 10;
+        }
+        
+        #open-history-btn {
+            pointer-events: auto !important; 
+            cursor: pointer;
+            position: relative;
+            z-index: 12; 
+            min-width: 60px; 
+            padding: 5px 10px;
+        }
+
         /* Style for the injected History Summary Box (just in case) */
         .history-summary-box {
             margin-bottom: 20px; 
             padding: 15px; 
             background: rgba(255, 255, 255, 0.05); 
             border-radius: 10px;
+            position: relative;
+            z-index: 1; 
         }
         .history-summary-box .summary-item {
             display: flex; justify-content: space-between; margin-bottom: 5px;
@@ -39,7 +60,7 @@
     <div class="grid-overlay"></div>
 
     <div id="game-loader" style="position:fixed; inset:0; background:#000; z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:opacity 0.5s;">
-        <img src="webapp/images/logo-gold.png" alt="CB" class="main-logo-img" style="width:100px; height:100px;">
+        <img src="/webapp/images/logo-gold.png" alt="CB" class="main-logo-img" style="width:100px; height:100px;">
         <p class="loading-status" style="color:var(--primary-gold); margin-top:15px;">در حال اتصال به بازار جهانی...</p>
     </div>
 
@@ -111,6 +132,9 @@
                 <span class="loader-text" style="margin-top:15px;">در حال دریافت نمودار...</span>
             </div>
         </div>
+        
+        <div id="dynamic-summary-placeholder" style="margin-bottom: 10px;">
+            </div>
 
         <div class="history-section">
             <div class="history-header">
@@ -246,7 +270,7 @@
                 <div class="loader-spinner"></div>
             </div>
         </div>
-    </div>
+      </div>
 
     <div id="history-modal" class="modal-overlay">
         <div class="modal-content glass-panel full-height-modal">
@@ -262,9 +286,10 @@
     <div id="toast" class="toast hidden">
         <div class="toast-icon">ℹ️</div>
         <div class="toast-message">پیام سیستم</div>
+        
     </div>
 
-    <script src="webapp/game.js?v=79.0"></script>
+        <script src="/webapp/game.js?v=79.1"></script>
     
     <script>
         window.addEventListener('load', () => {
@@ -273,10 +298,9 @@
                 if(l) { l.style.opacity='0'; setTimeout(()=>l.style.display='none', 500); }
             }, 1000);
             
-            // FIX: اتصال دکمه مشاهده همه به تابع JS
+            // FIX: اتصال دکمه مشاهده همه به تابع JS (این در game.js هم هست اما برای redundancy اینجا نگه داشته می‌شود)
             const historyBtn = document.getElementById('open-history-btn');
             if (historyBtn) {
-                 // توجه: در این مرحله ما از تابع عیب‌یابی استفاده می‌کنیم
                  historyBtn.onclick = window.openHistory; 
             }
         });

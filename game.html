@@ -10,7 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
-    <link rel="stylesheet" href="webapp/game-style.css?v=71.0">
+        <link rel="stylesheet" href="/webapp/game-style.css?v=71.1">
     
     <style>
         body { font-family: 'Vazirmatn', sans-serif !important; }
@@ -25,20 +25,15 @@
         /* اولویت دهی به هدر که دکمه در آن قرار دارد */
         .history-header {
             position: relative;
-            z-index: 10; /* مطمئن شوید که بالاتر از هر عنصر دیگری در نزدیکی آن است */
+            z-index: 10;
         }
         
         /* استایل نهایی دکمه */
         #open-history-btn {
-            /* اگر عنصر دیگری مانند یک Overlay پنهان روی دکمه قرار گرفته باشد، این آن را قابل کلیک می‌کند */
             pointer-events: auto !important; 
             cursor: pointer;
-            
-            /* افزایش زِد ایندکس برای اطمینان بیشتر */
             position: relative;
             z-index: 12; 
-            
-            /* ابعاد را جهت رفع مشکل ابعاد صفر بررسی کنید */
             min-width: 60px; 
             padding: 5px 10px;
         }
@@ -251,7 +246,6 @@
                     <label style="color:#888; font-size:0.8rem;">مبلغ به تومان</label>
                     <div class="swap-input-wrapper">
                         <input type="text" id="swap-input-toman" placeholder="مثلاً 100,000" inputmode="numeric">
-                        <span class="currency-tag">تومان</span>
                     </div>
                 </div>
 

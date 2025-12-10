@@ -1,9 +1,9 @@
-﻿/* webapp/dashboard-style.css (v97.0 - Final Precision, Complete File) */
+﻿/* webapp/dashboard-style.css (v98.0 - Definitive Layout Fix - COMPLETE) */
 
 /* NOTE: This file assumes global.css has been imported first for variables and base styling. */
 
 /* =========================================
-    1. Loader (Unchanged for visual stability)
+    1. Loader
     ========================================= */
 #loader {
     position: fixed;
@@ -336,7 +336,7 @@
 
 
 /* =========================================
-    5. Premium Asset Card (Digital Vault Polished - FIXED FOOTER)
+    5. Premium Asset Card (Definitive Layout Fix)
     ========================================= */
 .premium-card {
     /* Main container styles inherited */
@@ -402,7 +402,6 @@
     color: var(--gold-primary);
     letter-spacing: -2px;
     text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
-    min-width: 100px;
     max-width: 100%;
 }
 
@@ -430,7 +429,7 @@
     transform: translateZ(15px);
 }
 
-/* --- Card Footer (UUSD, XP, Link - FIXED) --- */
+/* --- Card Footer (FIXED) --- */
 .card-footer {
     background: rgba(255, 255, 255, 0.05); 
     border-radius: 12px;
@@ -445,12 +444,17 @@
 .asset-row {
     display: flex;
     width: 100%;
+    align-items: center; 
     justify-content: space-between; 
-    align-items: center;
     padding: 0 5px; 
 }
 
 .asset-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    
     text-align: center;
     cursor: pointer;
     padding: 0; 
@@ -487,6 +491,7 @@
     height: 35px;
     background: rgba(255, 255, 255, 0.2); 
     margin: 0 8px; 
+    align-self: center;
 }
 
 .footer-link-icon {
@@ -584,23 +589,7 @@
 .card-kyc { border-color: rgba(59, 130, 246, 0.6); }
 .card-kyc .card-icon { color: var(--accent-blue); }
 
-/* --- Support Styles (Retained for Dashboard use) --- */
-/* The styles for the chat elements are kept in this file to support the dashboard's support notification. */
-.chat-layout { display: flex; flex-direction: column; height: 100vh; padding-top: 70px; }
-.chat-messages-area { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 90px; }
-.message-wrapper { display: flex; flex-direction: column; max-width: 80%; margin-bottom: 15px; }
-.msg-user { align-self: flex-end; align-items: flex-end; }
-.msg-admin { align-self: flex-start; align-items: flex-start; }
-.bubble { padding: 12px 16px; border-radius: 18px; font-size: 0.9rem; line-height: 1.5; position: relative; word-wrap: break-word; }
-.msg-user .bubble { background: linear-gradient(135deg, var(--gold-primary), var(--gold-dark)); color: #000; border-bottom-left-radius: 18px; border-bottom-right-radius: 4px; }
-.msg-admin .bubble { background: #2c2c2e; color: #fff; border-bottom-left-radius: 4px; border-bottom-right-radius: 18px; border: 1px solid rgba(255,255,255,0.1); }
-.msg-meta { font-size: 0.65rem; margin-top: 4px; opacity: 0.7; display: flex; gap: 4px; }
-.chat-input-bar { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(20, 20, 20, 0.9); backdrop-filter: blur(20px); padding: 10px 15px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 10px; z-index: 200; }
-.chat-input-field { flex: 1; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 10px 15px; color: #fff; }
-.attach-btn, .send-btn { width: 40px; height: 40px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; }
-.attach-btn { background: transparent; color: var(--gold-primary); }
-.send-btn { background: var(--gold-primary); color: #000; }
-
+/* --- Footer Animation --- */
 .hidden-content { opacity: 0; transform: translateY(20px); }
 .fade-in-active { opacity: 1; transform: translateY(0); transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .ripple-btn:active { transform: scale(0.96); opacity: 0.8; }

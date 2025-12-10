@@ -8,9 +8,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
     <link rel="stylesheet" href="webapp/global.css?v=1.0">
-    <link rel="stylesheet" href="webapp/usdt-style.css?v=1.0">
-    
-</head>
+    <link rel="stylesheet" href="webapp/usdt-style.css?v=2.0"> </head>
 <body>
 
     <div class="ambient-glow glow-top"></div>
@@ -30,16 +28,46 @@
         
         <div class="ticker-card">
             <div class="ticker-col">
-                <span class="ticker-label">خرید (از شما)</span>
+                <span class="ticker-label">نرخ خرید (از ما)</span>
                 <span class="ticker-val col-sell" id="rate-buy">...</span>
             </div>
             <div style="width:1px; height:40px; background:var(--glass-border)"></div>
             <div class="ticker-col" style="align-items:flex-end">
-                <span class="ticker-label">فروش (به شما)</span>
+                <span class="ticker-label">نرخ فروش (به ما)</span>
                 <span class="ticker-val col-buy" id="rate-sell">...</span>
             </div>
         </div>
-
+        
+        <div id="discount-info-card" class="discount-card glass-panel" style="display:none;">
+            <div class="card-row">
+                <div class="card-col">
+                    <span class="card-label">موجودی XP شما:</span>
+                    <span class="card-value" id="user-xp-balance">--- XP</span>
+                </div>
+                <div class="card-col">
+                    <span class="card-label">کارمزد پایه:</span>
+                    <span class="card-value color-danger" id="base-fee-display">1.0%</span>
+                </div>
+            </div>
+            
+            <div class="divider"></div>
+            
+            <div class="card-row toggle-row">
+                <div class="card-col-wide">
+                    <span class="card-label color-primary">استفاده از XP برای تخفیف (30% off)</span>
+                    <span class="card-desc" id="xp-cost-display">هزینه: -- XP</span>
+                </div>
+                <div class="toggle-switch-wrapper">
+                    <input type="checkbox" id="toggle-xp-discount" onchange="toggleDiscount()" disabled>
+                    <label for="toggle-xp-discount" class="toggle-switch"></label>
+                </div>
+            </div>
+            
+            <div class="card-row final-fee-row" style="margin-top:10px;">
+                <span class="card-label color-success">کارمزد نهایی:</span>
+                <span class="card-value color-success" id="final-fee-display">1.0%</span>
+            </div>
+        </div>
         <div class="switch-tabs">
             <div class="tab-btn active buy-mode" onclick="setMode('buy')">خرید USDT</div>
             <div class="tab-btn" onclick="setMode('sell')">فروش USDT</div>
@@ -125,6 +153,6 @@
         </div>
     </div>
 
-    <script src="webapp/usdt.js?v=1.0"></script>
+    <script src="webapp/usdt.js?v=2.1"></script>
 </body>
 </html>

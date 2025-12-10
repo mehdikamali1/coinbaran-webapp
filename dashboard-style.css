@@ -1,4 +1,4 @@
-﻿/* webapp/dashboard-style.css (v98.0 - Definitive Layout Fix - COMPLETE) */
+﻿/* webapp/dashboard-style.css (v99.0 - Definitive Layout Fix - COMPLETE) */
 
 /* NOTE: This file assumes global.css has been imported first for variables and base styling. */
 
@@ -445,21 +445,21 @@
     display: flex;
     width: 100%;
     align-items: center; 
-    justify-content: space-between; 
-    padding: 0 5px; 
+    justify-content: space-around; /* FIX: Use space-around for balanced spacing */
+    padding: 0; 
 }
 
 .asset-col {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    /* FIX: Ensures internal content is centered horizontally */
+    align-items: center; 
     justify-content: center;
     
     text-align: center;
     cursor: pointer;
-    padding: 0; 
-    flex: 1; 
-    min-width: 30%; 
+    padding: 0 5px; /* Add slight internal horizontal padding */
+    min-width: 33%; 
 }
 
 .asset-title {

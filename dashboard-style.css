@@ -1,9 +1,9 @@
-﻿/* webapp/dashboard-style.css (v93.0 - Professional Overhaul) */
+﻿/* webapp/dashboard-style.css (v95.0 - The Digital Vault Overhaul) */
 
 /* NOTE: This file assumes global.css has been imported first for variables and base styling. */
 
 /* =========================================
-    1. Loader (Unchanged)
+    1. Loader (Unchanged for visual stability)
     ========================================= */
 #loader {
     position: fixed;
@@ -150,7 +150,7 @@
     transform: translateX(-50%);
     width: 80%;
     height: 300px;
-    background: radial-gradient(ellipse at center, rgba(255, 215, 0, 0.08), transparent 70%);
+    background: radial-gradient(ellipse at center, rgba(255, 215, 0, 0.15), transparent 70%); /* Brighter ambient light */
     z-index: 1;
     pointer-events: none;
 }
@@ -184,7 +184,7 @@
     width: 48px;
     height: 48px;
     padding: 2px;
-    border: 1px solid rgba(255, 215, 0, 0.3);
+    border: 1px solid var(--gold-primary); /* Use solid gold border */
     border-radius: 14px;
     background: #111;
 }
@@ -221,7 +221,7 @@
     line-height: 1.2;
 }
 
-/* XP Bar Styles */
+/* XP Bar Styles (Slightly adjusted) */
 .xp-container {
     width: 100px;
     margin-top: 6px;
@@ -278,7 +278,7 @@
     align-items: center;
     justify-content: center;
     font-size: 1.1rem;
-    position: relative; /* For the notification dot */
+    position: relative;
 }
 .notif-dot-support {
     position: absolute;
@@ -325,25 +325,15 @@
     color: var(--accent-red);
 }
 
-@keyframes ticker {
-    0% {
-        transform: translateX(0);
-    }
-    100% {
-        transform: translateX(100%);
-    }
-}
-
 /* =========================================
-    5. Premium Asset Card (Overhauled)
+    5. Premium Asset Card (Digital Vault Overhaul)
     ========================================= */
 .premium-card {
-    /* Main container styles inherited from original */
     background: linear-gradient(145deg, rgba(20,20,20,0.8) 0%, rgba(5,5,5,0.95) 100%);
     border-radius: var(--radius-xl);
     padding: 24px;
     position: relative;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--glass-border);
     overflow: hidden;
     box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.8);
     margin-bottom: 30px;
@@ -353,35 +343,21 @@
     will-change: transform;
 }
 
-.card-bg-texture {
-    /* Unchanged */
-    position: absolute;
-    inset: 0;
-    background: url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
-    opacity: 0.05;
-    pointer-events: none;
-    transform: translateZ(0);
-}
-
-.card-shine {
-    /* Unchanged */
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(255, 215, 0, 0.05) 0%, transparent 60%);
-    pointer-events: none;
-    mix-blend-mode: overlay;
-    transform: translateZ(1px);
-}
-
 .card-header {
-    /* Overhaul: Display Balance on the LEFT, Type on the RIGHT */
+    /* Top row elements */
     display: flex;
     justify-content: space-between;
-    align-items: flex-start; /* Align balance label to the top */
+    align-items: center;
     margin-bottom: 25px;
+    position: relative;
+    z-index: 2;
+    transform: translateZ(25px);
+}
+
+.card-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
     position: relative;
     z-index: 2;
     transform: translateZ(25px);
@@ -399,36 +375,37 @@
     font-weight: 700;
 }
 
-.card-balance {
-    /* Overhaul: Align to the LEFT */
-    text-align: left;
+.balance-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    display: block;
+}
+
+/* --- Main Balance Display --- */
+.main-balance-area {
+    /* NEW: Center the main reading */
+    text-align: center;
+    margin: 20px 0;
     position: relative;
     z-index: 2;
     transform: translateZ(35px);
 }
 
-.balance-label {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    display: block;
-    margin-bottom: 5px;
-}
-
 .amount-row {
-    /* Overhaul: Toman Balance is the focus */
+    /* Toman Balance is the focus */
     display: flex;
     align-items: baseline;
-    justify-content: flex-start;
+    justify-content: center;
     gap: 8px;
 }
 
 .amount-row h1 {
     font-family: 'Roboto Mono';
-    font-size: 2.8rem; /* Made significantly larger */
+    font-size: 3.2rem; /* LARGE AND DOMINANT */
     margin: 0;
-    color: var(--gold-primary); /* Primary gold color */
-    letter-spacing: -1px;
-    text-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
+    color: var(--gold-primary);
+    letter-spacing: -2px;
+    text-shadow: 0 0 30px rgba(255, 215, 0, 0.5); /* Stronger glow */
 }
 
 .currency-symbol {
@@ -436,6 +413,7 @@
     font-size: 1.5rem;
 }
 
+/* --- Mini Chart --- */
 .mini-chart-container {
     height: 50px;
     width: 100%;
@@ -452,8 +430,8 @@
     filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
 }
 
+/* --- Card Footer (UUSD, XP, Link) --- */
 .card-footer {
-    /* Overhaul: Now includes a link to the full wallet page */
     background: rgba(255, 255, 255, 0.03);
     border-radius: 12px;
     padding: 12px;
@@ -474,11 +452,12 @@
 .asset-col {
     text-align: center;
     cursor: pointer;
+    padding: 0 10px;
 }
 
 .asset-title {
     display: block;
-    font-size: 0.6rem;
+    font-size: 0.7rem;
     color: var(--text-muted);
     letter-spacing: 1px;
     margin-bottom: 2px;
@@ -486,7 +465,7 @@
 
 .asset-val {
     font-family: 'Roboto Mono';
-    font-size: 0.95rem;
+    font-size: 1rem;
     font-weight: 700;
 }
 .usd-color {
@@ -499,18 +478,19 @@
 
 .vertical-divider {
     width: 1px;
-    height: 25px;
+    height: 35px; /* Increased divider height for style */
     background: rgba(255, 255, 255, 0.1);
 }
 
 .footer-link-icon {
     font-size: 1rem;
     color: var(--accent-blue);
+    margin-top: 5px;
 }
 
 
 /* =========================================
-    6. Services Grid Overhaul (New Design)
+    6. Services Grid Overhaul (Clean, Professional Icons/Logos)
     ========================================= */
 .section-title {
     font-size: 0.9rem;
@@ -518,15 +498,13 @@
     color: #fff;
     margin-bottom: 15px;
     padding-right: 10px;
-    border-right: 3px solid var(--accent-blue); /* Changed from gold to blue accent */
+    border-right: 3px solid var(--accent-blue);
     margin-top: 30px;
 }
 
-/* REMOVED OLD: .quick-actions, .glass-btn, .services-grid-modern, .service-card */
-
 .service-buttons-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr; /* 2 columns */
+    grid-template-columns: 1fr 1fr;
     gap: 15px;
 }
 
@@ -543,11 +521,13 @@
     transition: all 0.2s;
     position: relative;
     overflow: hidden;
+    min-height: 140px; /* Uniform height for visual balance */
 }
 
 .modern-card:hover {
-    background: rgba(255, 255, 255, 0.05);
-    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.07); /* More noticeable hover */
+    transform: translateY(-3px); /* Stronger lift on hover */
+    box-shadow: 0 10px 20px rgba(0,0,0,0.4);
 }
 
 .card-icon {
@@ -557,12 +537,14 @@
     z-index: 2;
 }
 
+/* Fix Logo Size */
 .card-logo {
-    width: 38px;
-    height: 38px;
+    width: 45px; /* Corrected size */
+    height: 45px; /* Corrected size */
     border-radius: 50%;
     object-fit: cover;
     margin-bottom: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5); /* Added subtle shadow to logos */
 }
 
 .modern-card h4 {
@@ -579,21 +561,19 @@
     line-height: 1.3;
 }
 
-/* Card Color Accents */
+/* Card Color Accents (Used for Icons/Borders/Shadows) */
+.card-primary { border-color: rgba(255, 215, 0, 0.5); }
 .card-primary .card-icon { color: var(--gold-primary); filter: drop-shadow(0 0 10px rgba(255,215,0,0.3)); }
+
+.card-deposit { border-color: rgba(14, 203, 129, 0.5); }
 .card-deposit .card-icon { color: var(--accent-green); }
-.card-exchange { border-color: rgba(0, 213, 120, 0.3); } /* USDT Color */
-.card-utopia { border-color: rgba(255, 0, 122, 0.3); } /* Utopia Color */
+
+.card-exchange { border-color: rgba(0, 213, 120, 0.5); } /* USDT Color (Green/Turquoise) */
+
+.card-utopia { border-color: rgba(255, 0, 122, 0.5); } /* Utopia Color (Pink) */
+
+.card-live { border-color: rgba(246, 70, 93, 0.5); }
 .card-live .card-icon { color: var(--accent-red); filter: drop-shadow(0 0 10px rgba(246,70,93,0.3)); }
+
+.card-kyc { border-color: rgba(59, 130, 246, 0.5); }
 .card-kyc .card-icon { color: var(--accent-blue); }
-
-/* Custom Overrides for KYC status text */
-#kyc-text {
-    /* This H4 will receive styling from script.js, we don't apply colors here */
-    font-weight: 800 !important; 
-    line-height: 1;
-}
-
-/* --- Support Styles (Retained for Dashboard use) --- */
-/* The styles for the chat elements are kept in this file to support the dashboard's support notification. */
-/* For brevity, I'll omit the chat-specific styles here, assuming they were correctly carried over from the original. */

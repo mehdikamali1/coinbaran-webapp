@@ -1,4 +1,4 @@
-﻿/* webapp/dashboard-style.css (v101.0 - UPGRADE: Balance Display Fix) */
+﻿/* webapp/dashboard-style.css (v100.0 - Grid-Based Precision Fix) */
 
 /* =========================================
     1. Loader (Unchanged)
@@ -395,29 +395,24 @@
 
 .amount-row h1 {
     font-family: 'Roboto Mono';
-    /* FIX: Reduced font size for large Toman figures to fit cleanly on mobile */
-    font-size: 2.5rem;  /* Reduced from 3.2rem */
+    font-size: 3.2rem; 
     margin: 0;
     color: var(--gold-primary);
     letter-spacing: -2px;
     text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
     max-width: 100%;
-    /* FIX: Add min-width to prevent unwanted wrapping of numbers */
-    min-width: 0; 
 }
 
 @media (max-width: 350px) {
     .amount-row h1 {
-        /* FIX: Further reduction for very small screens */
-        font-size: 2.2rem;  /* Reduced from 2.5rem */
+        font-size: 2.5rem; 
     }
 }
 
 
 .currency-symbol {
     color: var(--gold-primary);
-    /* FIX: Adjusted symbol size to match the smaller h1 */
-    font-size: 1.2rem; /* Reduced from 1.5rem */
+    font-size: 1.5rem;
     align-self: center; 
 }
 

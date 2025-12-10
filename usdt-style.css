@@ -1,10 +1,10 @@
-/* webapp/usdt-style.css (v2.0 - USDT Exchange Specific Styles with XP Discount) */
+/* webapp/usdt-style.css (v1.0 - USDT Exchange Specific Styles) */
 
 /* NOTE: This file assumes global.css has been imported first for variables and base styling. */
 
 /* --- Ticker Card --- */
 .main-scroll-area {
-    padding-bottom: 150px !important; 
+    padding-bottom: 150px !important; /* Vital: Ensure space for elements at the bottom */
 }
 
 .ticker-card {
@@ -36,114 +36,14 @@
     letter-spacing: -0.5px; 
 }
 .col-buy { 
-    color: var(--accent-red); 
+    color: var(--accent-red); /* Admin sells (User buys) - RED */
 } 
 .col-sell { 
-    color: var(--accent-green); 
+    color: var(--accent-green); /* Admin buys (User sells) - GREEN */
     text-shadow: 0 0 10px rgba(14, 203, 129, 0.3); 
 } 
 
-/* --- UPGRADE: XP Discount Card Styles --- */
-.discount-card {
-    padding: 18px;
-    border-radius: var(--radius-md);
-    background: rgba(255, 255, 255, 0.05);
-    margin-bottom: 25px;
-    border: 1px solid var(--glass-border);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-}
-
-.card-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 5px;
-}
-
-.card-label {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-}
-.card-value {
-    font-family: 'Roboto Mono', monospace;
-    font-weight: 700;
-    font-size: 0.9rem;
-    color: var(--text-main);
-}
-.color-danger { color: var(--accent-red); }
-.color-success { color: var(--accent-green); }
-.color-primary { color: var(--gold-primary); }
-
-.divider {
-    height: 1px;
-    background: rgba(255,255,255,0.1);
-    margin: 15px 0;
-}
-
-.toggle-row {
-    margin-bottom: 0;
-}
-
-.card-col-wide {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 2px;
-}
-.card-desc {
-    font-size: 0.7rem;
-    color: var(--text-muted);
-}
-
-/* --- Custom Toggle Switch --- */
-.toggle-switch-wrapper {
-    position: relative;
-    display: inline-block;
-    width: 44px;
-    height: 24px;
-}
-
-.toggle-switch-wrapper input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.toggle-switch {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #333;
-    transition: .4s;
-    border-radius: 34px;
-}
-
-.toggle-switch:before {
-    position: absolute;
-    content: "";
-    height: 16px;
-    width: 16px;
-    left: 4px;
-    bottom: 4px;
-    background-color: white;
-    transition: .4s;
-    border-radius: 50%;
-}
-
-input:checked + .toggle-switch {
-    background-color: var(--gold-primary);
-}
-
-input:checked + .toggle-switch:before {
-    transform: translateX(20px);
-}
-/* --- END UPGRADE --- */
-
-
-/* --- Tab Switch (Unchanged) --- */
+/* --- Tab Switch --- */
 .switch-tabs {
     background: rgba(255,255,255,0.03); 
     border: 1px solid var(--glass-border);
@@ -174,7 +74,7 @@ input:checked + .toggle-switch:before {
     box-shadow: 0 0 15px rgba(246, 70, 93, 0.3); 
 }
 
-/* --- Form Sections (Unchanged) --- */
+/* --- Form Sections --- */
 .form-section { 
     display: none; 
     animation: fadeIn 0.3s ease-out; 
@@ -266,7 +166,7 @@ input:checked + .toggle-switch:before {
     box-shadow: 0 5px 20px rgba(246, 70, 93, 0.2); 
 }
 
-/* --- Modal Styles (Unchanged) --- */
+/* --- Modal Styles --- */
 .modal-overlay {
     position: fixed; 
     inset: 0; 

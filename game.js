@@ -1,35 +1,80 @@
-﻿/* webapp/game.js (v75.0 - UX Upgrade: Fast Price Ticker) */
+﻿/* webapp/game.js (v76.0 - UPGRADE: Dynamic Crash Game UX) */
 
 const tg = window.Telegram.WebApp;
 const API_BASE_URL = window.location.origin;
 
 // تنظیمات سراسری
 const CONFIG = {
-    ROUND_DURATION: 60,
-    EST_USDT_RATE: 90000, 
-    // UPGRADE: Define polling rates
-    FAST_POLL_RATE: 500, // 0.5 seconds for price/timer update
-    SLOW_POLL_RATE: 10000, // 10 seconds for full state/user data update
+    // These constants are now hints; the server manages the actual timing and limits.
+    BETTING_DURATION: 10, // Seconds for betting
+    RUNNING_UPDATE_RATE: 100, // Multiplier update rate (ms)
+    SLOW_POLL_RATE: 3000, // 3 seconds for full state/user data update
+    
     CHART_COLORS: {
         bg: 'transparent',
         text: '#848E9C',
         grid: 'transparent',
         up: '#0ECB81',
         down: '#F6465D',
-        areaTopUp: 'rgba(14, 203, 129, 0.5)',
-        areaBottomUp: 'rgba(14, 203, 129, 0.01)',
-        areaTopDown: 'rgba(246, 70, 93, 0.5)',
-        areaBottomDown: 'rgba(246, 70, 93, 0.01)',
+        areaTopUp: 'rgba(14, 203, 129, 0.7)',
+        areaBottomUp: 'rgba(14, 203, 129, 0.05)',
+        lineColor: '#0ECB81',
     }
 };
 
-let chart, areaSeries;
-let lastPrice = 0;
-let isFirstLoad = true;
-let lastTime = 0;
-let lastRoundId = 0; // Track round ID for new round detection
+let multiplierInterval = null;
+let lastState = 'CRASHED';
+let lastRoundId = 0;
+let userBetAmount = 0;
+let userCashedOut = false;
+let autoCashoutTarget = 0; // Future feature: Auto-cashout target
 
-// --- سیستم صوتی ---
+// --- DOM Elements ---
+const dom = {
+    statusText: document.getElementById('game-status-text'),
+    multiplierDisplay: document.getElementById('btc-price'), // Reusing the main price display
+    timerDisplay: document.getElementById('timer-text'),
+    timerCircle: document.getElementById('timer-progress'),
+    bettingBox: document.getElementById('betting-box'),
+    cashoutBox: document.getElementById('cashout-box'),
+    userBalance: document.getElementById('user-balance-display'),
+    historyContainer: document.getElementById('history-container'),
+    betBtn: document.getElementById('bet-btn'),
+    cashoutBtn: document.getElementById('cashout-btn')
+};
+
+// --- CHART SETUP (LightweightCharts) ---
+let chart, lineSeries;
+
+function initChart() {
+    const container = document.getElementById('tv-chart-container');
+    chart = LightweightCharts.createChart(container, {
+        width: container.clientWidth,
+        height: container.clientHeight,
+        layout: { background: { type: 'solid', color: CONFIG.CHART_COLORS.bg }, textColor: CONFIG.CHART_COLORS.text, fontFamily: "'Roboto Mono', monospace" },
+        grid: { vertLines: { visible: false }, horzLines: { visible: false } },
+        rightPriceScale: { borderColor: 'transparent', visible: true, scaleMargins: { top: 0.2, bottom: 0.1 } },
+        timeScale: { visible: false }, // Time scale is hidden for crash game multiplier
+        crosshair: { mode: 0 }, // Disable crosshair
+    });
+    lineSeries = chart.addLineSeries({ 
+        color: CONFIG.CHART_COLORS.lineColor, 
+        lineWidth: 3, 
+        lastValueVisible: true, 
+        priceLineVisible: false 
+    });
+    // Set initial dummy data for chart structure
+    lineSeries.setData([ { time: 1, value: 1.00 }, { time: 2, value: 1.00 }]);
+    
+    new ResizeObserver(entries => {
+        if (entries.length === 0 || entries[0].target !== container) return;
+        const newRect = entries[0].contentRect;
+        chart.applyOptions({ height: newRect.height, width: newRect.width });
+    }).observe(container);
+}
+
+
+// --- Audio System (Reused/Refined) ---
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 const SoundFX = {
     playTone: (freq, type, duration, vol = 0.1) => {
@@ -48,74 +93,29 @@ const SoundFX = {
     tick: () => SoundFX.playTone(800, 'sine', 0.05, 0.05),
     click: () => SoundFX.playTone(400, 'triangle', 0.05, 0.05),
     success: () => { SoundFX.playTone(600, 'sine', 0.1, 0.1); setTimeout(() => SoundFX.playTone(1200, 'sine', 0.2, 0.1), 100); },
+    crash: () => { SoundFX.playTone(150, 'sawtooth', 0.4, 0.2); tg.HapticFeedback.notificationOccurred('error'); },
     win: () => { [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => setTimeout(() => SoundFX.playTone(f, 'triangle', 0.3, 0.1), i * 80)); },
-    lose: () => { setTimeout(() => SoundFX.playTone(300, 'sawtooth', 0.3, 0.1), 0); setTimeout(() => SoundFX.playTone(200, 'sawtooth', 0.4, 0.1), 200); }
 };
+
+// --- Initialization ---
 
 window.onload = function() {
     tg.ready();
     tg.expand();
-    tg.setHeaderColor('#050505'); 
+    tg.setHeaderColor('#050505');  
     tg.setBackgroundColor('#050505');
     if (!tg.initData) tg.initData = "query_id=TEST_DEV_MODE";
 
     initChart();
     setupEventListeners();
     
-    // UPGRADE: Start separate polling loops
-    fetchFullState(); // Initial call to get everything
-    setInterval(fetchPriceUpdate, CONFIG.FAST_POLL_RATE);
+    // Start initial fetch, then poll regularly
+    fetchFullState(); 
     setInterval(fetchFullState, CONFIG.SLOW_POLL_RATE);
 };
 
-function initChart() {
-    const container = document.getElementById('tv-chart-container');
-    chart = LightweightCharts.createChart(container, {
-        width: container.clientWidth,
-        height: container.clientHeight,
-        layout: { background: { type: 'solid', color: CONFIG.CHART_COLORS.bg }, textColor: CONFIG.CHART_COLORS.text, fontFamily: "'Roboto Mono', monospace" },
-        grid: { vertLines: { visible: false }, horzLines: { visible: false } },
-        rightPriceScale: { borderColor: 'transparent', visible: true, scaleMargins: { top: 0.2, bottom: 0.1 } },
-        timeScale: { borderColor: 'transparent', timeVisible: true, secondsVisible: true, rightOffset: 2, fixLeftEdge: true },
-        crosshair: { vertLine: { width: 1, color: 'rgba(255, 255, 255, 0.1)', style: 3, labelBackgroundColor: '#171B26' }, horzLine: { width: 1, color: 'rgba(255, 255, 255, 0.1)', style: 3, labelBackgroundColor: '#171B26' } },
-        handleScroll: { mouseWheel: false, pressedMouseMove: true },
-        handleScale: { axisPressedMouseMove: false, mouseWheel: false, pinch: false },
-    });
-    areaSeries = chart.addAreaSeries({ topColor: CONFIG.CHART_COLORS.areaTopUp, bottomColor: CONFIG.CHART_COLORS.areaBottomUp, lineColor: CONFIG.CHART_COLORS.up, lineWidth: 2, crosshairMarkerVisible: true, crosshairMarkerRadius: 5 });
-    new ResizeObserver(entries => {
-        if (entries.length === 0 || entries[0].target !== container) return;
-        const newRect = entries[0].contentRect;
-        chart.applyOptions({ height: newRect.height, width: newRect.width });
-        chart.timeScale().fitContent();
-    }).observe(container);
-}
+// --- Data Polling ---
 
-// UPGRADE: New function for fast, lightweight price polling
-async function fetchPriceUpdate() {
-    try {
-        const res = await fetch(`${API_BASE_URL}/webapp/game/price`);
-        if (res.ok) {
-            const data = await res.json();
-            if (data.status === 'success') {
-                updateChartData(data.price);
-                updateTimerVisuals(data.time_left);
-                // Check for new round initiation
-                if (data.round_id !== lastRoundId && lastRoundId !== 0) {
-                     fetchFullState(); // Trigger full state refresh on new round
-                }
-                lastRoundId = data.round_id;
-                document.getElementById('round-id').innerText = `#${data.round_id}`;
-                setConnectionStatus(true);
-            }
-        } else { 
-            setConnectionStatus(false); 
-        }
-    } catch (e) {
-        setConnectionStatus(false);
-    }
-}
-
-// UPGRADE: Renamed and refactored from fetchServerData to fetch only heavy, user-specific state
 async function fetchFullState() {
     try {
         const res = await fetch(`${API_BASE_URL}/webapp/game/state`, {
@@ -124,16 +124,290 @@ async function fetchFullState() {
         });
         if (res.ok) {
             const data = await res.json();
-            updateHeavyGameUI(data); // New function to handle user data only
-            // Full state update overrides any connection error from fast poll
-            setConnectionStatus(true); 
-            // Only update the ribbon and user-specific round data from the slow poll
-            if (data.history) updateHistoryRibbon(data.history);
-            if (data.user_balance !== undefined) document.getElementById('user-balance-display').innerText = data.user_balance.toLocaleString('en-US', {minimumFractionDigits: 2});
+            updateGameUI(data);
+            updateHistoryRibbon(data.history || []);
+            setConnectionStatus(true);
         } else { setConnectionStatus(false); }
     } catch (e) {
         setConnectionStatus(false);
     }
+}
+
+// --- UI Update & Game State Management ---
+
+function updateGameUI(data) {
+    if (data.user_balance !== undefined) {
+        dom.userBalance.innerText = data.user_balance.toLocaleString('en-US', {minimumFractionDigits: 2});
+    }
+
+    if (data.round_id !== lastRoundId && lastRoundId !== 0) {
+        // Hard reset chart and UI on new round
+        resetChart();
+        userBetAmount = 0;
+        userCashedOut = false;
+        document.getElementById('bet-amount').value = '';
+        document.getElementById('chart-loader').classList.remove('fade-out');
+    }
+    lastRoundId = data.round_id;
+
+    if (data.last_result) {
+        showResultModal(data.last_result);
+    }
+    
+    // 1. Handle State Transitions
+    if (data.state !== lastState) {
+        handleStateTransition(data.state);
+    }
+    lastState = data.state;
+    
+    // 2. Update Visuals based on State
+    if (data.state === 'BETTING') {
+        updateBettingVisuals(data.time_to_next_phase, data.round_id);
+    } else if (data.state === 'RUNNING') {
+        updateRunningVisuals(data.multiplier);
+    } else if (data.state === 'CRASHED') {
+        updateCrashedVisuals(data.multiplier);
+    }
+
+    // 3. Update User Bet Status
+    const betInfo = data.user_bet_info;
+    if (betInfo) {
+        userBetAmount = betInfo.amount;
+        userCashedOut = betInfo.is_cashed_out;
+    } else {
+        userBetAmount = 0;
+        userCashedOut = false;
+    }
+    updateBetCashoutVisibility();
+}
+
+function handleStateTransition(newState) {
+    if (newState === 'BETTING') {
+        dom.statusText.innerText = "آماده ثبت شرط";
+        dom.statusText.className = 'status-betting';
+        resetChart();
+    } else if (newState === 'RUNNING') {
+        dom.statusText.innerText = "در حال صعود...";
+        dom.statusText.className = 'status-running';
+        // Start fast interval to update multiplier
+        if (!multiplierInterval) {
+             multiplierInterval = setInterval(fetchFullState, CONFIG.RUNNING_UPDATE_RATE);
+        }
+        document.getElementById('chart-loader').classList.add('fade-out');
+        
+    } else if (newState === 'CRASHED') {
+        dom.statusText.innerText = `CRASHED @ ${dom.multiplierDisplay.innerText}X`;
+        dom.statusText.className = 'status-crashed';
+        if (multiplierInterval) {
+            clearInterval(multiplierInterval);
+            multiplierInterval = null;
+        }
+        SoundFX.crash();
+        // Clear last multiplier display to prevent jump
+        dom.multiplierDisplay.innerText = '0.00'; 
+    } else if (newState === 'WAITING') {
+        dom.statusText.innerText = "آماده‌سازی...";
+        dom.statusText.className = 'status-waiting';
+    }
+}
+
+function updateBettingVisuals(timeLeft, roundId) {
+    // Timer visuals
+    dom.multiplierDisplay.innerText = '1.00';
+    dom.multiplierDisplay.className = 'crash-multiplier'; // Reset class
+    dom.timerDisplay.innerText = timeLeft;
+    const progress = (CONFIG.BETTING_DURATION - timeLeft) / CONFIG.BETTING_DURATION;
+    dom.timerCircle.style.strokeDashoffset = 283 - (progress * 283);
+    dom.timerCircle.style.stroke = 'var(--gold-primary)';
+    
+    document.getElementById('round-id').innerText = `#${roundId}`;
+}
+
+function updateRunningVisuals(multiplier) {
+    // Update multiplier display (main price area)
+    dom.multiplierDisplay.innerText = multiplier.toFixed(2);
+    dom.multiplierDisplay.className = 'crash-multiplier running';
+    
+    // Add point to chart (using arbitrary time axis)
+    const timeNow = Date.now() / 1000;
+    lineSeries.update({ time: timeNow, value: multiplier });
+    chart.timeScale().fitContent();
+
+    // Hide timer elements
+    dom.timerDisplay.innerText = '';
+    dom.timerCircle.style.strokeDashoffset = 283;
+}
+
+function updateCrashedVisuals(crashMultiplier) {
+    // Only display crash multiplier if it's the last value in the series
+    dom.multiplierDisplay.innerText = crashMultiplier.toFixed(2);
+    dom.multiplierDisplay.className = 'crash-multiplier crashed-final';
+}
+
+function resetChart() {
+    lineSeries.setData([]);
+    lineSeries = chart.addLineSeries({ 
+        color: CONFIG.CHART_COLORS.lineColor, 
+        lineWidth: 3, 
+        lastValueVisible: true, 
+        priceLineVisible: false 
+    });
+    lineSeries.setData([ { time: Date.now() / 1000 - 1, value: 1.00 }, { time: Date.now() / 1000, value: 1.00 }]);
+}
+
+function updateBetCashoutVisibility() {
+    if (userBetAmount > 0 && !userCashedOut && lastState === 'RUNNING') {
+        dom.bettingBox.classList.add('hidden');
+        dom.cashoutBox.classList.remove('hidden');
+        dom.cashoutBtn.innerText = `CASH OUT (${dom.multiplierDisplay.innerText}X)`;
+    } else {
+        dom.cashoutBox.classList.add('hidden');
+        dom.bettingBox.classList.remove('hidden');
+        // Disable betting if RUNNING or CRASHED
+        const disable = lastState !== 'BETTING' || userBetAmount > 0;
+        dom.betBtn.disabled = disable;
+        dom.betBtn.style.opacity = disable ? '0.5' : '1';
+        dom.betBtn.innerText = userBetAmount > 0 ? `Bet Placed: $${userBetAmount.toFixed(2)}` : 'PLACE BET';
+    }
+}
+
+// Set up listeners for the cashout button to update in real-time
+document.addEventListener('DOMContentLoaded', () => {
+    if (dom.multiplierDisplay) {
+        const observer = new MutationObserver((mutationsList, observer) => {
+            if (lastState === 'RUNNING' && userBetAmount > 0 && !userCashedOut) {
+                // Update cashout button text when multiplier changes
+                dom.cashoutBtn.innerText = `CASH OUT (${dom.multiplierDisplay.innerText}X)`;
+            }
+        });
+        observer.observe(dom.multiplierDisplay, { childList: true, characterData: true });
+    }
+});
+
+
+// --- Submission Handlers ---
+
+window.placeBet = async function() {
+    if (lastState !== 'BETTING' || userBetAmount > 0) return showToast('Cannot place bet now.');
+    
+    const amount = parseFloat(document.getElementById('bet-amount').value);
+    if (!amount || amount <= 0) return showToast('لطفاً مبلغ را وارد کنید');
+    
+    tg.HapticFeedback.impactOccurred('heavy');
+    dom.betBtn.disabled = true;
+    dom.betBtn.style.opacity = '0.5';
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/webapp/game/bet`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ initData: tg.initData, amount: amount })
+        });
+        const result = await res.json();
+        
+        if (result.status === 'success') {
+            SoundFX.success();
+            showToast(`✅ شرط ثبت شد: $${amount.toFixed(2)}`);
+            // Optimistic update
+            userBetAmount = amount;
+            updateBetCashoutVisibility(); 
+        } else { 
+            showToast(`⚠️ ${result.message}`); 
+            dom.betBtn.disabled = false;
+            dom.betBtn.style.opacity = '1';
+        }
+    } catch(e) { 
+        showToast("خطای اتصال"); 
+        dom.betBtn.disabled = false;
+        dom.betBtn.style.opacity = '1';
+    }
+};
+
+window.cashOut = async function() {
+    if (lastState !== 'RUNNING' || userCashedOut) return showToast('نمی‌توانید نقد کنید.');
+
+    // Prevent double-clicking
+    dom.cashoutBtn.disabled = true;
+    dom.cashoutBtn.style.opacity = '0.5';
+    
+    tg.HapticFeedback.impactOccurred('heavy');
+    
+    try {
+        const res = await fetch(`${API_BASE_URL}/webapp/game/cashout`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ initData: tg.initData, target_multiplier: null }) // Manual cashout
+        });
+        const result = await res.json();
+        
+        if (result.status === 'success') {
+            SoundFX.win();
+            const payout = parseFloat(result.payout);
+            const profit = payout - userBetAmount;
+            showToast(`🏆 نقد موفقیت‌آمیز! سود: $${profit.toFixed(2)}`);
+            userCashedOut = true;
+            dom.cashoutBox.classList.add('cashed-out');
+            dom.cashoutBox.innerText = `CASHED OUT @ ${dom.multiplierDisplay.innerText}X`;
+            // Force a full state refresh to update balance immediately
+            fetchFullState();
+        } else { 
+            showToast(`⚠️ ${result.message}`); 
+            // If cashout failed due to crash, this will be handled by the next state update
+            dom.cashoutBtn.disabled = false;
+            dom.cashoutBtn.style.opacity = '1';
+        }
+    } catch(e) { 
+        showToast("خطای شبکه");
+        dom.cashoutBtn.disabled = false;
+        dom.cashoutBtn.style.opacity = '1';
+    }
+};
+
+
+// --- Utility and Modal Handlers (Reused/Adapted) ---
+
+function showResultModal(result) {
+    const elModal = document.getElementById('result-modal');
+    const elTitle = document.getElementById('res-title');
+    const elAmount = document.getElementById('res-amount');
+    const elIcon = document.getElementById('res-icon');
+    const elMsg = document.getElementById('res-message');
+    
+    // Adaptation for Crash Game results
+    const multiplier = result.multiplier;
+    const isWin = result.status === 'WIN';
+
+    document.getElementById('res-entry').innerText = `$${result.bet_amount.toFixed(2)}`;
+    document.getElementById('res-close').innerText = `@ ${multiplier.toFixed(2)}X`;
+
+    if (isWin) {
+        elTitle.innerText = "نقد موفق!"; 
+        elTitle.style.color = CONFIG.CHART_COLORS.up;
+        elAmount.className = "res-amount res-win"; 
+        elAmount.innerText = `+$${result.profit.toFixed(2)}`;
+        elIcon.innerText = "💰"; 
+        elMsg.innerText = `شما در ضریب ${multiplier.toFixed(2)} نقد کردید.`;
+    } else {
+        elTitle.innerText = "سقوط"; 
+        elTitle.style.color = CONFIG.CHART_COLORS.down;
+        elAmount.className = "res-amount res-loss"; 
+        elAmount.innerText = `-$${Math.abs(result.profit).toFixed(2)}`;
+        elIcon.innerText = "💥"; 
+        elMsg.innerText = `ضریب در ${multiplier.toFixed(2)} سقوط کرد.`;
+    }
+    elModal.classList.add('active');
+}
+window.closeResultModal = () => document.getElementById('result-modal').classList.remove('active');
+
+function updateHistoryRibbon(history) {
+    const container = dom.historyContainer; 
+    container.innerHTML = '';
+    
+    history.slice().forEach(crashPoint => {
+        const div = document.createElement('div'); 
+        const isLow = crashPoint <= 2.0;
+        div.className = `hist-pill ${isLow ? 'low' : 'high'}`; 
+        div.innerText = `${crashPoint.toFixed(2)}x`;
+        container.appendChild(div);
+    });
 }
 
 function setConnectionStatus(isConnected) {
@@ -155,231 +429,43 @@ function setConnectionStatus(isConnected) {
     }
 }
 
-// UPGRADE: Function to handle heavy/user-specific state updates (from fetchFullState)
-function updateHeavyGameUI(data) {
-    const elEntry = document.getElementById('entry-display');
-    
-    // Handle User Bet Display
-    if (data.user_bet && data.user_bet.entry_price) {
-        elEntry.classList.remove('hidden');
-        const isUp = data.user_bet.prediction === 'UP';
-        const color = isUp ? CONFIG.CHART_COLORS.up : CONFIG.CHART_COLORS.down;
-        const icon = isUp ? '▲' : '▼';
-        const text = isUp ? 'خرید' : 'فروش';
-        elEntry.innerHTML = `<span style="color:${color}; font-weight:bold; margin-left:5px;">${icon} ${text}</span> <span class="mono-font">$${data.user_bet.entry_price.toLocaleString()}</span>`;
-    } else { elEntry.classList.add('hidden'); }
-
-    // Handle Round Result Modal
-    if (data.last_result) showResultModal(data.last_result);
-    
-    // Check Round Lock Status (now only dependent on full state refresh)
-    const timeLock = data.round && data.round.time_left <= 10;
-    const hasBet = !!data.user_bet;
-    toggleTradeButtons(timeLock || hasBet);
-}
-
-// UPGRADE: Consolidated price and chart update into this function
-function updateChartData(serverPrice) {
-    const domPrice = document.getElementById('btc-price');
-    const timeNow = Math.floor(Date.now() / 1000);
-    
-    // Only proceed if the price has meaningfully changed to avoid unnecessary chart redraws
-    if (serverPrice === lastPrice && !isFirstLoad) {
-        // Still update the chart point for time progression even if price hasn't changed much
-        if (timeNow > lastTime) { lastTime = timeNow; areaSeries.update({ time: timeNow, value: serverPrice }); }
-        return;
-    }
-    
-    // Handle Initial Load
-    if (isFirstLoad && serverPrice > 0) {
-        // Use a slight random walk to populate the initial chart view for aesthetics
-        const historyData = []; 
-        let tempPrice = serverPrice; 
-        for (let i = 60; i > 0; i--) { tempPrice = tempPrice + (Math.random() - 0.5) * 5; historyData.push({ time: timeNow - i, value: tempPrice }); }
-        historyData.sort((a,b) => a.time - b.time);
-        
-        areaSeries.setData(historyData); 
-        lastTime = timeNow; 
-        areaSeries.update({ time: lastTime, value: serverPrice }); // Add current price point
-        
-        document.getElementById('chart-loader').classList.add('fade-out'); 
-        isFirstLoad = false; 
-        lastPrice = serverPrice;
-    }
-    
-    // Handle Real-Time Updates
-    if (!isFirstLoad) {
-        const isUp = serverPrice >= lastPrice; 
-        const color = isUp ? CONFIG.CHART_COLORS.up : CONFIG.CHART_COLORS.down;
-        
-        // 1. Update Header Price Display
-        domPrice.style.color = color; 
-        domPrice.innerText = serverPrice.toLocaleString('en-US', {minimumFractionDigits: 2});
-        
-        // 2. Update Chart Colors (Line/Area)
-        areaSeries.applyOptions({ 
-            lineColor: color, 
-            topColor: isUp ? CONFIG.CHART_COLORS.areaTopUp : CONFIG.CHART_COLORS.areaTopDown, 
-            bottomColor: isUp ? CONFIG.CHART_COLORS.areaBottomUp : CONFIG.CHART_COLORS.areaBottomDown, 
-            crosshairMarkerBackgroundColor: color 
-        });
-        
-        // 3. Add new data point (only if time advanced or if it's the current time tick)
-        if (timeNow > lastTime) { lastTime = timeNow; areaSeries.update({ time: timeNow, value: serverPrice }); } 
-        else { areaSeries.update({ time: lastTime, value: serverPrice }); }
-
-        lastPrice = serverPrice;
-    }
-}
-
-function updateTimerVisuals(timeLeft) {
-    const elText = document.getElementById('timer-text');
-    const elCircle = document.getElementById('timer-progress');
-    
-    const currentText = elText.innerText;
-    
-    // Only update timer text if it actually changes (to prevent visual jitters)
-    if (parseInt(currentText) !== timeLeft) {
-         elText.innerText = timeLeft;
-    }
-    
-    // Update SVG progress circle
-    const offset = 283 - (timeLeft / CONFIG.ROUND_DURATION) * 283;
-    elCircle.style.strokeDashoffset = offset;
-    
-    // Handle audio and visual countdown warnings
-    if (timeLeft <= 5) {
-        elCircle.style.stroke = CONFIG.CHART_COLORS.down; 
-        elText.style.color = CONFIG.CHART_COLORS.down;
-        
-        // Play tick sound only once per second for the last 5 seconds
-        if (!window[`tick_${timeLeft}`]) { 
-            SoundFX.tick(); 
-            tg.HapticFeedback.impactOccurred('soft'); 
-            window[`tick_${timeLeft}`] = true; 
-        }
-    } else {
-        elCircle.style.stroke = 'var(--gold-primary)'; // Use global variable
-        elText.style.color = 'var(--text-main)'; // Use global variable
-        for(let i=1; i<=5; i++) window[`tick_${i}`] = false;
-    }
-}
-
-function toggleTradeButtons(disabled) {
-    const btns = document.querySelectorAll('.trade-btn');
-    btns.forEach(b => { 
-        b.disabled = disabled; 
-        b.style.opacity = disabled ? '0.5' : '1'; 
-        b.style.filter = disabled ? 'grayscale(1)' : 'none'; 
-    });
-}
-
-function updateHistoryRibbon(history) {
-    const container = document.getElementById('history-container'); 
-    container.innerHTML = '';
-    
-    // Only show the last 15 results
-    history.slice().reverse().slice(0, 15).forEach(h => {
-        const div = document.createElement('div'); 
-        const isUp = h.result === 'UP';
-        div.className = `hist-pill ${isUp ? 'up' : 'down'}`; 
-        container.appendChild(div);
-    });
-}
-
 function setupEventListeners() {
-    // ... (rest of the listeners remain unchanged)
+    // Attach input listeners for amount chips
+    document.querySelectorAll('.chip').forEach(chip => {
+        chip.addEventListener('click', function() {
+            window.setAmount(parseFloat(this.getAttribute('data-amount')));
+        });
+    });
+    
+    // Add haptic feedback and sound effects
     document.querySelectorAll('button').forEach(btn => {
         btn.addEventListener('click', () => { if(!btn.disabled) { SoundFX.click(); tg.HapticFeedback.impactOccurred('light'); } });
     });
-    const swapInput = document.getElementById('swap-input-toman');
-    if(swapInput) {
-        swapInput.addEventListener('input', function(e) {
-            let val = e.target.value.replace(/,/g, '').replace(/\D/g, '');
-            if (val) {
-                e.target.value = parseInt(val).toLocaleString('en-US');
-                const usd = parseFloat(val) / CONFIG.EST_USDT_RATE;
-                document.getElementById('swap-calc-usd').innerText = usd.toFixed(2) + ' USD';
-            } else { e.target.value = ''; document.getElementById('swap-calc-usd').innerText = '0.00 USD'; }
-        });
-    }
+    
+    // ... (All other modular window functions for modals/swaps can remain, ensuring they still call SoundFX.click etc.)
 }
 
+// Global exposure for event handlers in HTML
 window.setAmount = function(val) {
     document.getElementById('bet-amount').value = val;
     document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-    Array.from(document.querySelectorAll('.chip')).forEach(c => { if (c.innerText.includes(val)) c.classList.add('active'); });
+    document.querySelector(`.chip[data-amount="${val}"]`).classList.add('active');
     tg.HapticFeedback.selectionChanged();
 };
 
-window.placeBet = async function(prediction) {
-    const amount = document.getElementById('bet-amount').value;
-    if (!amount || amount <= 0) return showToast('لطفاً مبلغ را وارد کنید');
-    tg.HapticFeedback.impactOccurred('heavy'); 
-    try {
-        const res = await fetch(`${API_BASE_URL}/webapp/game/bet`, {
-            method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ initData: tg.initData, amount: parseFloat(amount), prediction: prediction })
-        });
-        const result = await res.json();
-        if (result.status === 'success') {
-            SoundFX.success();
-            showToast(`✅ سفارش ${prediction === 'UP' ? 'خرید' : 'فروش'} ثبت شد`);
-        } else { showToast(`⚠️ ${result.message}`); SoundFX.lose(); }
-    } catch(e) { showToast("خطای اتصال"); }
+window.showToast = function(msg) {
+    const toast = document.getElementById('toast');
+    if (!toast) return tg.showAlert(msg);
+    toast.querySelector('.toast-message').innerText = msg;
+    toast.classList.remove('hidden'); 
+    tg.HapticFeedback.impactOccurred('light');
+    setTimeout(() => toast.classList.add('hidden'), 3000);
 };
 
-window.performSwap = async function() {
-    const rawVal = document.getElementById('swap-input-toman').value.replace(/,/g, '');
-    const amount = parseFloat(rawVal);
-    if (!amount || amount < 50000) { showToast("⚠️ حداقل مبلغ ۵۰,۰۰۰ تومان"); return; }
-    tg.HapticFeedback.impactOccurred('medium');
-    try {
-        const res = await fetch(`${API_BASE_URL}/webapp/game/swap-to-usd`, {
-            method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ initData: tg.initData, amount_toman: amount })
-        });
-        const result = await res.json();
-        if (result.status === 'success') { showToast("✅ حساب شارژ شد"); window.closeSwapModal(); SoundFX.success(); }
-        else { showToast(`❌ ${result.message}`); }
-    } catch(e) { showToast("خطای شبکه"); }
-};
-
+// Placeholder functions for existing modal handlers (if used in game.html)
 window.openSwapModal = () => document.getElementById('swap-modal').classList.add('active');
 window.closeSwapModal = () => document.getElementById('swap-modal').classList.remove('active');
 window.openHistory = () => document.getElementById('history-modal').classList.add('active');
 window.closeHistory = () => document.getElementById('history-modal').classList.remove('active');
 window.openLeaderboard = () => document.getElementById('leaderboard-modal').classList.add('active');
 window.closeLeaderboard = () => document.getElementById('leaderboard-modal').classList.remove('active');
-
-function showResultModal(result) {
-    const elModal = document.getElementById('result-modal');
-    const elTitle = document.getElementById('res-title');
-    const elAmount = document.getElementById('res-amount');
-    const elIcon = document.getElementById('res-icon');
-    const elMsg = document.getElementById('res-message');
-    document.getElementById('res-entry').innerText = `$${result.entry_price.toFixed(2)}`;
-    document.getElementById('res-close').innerText = `$${result.close_price.toFixed(2)}`;
-
-    if (result.status === 'WIN') {
-        SoundFX.win(); tg.HapticFeedback.notificationOccurred('success');
-        confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, zIndex: 3000 });
-        elTitle.innerText = "پیروزی!"; elTitle.style.color = CONFIG.CHART_COLORS.up;
-        elAmount.className = "res-amount res-win"; elAmount.innerText = `+$${result.profit.toFixed(2)}`;
-        elIcon.innerText = "🏆"; elMsg.innerText = "پیش‌بینی شما صحیح بود.";
-    } else {
-        SoundFX.lose(); tg.HapticFeedback.notificationOccurred('error');
-        elTitle.innerText = "شکست"; elTitle.style.color = CONFIG.CHART_COLORS.down;
-        elAmount.className = "res-amount res-loss"; elAmount.innerText = `-$${Math.abs(result.profit).toFixed(2)}`;
-        elIcon.innerText = "📉"; elMsg.innerText = "بازار خلاف جهت شما حرکت کرد.";
-    }
-    elModal.classList.add('active');
-}
-window.closeResultModal = () => document.getElementById('result-modal').classList.remove('active');
-
-function showToast(msg) {
-    const toast = document.getElementById('toast');
-    toast.querySelector('.toast-message').innerText = msg;
-    toast.classList.remove('hidden'); tg.HapticFeedback.impactOccurred('light');
-    setTimeout(() => toast.classList.add('hidden'), 3000);
-}

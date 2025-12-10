@@ -1,4 +1,4 @@
-﻿/* webapp/game.js (v78.0 - FINAL FIX: Deferred DOM Access) */
+﻿/* webapp/game.js (v79.0 - FINAL FIX: Chart Initialization and DOM Safety) */
 
 const tg = window.Telegram.WebApp;
 const API_BASE_URL = window.location.origin;
@@ -36,6 +36,11 @@ let chart, lineSeries;
 
 function initChart() {
     const container = document.getElementById('tv-chart-container');
+    if (!container) {
+        console.error("Critical Error: Chart container missing.");
+        return; // Prevent crash if element is not found
+    }
+    
     chart = LightweightCharts.createChart(container, {
         width: container.clientWidth,
         height: container.clientHeight,
@@ -86,7 +91,7 @@ const SoundFX = {
 // --- Initialization ---
 
 window.onload = function() {
-    // Populate DOM elements map after the HTML is loaded
+    // 1. Populate DOM elements map after the HTML is loaded
     dom = {
         statusText: document.getElementById('game-status-text'),
         multiplierDisplay: document.getElementById('btc-price'), 
@@ -106,12 +111,15 @@ window.onload = function() {
     tg.setBackgroundColor('#050505');
     if (!tg.initData) tg.initData = "query_id=TEST_DEV_MODE";
 
-    initChart();
+    // 2. Delayed Chart Initialization (100ms delay to allow full DOM rendering)
+    setTimeout(() => {
+        initChart();
+        // 3. Start communication only after chart is ready
+        fetchFullState(); 
+        setInterval(fetchFullState, CONFIG.SLOW_POLL_RATE);
+    }, 100);
+
     setupEventListeners();
-    
-    // Start initial fetch, then poll regularly
-    fetchFullState(); 
-    setInterval(fetchFullState, CONFIG.SLOW_POLL_RATE);
 };
 
 // --- Data Polling ---
@@ -144,7 +152,9 @@ function updateGameUI(data) {
         resetChart();
         userBetAmount = 0;
         userCashedOut = false;
-        document.getElementById('bet-amount').value = '';
+        if(document.getElementById('bet-amount')) {
+            document.getElementById('bet-amount').value = '';
+        }
         if(document.getElementById('chart-loader')) {
             document.getElementById('chart-loader').classList.remove('fade-out');
         }
@@ -155,13 +165,11 @@ function updateGameUI(data) {
         showResultModal(data.last_result);
     }
     
-    // 1. Handle State Transitions
     if (data.state !== lastState) {
         handleStateTransition(data.state);
     }
     lastState = data.state;
     
-    // 2. Update Visuals based on State
     if (data.state === 'BETTING') {
         updateBettingVisuals(data.time_to_next_phase, data.round_id);
     } else if (data.state === 'RUNNING') {
@@ -170,7 +178,6 @@ function updateGameUI(data) {
         updateCrashedVisuals(data.multiplier);
     }
 
-    // 3. Update User Bet Status
     const betInfo = data.user_bet_info;
     if (betInfo) {
         userBetAmount = betInfo.amount;
@@ -229,8 +236,10 @@ function updateRunningVisuals(multiplier) {
     dom.multiplierDisplay.className = 'crash-multiplier running';
     
     const timeNow = Date.now() / 1000;
-    lineSeries.update({ time: timeNow, value: multiplier });
-    chart.timeScale().fitContent();
+    if (lineSeries) {
+        lineSeries.update({ time: timeNow, value: multiplier });
+        chart.timeScale().fitContent();
+    }
 
     dom.timerDisplay.innerText = '';
     dom.timerCircle.style.strokeDashoffset = 283;
@@ -242,18 +251,20 @@ function updateCrashedVisuals(crashMultiplier) {
 }
 
 function resetChart() {
-    lineSeries.setData([]);
-    lineSeries = chart.addLineSeries({ 
-        color: CONFIG.CHART_COLORS.lineColor, 
-        lineWidth: 3, 
-        lastValueVisible: true, 
-        priceLineVisible: false 
-    });
-    lineSeries.setData([ { time: Date.now() / 1000 - 1, value: 1.00 }, { time: Date.now() / 1000, value: 1.00 }]);
+    if (lineSeries) {
+        lineSeries.setData([]);
+        lineSeries = chart.addLineSeries({ 
+            color: CONFIG.CHART_COLORS.lineColor, 
+            lineWidth: 3, 
+            lastValueVisible: true, 
+            priceLineVisible: false 
+        });
+        lineSeries.setData([ { time: Date.now() / 1000 - 1, value: 1.00 }, { time: Date.now() / 1000, value: 1.00 }]);
+    }
 }
 
 function updateBetCashoutVisibility() {
-    if (!dom.bettingBox || !dom.cashoutBox) return; // Safety check
+    if (!dom.bettingBox || !dom.cashoutBox) return;
     
     if (userBetAmount > 0 && !userCashedOut && lastState === 'RUNNING') {
         dom.bettingBox.classList.add('hidden');
@@ -318,6 +329,43 @@ function setupEventListeners() {
 }
 
 // --- Global Exposed Functions (Called from HTML) ---
+
+function showResultModal(result) {
+    const elModal = document.getElementById('result-modal');
+    const elTitle = document.getElementById('res-title');
+    const elAmount = document.getElementById('res-amount');
+    const elIcon = document.getElementById('res-icon');
+    const elMsg = document.getElementById('res-message');
+    
+    if (!elModal || !elTitle || !elAmount) return; // Safety exit if modal elements are missing
+    
+    const multiplier = result.multiplier;
+    const isWin = result.status === 'WIN';
+
+    document.getElementById('res-entry').innerText = `$${result.bet_amount.toFixed(2)}`;
+    document.getElementById('res-close').innerText = `@ ${multiplier.toFixed(2)}X`;
+
+    if (isWin) {
+        elTitle.innerText = "نقد موفق!"; 
+        elTitle.style.color = CONFIG.CHART_COLORS.up;
+        elAmount.className = "res-amount res-win"; 
+        elAmount.innerText = `+$${result.profit.toFixed(2)}`;
+        elIcon.innerText = "💰"; 
+        elMsg.innerText = `شما در ضریب ${multiplier.toFixed(2)} نقد کردید.`;
+    } else {
+        elTitle.innerText = "سقوط"; 
+        elTitle.style.color = CONFIG.CHART_COLORS.down;
+        elAmount.className = "res-amount res-loss"; 
+        elAmount.innerText = `-$${Math.abs(result.profit).toFixed(2)}`;
+        elIcon.innerText = "💥"; 
+        elMsg.innerText = `ضریب در ${multiplier.toFixed(2)} سقوط کرد.`;
+    }
+    elModal.classList.add('active');
+}
+window.closeResultModal = () => document.getElementById('result-modal').classList.remove('active');
+
+
+// --- Game Action Handlers ---
 
 window.placeBet = async function() {
     if (lastState !== 'BETTING' || userBetAmount > 0) return window.showToast('Cannot place bet now.');
@@ -389,21 +437,22 @@ window.cashOut = async function() {
     }
 };
 
-window.setAmount = function(val) {
-    document.getElementById('bet-amount').value = val;
-    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-    document.querySelector(`.chip[data-amount="${val}"]`).classList.add('active');
-    tg.HapticFeedback.selectionChanged();
-};
+// --- History and Swap Utility Handlers ---
 
-window.showToast = function(msg) {
-    const toast = document.getElementById('toast');
-    if (!toast) return tg.showAlert(msg);
-    toast.querySelector('.toast-message').innerText = msg;
-    toast.classList.remove('hidden'); 
-    tg.HapticFeedback.impactOccurred('light');
-    setTimeout(() => toast.classList.add('hidden'), 3000);
-};
+function updateHistoryRibbon(history) {
+    const container = dom.historyContainer; 
+    if (!container) return; // Safety exit
+
+    container.innerHTML = '';
+    
+    history.slice().forEach(crashPoint => {
+        const div = document.createElement('div'); 
+        const isLow = crashPoint <= 2.0;
+        div.className = `hist-pill ${isLow ? 'low' : 'high'}`; 
+        div.innerText = `${crashPoint.toFixed(2)}x`;
+        container.appendChild(div);
+    });
+}
 
 window.openSwapModal = () => document.getElementById('swap-modal').classList.add('active');
 window.closeSwapModal = () => document.getElementById('swap-modal').classList.remove('active');
@@ -413,9 +462,13 @@ window.openLeaderboard = () => document.getElementById('leaderboard-modal').clas
 window.closeLeaderboard = () => document.getElementById('leaderboard-modal').classList.remove('active');
 
 window.performSwap = async function() {
-    const rawVal = document.getElementById('swap-input-toman').value.replace(/,/g, '');
+    const swapInput = document.getElementById('swap-input-toman');
+    if (!swapInput) { window.showToast("Error: Swap input not found."); return; }
+    
+    const rawVal = swapInput.value.replace(/,/g, '');
     const amount = parseFloat(rawVal);
     if (!amount || amount < 50000) { window.showToast("⚠️ حداقل مبلغ ۵۰,۰۰۰ تومان"); return; }
+    
     tg.HapticFeedback.impactOccurred('medium');
     try {
         const res = await fetch(`${API_BASE_URL}/webapp/game/swap-to-usd`, {
@@ -427,7 +480,7 @@ window.performSwap = async function() {
             window.showToast("✅ حساب شارژ شد"); 
             window.closeSwapModal(); 
             SoundFX.success(); 
-            window.fetchFullState(); // Refresh balance after swap
+            window.fetchFullState();
         }
         else { window.showToast(`❌ ${result.message}`); }
     } catch(e) { window.showToast("خطای شبکه"); }

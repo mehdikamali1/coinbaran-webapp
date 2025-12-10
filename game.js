@@ -1,4 +1,4 @@
-﻿/* webapp/game.js (v76.0 - UPGRADE: Dynamic Crash Game UX) */
+﻿/* webapp/game.js (v77.0 - FIX: Swap Input Logic Restoration) */
 
 const tg = window.Telegram.WebApp;
 const API_BASE_URL = window.location.origin;
@@ -9,6 +9,7 @@ const CONFIG = {
     BETTING_DURATION: 10, // Seconds for betting
     RUNNING_UPDATE_RATE: 100, // Multiplier update rate (ms)
     SLOW_POLL_RATE: 3000, // 3 seconds for full state/user data update
+    EST_USDT_RATE: 90000, // Placeholder for Toman conversion in swap UI
     
     CHART_COLORS: {
         bg: 'transparent',
@@ -74,7 +75,7 @@ function initChart() {
 }
 
 
-// --- Audio System (Reused/Refined) ---
+// --- Audio System (Unchanged) ---
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 const SoundFX = {
     playTone: (freq, type, duration, vol = 0.1) => {
@@ -282,6 +283,30 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         observer.observe(dom.multiplierDisplay, { childList: true, characterData: true });
     }
+    
+    // --- RE-ADDED: SWAP INPUT LISTENER LOGIC ---
+    const swapInput = document.getElementById('swap-input-toman');
+    if(swapInput) {
+        swapInput.addEventListener('input', function(e) {
+            // Remove all non-numeric and comma characters
+            let val = e.target.value.replace(/,/g, '').replace(/\D/g, ''); 
+            
+            if (val) {
+                // Format with thousand separators
+                e.target.value = parseInt(val).toLocaleString('en-US');
+                
+                // Calculate USD equivalent using the placeholder rate
+                const tomanAmount = parseFloat(val);
+                const usd = tomanAmount / CONFIG.EST_USDT_RATE;
+                
+                document.getElementById('swap-calc-usd').innerText = usd.toFixed(2) + ' USD';
+            } else { 
+                e.target.value = ''; 
+                document.getElementById('swap-calc-usd').innerText = '0.00 USD'; 
+            }
+        });
+    }
+    // --- END RE-ADDED SWAP INPUT LISTENER LOGIC ---
 });
 
 
@@ -362,7 +387,7 @@ window.cashOut = async function() {
 };
 
 
-// --- Utility and Modal Handlers (Reused/Adapted) ---
+// --- Utility and Modal Handlers ---
 
 function showResultModal(result) {
     const elModal = document.getElementById('result-modal');
@@ -441,8 +466,6 @@ function setupEventListeners() {
     document.querySelectorAll('button').forEach(btn => {
         btn.addEventListener('click', () => { if(!btn.disabled) { SoundFX.click(); tg.HapticFeedback.impactOccurred('light'); } });
     });
-    
-    // ... (All other modular window functions for modals/swaps can remain, ensuring they still call SoundFX.click etc.)
 }
 
 // Global exposure for event handlers in HTML
@@ -462,10 +485,32 @@ window.showToast = function(msg) {
     setTimeout(() => toast.classList.add('hidden'), 3000);
 };
 
-// Placeholder functions for existing modal handlers (if used in game.html)
+// --- Modal Handlers ---
+
 window.openSwapModal = () => document.getElementById('swap-modal').classList.add('active');
 window.closeSwapModal = () => document.getElementById('swap-modal').classList.remove('active');
 window.openHistory = () => document.getElementById('history-modal').classList.add('active');
 window.closeHistory = () => document.getElementById('history-modal').classList.remove('active');
 window.openLeaderboard = () => document.getElementById('leaderboard-modal').classList.add('active');
 window.closeLeaderboard = () => document.getElementById('leaderboard-modal').classList.remove('active');
+
+window.performSwap = async function() {
+    const rawVal = document.getElementById('swap-input-toman').value.replace(/,/g, '');
+    const amount = parseFloat(rawVal);
+    if (!amount || amount < 50000) { showToast("⚠️ حداقل مبلغ ۵۰,۰۰۰ تومان"); return; }
+    tg.HapticFeedback.impactOccurred('medium');
+    try {
+        const res = await fetch(`${API_BASE_URL}/webapp/game/swap-to-usd`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ initData: tg.initData, amount_toman: amount })
+        });
+        const result = await res.json();
+        if (result.status === 'success') { 
+            showToast("✅ حساب شارژ شد"); 
+            window.closeSwapModal(); 
+            SoundFX.success(); 
+            fetchFullState(); // Refresh balance after swap
+        }
+        else { showToast(`❌ ${result.message}`); }
+    } catch(e) { showToast("خطای شبکه"); }
+};

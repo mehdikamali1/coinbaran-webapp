@@ -1,9 +1,7 @@
-﻿/* webapp/dashboard-style.css (v99.0 - Definitive Layout Fix - COMPLETE) */
-
-/* NOTE: This file assumes global.css has been imported first for variables and base styling. */
+﻿/* webapp/dashboard-style.css (v100.0 - Grid-Based Precision Fix) */
 
 /* =========================================
-    1. Loader
+    1. Loader (Unchanged)
     ========================================= */
 #loader {
     position: fixed;
@@ -336,7 +334,7 @@
 
 
 /* =========================================
-    5. Premium Asset Card (Definitive Layout Fix)
+    5. Premium Asset Card (Grid-Based Precision Fix)
     ========================================= */
 .premium-card {
     /* Main container styles inherited */
@@ -429,7 +427,7 @@
     transform: translateZ(15px);
 }
 
-/* --- Card Footer (FIXED) --- */
+/* --- Card Footer (GRID FIXED) --- */
 .card-footer {
     background: rgba(255, 255, 255, 0.05); 
     border-radius: 12px;
@@ -442,24 +440,24 @@
 }
 
 .asset-row {
-    display: flex;
+    /* FIX: Use Grid for absolute, non-stretching horizontal alignment */
+    display: grid;
+    /* FIX: Define 3 columns: (Asset 1) | (Divider) | (Asset 2) */
+    grid-template-columns: 3fr 1px 2fr; 
+    align-items: center; /* Ensure all children are vertically centered */
     width: 100%;
-    align-items: center; 
-    justify-content: space-around; /* FIX: Use space-around for balanced spacing */
-    padding: 0; 
+    padding: 0 5px; 
 }
 
 .asset-col {
+    /* FIX: Center content within the grid cell */
     display: flex;
     flex-direction: column;
-    /* FIX: Ensures internal content is centered horizontally */
-    align-items: center; 
+    align-items: center;
     justify-content: center;
-    
     text-align: center;
     cursor: pointer;
-    padding: 0 5px; /* Add slight internal horizontal padding */
-    min-width: 33%; 
+    padding: 0 5px; 
 }
 
 .asset-title {
@@ -487,10 +485,11 @@
 }
 
 .vertical-divider {
+    /* This element is the 1px middle column in the grid, so margins should be 0 */
     width: 1px;
     height: 35px;
     background: rgba(255, 255, 255, 0.2); 
-    margin: 0 8px; 
+    margin: 0; 
     align-self: center;
 }
 

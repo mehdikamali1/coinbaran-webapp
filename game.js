@@ -1,4 +1,4 @@
-﻿/* webapp/game.js (v79.0 - FINAL FIX: Chart Initialization and DOM Safety) */
+﻿/* webapp/game.js (v80.0 - FINAL FIX: Ensured Full State Fetch) */
 
 const tg = window.Telegram.WebApp;
 const API_BASE_URL = window.location.origin;
@@ -28,7 +28,7 @@ let lastRoundId = 0;
 let userBetAmount = 0;
 let userCashedOut = false;
 
-// --- DOM Elements (Now populated inside window.onload) ---
+// --- DOM Elements (Populated inside window.onload) ---
 let dom = {};
 
 // --- CHART SETUP (LightweightCharts) ---
@@ -38,7 +38,7 @@ function initChart() {
     const container = document.getElementById('tv-chart-container');
     if (!container) {
         console.error("Critical Error: Chart container missing.");
-        return; // Prevent crash if element is not found
+        return; 
     }
     
     chart = LightweightCharts.createChart(container, {
@@ -91,7 +91,6 @@ const SoundFX = {
 // --- Initialization ---
 
 window.onload = function() {
-    // 1. Populate DOM elements map after the HTML is loaded
     dom = {
         statusText: document.getElementById('game-status-text'),
         multiplierDisplay: document.getElementById('btc-price'), 
@@ -111,12 +110,17 @@ window.onload = function() {
     tg.setBackgroundColor('#050505');
     if (!tg.initData) tg.initData = "query_id=TEST_DEV_MODE";
 
-    // 2. Delayed Chart Initialization (100ms delay to allow full DOM rendering)
+    // Critical Step: Delay Chart Init and ensure initial fetch runs
     setTimeout(() => {
-        initChart();
-        // 3. Start communication only after chart is ready
-        fetchFullState(); 
-        setInterval(fetchFullState, CONFIG.SLOW_POLL_RATE);
+        try {
+            initChart();
+            fetchFullState(); 
+            setInterval(fetchFullState, CONFIG.SLOW_POLL_RATE);
+        } catch (e) {
+            console.error("Chart/Game Init Failed in Timeout:", e);
+            // Fallback: Try fetching state immediately outside the chart block
+            fetchFullState(); 
+        }
     }, 100);
 
     setupEventListeners();
@@ -135,13 +139,17 @@ async function fetchFullState() {
             updateGameUI(data);
             updateHistoryRibbon(data.history || []);
             setConnectionStatus(true);
-        } else { setConnectionStatus(false); }
+        } else { 
+            setConnectionStatus(false);
+            console.warn("Server responded, but status was not OK:", res.status);
+        }
     } catch (e) {
         setConnectionStatus(false);
+        console.error("Network Error: Could not reach game state endpoint.", e);
     }
 }
 
-// --- UI Update & Game State Management ---
+// --- UI Update & Game State Management (Unchanged core logic) ---
 
 function updateGameUI(data) {
     if (dom.userBalance && data.user_balance !== undefined) {
@@ -280,7 +288,6 @@ function updateBetCashoutVisibility() {
     }
 }
 
-// Set up listeners for the cashout button to update in real-time
 function setupEventListeners() {
     if (dom.multiplierDisplay) {
         const observer = new MutationObserver((mutationsList, observer) => {
@@ -291,19 +298,16 @@ function setupEventListeners() {
         observer.observe(dom.multiplierDisplay, { childList: true, characterData: true });
     }
     
-    // Attach input listeners for amount chips
     document.querySelectorAll('.chip').forEach(chip => {
         chip.addEventListener('click', function() {
             window.setAmount(parseFloat(this.getAttribute('data-amount')));
         });
     });
     
-    // Add haptic feedback and sound effects
     document.querySelectorAll('button').forEach(btn => {
         btn.addEventListener('click', () => { if(!btn.disabled) { SoundFX.click(); tg.HapticFeedback.impactOccurred('light'); } });
     });
     
-    // --- RE-ADDED: SWAP INPUT LISTENER LOGIC ---
     const swapInput = document.getElementById('swap-input-toman');
     if(swapInput) {
         swapInput.addEventListener('input', function(e) {
@@ -325,47 +329,9 @@ function setupEventListeners() {
             }
         });
     }
-    // --- END RE-ADDED SWAP INPUT LISTENER LOGIC ---
 }
 
 // --- Global Exposed Functions (Called from HTML) ---
-
-function showResultModal(result) {
-    const elModal = document.getElementById('result-modal');
-    const elTitle = document.getElementById('res-title');
-    const elAmount = document.getElementById('res-amount');
-    const elIcon = document.getElementById('res-icon');
-    const elMsg = document.getElementById('res-message');
-    
-    if (!elModal || !elTitle || !elAmount) return; // Safety exit if modal elements are missing
-    
-    const multiplier = result.multiplier;
-    const isWin = result.status === 'WIN';
-
-    document.getElementById('res-entry').innerText = `$${result.bet_amount.toFixed(2)}`;
-    document.getElementById('res-close').innerText = `@ ${multiplier.toFixed(2)}X`;
-
-    if (isWin) {
-        elTitle.innerText = "نقد موفق!"; 
-        elTitle.style.color = CONFIG.CHART_COLORS.up;
-        elAmount.className = "res-amount res-win"; 
-        elAmount.innerText = `+$${result.profit.toFixed(2)}`;
-        elIcon.innerText = "💰"; 
-        elMsg.innerText = `شما در ضریب ${multiplier.toFixed(2)} نقد کردید.`;
-    } else {
-        elTitle.innerText = "سقوط"; 
-        elTitle.style.color = CONFIG.CHART_COLORS.down;
-        elAmount.className = "res-amount res-loss"; 
-        elAmount.innerText = `-$${Math.abs(result.profit).toFixed(2)}`;
-        elIcon.innerText = "💥"; 
-        elMsg.innerText = `ضریب در ${multiplier.toFixed(2)} سقوط کرد.`;
-    }
-    elModal.classList.add('active');
-}
-window.closeResultModal = () => document.getElementById('result-modal').classList.remove('active');
-
-
-// --- Game Action Handlers ---
 
 window.placeBet = async function() {
     if (lastState !== 'BETTING' || userBetAmount > 0) return window.showToast('Cannot place bet now.');
@@ -437,22 +403,21 @@ window.cashOut = async function() {
     }
 };
 
-// --- History and Swap Utility Handlers ---
+window.setAmount = function(val) {
+    document.getElementById('bet-amount').value = val;
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    document.querySelector(`.chip[data-amount="${val}"]`).classList.add('active');
+    tg.HapticFeedback.selectionChanged();
+};
 
-function updateHistoryRibbon(history) {
-    const container = dom.historyContainer; 
-    if (!container) return; // Safety exit
-
-    container.innerHTML = '';
-    
-    history.slice().forEach(crashPoint => {
-        const div = document.createElement('div'); 
-        const isLow = crashPoint <= 2.0;
-        div.className = `hist-pill ${isLow ? 'low' : 'high'}`; 
-        div.innerText = `${crashPoint.toFixed(2)}x`;
-        container.appendChild(div);
-    });
-}
+window.showToast = function(msg) {
+    const toast = document.getElementById('toast');
+    if (!toast) return tg.showAlert(msg);
+    toast.querySelector('.toast-message').innerText = msg;
+    toast.classList.remove('hidden'); 
+    tg.HapticFeedback.impactOccurred('light');
+    setTimeout(() => toast.classList.add('hidden'), 3000);
+};
 
 window.openSwapModal = () => document.getElementById('swap-modal').classList.add('active');
 window.closeSwapModal = () => document.getElementById('swap-modal').classList.remove('active');

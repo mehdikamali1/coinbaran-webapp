@@ -1,4 +1,4 @@
-﻿/* webapp/game.js (v81.0 - FINAL STABILITY FIX: Dependency Bypass) */
+﻿/* webapp/game.js (v82.0 - FIX: WebSocket Implementation) */
 
 const tg = window.Telegram.WebApp;
 const API_BASE_URL = window.location.origin;
@@ -6,7 +6,7 @@ const API_BASE_URL = window.location.origin;
 // تنظیمات سراسری (unchanged)
 const CONFIG = {
     BETTING_DURATION: 10,
-    RUNNING_UPDATE_RATE: 100, 
+    RUNNING_UPDATE_RATE: 100, // Now purely cosmetic, controlled by WS broadcast rate
     SLOW_POLL_RATE: 3000, 
     EST_USDT_RATE: 90000,
     
@@ -22,11 +22,12 @@ const CONFIG = {
     }
 };
 
-let multiplierInterval = null;
+let multiplierInterval = null; // No longer needed for polling
 let lastState = 'CRASHED';
 let lastRoundId = 0;
 let userBetAmount = 0;
 let userCashedOut = false;
+let ws = null; // WebSocket instance
 
 // --- DOM Elements (Populated inside window.onload) ---
 let dom = {};
@@ -62,7 +63,7 @@ const SoundFX = {
 // --- Initialization ---
 
 window.onload = function() {
-    // 1. Populate DOM elements (critical for preventing NameError)
+    // 1. Populate DOM elements
     dom = {
         statusText: document.getElementById('game-status-text'),
         multiplierDisplay: document.getElementById('btc-price'), 
@@ -82,17 +83,58 @@ window.onload = function() {
     tg.setBackgroundColor('#050505');
     if (!tg.initData) tg.initData = "query_id=TEST_DEV_MODE";
 
-    // 2. Start communication immediately, bypassing chart init
-    fetchFullState(); 
-    setInterval(fetchFullState, CONFIG.SLOW_POLL_RATE);
+    // 2. Start communication immediately via WebSocket
+    connectWebSocket();
+    // We keep one slow poll to refresh user balance/last result after WS reconnects or state changes
+    window.fetchUserBalanceAndLastResult();
+    setInterval(window.fetchUserBalanceAndLastResult, CONFIG.SLOW_POLL_RATE);
     
     // 3. Setup event listeners
     setupEventListeners();
 };
 
-// --- Data Polling ---
+// --- WebSocket Communication ---
 
-async function fetchFullState() {
+function connectWebSocket() {
+    // Convert http(s):// to ws(s)://
+    const ws_protocol = window.location.protocol === "https:" ? "wss://" : "ws://";
+    const ws_url = ws_protocol + window.location.host + "/ws/game/state";
+
+    ws = new WebSocket(ws_url);
+
+    ws.onopen = () => {
+        setConnectionStatus(true);
+        console.log("WebSocket connected to game state.");
+        // Initial state fetch to sync UI/Balance/History immediately upon connection
+        window.fetchUserBalanceAndLastResult();
+    };
+
+    ws.onmessage = (event) => {
+        try {
+            const data = JSON.parse(event.data);
+            // WS only provides live state. User balance/last_result still need HTTP poll.
+            updateGameUI(data); 
+        } catch (e) {
+            console.error("Failed to parse WebSocket message:", e);
+        }
+    };
+
+    ws.onclose = () => {
+        setConnectionStatus(false);
+        console.warn("WebSocket disconnected. Attempting to reconnect in 3s...");
+        setTimeout(connectWebSocket, 3000); // Attempt to reconnect after 3 seconds
+    };
+
+    ws.onerror = (err) => {
+        setConnectionStatus(false);
+        console.error("WebSocket error:", err);
+        ws.close();
+    };
+}
+
+// --- Data Fetch (Reduced scope to non-real-time data) ---
+
+window.fetchUserBalanceAndLastResult = async function() {
     try {
         const res = await fetch(`${API_BASE_URL}/webapp/game/state`, {
             method: 'POST', headers: {'Content-Type': 'application/json'},
@@ -100,27 +142,31 @@ async function fetchFullState() {
         });
         if (res.ok) {
             const data = await res.json();
-            updateGameUI(data);
+            // Only update non-WS driven data
+            if (dom.userBalance && data.user_balance !== undefined) {
+                dom.userBalance.innerText = data.user_balance.toLocaleString('en-US', {minimumFractionDigits: 2});
+            }
             updateHistoryRibbon(data.history || []);
-            setConnectionStatus(true);
-        } else { 
+            
+            // Check for last result and show modal
+            if (data.last_result) {
+                showResultModal(data.last_result);
+            }
+            
+        } else {  
             setConnectionStatus(false);
             console.warn("Server responded, but status was not OK:", res.status);
         }
     } catch (e) {
         setConnectionStatus(false);
-        // Note: We expect the connection to succeed here since the server is running.
-        console.error("Network Error: Could not reach game state endpoint.", e);
+        console.error("Network Error: Could not reach user state endpoint.", e);
     }
 }
 
-// --- UI Update & Game State Management (Simplified logic for debugging) ---
+
+// --- UI Update & Game State Management ---
 
 function updateGameUI(data) {
-    if (dom.userBalance && data.user_balance !== undefined) {
-        dom.userBalance.innerText = data.user_balance.toLocaleString('en-US', {minimumFractionDigits: 2});
-    }
-
     // Reset logic simplified
     if (data.round_id !== lastRoundId && lastRoundId !== 0) {
         userBetAmount = 0;
@@ -131,12 +177,10 @@ function updateGameUI(data) {
         if(document.getElementById('chart-loader')) {
             document.getElementById('chart-loader').classList.remove('fade-out');
         }
+        // Force a balance fetch after round transition in case of payout/loss
+        window.fetchUserBalanceAndLastResult(); 
     }
     lastRoundId = data.round_id;
-
-    if (data.last_result) {
-        showResultModal(data.last_result);
-    }
     
     // State handling
     if (data.state !== lastState) {
@@ -144,6 +188,7 @@ function updateGameUI(data) {
     }
     lastState = data.state;
     
+    // State visuals use the current WS data
     if (data.state === 'BETTING') {
         updateBettingVisuals(data.time_to_next_phase, data.round_id);
     } else if (data.state === 'RUNNING') {
@@ -152,6 +197,8 @@ function updateGameUI(data) {
         updateCrashedVisuals(data.multiplier);
     }
 
+    // This bet info should ideally be pushed by the WS manager after a successful POST /bet
+    // but for stability, we assume the user only updates it on local events and re-syncs on transition.
     const betInfo = data.user_bet_info;
     if (betInfo) {
         userBetAmount = betInfo.amount;
@@ -170,19 +217,12 @@ function handleStateTransition(newState) {
     } else if (newState === 'RUNNING') {
         dom.statusText.innerText = "در حال صعود...";
         dom.statusText.className = 'status-running';
-        if (!multiplierInterval) {
-             multiplierInterval = setInterval(fetchFullState, CONFIG.RUNNING_UPDATE_RATE);
-        }
         if(document.getElementById('chart-loader')) {
             document.getElementById('chart-loader').classList.add('fade-out');
         }
     } else if (newState === 'CRASHED') {
         dom.statusText.innerText = `CRASHED @ ${dom.multiplierDisplay.innerText}X`;
         dom.statusText.className = 'status-crashed';
-        if (multiplierInterval) {
-            clearInterval(multiplierInterval);
-            multiplierInterval = null;
-        }
         SoundFX.crash();
         dom.multiplierDisplay.innerText = '0.00'; 
     } else if (newState === 'WAITING') {
@@ -217,6 +257,17 @@ function updateRunningVisuals(multiplier) {
 function updateCrashedVisuals(crashMultiplier) {
     dom.multiplierDisplay.innerText = crashMultiplier.toFixed(2);
     dom.multiplierDisplay.className = 'crash-multiplier crashed-final';
+}
+
+function setConnectionStatus(isConnected) {
+    const statusDot = document.getElementById('connection-status-dot');
+    if (statusDot) {
+        statusDot.style.backgroundColor = isConnected ? CONFIG.CHART_COLORS.up : CONFIG.CHART_COLORS.down;
+    }
+    if (!isConnected) {
+        dom.statusText.innerText = "در حال اتصال به اجین بازی...";
+        dom.statusText.className = 'status-error';
+    }
 }
 
 // updateBetCashoutVisibility, setupEventListeners, showResultModal, etc. (Unchanged functions follow)
@@ -307,6 +358,7 @@ function showResultModal(result) {
         elAmount.innerText = `+$${result.profit.toFixed(2)}`;
         elIcon.innerText = "💰"; 
         elMsg.innerText = `شما در ضریب ${multiplier.toFixed(2)} نقد کردید.`;
+        SoundFX.win();
     } else {
         elTitle.innerText = "سقوط"; 
         elTitle.style.color = CONFIG.CHART_COLORS.down;
@@ -314,6 +366,7 @@ function showResultModal(result) {
         elAmount.innerText = `-$${Math.abs(result.profit).toFixed(2)}`;
         elIcon.innerText = "💥"; 
         elMsg.innerText = `ضریب در ${multiplier.toFixed(2)} سقوط کرد.`;
+        // SoundFX.crash() is handled in handleStateTransition when state changes to CRASHED
     }
     elModal.classList.add('active');
 }
@@ -326,6 +379,10 @@ window.placeBet = async function() {
     if (lastState !== 'BETTING' || userBetAmount > 0) return window.showToast('Cannot place bet now.');
     
     const amount = parseFloat(document.getElementById('bet-amount').value);
+    // Assuming auto-cash-out input is available, otherwise default to null
+    const autoCashOutInput = document.getElementById('auto-cashout-multiplier'); 
+    const auto_cash_out = (autoCashOutInput && autoCashOutInput.value) ? parseFloat(autoCashOutInput.value) : null;
+    
     if (!amount || amount <= 0) return window.showToast('لطفاً مبلغ را وارد کنید');
     
     tg.HapticFeedback.impactOccurred('heavy');
@@ -335,7 +392,7 @@ window.placeBet = async function() {
     try {
         const res = await fetch(`${API_BASE_URL}/webapp/game/bet`, {
             method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ initData: tg.initData, amount: amount })
+            body: JSON.stringify({ initData: tg.initData, amount: amount, auto_cash_out: auto_cash_out })
         });
         const result = await res.json();
         
@@ -343,6 +400,8 @@ window.placeBet = async function() {
             SoundFX.success();
             window.showToast(`✅ شرط ثبت شد: $${amount.toFixed(2)}`);
             userBetAmount = amount;
+            // Force a balance refresh as the deduction has occurred
+            window.fetchUserBalanceAndLastResult(); 
             updateBetCashoutVisibility(); 
         } else { 
             window.showToast(`⚠️ ${result.message}`); 
@@ -367,19 +426,20 @@ window.cashOut = async function() {
     try {
         const res = await fetch(`${API_BASE_URL}/webapp/game/cashout`, {
             method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ initData: tg.initData, target_multiplier: null })
+            body: JSON.stringify({ initData: tg.initData }) // target_multiplier removed, controlled by server time
         });
         const result = await res.json();
         
         if (result.status === 'success') {
-            SoundFX.win();
+            // SoundFX.win is now called inside showResultModal
             const payout = parseFloat(result.payout);
             const profit = payout - userBetAmount;
             window.showToast(`🏆 نقد موفقیت‌آمیز! سود: $${profit.toFixed(2)}`);
             userCashedOut = true;
             dom.cashoutBox.classList.add('cashed-out');
             dom.cashoutBox.innerText = `CASHED OUT @ ${dom.multiplierDisplay.innerText}X`;
-            fetchFullState();
+            // Force a balance refresh as the credit has occurred
+            window.fetchUserBalanceAndLastResult(); 
         } else { 
             window.showToast(`⚠️ ${result.message}`); 
             dom.cashoutBtn.disabled = false;
@@ -451,7 +511,7 @@ window.performSwap = async function() {
             window.showToast("✅ حساب شارژ شد"); 
             window.closeSwapModal(); 
             SoundFX.success(); 
-            window.fetchFullState();
+            window.fetchUserBalanceAndLastResult(); // Use the dedicated function for balance update
         }
         else { window.showToast(`❌ ${result.message}`); }
     } catch(e) { window.showToast("خطای شبکه"); }

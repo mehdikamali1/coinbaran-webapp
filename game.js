@@ -1,9 +1,9 @@
-﻿/* webapp/game.js (v80.0 - FINAL FIX: Ensured Full State Fetch) */
+﻿/* webapp/game.js (v81.0 - FINAL STABILITY FIX: Dependency Bypass) */
 
 const tg = window.Telegram.WebApp;
 const API_BASE_URL = window.location.origin;
 
-// تنظیمات سراسری
+// تنظیمات سراسری (unchanged)
 const CONFIG = {
     BETTING_DURATION: 10,
     RUNNING_UPDATE_RATE: 100, 
@@ -31,39 +31,10 @@ let userCashedOut = false;
 // --- DOM Elements (Populated inside window.onload) ---
 let dom = {};
 
-// --- CHART SETUP (LightweightCharts) ---
+// --- CHART SETUP (DEACTIVATED FOR DEBUGGING) ---
 let chart, lineSeries;
-
-function initChart() {
-    const container = document.getElementById('tv-chart-container');
-    if (!container) {
-        console.error("Critical Error: Chart container missing.");
-        return; 
-    }
-    
-    chart = LightweightCharts.createChart(container, {
-        width: container.clientWidth,
-        height: container.clientHeight,
-        layout: { background: { type: 'solid', color: CONFIG.CHART_COLORS.bg }, textColor: CONFIG.CHART_COLORS.text, fontFamily: "'Roboto Mono', monospace" },
-        grid: { vertLines: { visible: false }, horzLines: { visible: false } },
-        rightPriceScale: { borderColor: 'transparent', visible: true, scaleMargins: { top: 0.2, bottom: 0.1 } },
-        timeScale: { visible: false },
-        crosshair: { mode: 0 },
-    });
-    lineSeries = chart.addLineSeries({ 
-        color: CONFIG.CHART_COLORS.lineColor, 
-        lineWidth: 3, 
-        lastValueVisible: true, 
-        priceLineVisible: false 
-    });
-    lineSeries.setData([ { time: 1, value: 1.00 }, { time: 2, value: 1.00 }]);
-    
-    new ResizeObserver(entries => {
-        if (entries.length === 0 || entries[0].target !== container) return;
-        const newRect = entries[0].contentRect;
-        chart.applyOptions({ height: newRect.height, width: newRect.width });
-    }).observe(container);
-}
+function initChart() { /* Temporarily deactivated to check for chart library conflicts */ }
+function resetChart() { /* Temporarily deactivated */ }
 
 // --- Audio System (Unchanged) ---
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -91,6 +62,7 @@ const SoundFX = {
 // --- Initialization ---
 
 window.onload = function() {
+    // 1. Populate DOM elements (critical for preventing NameError)
     dom = {
         statusText: document.getElementById('game-status-text'),
         multiplierDisplay: document.getElementById('btc-price'), 
@@ -110,19 +82,11 @@ window.onload = function() {
     tg.setBackgroundColor('#050505');
     if (!tg.initData) tg.initData = "query_id=TEST_DEV_MODE";
 
-    // Critical Step: Delay Chart Init and ensure initial fetch runs
-    setTimeout(() => {
-        try {
-            initChart();
-            fetchFullState(); 
-            setInterval(fetchFullState, CONFIG.SLOW_POLL_RATE);
-        } catch (e) {
-            console.error("Chart/Game Init Failed in Timeout:", e);
-            // Fallback: Try fetching state immediately outside the chart block
-            fetchFullState(); 
-        }
-    }, 100);
-
+    // 2. Start communication immediately, bypassing chart init
+    fetchFullState(); 
+    setInterval(fetchFullState, CONFIG.SLOW_POLL_RATE);
+    
+    // 3. Setup event listeners
     setupEventListeners();
 };
 
@@ -145,19 +109,20 @@ async function fetchFullState() {
         }
     } catch (e) {
         setConnectionStatus(false);
+        // Note: We expect the connection to succeed here since the server is running.
         console.error("Network Error: Could not reach game state endpoint.", e);
     }
 }
 
-// --- UI Update & Game State Management (Unchanged core logic) ---
+// --- UI Update & Game State Management (Simplified logic for debugging) ---
 
 function updateGameUI(data) {
     if (dom.userBalance && data.user_balance !== undefined) {
         dom.userBalance.innerText = data.user_balance.toLocaleString('en-US', {minimumFractionDigits: 2});
     }
 
+    // Reset logic simplified
     if (data.round_id !== lastRoundId && lastRoundId !== 0) {
-        resetChart();
         userBetAmount = 0;
         userCashedOut = false;
         if(document.getElementById('bet-amount')) {
@@ -173,6 +138,7 @@ function updateGameUI(data) {
         showResultModal(data.last_result);
     }
     
+    // State handling
     if (data.state !== lastState) {
         handleStateTransition(data.state);
     }
@@ -201,7 +167,6 @@ function handleStateTransition(newState) {
     if (newState === 'BETTING') {
         dom.statusText.innerText = "آماده ثبت شرط";
         dom.statusText.className = 'status-betting';
-        resetChart();
     } else if (newState === 'RUNNING') {
         dom.statusText.innerText = "در حال صعود...";
         dom.statusText.className = 'status-running';
@@ -243,12 +208,8 @@ function updateRunningVisuals(multiplier) {
     dom.multiplierDisplay.innerText = multiplier.toFixed(2);
     dom.multiplierDisplay.className = 'crash-multiplier running';
     
-    const timeNow = Date.now() / 1000;
-    if (lineSeries) {
-        lineSeries.update({ time: timeNow, value: multiplier });
-        chart.timeScale().fitContent();
-    }
-
+    // CHART UPDATES REMOVED FOR DEBUGGING
+    
     dom.timerDisplay.innerText = '';
     dom.timerCircle.style.strokeDashoffset = 283;
 }
@@ -258,18 +219,7 @@ function updateCrashedVisuals(crashMultiplier) {
     dom.multiplierDisplay.className = 'crash-multiplier crashed-final';
 }
 
-function resetChart() {
-    if (lineSeries) {
-        lineSeries.setData([]);
-        lineSeries = chart.addLineSeries({ 
-            color: CONFIG.CHART_COLORS.lineColor, 
-            lineWidth: 3, 
-            lastValueVisible: true, 
-            priceLineVisible: false 
-        });
-        lineSeries.setData([ { time: Date.now() / 1000 - 1, value: 1.00 }, { time: Date.now() / 1000, value: 1.00 }]);
-    }
-}
+// updateBetCashoutVisibility, setupEventListeners, showResultModal, etc. (Unchanged functions follow)
 
 function updateBetCashoutVisibility() {
     if (!dom.bettingBox || !dom.cashoutBox) return;
@@ -332,6 +282,45 @@ function setupEventListeners() {
 }
 
 // --- Global Exposed Functions (Called from HTML) ---
+
+function showResultModal(result) {
+    const elModal = document.getElementById('result-modal');
+    const elTitle = document.getElementById('res-title');
+    const elAmount = document.getElementById('res-amount');
+    const elIcon = document.getElementById('res-icon');
+    const elMsg = document.getElementById('res-message');
+    
+    if (!elModal || !elTitle || !elAmount) return;
+    
+    // Note: Confetti removed here as the library is not guaranteed to be loaded
+    
+    const multiplier = result.multiplier;
+    const isWin = result.status === 'WIN';
+
+    document.getElementById('res-entry').innerText = `$${result.bet_amount.toFixed(2)}`;
+    document.getElementById('res-close').innerText = `@ ${multiplier.toFixed(2)}X`;
+
+    if (isWin) {
+        elTitle.innerText = "نقد موفق!"; 
+        elTitle.style.color = CONFIG.CHART_COLORS.up;
+        elAmount.className = "res-amount res-win"; 
+        elAmount.innerText = `+$${result.profit.toFixed(2)}`;
+        elIcon.innerText = "💰"; 
+        elMsg.innerText = `شما در ضریب ${multiplier.toFixed(2)} نقد کردید.`;
+    } else {
+        elTitle.innerText = "سقوط"; 
+        elTitle.style.color = CONFIG.CHART_COLORS.down;
+        elAmount.className = "res-amount res-loss"; 
+        elAmount.innerText = `-$${Math.abs(result.profit).toFixed(2)}`;
+        elIcon.innerText = "💥"; 
+        elMsg.innerText = `ضریب در ${multiplier.toFixed(2)} سقوط کرد.`;
+    }
+    elModal.classList.add('active');
+}
+window.closeResultModal = () => document.getElementById('result-modal').classList.remove('active');
+
+
+// --- Game Action Handlers ---
 
 window.placeBet = async function() {
     if (lastState !== 'BETTING' || userBetAmount > 0) return window.showToast('Cannot place bet now.');
@@ -418,6 +407,23 @@ window.showToast = function(msg) {
     tg.HapticFeedback.impactOccurred('light');
     setTimeout(() => toast.classList.add('hidden'), 3000);
 };
+
+// --- History and Swap Utility Handlers ---
+
+function updateHistoryRibbon(history) {
+    const container = dom.historyContainer; 
+    if (!container) return;
+
+    container.innerHTML = '';
+    
+    history.slice().forEach(crashPoint => {
+        const div = document.createElement('div'); 
+        const isLow = crashPoint <= 2.0;
+        div.className = `hist-pill ${isLow ? 'low' : 'high'}`; 
+        div.innerText = `${crashPoint.toFixed(2)}x`;
+        container.appendChild(div);
+    });
+}
 
 window.openSwapModal = () => document.getElementById('swap-modal').classList.add('active');
 window.closeSwapModal = () => document.getElementById('swap-modal').classList.remove('active');

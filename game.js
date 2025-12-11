@@ -1,4 +1,4 @@
-﻿/* webapp/game.js (v82.0 - FIX: WebSocket Implementation) */
+﻿/* webapp/game.js (v83.0 - FINAL FIX: WS URL Construction & Error Robustness) */
 
 const tg = window.Telegram.WebApp;
 const API_BASE_URL = window.location.origin;
@@ -22,7 +22,7 @@ const CONFIG = {
     }
 };
 
-let multiplierInterval = null; // No longer needed for polling
+let multiplierInterval = null; 
 let lastState = 'CRASHED';
 let lastRoundId = 0;
 let userBetAmount = 0;
@@ -96,23 +96,26 @@ window.onload = function() {
 // --- WebSocket Communication ---
 
 function connectWebSocket() {
-    // Convert http(s):// to ws(s)://
+    // CRITICAL FIX: Ensure correct WS protocol construction. window.location.host includes the port.
     const ws_protocol = window.location.protocol === "https:" ? "wss://" : "ws://";
     const ws_url = ws_protocol + window.location.host + "/ws/game/state";
 
+    // Safety check to ensure we don't spam connections if one is already connecting/open
+    if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
+        return; 
+    }
+    
     ws = new WebSocket(ws_url);
 
     ws.onopen = () => {
         setConnectionStatus(true);
         console.log("WebSocket connected to game state.");
-        // Initial state fetch to sync UI/Balance/History immediately upon connection
         window.fetchUserBalanceAndLastResult();
     };
 
     ws.onmessage = (event) => {
         try {
             const data = JSON.parse(event.data);
-            // WS only provides live state. User balance/last_result still need HTTP poll.
             updateGameUI(data); 
         } catch (e) {
             console.error("Failed to parse WebSocket message:", e);
@@ -128,7 +131,7 @@ function connectWebSocket() {
     ws.onerror = (err) => {
         setConnectionStatus(false);
         console.error("WebSocket error:", err);
-        ws.close();
+        // Do NOT call ws.close() here; let onclose handle reconnection
     };
 }
 
@@ -154,6 +157,7 @@ window.fetchUserBalanceAndLastResult = async function() {
             }
             
         } else {  
+            // Server error response, but connection is alive.
             setConnectionStatus(false);
             console.warn("Server responded, but status was not OK:", res.status);
         }
@@ -267,6 +271,11 @@ function setConnectionStatus(isConnected) {
     if (!isConnected) {
         dom.statusText.innerText = "در حال اتصال به اجین بازی...";
         dom.statusText.className = 'status-error';
+    } else {
+        // When connected, update status to show engine is ready (removes the "در حال اتصال" status)
+        if (lastState === 'WAITING' || lastState === 'BETTING') {
+            handleStateTransition(lastState);
+        }
     }
 }
 

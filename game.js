@@ -1,11 +1,17 @@
-﻿/* webapp/game.js (v83.2 - CRITICAL FIX: Execution Flow & WS Direct Start) */
+﻿/* webapp/game.js (v83.3 - CRITICAL FIX: Reverting to Dynamic WS URL + Execution Flow Fix) */
 
 const tg = window.Telegram.WebApp;
 const API_BASE_URL = window.location.origin;
 
-// === CRITICAL FIX: Direct WSS URL for Ngrok Stability ===
-// Use the Ngrok domain for WSS (Ensure this domain is current: unviolable-naillike-juana.ngrok-free.dev)
-const WS_BASE_URL = "wss://unviolable-naillike-juana.ngrok-free.dev"; 
+// === CRITICAL FIX: Dynamic WS URL for better proxy/WSS handling ===
+// We revert to dynamic construction but ensure the protocol is correct (ws/wss).
+// This relies on the browser/Ngrok properly handling the protocol upgrade.
+function getWebSocketUrl() {
+    // Determine the correct WebSocket protocol based on the current page protocol
+    const ws_protocol = window.location.protocol === "https:" ? "wss://" : "ws://";
+    // Use window.location.host (includes domain and port if necessary)
+    return ws_protocol + window.location.host + "/ws/game/state";
+}
 
 // تنظیمات سراسری (unchanged)
 const CONFIG = {
@@ -100,8 +106,8 @@ function initializeGame() {
 // --- WebSocket Communication ---
 
 function connectWebSocket() {
-    // FIX: Use the hardcoded WSS URL for Ngrok/Production environments
-    const ws_url = WS_BASE_URL + "/ws/game/state";
+    // FIX: Use the dynamic URL construction 
+    const ws_url = getWebSocketUrl();
 
     // Safety check to ensure we don't spam connections if one is already connecting/open
     if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {

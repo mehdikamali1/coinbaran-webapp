@@ -1,0 +1,218 @@
+﻿/* webapp/admin_style.css (v1.0 - Admin Panel Luxury Theme) */
+@import url('style.css'); /* وارد کردن فونت و متغیرهای اصلی */
+@import url('dashboard-style.css'); /* وارد کردن متغیرهای گلد و گلس */
+
+/* متغیرهای ضروری از دیتابورد استایل */
+:root {
+    --primary-gold: #F0B90B;
+    --accent-green: #0ECB81;
+    --accent-red: #F6465D;
+    --accent-blue: #3B82F6;
+    --bg-deep: #050505;
+    --card-bg-admin: rgba(255, 255, 255, 0.05); /* لایت‌تر برای دید بهتر ادمین */
+    --glass-border: rgba(255, 255, 255, 0.15);
+    --text-muted: #aaaaaa;
+    --radius-xl: 24px;
+    --radius-lg: 16px;
+    --radius-md: 12px;
+}
+
+/* --- لایه‌بندی اصلی و ناوبری --- */
+#app-container {
+    /* اطمینان از وجود فضای کافی برای فوتر */
+    padding-bottom: 90px;
+}
+
+.admin-header {
+    background: var(--bg-deep); /* حذف شفافیت برای تمرکز */
+    border-bottom: 2px solid var(--primary-gold);
+    padding: 15px 20px;
+    text-align: center;
+}
+
+.admin-header h1 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--primary-gold);
+    text-shadow: 0 0 10px rgba(240, 185, 11, 0.3);
+}
+
+.admin-nav {
+    display: flex;
+    justify-content: space-around;
+    background: rgba(15, 15, 15, 0.9);
+    border-bottom: 1px solid var(--glass-border);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    padding: 8px 10px;
+}
+
+.nav-button {
+    flex: 1;
+    text-align: center;
+    padding: 10px 5px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 700;
+    border-radius: 8px;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.nav-button i {
+    font-size: 1.2rem;
+    line-height: 1;
+}
+
+.nav-button.active {
+    color: var(--primary-gold);
+    background: rgba(240, 185, 11, 0.1);
+}
+
+.nav-button:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.admin-main-content {
+    padding: 20px;
+}
+
+/* --- بخش آمار سریع (Quick Stats) --- */
+.quick-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: var(--card-bg-admin);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: 15px;
+    text-align: center;
+}
+
+.stat-value {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 1.8rem;
+    font-weight: 900;
+    display: block;
+    margin-bottom: 5px;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    display: block;
+}
+
+/* رنگ‌بندی خاص برای آمارها */
+.pending-kyc .stat-value, .pending-withdrawal .stat-value { color: var(--accent-red); }
+.pending-deposit .stat-value, .total-users .stat-value { color: var(--primary-gold); }
+
+/* --- لیست بررسی‌ها (Review Lists) --- */
+.review-list-item {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: 12px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.review-list-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.review-info h4 {
+    margin: 0 0 5px 0;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.review-info span {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.status-badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* رنگ‌های وضعیت بررسی */
+.status-pending { background: rgba(240, 185, 11, 0.2); color: var(--primary-gold); }
+.status-approved { background: rgba(14, 203, 129, 0.2); color: var(--accent-green); }
+.status-rejected { background: rgba(246, 70, 93, 0.2); color: var(--accent-red); }
+
+/* --- فرم‌ها و ورودی‌ها (برای تنظیمات) --- */
+.input-group-admin {
+    margin-bottom: 20px;
+    background: var(--card-bg-admin);
+    padding: 15px;
+    border-radius: var(--radius-md);
+}
+
+.input-group-admin label {
+    display: block;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+}
+
+.glass-input-admin {
+    width: 100%;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    color: var(--text-main);
+    font-size: 1rem;
+    font-family: 'Vazirmatn', sans-serif;
+}
+
+.glass-input-admin:focus {
+    border-color: var(--accent-blue);
+}
+
+/* --- دکمه‌های ادمین --- */
+.btn-admin-action {
+    width: 100%;
+    padding: 15px;
+    border-radius: 14px;
+    font-size: 1rem;
+    font-weight: 800;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 10px;
+}
+
+.btn-approve { background: var(--accent-green); color: #000; }
+.btn-reject { background: var(--accent-red); color: #fff; }
+.btn-cancel { background: #333; color: #fff; }
+
+.btn-approve:active { background: #0aa769; }
+.btn-reject:active { background: #c92a40; }
+
+/* --- جداکننده --- */
+.admin-divider {
+    border: none;
+    border-top: 1px dashed rgba(255, 255, 255, 0.1);
+    margin: 25px 0;
+}

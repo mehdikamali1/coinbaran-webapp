@@ -1,0 +1,194 @@
+﻿<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>بررسی درخواست‌ها | پنل ادمین</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <link rel="stylesheet" href="style.css?v=1.0">
+    <link rel="stylesheet" href="admin_style.css?v=1.0">
+</head>
+<body class="loading-active">
+    
+    <div id="loader" class="admin-loader-custom">
+        <div class="loader-content">
+            <i class="fas fa-search-location" style="font-size: 3rem; color: var(--accent-blue);"></i>
+            <p class="loading-status" style="color:var(--text-main); margin-top:15px;">بارگذاری صف بررسی‌ها...</p>
+        </div>
+    </div>
+
+    <div id="app-container" class="hidden-content">
+        
+        <header class="admin-header">
+            <h1>🔍 مرکز بررسی درخواست‌ها</h1>
+        </header>
+
+        <nav class="admin-nav">
+            <a href="/admin" class="nav-button" data-target="admin-dashboard">
+                <i class="fas fa-tachometer-alt"></i> <span>داشبورد</span>
+            </a>
+            <a href="/admin/reviews" class="nav-button active" data-target="admin-reviews">
+                <i class="fas fa-clipboard-list"></i> <span>بررسی‌ها</span>
+            </a>
+            <a href="/admin/users" class="nav-button" data-target="admin-users">
+                <i class="fas fa-users"></i> <span>کاربران</span>
+            </a>
+            <a href="/admin/settings" class="nav-button" data-target="admin-settings">
+                <i class="fas fa-cogs"></i> <span>تنظیمات</span>
+            </a>
+        </nav>
+
+        <main class="admin-main-content">
+            
+            <div class="tab-nav-reviews" id="review-tabs">
+                <button class="tab-button active" data-tab="kyc_lite">KYC ویدیویی</button>
+                <button class="tab-button" data-tab="kyc_full">KYC کامل</button>
+                <button class="tab-button" data-tab="deposit">واریز دستی</button>
+                <button class="tab-button" data-tab="withdrawal">برداشت وجه</button>
+            </div>
+
+            <hr class="admin-divider">
+
+            <section class="review-queue-section">
+                <div class="section-label" style="border-right-color: var(--primary-gold);">
+                    <i class="fas fa-list-ul"></i> صف در انتظار (<span id="queue-count">0</span> مورد)
+                </div>
+                
+                <div class="list-container" id="review-list-container">
+                    <p id="empty-queue-message" class="text-muted" style="text-align: center; padding: 20px;">صف بررسی خالی است. کار خوب ادمین!</p>
+                    </div>
+            </section>
+
+        </main>
+        
+        <div id="review-modal" class="modal-backdrop hidden">
+            <div class="modal-content">
+                <h3 id="modal-title" style="border-bottom: 2px solid var(--accent-blue); padding-bottom: 10px;">جزئیات درخواست</h3>
+                
+                <div id="modal-details" class="details-section">
+                    <div class="detail-row">
+                        <span>نام کاربری:</span> <strong id="detail-user-name">--</strong>
+                    </div>
+                    <div class="detail-row">
+                        <span>مبلغ/سطح:</span> <strong id="detail-amount-level">--</strong>
+                    </div>
+                    <div class="detail-row">
+                        <span>تاریخ ثبت:</span> <strong id="detail-timestamp">--</strong>
+                    </div>
+                    
+                    <hr class="admin-divider">
+
+                    <div id="files-section" style="margin-top: 15px;">
+                        <div id="file-link-1" class="file-link-container"></div>
+                        <div id="file-link-2" class="file-link-container"></div>
+                    </div>
+
+                    <hr class="admin-divider">
+
+                    <textarea id="admin-notes" class="glass-input-admin" placeholder="یادداشت‌های ادمین (مثلاً دلیل رد درخواست)"></textarea>
+
+                </div>
+                
+                <div class="action-buttons-container">
+                    <button class="btn-admin-action btn-approve" id="btn-approve-review">
+                        <i class="fas fa-check"></i> تأیید درخواست
+                    </button>
+                    <button class="btn-admin-action btn-reject" id="btn-reject-review">
+                        <i class="fas fa-times"></i> رد درخواست
+                    </button>
+                    <button class="btn-admin-action btn-cancel" id="btn-close-modal">
+                        بستن
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+    <script src="admin_script.js"></script> 
+    <script src="admin_reviews_script.js"></script>
+    
+    <style>
+        /* استایل‌های اختصاصی Modal */
+        .tab-nav-reviews {
+            display: flex;
+            justify-content: space-between;
+            overflow-x: auto;
+            white-space: nowrap;
+            padding: 5px 0;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .tab-button {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 10px 15px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .tab-button.active {
+            color: var(--primary-gold);
+            border-bottom-color: var(--primary-gold);
+        }
+        .list-container {
+            min-height: 150px;
+        }
+        /* Modal Backdrop */
+        .modal-backdrop {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background: var(--bg-deep);
+            border: 2px solid var(--primary-gold);
+            border-radius: var(--radius-lg);
+            padding: 25px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: scale(0.9);
+            opacity: 0;
+            transition: all 0.3s ease-out;
+        }
+        .modal-backdrop.active .modal-content {
+            transform: scale(1);
+            opacity: 1;
+        }
+        .details-section .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            font-size: 0.9rem;
+        }
+        .file-link-container {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            cursor: pointer;
+            color: var(--accent-blue);
+            transition: background 0.2s;
+        }
+        .file-link-container:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .action-buttons-container button {
+            margin-bottom: 8px;
+        }
+    </style>
+</body>
+</html>

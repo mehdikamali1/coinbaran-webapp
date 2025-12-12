@@ -1,4 +1,4 @@
-﻿/* webapp/game.js (v75.0 - UX Upgrade: Fast Price Ticker) */
+﻿/* webapp/game.js (v74.0 - Persian Localization) */
 
 const tg = window.Telegram.WebApp;
 const API_BASE_URL = window.location.origin;
@@ -7,9 +7,6 @@ const API_BASE_URL = window.location.origin;
 const CONFIG = {
     ROUND_DURATION: 60,
     EST_USDT_RATE: 90000, 
-    // UPGRADE: Define polling rates
-    FAST_POLL_RATE: 500, // 0.5 seconds for price/timer update
-    SLOW_POLL_RATE: 10000, // 10 seconds for full state/user data update
     CHART_COLORS: {
         bg: 'transparent',
         text: '#848E9C',
@@ -27,7 +24,6 @@ let chart, areaSeries;
 let lastPrice = 0;
 let isFirstLoad = true;
 let lastTime = 0;
-let lastRoundId = 0; // Track round ID for new round detection
 
 // --- سیستم صوتی ---
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -61,11 +57,8 @@ window.onload = function() {
 
     initChart();
     setupEventListeners();
-    
-    // UPGRADE: Start separate polling loops
-    fetchFullState(); // Initial call to get everything
-    setInterval(fetchPriceUpdate, CONFIG.FAST_POLL_RATE);
-    setInterval(fetchFullState, CONFIG.SLOW_POLL_RATE);
+    fetchServerData();
+    setInterval(fetchServerData, 1000);
 };
 
 function initChart() {
@@ -90,33 +83,7 @@ function initChart() {
     }).observe(container);
 }
 
-// UPGRADE: New function for fast, lightweight price polling
-async function fetchPriceUpdate() {
-    try {
-        const res = await fetch(`${API_BASE_URL}/webapp/game/price`);
-        if (res.ok) {
-            const data = await res.json();
-            if (data.status === 'success') {
-                updateChartData(data.price);
-                updateTimerVisuals(data.time_left);
-                // Check for new round initiation
-                if (data.round_id !== lastRoundId && lastRoundId !== 0) {
-                     fetchFullState(); // Trigger full state refresh on new round
-                }
-                lastRoundId = data.round_id;
-                document.getElementById('round-id').innerText = `#${data.round_id}`;
-                setConnectionStatus(true);
-            }
-        } else { 
-            setConnectionStatus(false); 
-        }
-    } catch (e) {
-        setConnectionStatus(false);
-    }
-}
-
-// UPGRADE: Renamed and refactored from fetchServerData to fetch only heavy, user-specific state
-async function fetchFullState() {
+async function fetchServerData() {
     try {
         const res = await fetch(`${API_BASE_URL}/webapp/game/state`, {
             method: 'POST', headers: {'Content-Type': 'application/json'},
@@ -124,15 +91,12 @@ async function fetchFullState() {
         });
         if (res.ok) {
             const data = await res.json();
-            updateHeavyGameUI(data); // New function to handle user data only
-            // Full state update overrides any connection error from fast poll
-            setConnectionStatus(true); 
-            // Only update the ribbon and user-specific round data from the slow poll
-            if (data.history) updateHistoryRibbon(data.history);
-            if (data.user_balance !== undefined) document.getElementById('user-balance-display').innerText = data.user_balance.toLocaleString('en-US', {minimumFractionDigits: 2});
+            updateGameUI(data);
+            setConnectionStatus(true);
         } else { setConnectionStatus(false); }
     } catch (e) {
         setConnectionStatus(false);
+        if (!isFirstLoad) simulateSmoothLocalMovement();
     }
 }
 
@@ -140,26 +104,18 @@ function setConnectionStatus(isConnected) {
     const el = document.getElementById('connection-status');
     const txt = el.querySelector('.status-text');
     const dot = el.querySelector('.status-dot');
-    const upColor = '#0ECB81';
-    const downColor = '#F6465D';
     if (isConnected) {
-        dot.style.background = upColor; 
-        txt.style.color = upColor; 
-        txt.innerText = 'متصل';
-        el.classList.remove('disconnected');
+        dot.style.background = '#0ECB81'; txt.style.color = '#0ECB81'; txt.innerText = 'متصل';
     } else {
-        dot.style.background = downColor; 
-        txt.style.color = downColor; 
-        txt.innerText = 'قطع';
-        el.classList.add('disconnected');
+        dot.style.background = '#F6465D'; txt.style.color = '#F6465D'; txt.innerText = 'قطع';
     }
 }
 
-// UPGRADE: Function to handle heavy/user-specific state updates (from fetchFullState)
-function updateHeavyGameUI(data) {
+function updateGameUI(data) {
+    const serverPrice = data.current_price;
+    if (data.user_balance !== undefined) document.getElementById('user-balance-display').innerText = data.user_balance.toLocaleString('en-US', {minimumFractionDigits: 2});
+
     const elEntry = document.getElementById('entry-display');
-    
-    // Handle User Bet Display
     if (data.user_bet && data.user_bet.entry_price) {
         elEntry.classList.remove('hidden');
         const isUp = data.user_bet.prediction === 'UP';
@@ -169,126 +125,75 @@ function updateHeavyGameUI(data) {
         elEntry.innerHTML = `<span style="color:${color}; font-weight:bold; margin-left:5px;">${icon} ${text}</span> <span class="mono-font">$${data.user_bet.entry_price.toLocaleString()}</span>`;
     } else { elEntry.classList.add('hidden'); }
 
-    // Handle Round Result Modal
     if (data.last_result) showResultModal(data.last_result);
-    
-    // Check Round Lock Status (now only dependent on full state refresh)
-    const timeLock = data.round && data.round.time_left <= 10;
-    const hasBet = !!data.user_bet;
-    toggleTradeButtons(timeLock || hasBet);
+    updateChartData(serverPrice);
+
+    if (data.round) {
+        updateTimerVisuals(data.round.time_left);
+        document.getElementById('round-id').innerText = `#${data.round.id}`;
+        const isLocked = data.round.time_left <= 10;
+        const hasBet = !!data.user_bet;
+        toggleTradeButtons(isLocked || hasBet);
+    }
+    if (data.history) updateHistoryRibbon(data.history);
 }
 
-// UPGRADE: Consolidated price and chart update into this function
 function updateChartData(serverPrice) {
     const domPrice = document.getElementById('btc-price');
-    const timeNow = Math.floor(Date.now() / 1000);
-    
-    // Only proceed if the price has meaningfully changed to avoid unnecessary chart redraws
-    if (serverPrice === lastPrice && !isFirstLoad) {
-        // Still update the chart point for time progression even if price hasn't changed much
-        if (timeNow > lastTime) { lastTime = timeNow; areaSeries.update({ time: timeNow, value: serverPrice }); }
-        return;
-    }
-    
-    // Handle Initial Load
     if (isFirstLoad && serverPrice > 0) {
-        // Use a slight random walk to populate the initial chart view for aesthetics
-        const historyData = []; 
-        let tempPrice = serverPrice; 
+        const historyData = []; let tempPrice = serverPrice; const timeNow = Math.floor(Date.now() / 1000);
         for (let i = 60; i > 0; i--) { tempPrice = tempPrice + (Math.random() - 0.5) * 5; historyData.push({ time: timeNow - i, value: tempPrice }); }
         historyData.sort((a,b) => a.time - b.time);
-        
-        areaSeries.setData(historyData); 
-        lastTime = timeNow; 
-        areaSeries.update({ time: lastTime, value: serverPrice }); // Add current price point
-        
-        document.getElementById('chart-loader').classList.add('fade-out'); 
-        isFirstLoad = false; 
+        areaSeries.setData(historyData); lastTime = timeNow; areaSeries.update({ time: lastTime, value: serverPrice });
+        document.getElementById('chart-loader').classList.add('fade-out'); isFirstLoad = false; lastPrice = serverPrice;
+    }
+    if (serverPrice !== lastPrice) {
+        const isUp = serverPrice >= lastPrice; const color = isUp ? CONFIG.CHART_COLORS.up : CONFIG.CHART_COLORS.down;
+        domPrice.style.color = color; domPrice.innerText = serverPrice.toLocaleString('en-US', {minimumFractionDigits: 2});
+        areaSeries.applyOptions({ lineColor: color, topColor: isUp ? CONFIG.CHART_COLORS.areaTopUp : CONFIG.CHART_COLORS.areaTopDown, bottomColor: isUp ? CONFIG.CHART_COLORS.areaBottomUp : CONFIG.CHART_COLORS.areaBottomDown, crosshairMarkerBackgroundColor: color });
         lastPrice = serverPrice;
     }
-    
-    // Handle Real-Time Updates
     if (!isFirstLoad) {
-        const isUp = serverPrice >= lastPrice; 
-        const color = isUp ? CONFIG.CHART_COLORS.up : CONFIG.CHART_COLORS.down;
-        
-        // 1. Update Header Price Display
-        domPrice.style.color = color; 
-        domPrice.innerText = serverPrice.toLocaleString('en-US', {minimumFractionDigits: 2});
-        
-        // 2. Update Chart Colors (Line/Area)
-        areaSeries.applyOptions({ 
-            lineColor: color, 
-            topColor: isUp ? CONFIG.CHART_COLORS.areaTopUp : CONFIG.CHART_COLORS.areaTopDown, 
-            bottomColor: isUp ? CONFIG.CHART_COLORS.areaBottomUp : CONFIG.CHART_COLORS.areaBottomDown, 
-            crosshairMarkerBackgroundColor: color 
-        });
-        
-        // 3. Add new data point (only if time advanced or if it's the current time tick)
-        if (timeNow > lastTime) { lastTime = timeNow; areaSeries.update({ time: timeNow, value: serverPrice }); } 
-        else { areaSeries.update({ time: lastTime, value: serverPrice }); }
-
-        lastPrice = serverPrice;
+        const now = Math.floor(Date.now() / 1000);
+        if (now > lastTime) { lastTime = now; areaSeries.update({ time: now, value: serverPrice }); } else { areaSeries.update({ time: lastTime, value: serverPrice }); }
     }
+}
+
+function simulateSmoothLocalMovement() {
+    if (isFirstLoad) return;
+    const move = (Math.random() - 0.5) * 2; const newPrice = lastPrice + move;
+    document.getElementById('btc-price').innerText = newPrice.toFixed(2);
 }
 
 function updateTimerVisuals(timeLeft) {
     const elText = document.getElementById('timer-text');
     const elCircle = document.getElementById('timer-progress');
-    
-    const currentText = elText.innerText;
-    
-    // Only update timer text if it actually changes (to prevent visual jitters)
-    if (parseInt(currentText) !== timeLeft) {
-         elText.innerText = timeLeft;
-    }
-    
-    // Update SVG progress circle
+    elText.innerText = timeLeft;
     const offset = 283 - (timeLeft / CONFIG.ROUND_DURATION) * 283;
     elCircle.style.strokeDashoffset = offset;
-    
-    // Handle audio and visual countdown warnings
     if (timeLeft <= 5) {
-        elCircle.style.stroke = CONFIG.CHART_COLORS.down; 
-        elText.style.color = CONFIG.CHART_COLORS.down;
-        
-        // Play tick sound only once per second for the last 5 seconds
-        if (!window[`tick_${timeLeft}`]) { 
-            SoundFX.tick(); 
-            tg.HapticFeedback.impactOccurred('soft'); 
-            window[`tick_${timeLeft}`] = true; 
-        }
+        elCircle.style.stroke = CONFIG.CHART_COLORS.down; elText.style.color = CONFIG.CHART_COLORS.down;
+        if (!window[`tick_${timeLeft}`]) { SoundFX.tick(); tg.HapticFeedback.impactOccurred('soft'); window[`tick_${timeLeft}`] = true; }
     } else {
-        elCircle.style.stroke = 'var(--gold-primary)'; // Use global variable
-        elText.style.color = 'var(--text-main)'; // Use global variable
+        elCircle.style.stroke = '#F0B90B'; elText.style.color = CONFIG.CHART_COLORS.text;
         for(let i=1; i<=5; i++) window[`tick_${i}`] = false;
     }
 }
 
 function toggleTradeButtons(disabled) {
     const btns = document.querySelectorAll('.trade-btn');
-    btns.forEach(b => { 
-        b.disabled = disabled; 
-        b.style.opacity = disabled ? '0.5' : '1'; 
-        b.style.filter = disabled ? 'grayscale(1)' : 'none'; 
-    });
+    btns.forEach(b => { b.disabled = disabled; b.style.opacity = disabled ? '0.5' : '1'; b.style.filter = disabled ? 'grayscale(1)' : 'none'; });
 }
 
 function updateHistoryRibbon(history) {
-    const container = document.getElementById('history-container'); 
-    container.innerHTML = '';
-    
-    // Only show the last 15 results
+    const container = document.getElementById('history-container'); container.innerHTML = '';
     history.slice().reverse().slice(0, 15).forEach(h => {
-        const div = document.createElement('div'); 
-        const isUp = h.result === 'UP';
-        div.className = `hist-pill ${isUp ? 'up' : 'down'}`; 
-        container.appendChild(div);
+        const div = document.createElement('div'); const isUp = h.result === 'UP';
+        div.className = `hist-pill ${isUp ? 'up' : 'down'}`; container.appendChild(div);
     });
 }
 
 function setupEventListeners() {
-    // ... (rest of the listeners remain unchanged)
     document.querySelectorAll('button').forEach(btn => {
         btn.addEventListener('click', () => { if(!btn.disabled) { SoundFX.click(); tg.HapticFeedback.impactOccurred('light'); } });
     });

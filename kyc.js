@@ -1,13 +1,13 @@
-﻿/* webapp/kyc.js (v103.0 - UPGRADE: Telegram File ID Submission) */
+﻿/* webapp/kyc.js (v102.0) */
 (function () {
     'use strict';
 
     // --- GLOBAL ERROR TRAP (برای کشف باگ موبایل) ---
+    // اگر خطایی رخ دهد، به جای کرش کردن و ریست شدن صفحه، یک آلرت با جزئیات نمایش می‌دهد
     window.onerror = function(msg, url, line, col, error) {
         var extra = !col ? '' : '\ncolumn: ' + col;
         extra += !error ? '' : '\nerror: ' + error;
-        // In production, log this silently
-        console.error("⚠️ CRITICAL ERROR:", msg, error);
+        alert("⚠️ CRITICAL ERROR:\n" + msg + "\nurl: " + url + "\nline: " + line + extra);
         return false;
     };
 
@@ -16,8 +16,8 @@
     
     // متغیرهای وضعیت سراسری
     let currentTab = 'lvl1'; 
-    let userKycLevel = 1; 
-    let kycStatus = 'none'; 
+    let userKycLevel = 1;     // 1: مهمان, 2: ویدیو تایید شده, 3: کامل
+    let kycStatus = 'none';   // وضعیت دقیق
 
     // المان‌های اصلی رابط کاربری
     const btnSubmit = document.getElementById('main-submit-btn');
@@ -300,69 +300,24 @@
         else submitLevel2();
     }
 
-    // UPGRADE: New logic for Level 1 submission using Telegram File IDs
+    // --- ارسال سطح ۱ ---
     async function submitLevel1() {
         const vidInput = document.getElementById('video-file');
         const cardInput = document.getElementById('card-file');
-        
-        // 1. Initial State
-        if (vidInput.files.length === 0 || cardInput.files.length === 0) return;
-        
+
         btnSubmit.disabled = true;
-        btnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin"></i> در حال ارسال فایل...';
+        btnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin"></i> در حال آپلود...';
         
-        let videoFileId = null;
-        let cardFileId = null;
-        
+        const formData = new FormData();
+        formData.append('initData', tg.initData);
+        formData.append('video', vidInput.files[0]);
+        formData.append('bank_card', cardInput.files[0]);
+
         try {
-            // 2. Telegram File Upload (Video)
-            // Telegram Web App API uploads the file and returns a file_id in the response.
-            // This is the fastest and most reliable way to handle media submission.
-            const vidPromise = new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const blob = new Blob([e.target.result], { type: vidInput.files[0].type });
-                    // Use WebApp.sendData method for file upload
-                    tg.sendData(JSON.stringify({
-                        action: 'upload_kyc_video', 
-                        file_name: vidInput.files[0].name,
-                        file_data: btoa(String.fromCharCode(...new Uint8Array(e.target.result))),
-                        type: vidInput.files[0].type
-                    }), (res) => {
-                         // Note: sendData only sends a string. Actual file_id retrieval is usually done via a bot hook.
-                         // For simplicity in this WebApp environment, we assume sendData returns the temporary file ID
-                         // or that the bot backend immediately processes the upload result.
-                         resolve("dummy_video_file_id_" + Math.random()); // Simulation of successful bot upload
-                    }, reject);
-                };
-                reader.onerror = reject;
-                reader.readAsArrayBuffer(vidInput.files[0]);
-            });
-            
-            // Revert to the original FormData structure for file submission 
-            // as tg.sendData does not support direct binary file transfer, 
-            // and relying on the bot to catch the upload is complex without a dedicated bot handler.
-            // Since the original code was already using FormData, we revert the upgrade attempt
-            // and rely on the original FormData flow, but change the server-side to expect Telegram File IDs.
-
-            // *********************************************************************************
-            // REVERTING TO ORIGINAL FORM DATA SUBMISSION FLOW (Temporary File Path)
-            // *********************************************************************************
-            
-            btnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin"></i> در حال آپلود...';
-            
-            const formData = new FormData();
-            formData.append('initData', tg.initData);
-            formData.append('video_file', vidInput.files[0]); // File
-            formData.append('bank_card_file', cardInput.files[0]); // File
-            
-            // Server will handle the upload and return Telegram File IDs later.
-            // *********************************************************************************
-
             const res = await fetch(`${API_BASE_URL}/webapp/submit_kyc_lite`, {
-                 method: 'POST',
-                 body: formData,
-                 headers: { 'ngrok-skip-browser-warning': 'true' }
+                method: 'POST',
+                body: formData,
+                headers: { 'ngrok-skip-browser-warning': 'true' }
             });
             
             const result = await res.json();
@@ -377,7 +332,7 @@
             }
 
         } catch (e) {
-            tg.showAlert("❌ خطا: " + (e.message || "خطای ناشناخته در ارسال مدارک."));
+            tg.showAlert("❌ خطا: " + e.message);
             btnSubmit.disabled = false;
             updateFooterState();
         }

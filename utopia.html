@@ -7,9 +7,60 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    <link rel="stylesheet" href="webapp/global.css?v=1.0">
-    <link rel="stylesheet" href="webapp/utopia-style.css?v=1.0">
-    
+    <link rel="stylesheet" href="webapp/dashboard-style.css?v=30.0">
+
+    <style>
+        :root { --utopia-pink: #FF007A; }
+
+        .utopia-ticker {
+            background: linear-gradient(135deg, rgba(255, 0, 122, 0.1) 0%, rgba(0,0,0,0) 100%);
+            border: 1px solid rgba(255, 0, 122, 0.3);
+            border-radius: var(--radius-lg);
+            padding: 20px; display: flex; justify-content: space-between;
+            margin-bottom: 25px;
+        }
+        
+        .tick-item { display: flex; flex-direction: column; gap: 5px; }
+        .tick-label { font-size: 0.75rem; color: var(--text-muted); }
+        .tick-val { font-family: monospace; font-size: 1.2rem; font-weight: 800; }
+        .c-buy { color: var(--color-up); }
+        .c-sell { color: var(--utopia-pink); }
+
+        .u-tabs {
+            background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
+            border-radius: 16px; padding: 5px; display: flex; margin-bottom: 25px;
+        }
+        .u-tab {
+            flex: 1; padding: 12px; text-align: center; border-radius: 12px;
+            font-weight: 700; font-size: 0.9rem; color: var(--text-muted);
+            cursor: pointer; transition: all 0.3s;
+        }
+        .u-tab.active { color: #fff; background: var(--utopia-pink); box-shadow: 0 0 15px rgba(255,0,122,0.3); }
+        
+        .section-box { display: none; animation: fadeIn 0.4s ease; }
+        .section-box.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .glass-inp {
+            width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border);
+            color: #fff; padding: 16px; border-radius: 16px;
+            font-size: 1.1rem; font-weight: 700; font-family: monospace; text-align: center;
+        }
+        
+        .btn-pink { 
+            width: 100%; padding: 18px; border-radius: 18px; border: none;
+            font-size: 1.1rem; font-weight: 800; cursor: pointer; color: #fff;
+            background: var(--utopia-pink); box-shadow: 0 5px 20px rgba(255, 0, 122, 0.3);
+            margin-top: 20px;
+        }
+        
+        .btn-green {
+            width: 100%; padding: 18px; border-radius: 18px; border: none;
+            font-size: 1.1rem; font-weight: 800; cursor: pointer; color: #000;
+            background: var(--color-up); box-shadow: 0 5px 20px rgba(14, 203, 129, 0.3);
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
 
@@ -45,11 +96,11 @@
 
         <div id="buy-section" class="section-box active">
             <div style="margin-bottom:20px;">
-                <label style="display:block; color:var(--text-muted); margin-bottom:8px; font-size:0.9rem;">مقدار (دلار):</label>
+                <label style="display:block; color:#888; margin-bottom:8px; font-size:0.9rem;">مقدار (دلار):</label>
                 <input type="number" id="buy-amount" class="glass-inp" placeholder="10" oninput="calcPrice()">
             </div>
             <div style="display:flex; justify-content:space-between; padding:0 10px;">
-                <span style="color:var(--text-muted); font-size:0.9rem;">مبلغ قابل پرداخت:</span>
+                <span style="color:#888; font-size:0.9rem;">مبلغ قابل پرداخت:</span>
                 <span id="buy-total" style="color:var(--gold-primary); font-weight:bold; font-family:monospace;">0</span>
             </div>
 
@@ -58,21 +109,21 @@
             </button>
             
             <div id="buy-result" style="display:none; background:#000; border:1px dashed var(--utopia-pink); padding:20px; border-radius:16px; margin-top:20px; text-align:center;">
-                <div style="color:var(--accent-green); font-weight:800; margin-bottom:10px">✅ خرید موفق!</div>
-                <div style="font-size:0.8rem; color:var(--text-muted); opacity:0.8;">کد ووچر شما:</div>
-                <div id="new-voucher-code" style="font-family:monospace; font-size:1.1rem; color:var(--text-main); background:rgba(255,0,122,0.1); padding:10px; border-radius:8px; margin:10px 0; word-break:break-all;">...</div>
-                <button onclick="copyCode()" style="background:transparent; border:1px solid var(--text-main); color:var(--text-main); padding:5px 15px; border-radius:15px;">کپی</button>
+                <div style="color:var(--color-up); font-weight:800; margin-bottom:10px">✅ خرید موفق!</div>
+                <div style="font-size:0.8rem; color:#aaa">کد ووچر شما:</div>
+                <div id="new-voucher-code" style="font-family:monospace; font-size:1.1rem; color:#fff; background:rgba(255,0,122,0.1); padding:10px; border-radius:8px; margin:10px 0; word-break:break-all;">...</div>
+                <button onclick="copyCode()" style="background:transparent; border:1px solid #fff; color:#fff; padding:5px 15px; border-radius:15px;">کپی</button>
             </div>
         </div>
 
         <div id="sell-section" class="section-box">
             <div style="margin-bottom:20px;">
-                <label style="display:block; color:var(--text-muted); margin-bottom:8px; font-size:0.9rem;">کد ووچر:</label>
+                <label style="display:block; color:#888; margin-bottom:8px; font-size:0.9rem;">کد ووچر:</label>
                 <input type="text" id="sell-code" class="glass-inp" placeholder="UTP...">
             </div>
             
-            <div style="background:rgba(14, 203, 129, 0.1); border:1px dashed var(--accent-green); border-radius:12px; padding:15px; text-align:center;">
-                <p style="margin:0; font-size:0.8rem; color:var(--text-main); opacity:0.9;">سیستم به صورت خودکار ووچر را نقد می‌کند.</p>
+            <div style="background:rgba(14, 203, 129, 0.1); border:1px dashed var(--color-up); border-radius:12px; padding:15px; text-align:center;">
+                <p style="margin:0; font-size:0.8rem; color:#eee;">سیستم به صورت خودکار ووچر را نقد می‌کند.</p>
             </div>
 
             <button id="btn-do-sell" class="btn-green" onclick="doSell()">
@@ -82,6 +133,117 @@
 
     </div>
 
-    <script src="webapp/utopia.js?v=1.0"></script>
+    <script>
+        const tg = window.Telegram.WebApp;
+        const API_BASE_URL = window.location.origin;
+        let rates = { buy: 0, sell: 0 };
+
+        window.onload = function() {
+            tg.ready(); tg.expand(); tg.setHeaderColor('#000000');
+            if (!tg.initData) tg.initData = "query_id=TEST&user=%7B%22id%22%3A111111111%7D&auth_date=1700000000&hash=fake";
+            fetchRates();
+        };
+
+        function switchTab(tab) {
+            document.querySelectorAll('.u-tab').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.section-box').forEach(s => s.classList.remove('active'));
+            if(tab === 'buy') {
+                document.querySelector('.u-tab:nth-child(1)').classList.add('active');
+                document.getElementById('buy-section').classList.add('active');
+            } else {
+                document.querySelector('.u-tab:nth-child(2)').classList.add('active');
+                document.getElementById('sell-section').classList.add('active');
+            }
+        }
+
+        async function fetchRates() {
+            try {
+                const res = await fetch(`${API_BASE_URL}/webapp/utopia/rates`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ initData: tg.initData })
+                });
+                const data = await res.json();
+                if(data.status === 'success') {
+                    rates.buy = data.buy; rates.sell = data.sell;
+                    document.getElementById('rate-buy').innerText = parseInt(rates.buy).toLocaleString();
+                    document.getElementById('rate-sell').innerText = parseInt(rates.sell).toLocaleString();
+                }
+            } catch(e) {}
+        }
+
+        function calcPrice() {
+            const val = parseFloat(document.getElementById('buy-amount').value);
+            if(val > 0 && rates.buy > 0) {
+                const total = val * rates.buy;
+                document.getElementById('buy-total').innerText = parseInt(total).toLocaleString() + " تومان";
+            } else {
+                document.getElementById('buy-total').innerText = "0";
+            }
+        }
+
+        async function doBuy() {
+            const amount = parseFloat(document.getElementById('buy-amount').value);
+            const btn = document.getElementById('btn-do-buy');
+            
+            if(!amount || amount < 1) { tg.showAlert("حداقل خرید ۱ دلار است."); return; }
+
+            btn.disabled = true; btn.innerText = 'پردازش...';
+            document.getElementById('buy-result').style.display = 'none';
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/webapp/utopia/buy`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ initData: tg.initData, amount_usd: amount })
+                });
+                const data = await res.json();
+
+                if(data.status === 'success') {
+                    tg.HapticFeedback.notificationOccurred('success');
+                    document.getElementById('new-voucher-code').innerText = data.voucher_code;
+                    document.getElementById('buy-result').style.display = 'block';
+                    tg.showAlert("✅ خرید موفقیت آمیز بود");
+                } else {
+                    tg.HapticFeedback.notificationOccurred('error');
+                    tg.showAlert("❌ " + data.message);
+                }
+            } catch(e) { tg.showAlert("خطای شبکه"); }
+            
+            btn.disabled = false; btn.innerHTML = '<i class="fas fa-shopping-cart"></i> خرید آنی';
+        }
+
+        async function doSell() {
+            const code = document.getElementById('sell-code').value.trim();
+            const btn = document.getElementById('btn-do-sell');
+            
+            if(code.length < 10) { tg.showAlert("کد نامعتبر است."); return; }
+
+            btn.disabled = true; btn.innerText = 'در حال استعلام...';
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/webapp/utopia/sell`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ initData: tg.initData, voucher_code: code })
+                });
+                const data = await res.json();
+
+                if(data.status === 'success') {
+                    tg.HapticFeedback.notificationOccurred('success');
+                    tg.showAlert(`✅ فروخته شد!\nمبلغ ${parseInt(data.amount_toman).toLocaleString()} تومان واریز شد.`);
+                    document.getElementById('sell-code').value = "";
+                } else {
+                    tg.HapticFeedback.notificationOccurred('error');
+                    tg.showAlert("❌ " + data.message);
+                }
+            } catch(e) { tg.showAlert("خطای شبکه"); }
+
+            btn.disabled = false; btn.innerHTML = '<i class="fas fa-exchange-alt"></i> نقد کردن';
+        }
+
+        function copyCode() {
+            const code = document.getElementById('new-voucher-code').innerText;
+            navigator.clipboard.writeText(code);
+            tg.showAlert("کد کپی شد!");
+        }
+    </script>
 </body>
 </html>

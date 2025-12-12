@@ -6,27 +6,38 @@
     <meta name="theme-color" content="#050505">
     <title>ترید حرفه‌ای | کوین باران</title>
 
+    <!-- Libraries -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
-    <link rel="stylesheet" href="webapp/global.css?v=1.0">
-    <link rel="stylesheet" href="webapp/game-style.css?v=72.0">
+    <!-- Styles (Reuse Dashboard V71 for consistency) -->
+    <link rel="stylesheet" href="webapp/game-style.css?v=71.0">
     
+    <!-- Inline Override for Persian Font Adjustments -->
+    <style>
+        body { font-family: 'Vazirmatn', sans-serif !important; }
+        .main-price { letter-spacing: 0; } 
+        .btn-title { font-size: 1.1rem; }
+        .btn-rate { font-family: 'Roboto Mono'; font-size: 0.8rem; opacity: 0.9; }
+    </style>
 </head>
 <body>
 
+    <!-- Ambient Background Effects -->
     <div class="ambient-glow glow-top"></div>
     <div class="ambient-glow glow-bottom"></div>
     <div class="grid-overlay"></div>
 
-    <div id="game-loader">
-        <img src="webapp/images/logo-gold.png" alt="CB" class="main-logo-img">
-        <p class="loading-status" style="color:var(--gold-primary); margin-top:15px;">در حال اتصال به بازار جهانی...</p>
+    <!-- Persian Loader -->
+    <div id="game-loader" style="position:fixed; inset:0; background:#000; z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:opacity 0.5s;">
+        <img src="webapp/images/logo-gold.png" alt="CB" class="main-logo-img" style="width:100px; height:100px;">
+        <p class="loading-status" style="color:var(--primary-gold); margin-top:15px;">در حال اتصال به بازار جهانی...</p>
     </div>
 
     <div id="app-container">
         
+        <!-- Header -->
         <header class="game-header glass-panel">
             <div class="header-left">
                 <button onclick="window.location.href='/'" class="icon-btn back-btn ripple-btn">
@@ -54,6 +65,7 @@
             </div>
         </header>
 
+        <!-- Market Stats Area -->
         <div class="market-stats">
             <div class="price-wrapper">
                 <div class="price-header">
@@ -86,6 +98,7 @@
             </div>
         </div>
 
+        <!-- Chart Area -->
         <div class="chart-section glass-panel">
             <div id="tv-chart-container" class="chart-box"></div>
             <div id="chart-loader" class="chart-loader">
@@ -94,17 +107,20 @@
             </div>
         </div>
 
+        <!-- Round History -->
         <div class="history-section">
             <div class="history-header">
                 <span>نتایج اخیر</span>
                 <span class="history-more ripple-btn" onclick="window.openHistory()">مشاهده همه</span>
             </div>
             <div id="history-container" class="history-scroll">
-                </div>
+                <!-- Items injected by JS -->
+            </div>
         </div>
 
         <div class="spacer-bottom"></div>
 
+        <!-- Bottom Controls -->
         <footer class="trading-controls glass-panel-top">
             <div class="control-header">
                 <div class="round-info">
@@ -112,7 +128,8 @@
                     <span id="round-id" class="round-value">#...</span>
                 </div>
                 <div id="entry-display" class="entry-display hidden">
-                    </div>
+                    <!-- Injected by JS -->
+                </div>
             </div>
 
             <div class="betting-interface">
@@ -157,6 +174,9 @@
         </footer>
     </div>
 
+    <!-- MODALS -->
+
+    <!-- Result Modal (Persian) -->
     <div id="result-modal" class="result-overlay">
         <div class="result-card glass-panel">
             <div class="result-confetti-origin"></div>
@@ -189,6 +209,7 @@
         </div>
     </div>
 
+    <!-- Swap Modal (Persian) -->
     <div id="swap-modal" class="modal-overlay">
         <div class="modal-content glass-panel">
             <div class="modal-header">
@@ -199,7 +220,7 @@
                 <p class="swap-desc">تبدیل آنی موجودی تومان به دلار بازی</p>
                 
                 <div class="swap-input-container">
-                    <label style="color:var(--text-muted); font-size:0.8rem;">مبلغ به تومان</label>
+                    <label style="color:#888; font-size:0.8rem;">مبلغ به تومان</label>
                     <div class="swap-input-wrapper">
                         <input type="text" id="swap-input-toman" placeholder="مثلاً 100,000" inputmode="numeric">
                         <span class="currency-tag">تومان</span>
@@ -218,6 +239,7 @@
         </div>
     </div>
 
+    <!-- Leaderboard Modal -->
     <div id="leaderboard-modal" class="modal-overlay">
         <div class="modal-content glass-panel full-height-modal">
             <div class="modal-header">
@@ -230,6 +252,7 @@
         </div>
     </div>
 
+    <!-- History Modal -->
     <div id="history-modal" class="modal-overlay">
         <div class="modal-content glass-panel full-height-modal">
             <div class="modal-header">
@@ -240,12 +263,23 @@
         </div>
     </div>
 
+    <!-- Toast Notification -->
     <div id="toast" class="toast hidden">
         <div class="toast-icon">ℹ️</div>
         <div class="toast-message">پیام سیستم</div>
     </div>
 
+    <!-- Main Logic (Updated for Persian) -->
     <script src="webapp/game.js?v=74.0"></script>
     
+    <!-- Loader Fade Out -->
+    <script>
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const l = document.getElementById('game-loader');
+                if(l) { l.style.opacity='0'; setTimeout(()=>l.style.display='none', 500); }
+            }, 1000);
+        });
+    </script>
 </body>
 </html>

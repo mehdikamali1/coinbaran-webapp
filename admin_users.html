@@ -1,0 +1,184 @@
+﻿<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>مدیریت کاربران | پنل ادمین</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <link rel="stylesheet" href="style.css?v=1.0">
+    <link rel="stylesheet" href="admin_style.css?v=1.0">
+</head>
+<body class="loading-active">
+    
+    <div id="loader" class="admin-loader-custom">
+        <div class="loader-content">
+            <i class="fas fa-users" style="font-size: 3rem; color: var(--accent-green);"></i>
+            <p class="loading-status" style="color:var(--text-main); margin-top:15px;">بارگذاری لیست کاربران...</p>
+        </div>
+    </div>
+
+    <div id="app-container" class="hidden-content">
+        
+        <header class="admin-header">
+            <h1>👥 مدیریت کاربران</h1>
+        </header>
+
+        <nav class="admin-nav">
+            <a href="/admin" class="nav-button" data-target="admin-dashboard">
+                <i class="fas fa-tachometer-alt"></i> <span>داشبورد</span>
+            </a>
+            <a href="/admin/reviews" class="nav-button" data-target="admin-reviews">
+                <i class="fas fa-clipboard-list"></i> <span>بررسی‌ها</span>
+            </a>
+            <a href="/admin/users" class="nav-button active" data-target="admin-users">
+                <i class="fas fa-users"></i> <span>کاربران</span>
+            </a>
+            <a href="/admin/settings" class="nav-button" data-target="admin-settings">
+                <i class="fas fa-cogs"></i> <span>تنظیمات</span>
+            </a>
+        </nav>
+
+        <main class="admin-main-content">
+            
+            <section class="search-section">
+                <div class="input-group-admin" style="padding: 10px; border-color: var(--accent-blue);">
+                    <label style="color: var(--accent-blue);">جستجوی کاربر (ID, نام، کد ملی یا Username)</label>
+                    <input type="text" id="user-search-input" class="glass-input-admin" placeholder="ID یا نام کامل را وارد کنید...">
+                    <button class="btn-admin-action" id="btn-search-user" style="background: var(--accent-blue); margin-top: 10px;">
+                        <i class="fas fa-search"></i> جستجو
+                    </button>
+                </div>
+            </section>
+            
+            <hr class="admin-divider">
+
+            <section class="user-list-section">
+                <div class="section-label" style="border-right-color: var(--accent-green);">
+                    <i class="fas fa-address-book"></i> لیست کاربران اخیر (<span id="user-count">--</span> نفر)
+                </div>
+                
+                <div class="list-container" id="user-list-container">
+                    <p id="loading-message" class="text-muted" style="text-align: center; padding: 20px;">
+                        <i class="fas fa-spinner fa-spin"></i> در حال بارگذاری لیست...
+                    </p>
+                    </div>
+
+                <div class="pagination-controls" style="text-align: center; margin-top: 20px;">
+                    <button class="btn-admin-action" id="btn-prev-page" disabled style="width: 45%; margin-left: 10px;">
+                        <i class="fas fa-arrow-right"></i> قبلی
+                    </button>
+                    <button class="btn-admin-action" id="btn-next-page" disabled style="width: 45%;">
+                        بعدی <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <span id="page-info" class="text-muted" style="display: block; margin-top: 10px;">صفحه 1 از 1</span>
+                </div>
+            </section>
+            
+        </main>
+        
+        <div id="user-profile-modal" class="modal-backdrop hidden">
+            <div class="modal-content" style="max-width: 600px;">
+                <h3 id="profile-modal-title" style="border-bottom: 2px solid var(--primary-gold); padding-bottom: 10px; color: var(--primary-gold);">
+                    <i class="fas fa-user-circle"></i> پروفایل کامل
+                </h3>
+                
+                <div id="profile-details" class="details-section" style="text-align: right;">
+                    </div>
+
+                <div class="action-buttons-container" style="margin-top: 20px;">
+                    <button class="btn-admin-action btn-reject" id="btn-toggle-ban" style="background: #e74c3c;">
+                        <i class="fas fa-ban"></i> مسدود سازی
+                    </button>
+                    <button class="btn-admin-action btn-approve" id="btn-manual-credit" style="background: var(--accent-green);">
+                        <i class="fas fa-dollar-sign"></i> ویرایش موجودی
+                    </button>
+                    <button class="btn-admin-action btn-cancel" id="btn-close-profile-modal" style="margin-top: 10px;">
+                        بستن
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+    <script src="admin_script.js"></script> 
+    <script src="admin_reviews_script.js"></script>
+    <script src="admin_users_script.js"></script>
+    
+    <style>
+        /* استایل‌های اختصاصی User Management (تکمیل admin_style.css) */
+        .user-list-item {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr; /* Name/ID, KYC, Balance */
+            gap: 10px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .user-list-item:hover { background: rgba(255, 255, 255, 0.08); }
+
+        .user-name-col h4 {
+            margin: 0;
+            font-size: 0.95rem;
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .user-name-col span {
+            display: block;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-family: 'Roboto Mono', monospace;
+        }
+
+        .user-kyc-col {
+            text-align: center;
+        }
+
+        .kyc-status-badge {
+            font-size: 0.7rem;
+            font-weight: 800;
+            padding: 4px 8px;
+            border-radius: 10px;
+            display: inline-block;
+        }
+        .kyc-approved { background: rgba(14, 203, 129, 0.2); color: var(--accent-green); }
+        .kyc-pending { background: rgba(240, 185, 11, 0.2); color: var(--primary-gold); }
+        .kyc-rejected { background: rgba(246, 70, 93, 0.2); color: var(--accent-red); }
+        .kyc-none { background: rgba(100, 100, 100, 0.2); color: #ccc; }
+
+        .user-balance-col {
+            text-align: left;
+        }
+
+        .balance-value {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--primary-gold);
+        }
+
+        .balance-label {
+             font-size: 0.6rem;
+             color: var(--text-muted);
+        }
+
+        /* استایل‌های Modal (تکمیل admin_reviews.html) */
+        .modal-backdrop.hidden {
+            display: none;
+        }
+        .details-section .detail-row {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px 0;
+        }
+    </style>
+</body>
+</html>

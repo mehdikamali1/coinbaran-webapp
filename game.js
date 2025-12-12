@@ -1,12 +1,20 @@
-﻿/* webapp/game.js (v83.0 - FINAL FIX: WS URL Construction & Error Robustness) */
+﻿/* webapp/game.js (v83.1 - CRITICAL FIX: Direct Ngrok WS URL) */
 
 const tg = window.Telegram.WebApp;
 const API_BASE_URL = window.location.origin;
 
+// === CRITICAL FIX: Hardcode WSS URL for Ngrok Stability ===
+// The base host for the WebSocket connection should be explicitly defined 
+// to ensure the WSS handshake is initiated correctly through the reverse proxy (Ngrok).
+
+// Use the Ngrok domain shown in your log (unviolable-naillike-juana.ngrok-free.dev)
+const WS_BASE_URL = "wss://unviolable-naillike-juana.ngrok-free.dev"; 
+
 // تنظیمات سراسری (unchanged)
 const CONFIG = {
+// ... (بقیه CONFIG بدون تغییر)
     BETTING_DURATION: 10,
-    RUNNING_UPDATE_RATE: 100, // Now purely cosmetic, controlled by WS broadcast rate
+    RUNNING_UPDATE_RATE: 100,
     SLOW_POLL_RATE: 3000, 
     EST_USDT_RATE: 90000,
     
@@ -32,10 +40,7 @@ let ws = null; // WebSocket instance
 // --- DOM Elements (Populated inside window.onload) ---
 let dom = {};
 
-// --- CHART SETUP (DEACTIVATED FOR DEBUGGING) ---
-let chart, lineSeries;
-function initChart() { /* Temporarily deactivated to check for chart library conflicts */ }
-function resetChart() { /* Temporarily deactivated */ }
+// ... (Audio System و Initialization بدون تغییر)
 
 // --- Audio System (Unchanged) ---
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -96,9 +101,8 @@ window.onload = function() {
 // --- WebSocket Communication ---
 
 function connectWebSocket() {
-    // CRITICAL FIX: Ensure correct WS protocol construction. window.location.host includes the port.
-    const ws_protocol = window.location.protocol === "https:" ? "wss://" : "ws://";
-    const ws_url = ws_protocol + window.location.host + "/ws/game/state";
+    // FIX: Use the hardcoded WSS URL for Ngrok/Production environments
+    const ws_url = WS_BASE_URL + "/ws/game/state";
 
     // Safety check to ensure we don't spam connections if one is already connecting/open
     if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
@@ -272,9 +276,7 @@ function setConnectionStatus(isConnected) {
         dom.statusText.innerText = "در حال اتصال به اجین بازی...";
         dom.statusText.className = 'status-error';
     } else {
-        // --- FIX: هنگام اتصال موفق، وضعیت متنی را بلافاصله بر اساس lastState تنظیم کن.
-        // این کار پیام "در حال اتصال..." را پاک می‌کند و UI را به حالت پیش فرض (مثلاً CRASHED) می‌برد.
-        // اولین پیام WS که کمی بعد می‌رسد، وضعیت را به BETTING به‌روز می‌کند.
+        // FIX: هنگام اتصال موفق، وضعیت متنی را بلافاصله بر اساس lastState تنظیم کن.
         handleStateTransition(lastState); 
     }
 }

@@ -1,18 +1,14 @@
-﻿/* webapp/game.js (v83.1 - CRITICAL FIX: Direct Ngrok WS URL) */
+﻿/* webapp/game.js (v83.2 - CRITICAL FIX: Execution Flow & WS Direct Start) */
 
 const tg = window.Telegram.WebApp;
 const API_BASE_URL = window.location.origin;
 
-// === CRITICAL FIX: Hardcode WSS URL for Ngrok Stability ===
-// The base host for the WebSocket connection should be explicitly defined 
-// to ensure the WSS handshake is initiated correctly through the reverse proxy (Ngrok).
-
-// Use the Ngrok domain shown in your log (unviolable-naillike-juana.ngrok-free.dev)
+// === CRITICAL FIX: Direct WSS URL for Ngrok Stability ===
+// Use the Ngrok domain for WSS (Ensure this domain is current: unviolable-naillike-juana.ngrok-free.dev)
 const WS_BASE_URL = "wss://unviolable-naillike-juana.ngrok-free.dev"; 
 
 // تنظیمات سراسری (unchanged)
 const CONFIG = {
-// ... (بقیه CONFIG بدون تغییر)
     BETTING_DURATION: 10,
     RUNNING_UPDATE_RATE: 100,
     SLOW_POLL_RATE: 3000, 
@@ -37,10 +33,13 @@ let userBetAmount = 0;
 let userCashedOut = false;
 let ws = null; // WebSocket instance
 
-// --- DOM Elements (Populated inside window.onload) ---
+// --- DOM Elements (Must be populated before use) ---
 let dom = {};
 
-// ... (Audio System و Initialization بدون تغییر)
+// --- CHART SETUP (DEACTIVATED FOR DEBUGGING) ---
+let chart, lineSeries;
+function initChart() { /* Temporarily deactivated to check for chart library conflicts */ }
+function resetChart() { /* Temporarily deactivated */ }
 
 // --- Audio System (Unchanged) ---
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -65,10 +64,10 @@ const SoundFX = {
     win: () => { [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => setTimeout(() => SoundFX.playTone(f, 'triangle', 0.3, 0.1), i * 80)); },
 };
 
-// --- Initialization ---
+// --- Initialization Logic (Moved from window.onload) ---
 
-window.onload = function() {
-    // 1. Populate DOM elements
+function initializeGame() {
+    // 1. Populate DOM elements (CRITICAL: Must be run after DOM is parsed)
     dom = {
         statusText: document.getElementById('game-status-text'),
         multiplierDisplay: document.getElementById('btc-price'), 
@@ -96,7 +95,7 @@ window.onload = function() {
     
     // 3. Setup event listeners
     setupEventListeners();
-};
+}
 
 // --- WebSocket Communication ---
 
@@ -527,3 +526,7 @@ window.performSwap = async function() {
         else { window.showToast(`❌ ${result.message}`); }
     } catch(e) { window.showToast("خطای شبکه"); }
 };
+
+// --- اجرای تابع اولیه بلافاصله پس از بارگذاری اسکریپت ---
+// این خط جایگزین window.onload شده است تا از Race Condition جلوگیری کند
+initializeGame();

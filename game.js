@@ -4,8 +4,6 @@ const tg = window.Telegram.WebApp;
 const API_BASE_URL = window.location.origin;
 
 // === CRITICAL FIX: Dynamic WS URL for better proxy/WSS handling ===
-// We revert to dynamic construction but ensure the protocol is correct (ws/wss).
-// This relies on the browser/Ngrok properly handling the protocol upgrade.
 function getWebSocketUrl() {
     // Determine the correct WebSocket protocol based on the current page protocol
     const ws_protocol = window.location.protocol === "https:" ? "wss://" : "ws://";

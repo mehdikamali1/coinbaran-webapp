@@ -7,13 +7,10 @@
     <link rel="stylesheet" href="global.css">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="game-style.css">
-    <script src="https://cdn.jsdelivr.net/npm/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
-    <script src="https://kit.fontawesome.com/b5a5b51b2a.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
-</head>
+    
+    </head>
 <body>
     <div id="app-container" class="app-container">
-
         <header class="header">
             <div class="header-content">
                 <div class="header-item">
@@ -37,7 +34,6 @@
         </header>
 
         <main class="game-main">
-            
             <div class="history-ribbon-container">
                 <div id="history-container" class="history-ribbon">
                     </div>
@@ -63,104 +59,12 @@
                 </div>
             </div>
             
-            <div id="result-modal" class="modal-overlay" onclick="window.closeResultModal()">
-                <div class="modal-content result-modal-content" onclick="event.stopPropagation()">
-                    <span id="res-icon" class="res-icon"></span>
-                    <h2 id="res-title" class="res-title"></h2>
-                    <p id="res-message" class="res-message"></p>
-                    <div class="res-details">
-                        <div><small>ضریب نهایی:</small><span id="res-close" class="mono-font"></span></div>
-                        <div><small>مبلغ شرط:</small><span id="res-entry" class="mono-font"></span></div>
-                    </div>
-                    <p id="res-amount" class="res-amount"></p>
-                    <button onclick="window.closeResultModal()">ادامه</button>
-                </div>
-            </div>
-        </main>
-
-        <section class="game-controls">
-            
-            <div class="top-row-actions">
-                <button class="small-action-btn" onclick="window.openHistory()">
-                    <i class="fas fa-history"></i> تاریخچه شرط‌ها
-                </button>
-                <button class="small-action-btn" onclick="window.openLeaderboard()">
-                    <i class="fas fa-trophy"></i> جدول رتبه‌بندی
-                </button>
-            </div>
-            
-            <div class="input-section">
-                <label for="bet-amount">مقدار شرط (UUSD)</label>
-                <input type="number" id="bet-amount" value="5" min="0.1" step="0.1" inputmode="decimal">
-                
-                <div class="chip-container">
-                    <span class="chip" data-amount="1" onclick="setAmount(1)">$1</span>
-                    <span class="chip" data-amount="5" onclick="setAmount(5)">$5</span>
-                    <span class="chip" data-amount="10" onclick="setAmount(10)">$10</span>
-                    <span class="chip" data-amount="25" onclick="setAmount(25)">$25</span>
-                </div>
-            </div>
-
-            <div id="betting-box" class="action-box">
-                <button id="bet-btn" class="main-action-btn primary" onclick="window.placeBet()">
-                    PLACE BET
-                </button>
-            </div>
-
-            <div id="cashout-box" class="action-box hidden">
-                <button id="cashout-btn" class="main-action-btn win-button" onclick="window.cashOut()">
-                    CASH OUT (1.00X)
-                </button>
-            </div>
-        </section>
-        
-        <div id="swap-modal" class="modal-overlay" onclick="window.closeSwapModal()">
-            <div class="modal-content" onclick="event.stopPropagation()">
-                <h2>شارژ حساب بازی (UUSD)</h2>
-                <p class="text-muted">موجودی تومان شما به نرخ لحظه‌ای به UUSD تبدیل می‌شود.</p>
-                
-                <div class="swap-input-group">
-                    <label>مبلغ به تومان:</label>
-                    <input type="text" id="swap-input-toman" placeholder="حداقل ۵۰,۰۰۰ تومان" inputmode="numeric">
-                </div>
-                
-                <div class="swap-output-group">
-                    <label>دریافت UUSD (تخمینی):</label>
-                    <span id="swap-calc-usd" class="mono-font">0.00 USD</span>
-                </div>
-
-                <div class="modal-actions">
-                    <button class="main-action-btn primary" onclick="window.performSwap()">تبدیل و شارژ</button>
-                    <button class="secondary-btn" onclick="window.closeSwapModal()">انصراف</button>
-                </div>
-            </div>
-        </div>
-        
-        <div id="history-modal" class="modal-overlay" onclick="window.closeHistory()">
-            <div class="modal-content" onclick="event.stopPropagation()">
-                <h2>تاریخچه بازی</h2>
-                <p class="text-muted">تاریخچه دقیق شرط‌ها و ضرایب نهایی شما.</p>
-                <div id="game-history-list" class="history-list-placeholder">
-                    <p>در حال بارگذاری...</p>
-                </div>
-                <button class="secondary-btn mt-3" onclick="window.closeHistory()">بستن</button>
-            </div>
-        </div>
-
-        <div id="leaderboard-modal" class="modal-overlay" onclick="window.closeLeaderboard()">
-            <div class="modal-content" onclick="event.stopPropagation()">
-                <h2>جدول رتبه‌بندی</h2>
-                <p class="text-muted">برترین کاربران این هفته بر اساس بیشترین سود.</p>
-                <div class="leaderboard-list-placeholder">
-                    <p>در حال بارگذاری...</p>
-                </div>
-                <button class="secondary-btn mt-3" onclick="window.closeLeaderboard()">بستن</button>
-            </div>
-        </div>
-
-        <div id="toast" class="toast hidden">
-            <span class="toast-message">پیام موقت</span>
-        </div>
+            </main>
+        <section class="game-controls">...</section>
+        <div id="swap-modal" class="modal-overlay" onclick="window.closeSwapModal()">...</div>
+        <div id="history-modal" class="modal-overlay" onclick="window.closeHistory()">...</div>
+        <div id="leaderboard-modal" class="modal-overlay" onclick="window.closeLeaderboard()">...</div>
+        <div id="toast" class="toast hidden">...</div>
 
     </div>
     

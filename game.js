@@ -272,10 +272,10 @@ function setConnectionStatus(isConnected) {
         dom.statusText.innerText = "در حال اتصال به اجین بازی...";
         dom.statusText.className = 'status-error';
     } else {
-        // When connected, update status to show engine is ready (removes the "در حال اتصال" status)
-        if (lastState === 'WAITING' || lastState === 'BETTING') {
-            handleStateTransition(lastState);
-        }
+        // --- FIX: هنگام اتصال موفق، وضعیت متنی را بلافاصله بر اساس lastState تنظیم کن.
+        // این کار پیام "در حال اتصال..." را پاک می‌کند و UI را به حالت پیش فرض (مثلاً CRASHED) می‌برد.
+        // اولین پیام WS که کمی بعد می‌رسد، وضعیت را به BETTING به‌روز می‌کند.
+        handleStateTransition(lastState); 
     }
 }
 

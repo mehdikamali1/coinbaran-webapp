@@ -5,19 +5,25 @@ console.log("TEST-01: Script start.");
 // ------------------------------------------------
 // --- ⚠️ CRITICAL: REPLACE THE NGROK URL BELOW ⚠️ ---
 // ------------------------------------------------
+// مطمئن شوید که این آدرس همان آدرس WSS فعال Ngrok شما باشد!
 const WS_BASE_URL = "wss://unviolable-naillike-juana.ngrok-free.dev"; 
 const ws_url = WS_BASE_URL + "/ws/game/state";
 // ------------------------------------------------
 
+// این اسکریپت بلافاصله اجرا می شود (بدون نیاز به window.onload یا توابع دیگر)
 try {
+    // 1. نمایش وضعیت اتصال در UI (برای کاربر)
+    document.getElementById('game-status-text').innerText = "🔬 در حال تست اتصال (مرحله ۰۲)";
+    
     console.log("TEST-02: Attempting WebSocket connection to:", ws_url);
     
-    // Create WebSocket instance immediately
+    // 2. ایجاد شیء WebSocket
     const ws = new WebSocket(ws_url);
 
+    // 3. هندلرهای اتصال
     ws.onopen = () => {
         console.log("TEST-03: SUCCESS - WebSocket Connected!");
-        document.getElementById('game-status-text').innerText = "✅ اتصال موفق! (مرحله ۰۳)";
+        document.getElementById('game-status-text').innerText = "✅ اتصال موفق (مرحله ۰۳)";
     };
 
     ws.onmessage = (event) => {
@@ -42,4 +48,3 @@ try {
 }
 
 console.log("TEST-10: Script finished its execution flow.");
-// End of file should contain the actual script tag execution point

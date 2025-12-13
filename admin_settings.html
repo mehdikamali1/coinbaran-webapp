@@ -1,0 +1,242 @@
+﻿<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>تنظیمات سیستم | پنل ادمین</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <link rel="stylesheet" href="style.css?v=1.0">
+    <link rel="stylesheet" href="admin_style.css?v=1.0">
+</head>
+<body class="loading-active">
+    
+    <div id="loader" class="admin-loader-custom">
+        <div class="loader-content">
+            <i class="fas fa-cogs" style="font-size: 3rem; color: var(--accent-blue);"></i>
+            <p class="loading-status" style="color:var(--text-main); margin-top:15px;">بارگذاری تنظیمات سیستم...</p>
+        </div>
+    </div>
+
+    <div id="app-container" class="hidden-content">
+        
+        <header class="admin-header">
+            <h1>⚙️ تنظیمات عمومی سیستم</h1>
+        </header>
+
+        <nav class="admin-nav">
+            <a href="/admin" class="nav-button" data-target="admin-dashboard">
+                <i class="fas fa-tachometer-alt"></i> <span>داشبورد</span>
+            </a>
+            <a href="/admin/reviews" class="nav-button" data-target="admin-reviews">
+                <i class="fas fa-clipboard-list"></i> <span>بررسی‌ها</span>
+            </a>
+            <a href="/admin/users" class="nav-button" data-target="admin-users">
+                <i class="fas fa-users"></i> <span>کاربران</span>
+            </a>
+            <a href="/admin/settings" class="nav-button active" data-target="admin-settings">
+                <i class="fas fa-cogs"></i> <span>تنظیمات</span>
+            </a>
+        </nav>
+
+        <main class="admin-main-content">
+            
+            <div class="tab-nav-reviews" id="settings-tabs">
+                <button class="tab-button active" data-tab="general"><i class="fas fa-sliders-h"></i> عمومی</button>
+                <button class="tab-button" data-tab="fees"><i class="fas fa-percentage"></i> کارمزدها</button>
+                <button class="tab-button" data-tab="wallets"><i class="fas fa-wallet"></i> آدرس‌ها</button>
+                <button class="tab-button" data-tab="prices"><i class="fas fa-dollar-sign"></i> قیمت‌گذاری</button>
+            </div>
+
+            <hr class="admin-divider">
+
+            <div class="tab-content-container" id="settings-content">
+                
+                <div id="tab-general" class="tab-content active">
+                    <div class="section-label" style="border-right-color: var(--primary-gold);">
+                        <i class="fas fa-shield-alt"></i> وضعیت و قفل سیستم
+                    </div>
+
+                    <div class="input-group-admin toggle-group">
+                        <label for="maintenance_mode_enabled" style="color: #fff;">حالت نگهداری (Maintenance)</label>
+                        <input type="checkbox" id="maintenance_mode_enabled" class="toggle-switch">
+                        <span class="status-label" id="maintenance-status-label">وضعیت: غیرفعال</span>
+                    </div>
+                    
+                    <div class="input-group-admin">
+                        <label for="maintenance_mode_message">پیام حالت نگهداری</label>
+                        <textarea id="maintenance_mode_message" class="glass-input-admin" rows="3" placeholder="پیام به کاربران هنگام فعال بودن حالت نگهداری"></textarea>
+                    </div>
+
+                    <div class="section-label" style="border-right-color: var(--accent-green);">
+                        <i class="fas fa-toggle-on"></i> فعال/غیرفعال‌سازی قابلیت‌ها
+                    </div>
+
+                    <div class="input-group-admin toggle-group">
+                        <label for="feature_usdt_trading_enabled">معاملات تتر (USDT)</label>
+                        <input type="checkbox" id="feature_usdt_trading_enabled" class="toggle-switch">
+                    </div>
+                    <div class="input-group-admin toggle-group">
+                        <label for="feature_withdrawal_whitelist_enabled">لیست سفید برداشت</label>
+                        <input type="checkbox" id="feature_withdrawal_whitelist_enabled" class="toggle-switch">
+                    </div>
+
+                </div>
+
+                <div id="tab-fees" class="tab-content hidden">
+                    <div class="section-label" style="border-right-color: var(--primary-gold);">
+                        <i class="fas fa-coins"></i> کارمزدهای اصلی
+                    </div>
+
+                    <div class="input-group-admin">
+                        <label for="withdrawal_fee_value">کارمزد برداشت وجه (تومان)</label>
+                        <input type="number" id="withdrawal_fee_value" class="glass-input-admin" placeholder="مثلاً: 5000">
+                    </div>
+
+                    <div class="section-label" style="border-right-color: var(--accent-blue);">
+                        <i class="fas fa-hand-holding-usd"></i> کارمزدهای معاملاتی (درصد)
+                    </div>
+
+                    <div class="input-group-admin">
+                        <label for="usdt_buy_fee_value">کارمزد خرید تتر (%)</label>
+                        <input type="number" step="0.01" id="usdt_buy_fee_value" class="glass-input-admin" placeholder="مثلاً: 0.1">
+                    </div>
+                    <div class="input-group-admin">
+                        <label for="usdt_sell_fee_value">کارمزد فروش تتر (%)</label>
+                        <input type="number" step="0.01" id="usdt_sell_fee_value" class="glass-input-admin" placeholder="مثلاً: 0.1">
+                    </div>
+
+                </div>
+                
+                <div id="tab-wallets" class="tab-content hidden">
+                    <div class="section-label" style="border-right-color: var(--primary-gold);">
+                        <i class="fas fa-qrcode"></i> آدرس‌های دریافت (برای فروش کاربر)
+                    </div>
+
+                    <div class="input-group-admin">
+                        <label for="usdt_address_trc20">آدرس USDT (TRC20)</label>
+                        <input type="text" id="usdt_address_trc20" class="glass-input-admin" placeholder="TRC20 Address">
+                    </div>
+                    <div class="input-group-admin">
+                        <label for="btc_address_main">آدرس بیت‌کوین (Main)</label>
+                        <input type="text" id="btc_address_main" class="glass-input-admin" placeholder="BTC Address">
+                    </div>
+
+                    <div class="section-label" style="border-right-color: var(--accent-red);">
+                        <i class="fas fa-university"></i> موجودی‌های سیستم
+                    </div>
+                    <div class="input-group-admin">
+                        <label>موجودی ریالی بانک (Asset Bank Balance)</label>
+                        <input type="text" id="asset_bank_balance" class="glass-input-admin" readonly>
+                    </div>
+                    <div class="input-group-admin">
+                        <label>موجودی تتر (Asset USDT Inventory)</label>
+                        <input type="text" id="asset_usdt_inventory" class="glass-input-admin" readonly>
+                    </div>
+                </div>
+                
+                <div id="tab-prices" class="tab-content hidden">
+                    <div class="section-label" style="border-right-color: var(--primary-gold);">
+                        <i class="fas fa-tag"></i> قیمت‌گذاری Utopia (UUSD)
+                    </div>
+                    
+                    <div class="input-group-admin">
+                        <label for="utopia_voucher_buy_price">قیمت فروش به کاربر (Buy Price)</label>
+                        <input type="number" id="utopia_voucher_buy_price" class="glass-input-admin" placeholder="قیمت فروش یک ووچر به کاربر">
+                    </div>
+                    <div class="input-group-admin">
+                        <label for="utopia_voucher_sell_price">قیمت خرید از کاربر (Sell Price)</label>
+                        <input type="number" id="utopia_voucher_sell_price" class="glass-input-admin" placeholder="قیمت خرید یک ووچر از کاربر">
+                    </div>
+                    
+                    <div class="input-group-admin">
+                        <label for="utopia_target_margin_percent">حاشیه سود هدف یوتوپیا (درصد)</label>
+                        <input type="number" step="0.1" id="utopia_target_margin_percent" class="glass-input-admin" placeholder="مثلاً: 4.0">
+                    </div>
+                    
+                    <button class="btn-admin-action" id="btn-apply-utopia-suggestion" style="background: var(--accent-blue); margin-top: 10px;">
+                        <i class="fas fa-lightbulb"></i> اعمال قیمت پیشنهادی هوشمند (در صورت وجود)
+                    </button>
+                    
+                </div>
+                
+            </div> <hr class="admin-divider">
+
+            <button class="btn-admin-action btn-approve" id="btn-save-settings" style="margin-top: 20px;">
+                <i class="fas fa-save"></i> ذخیره تمام تنظیمات
+            </button>
+            
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+    <script src="admin_script.js"></script> 
+    <script src="admin_settings_script.js"></script>
+    
+    <style>
+        /* استایل‌های اختصاصی Settings */
+        .tab-nav-reviews { border-bottom: none; margin-bottom: 15px;}
+        .tab-nav-reviews .tab-button {
+            padding: 8px 10px;
+            font-size: 0.85rem;
+            border-radius: 8px;
+            border-bottom: none;
+            margin: 0 5px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .tab-nav-reviews .tab-button.active {
+            background: var(--primary-gold);
+            color: #000;
+        }
+        .tab-content {
+            padding-top: 10px;
+        }
+        .hidden {
+            display: none;
+        }
+        .toggle-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+        }
+        /* Custom Toggle Switch */
+        .toggle-switch {
+            appearance: none;
+            width: 40px;
+            height: 20px;
+            border-radius: 10px;
+            background-color: #555;
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .toggle-switch:checked {
+            background-color: var(--accent-green);
+        }
+        .toggle-switch::before {
+            content: '';
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background-color: #fff;
+            transition: right 0.3s, background-color 0.3s;
+        }
+        .toggle-switch:checked::before {
+            right: 22px;
+        }
+        .status-label {
+            margin-right: 15px;
+            font-size: 0.9rem;
+            color: var(--accent-red);
+        }
+        .toggle-switch:checked + .status-label {
+            color: var(--accent-green);
+        }
+    </style>
+</body>
+</html>

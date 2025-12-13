@@ -1,0 +1,118 @@
+﻿<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>تعمیر و نگهداری | کوین باران</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="style.css?v=1.0">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* استایل‌های لوکس برای صفحه نگهداری */
+        :root {
+            --primary-gold: #F0B90B;
+            --bg-deep: #050505;
+            --text-main: #f0f0f0;
+            --accent-red: #F6465D;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.15);
+        }
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: 'Vazirmatn', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+        .maintenance-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 2px solid var(--primary-gold);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            max-width: 90%;
+            width: 400px;
+            animation: fadeIn 0.8s ease-out;
+        }
+        .maintenance-icon {
+            font-size: 3.5rem;
+            color: var(--primary-gold);
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+        #maintenance-message {
+            color: var(--text-main);
+            font-size: 1rem;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+        .contact-info {
+            font-size: 0.8rem;
+            color: var(--accent-red);
+        }
+        .contact-info a {
+            color: var(--accent-red);
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="maintenance-card">
+        <i class="fas fa-tools maintenance-icon"></i>
+        <h2>🛠️ در حال تعمیر و به‌روزرسانی 🛠️</h2>
+        
+        <p id="maintenance-message">
+            در حال حاضر صرافی کوین باران برای اعمال به‌روزرسانی‌های امنیتی و افزودن قابلیت‌های جدید در حالت تعمیر و نگهداری قرار دارد.
+            <br><br>
+            لطفاً تا دقایقی دیگر مجدداً تلاش کنید.
+        </p>
+
+        <p class="contact-info">
+            برای پیگیری اخبار می‌توانید به کانال رسمی ما مراجعه کنید.
+        </p>
+    </div>
+    
+    <script>
+        // به محض بارگذاری، WebApp تلگرام را گسترش داده و رنگ پس‌زمینه را تنظیم می‌کند
+        window.onload = function() {
+            if (window.Telegram.WebApp) {
+                const tg = window.Telegram.WebApp;
+                tg.ready();
+                tg.expand();
+                tg.setHeaderColor('#050505');
+                tg.setBackgroundColor('#050505');
+
+                // این کد پیام را از URL می‌خواند و در صورت وجود جایگزین می‌کند
+                const urlParams = new URLSearchParams(window.location.search);
+                let message = urlParams.get('msg');
+                if (message) {
+                    message = decodeURIComponent(message).replace(/\+/g, ' ');
+                    document.getElementById('maintenance-message').innerHTML = message;
+                }
+            }
+        };
+    </script>
+</body>
+</html>

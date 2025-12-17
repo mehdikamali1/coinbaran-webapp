@@ -54,6 +54,8 @@
             color: #fff; padding: 16px; padding-left: 50px; border-radius: 16px;
             font-size: 1.1rem; font-weight: 700; font-family: monospace; text-align: right; direction: ltr;
         }
+        .glass-inp.invalid { border-color: var(--color-down) !important; box-shadow: 0 0 10px rgba(246, 70, 93, 0.2); }
+        .glass-inp.valid { border-color: var(--color-up) !important; box-shadow: 0 0 10px rgba(14, 203, 129, 0.2); }
         .glass-inp:focus { border-color: var(--gold-primary); background: rgba(0,0,0,0.5); }
         .inp-icon { position: absolute; left: 16px; top: 48px; color: var(--text-muted); font-size: 1.1rem; }
         
@@ -207,7 +209,56 @@
             tg.ready(); tg.expand(); tg.setHeaderColor('#000000');
             if (!tg.initData) tg.initData = "query_id=TEST&user=%7B%22id%22%3A111111111%7D&auth_date=1700000000&hash=fake";
             fetchRates();
+
+            // فعال‌سازی ناظر هوشمند روی فیلد آدرس خرید
+            const addrInput = document.getElementById('buy-address');
+            if(addrInput) {
+                addrInput.addEventListener('input', function(e) {
+                    validateAndAutoSelectNetwork(e.target.value);
+                });
+            }
         };
+
+        // --- لایه هوشمند تشخیص آدرس و شبکه (بهبود یافته) ---
+        function validateAndAutoSelectNetwork(address) {
+            address = address.trim();
+            const netSelect = document.getElementById('buy-network');
+            const addrInput = document.getElementById('buy-address');
+            
+            if (address.length === 0) {
+                addrInput.classList.remove('valid', 'invalid');
+                return;
+            }
+
+            let detectedNet = "";
+            let isValid = false;
+
+            // تشخیص آدرس TRON (معمولا با T شروع شده و طول حدود 34 کاراکتر)
+            if (address.startsWith('T') && address.length >= 30 && address.length <= 45) {
+                detectedNet = "TRC20";
+                isValid = true;
+            } 
+            // تشخیص آدرس EVM (با 0x شروع شده و طول 42 کاراکتر)
+            else if (address.startsWith('0x') && address.length >= 40 && address.length <= 44) {
+                detectedNet = "BEP20";
+                isValid = true;
+            } 
+            // تشخیص آدرس TON (با EQ یا UQ شروع شده و طول حدود 48 کاراکتر)
+            else if ((address.startsWith('EQ') || address.startsWith('UQ')) && address.length >= 40) {
+                detectedNet = "TON";
+                isValid = true;
+            }
+
+            if (isValid) {
+                netSelect.value = detectedNet;
+                addrInput.classList.remove('invalid');
+                addrInput.classList.add('valid');
+                try { tg.HapticFeedback.selectionChanged(); } catch(e){}
+            } else {
+                addrInput.classList.remove('valid');
+                addrInput.classList.add('invalid');
+            }
+        }
 
         function setMode(mode) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active', 'buy-mode', 'sell-mode'));
@@ -220,11 +271,16 @@
                 document.querySelector('.tab-btn:nth-child(2)').classList.add('active', 'sell-mode'); 
                 document.getElementById('sell-form').classList.add('active'); 
             }
+            try { tg.HapticFeedback.impactOccurred('light'); } catch(e){}
         }
 
         async function fetchRates() {
             try {
-                const res = await fetch(`${API_BASE_URL}/webapp/usdt/rates`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ initData: tg.initData }) });
+                const res = await fetch(`${API_BASE_URL}/webapp/usdt/rates`, { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true'}, 
+                    body: JSON.stringify({ initData: tg.initData }) 
+                });
                 const data = await res.json();
                 if(data.status === 'success') {
                     rates.buy = data.sell; rates.sell = data.buy;
@@ -232,16 +288,23 @@
                     document.getElementById('rate-sell').innerText = parseInt(rates.buy).toLocaleString();
                     document.getElementById('rate-buy').innerText = parseInt(rates.sell).toLocaleString();
                 }
-            } catch(e) {}
+            } catch(e) { console.error("Rate fetch failed"); }
         }
 
         function updateWalletAddress() { 
             const net = document.getElementById('sell-network').value;
             const addr = WALLETS[net];
-            document.getElementById('admin-wallet-address').innerText = (addr && addr.length > 5) ? addr : "تنظیم نشده"; 
+            const displayEl = document.getElementById('admin-wallet-address');
+            if(displayEl) displayEl.innerText = (addr && addr.length > 5) ? addr : "تنظیم نشده"; 
         }
         
-        function copyAddress() { navigator.clipboard.writeText(document.getElementById('admin-wallet-address').innerText); tg.showAlert("✅ آدرس کپی شد!"); }
+        function copyAddress() { 
+            const addr = document.getElementById('admin-wallet-address').innerText;
+            if(addr === "تنظیم نشده") return;
+            navigator.clipboard.writeText(addr); 
+            tg.showAlert("✅ آدرس واریز کپی شد!"); 
+            try { tg.HapticFeedback.notificationOccurred('success'); } catch(e){}
+        }
 
         function calc(mode) {
             const amount = parseFloat(document.getElementById(mode + '-amount').value);
@@ -253,50 +316,64 @@
 
         async function submitBuy() {
             const amount = parseFloat(document.getElementById('buy-amount').value);
-            const address = document.getElementById('buy-address').value;
-            if(!amount || amount < 2) { tg.showAlert("حداقل خرید ۲ تتر."); return; }
-            if(address.length < 10) { tg.showAlert("آدرس نامعتبر."); return; }
+            const address = document.getElementById('buy-address').value.trim();
+            const network = document.getElementById('buy-network').value;
+
+            if(!amount || amount < 2) { tg.showAlert("❌ حداقل خرید ۲ تتر است."); return; }
+            if(address.length < 10) { tg.showAlert("❌ آدرس کیف پول معتبر نیست."); return; }
             
             document.getElementById('status-modal').classList.add('active');
             
             try {
                 const res = await fetch(`${API_BASE_URL}/webapp/usdt/buy`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ initData: tg.initData, amount: amount, address: address, network: document.getElementById('buy-network').value })
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true'},
+                    body: JSON.stringify({ initData: tg.initData, amount: amount, address: address, network: network })
                 });
                 const data = await res.json();
                 if (data.status === 'success') { 
-                    tg.showAlert("✅ درخواست ثبت شد"); 
+                    try { tg.HapticFeedback.notificationOccurred('success'); } catch(e){}
+                    tg.showAlert("✅ درخواست خرید شما با موفقیت ثبت شد و در صف واریز قرار گرفت."); 
                     location.reload(); 
                 } else { 
                     tg.showAlert("❌ " + data.message); 
                     document.getElementById('status-modal').classList.remove('active'); 
                 }
-            } catch (e) { tg.showAlert("خطای شبکه"); document.getElementById('status-modal').classList.remove('active'); }
+            } catch (e) { 
+                tg.showAlert("❌ خطای شبکه! لطفا اتصال خود را چک کنید."); 
+                document.getElementById('status-modal').classList.remove('active'); 
+            }
         }
 
         async function submitSell() {
             const amount = parseFloat(document.getElementById('sell-amount').value);
-            const txid = document.getElementById('sell-txid').value;
-            if(!amount || amount < 2) { tg.showAlert("حداقل فروش ۲ تتر."); return; }
-            if(txid.length < 10) { tg.showAlert("TxID نامعتبر."); return; }
+            const txid = document.getElementById('sell-txid').value.trim();
+            const network = document.getElementById('sell-network').value;
+
+            if(!amount || amount < 2) { tg.showAlert("❌ حداقل فروش ۲ تتر است."); return; }
+            if(txid.length < 10) { tg.showAlert("❌ هش تراکنش (TxID) معتبر نیست."); return; }
             
             document.getElementById('status-modal').classList.add('active');
             
             try {
                 const res = await fetch(`${API_BASE_URL}/webapp/usdt/sell`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ initData: tg.initData, amount: amount, txid: txid, network: document.getElementById('sell-network').value })
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true'},
+                    body: JSON.stringify({ initData: tg.initData, amount: amount, txid: txid, network: network })
                 });
                 const data = await res.json();
                 if (data.status === 'success') { 
-                    tg.showAlert("✅ فروش ثبت شد"); 
+                    try { tg.HapticFeedback.notificationOccurred('success'); } catch(e){}
+                    tg.showAlert("✅ اطلاعات فروش ثبت شد. پس از تایید شبکه، مبلغ به کیف پول شما واریز می‌شود."); 
                     location.reload();
                 } else { 
                     tg.showAlert("❌ " + data.message); 
                     document.getElementById('status-modal').classList.remove('active'); 
                 }
-            } catch (e) { tg.showAlert("خطا در ارتباط"); document.getElementById('status-modal').classList.remove('active'); }
+            } catch (e) { 
+                tg.showAlert("❌ خطا در ارتباط با سرور."); 
+                document.getElementById('status-modal').classList.remove('active'); 
+            }
         }
     </script>
 </body>

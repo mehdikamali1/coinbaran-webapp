@@ -6,7 +6,7 @@
     <title>تبادل تتر | کوین باران</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="webapp/dashboard-style.css?v=32.0">
+    <link rel="stylesheet" href="webapp/dashboard-style.css?v=33.0">
 
     <style>
         :root {
@@ -30,7 +30,6 @@
             padding-bottom: 150px !important;
         }
 
-        /* --- اصلاح فیلد ورودی برای جلوگیری از محو شدن متن --- */
         .input-box { position: relative; margin-bottom: 20px; }
         .inp-label { display: block; color: #848e9c; font-size: 0.85rem; margin-bottom: 8px; text-align: right; }
         
@@ -63,7 +62,6 @@
             padding-right: 16px;
         }
 
-        /* --- کارت نرخ‌ها --- */
         .ticker-card {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid var(--glass-border);
@@ -80,7 +78,6 @@
         .col-buy { color: var(--color-down); } 
         .col-sell { color: var(--color-up); }
 
-        /* --- تب‌ها --- */
         .switch-tabs {
             background: rgba(255, 255, 255, 0.03); 
             border: 1px solid var(--glass-border);
@@ -110,7 +107,6 @@
         .bg-green { background: var(--color-up); color: #000; }
         .bg-red { background: var(--color-down); color: #fff; }
 
-        /* --- مودال وضعیت --- */
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.92); backdrop-filter: blur(10px);
             z-index: 1000; display: none; align-items: center; justify-content: center;
@@ -239,7 +235,8 @@
 
     <script>
         const tg = window.Telegram.WebApp;
-        const API_BASE_URL = window.location.origin;
+        // آدرس پایه هماهنگ با ساختار ماژولار جدید
+        const API_BASE_URL = window.location.origin + "/api/webapp"; 
         let WALLETS = {}; 
         let rates = { buy: 0, sell: 0 };
 
@@ -256,7 +253,8 @@
 
         async function fetchRates() {
             try {
-                const res = await fetch(`${API_BASE_URL}/webapp/usdt/rates?t=${Date.now()}`, { 
+                // FIXED: API Path changed to modular structure
+                const res = await fetch(`${API_BASE_URL}/usdt/rates?t=${Date.now()}`, { 
                     method: 'POST', 
                     headers: {'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true'}, 
                     body: JSON.stringify({ initData: tg.initData }) 
@@ -276,7 +274,7 @@
                 }
             } catch(e) {
                 console.error(e);
-                tg.showAlert("⚠️ خطا در دریافت اطلاعات از سرور. لطفاً دوباره تلاش کنید.");
+                tg.showAlert("⚠️ خطا در دریافت اطلاعات نرخ تتر از سرور.");
             }
         }
 
@@ -356,14 +354,15 @@
             showStatus("در حال ثبت سفارش", "لطفاً از صفحه خارج نشوید...", "⏳");
 
             try {
-                const res = await fetch(`${API_BASE_URL}/webapp/usdt/buy`, {
+                // FIXED: Endpoint changed to modular path
+                const res = await fetch(`${API_BASE_URL}/usdt/buy`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true'},
                     body: JSON.stringify({ initData: tg.initData, amount, address, network })
                 });
                 const data = await res.json();
                 if(data.status === 'success') {
-                    showStatus("موفقیت‌آمیز", "سفارش شما با موفقیت ثبت شد و به زودی واریز می‌گردد.", "✅", true);
+                    showStatus("موفقیت‌آمیز", "سفارش خرید شما ثبت شد و پس از تایید مالی واریز می‌گردد.", "✅", true);
                     tg.HapticFeedback.notificationOccurred('success');
                 } else {
                     showStatus("خطا در ثبت", data.message, "❌", true);
@@ -384,14 +383,15 @@
             showStatus("در حال بررسی", "سیستم در حال استعلام تراکنش از شبکه است...", "⏳");
 
             try {
-                const res = await fetch(`${API_BASE_URL}/webapp/usdt/sell`, {
+                // FIXED: Endpoint changed to modular path
+                const res = await fetch(`${API_BASE_URL}/usdt/sell`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true'},
                     body: JSON.stringify({ initData: tg.initData, amount, txid, network })
                 });
                 const data = await res.json();
                 if(data.status === 'success') {
-                    showStatus("تایید شد", "تراکنش تایید شد و مبلغ به موجودی شما اضافه گردید.", "✅", true);
+                    showStatus("تایید شد", "تراکنش تایید شد و موجودی شما شارژ گردید.", "✅", true);
                     tg.HapticFeedback.notificationOccurred('success');
                 } else {
                     showStatus("رد شد", data.message, "❌", true);

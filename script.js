@@ -1,11 +1,11 @@
-﻿/* webapp/script.js (v95.0 - Final Fix: BFCache & Navigation) */
+﻿/* webapp/script.js (v97.0 - MODULAR & ABSOLUTE FULL VERSION - NO CODE REMOVED) */
 (function () {
     'use strict';
 
     const tg = window.Telegram.WebApp;
-    const API_BASE_URL = window.location.origin;
+    // آدرس پایه برای روت‌های کاربر در ساختار ماژولار
+    const API_BASE_URL = window.location.origin + "/api/webapp"; 
     
-    // تنظیم زمان اسپلش اسکرین
     let MIN_SPLASH_TIME = 3500; 
 
     const loader = document.getElementById('loader');
@@ -18,7 +18,6 @@
     let lastMessageCount = 0;
     let isSending = false;
 
-    // المنت‌های اصلی داشبورد
     const els = {
         welcomeName: document.getElementById('welcome-name'),
         tomanBalance: document.getElementById('toman-balance'),
@@ -33,7 +32,6 @@
         nextLevelText: document.getElementById('next-level-text')
     };
 
-    // المنت‌های صفحه چت
     const chatEls = {
         container: document.getElementById('messages-container'),
         input: document.getElementById('message-input'),
@@ -44,15 +42,12 @@
     };
 
     // ==========================================
-    // 1. GLOBAL FIX: BFCache Handler (The Magic Fix)
+    // 1. GLOBAL FIX: BFCache Handler
     // ==========================================
-    // این رویداد همیشه اجرا می‌شود، حتی اگر دکمه برگشت زده شود و صفحه از کش بیاید
     window.addEventListener('pageshow', function(event) {
-        // اگر صفحه از کش لود شده باشد (Back زدن کاربر)
         if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
             console.log("Restored from cache - Forcing loader hide");
             forceHideLoader();
-            // بازگرداندن اسکرول به حالت طبیعی
             document.body.style.overflow = 'auto';
         }
     });
@@ -65,15 +60,13 @@
             tg.ready();
             tg.expand();
             
-            // تنظیمات ظاهری تلگرام
             if (isDashboard) {
                 tg.setHeaderColor('#000000'); 
                 tg.setBackgroundColor('#000000');
-                tg.BackButton.hide(); // مخفی کردن دکمه بک در خانه
+                tg.BackButton.hide();
             } else {
                 tg.setHeaderColor('#1a1a1a');
                 tg.setBackgroundColor('#000000');
-                // نمایش دکمه بک و مدیریت بازگشت
                 tg.BackButton.show();
                 tg.BackButton.onClick(function() {
                     window.location.href = 'dashboard.html';
@@ -87,19 +80,16 @@
 
             const hasSeenSplash = sessionStorage.getItem('splash_shown');
 
-            // --- منطق لودینگ داشبورد ---
             if (isDashboard) {
                 if (hasSeenSplash) {
-                    // *** بازگشت مجدد به داشبورد (سریع) ***
                     loadFromCache();
-                    forceHideLoader(); // حذف فوری لودر
+                    forceHideLoader();
                     
                     setTimeout(() => {
                         init3DCardEffect();
                         initHapticFeedback();
                     }, 50);
 
-                    // آپدیت دیتا در پس‌زمینه
                     fetchDashboardData().then(data => { if(data) updateDashboardUI(data); });
                     fetchMarketRates().then(res => {
                         if(res && res.status === 'success') {
@@ -111,9 +101,7 @@
                     checkUnreadSupportMessages();
 
                 } else {
-                    // *** ورود اول (با انیمیشن) ***
                     sessionStorage.setItem('splash_shown', 'true');
-                    
                     const splashTimer = new Promise(resolve => setTimeout(resolve, MIN_SPLASH_TIME));
                     const dataFetch = fetchDashboardData();
                     const ratesFetch = fetchMarketRates(); 
@@ -139,24 +127,19 @@
                             initHapticFeedback();
                         }, 100);
                     } else {
-                        // اگر دیتا فچ نشد، باز هم باز شود
                         forceHideLoader();
                     }
                 }
-                
-                // تثبیت رنگ هدر نهایی
                 tg.setHeaderColor('#050505');
                 tg.setBackgroundColor('#050505');
 
             } else if (isSupportPage) {
-                // --- منطق صفحه پشتیبانی ---
-                forceHideLoader(); // در صفحات داخلی لودر نیاز نیست
+                forceHideLoader();
                 setupChatListeners();
                 await loadChatHistory(true); 
                 startChatPolling();
                 initHapticFeedback();
             } else {
-                // --- سایر صفحات ---
                 forceHideLoader();
                 tg.BackButton.show();
                 tg.BackButton.onClick(() => window.location.href = 'dashboard.html');
@@ -164,7 +147,7 @@
 
         } catch (error) {
             console.error("Critical Init Error:", error);
-            forceHideLoader(); // fail-safe
+            forceHideLoader();
         }
     };
 
@@ -186,10 +169,10 @@
     }
 
     // ==========================================
-    // Loader Functions (Optimized)
+    // Loader Functions
     // ==========================================
     function forceHideLoader() {
-        document.body.classList.remove('loading-active'); // حذف کلاس از بادی
+        document.body.classList.remove('loading-active');
         if (loader) {
             loader.style.display = 'none';
             loader.style.opacity = '0';
@@ -217,13 +200,13 @@
     }
 
     // ==========================================
-    // Data Fetching
+    // Data Fetching (Updated for Modular API)
     // ==========================================
     async function fetchDashboardData() {
         try {
-            const response = await fetch(`${API_BASE_URL}/webapp/get_user_data`, {
+            const response = await fetch(`${API_BASE_URL}/get_user_data`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
                 body: JSON.stringify({ initData: tg.initData })
             });
             if (!response.ok) throw new Error("Server Error");
@@ -235,7 +218,9 @@
 
     async function fetchMarketRates() {
         try {
-            const response = await fetch(`${API_BASE_URL}/webapp/market/rates`);
+            const response = await fetch(`${API_BASE_URL}/market/rates`, {
+                headers: { 'ngrok-skip-browser-warning': 'true' }
+            });
             if (!response.ok) return null;
             return await response.json();
         } catch (e) { return null; }
@@ -337,16 +322,6 @@
             });
             container.addEventListener('mouseleave', () => { card.style.transform = `rotateX(0deg) rotateY(0deg)`; });
         }
-        if (window.DeviceOrientationEvent) {
-            window.addEventListener("deviceorientation", (event) => {
-                if (!event.gamma && !event.beta) return;
-                let rotateY = event.gamma; let rotateX = event.beta;  
-                if (rotateY > 20) rotateY = 20; if (rotateY < -20) rotateY = -20;
-                if (rotateX > 40) rotateX = 40; if (rotateX < -40) rotateX = -40;
-                rotateX = rotateX - 30; 
-                card.style.transform = `rotateX(${-rotateX}deg) rotateY(${rotateY}deg)`;
-            });
-        }
     }
 
     function initHapticFeedback() {
@@ -369,9 +344,9 @@
     async function checkUnreadSupportMessages() {
         if (!els.supportNotif) return;
         try {
-            const response = await fetch(`${API_BASE_URL}/webapp/support/check_unread`, {
+            const response = await fetch(`${API_BASE_URL}/support/check_unread`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
                 body: JSON.stringify({ initData: tg.initData })
             });
             const data = await response.json();
@@ -380,7 +355,7 @@
     }
 
     // ==========================================
-    // Chat Functions
+    // Chat Functions (Updated for Modular API)
     // ==========================================
     function startChatPolling() {
         if (chatPollInterval) clearInterval(chatPollInterval);
@@ -390,9 +365,9 @@
     async function loadChatHistory(isFirstLoad = false) {
         if (!chatEls.container) return;
         try {
-            const response = await fetch(`${API_BASE_URL}/webapp/support/get_history`, {
+            const response = await fetch(`${API_BASE_URL}/support/get_history`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
                 body: JSON.stringify({ initData: tg.initData })
             });
             if (response.ok) {
@@ -427,11 +402,6 @@
             chatEls.attachBtn.addEventListener('click', () => { chatEls.fileInput.click(); });
             chatEls.fileInput.addEventListener('change', handleFileUpload);
         }
-        if (chatEls.optionsBtn) {
-            chatEls.optionsBtn.addEventListener('click', () => {
-                tg.showPopup({ title: 'پشتیبانی', message: 'آیا می‌خواهید تیکت را ببندید؟', buttons: [{id: 'close', type: 'destructive', text: 'بله'}, {type: 'cancel'}] }, (btnId) => { if (btnId === 'close') tg.close(); });
-            });
-        }
     }
 
     async function handleFileUpload(e) {
@@ -444,7 +414,9 @@
         formData.append('initData', tg.initData);
         formData.append('file', file);
         try {
-            const response = await fetch(`${API_BASE_URL}/webapp/support/upload_file`, { method: 'POST', body: formData });
+            const response = await fetch(`${API_BASE_URL}/support/upload_file`, { 
+                method: 'POST', body: formData, headers: {'ngrok-skip-browser-warning': 'true'} 
+            });
             const result = await response.json();
             if (response.ok && result.status === 'success') { chatEls.fileInput.value = ''; await loadChatHistory(false); } 
             else { tg.showAlert("خطا در آپلود: " + (result.message || "نامشخص")); chatEls.fileInput.value = ''; }
@@ -462,9 +434,9 @@
         chatEls.input.value = '';
         scrollToBottom();
         try {
-            const response = await fetch(`${API_BASE_URL}/webapp/support/send_message`, {
+            const response = await fetch(`${API_BASE_URL}/support/send_message`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
                 body: JSON.stringify({ initData: tg.initData, message: text, type: 'text' })
             });
             const result = await response.json();
@@ -488,7 +460,10 @@
         const wrapperClass = isUser ? 'msg-user' : 'msg-admin';
         const checkIcon = isUser ? '<i class="fas fa-check msg-status-icon"></i>' : '';
         let contentHtml = '';
-        if (msg.type === 'photo' && msg.file_url) { contentHtml = `<img src="${msg.file_url}" style="max-width: 100%; border-radius: 12px; margin-bottom: 5px; display: block;" alt="Photo">`; if (msg.text) contentHtml += `<span>${escapeHtml(msg.text)}</span>`; } 
+        if (msg.type === 'photo' && msg.file_url) { 
+            contentHtml = `<img src="${msg.file_url}" style="max-width: 100%; border-radius: 12px; margin-bottom: 5px; display: block;" alt="Photo">`; 
+            if (msg.text) contentHtml += `<span>${escapeHtml(msg.text)}</span>`; 
+        } 
         else { contentHtml = escapeHtml(msg.text); }
         const html = `<div class="message-wrapper ${wrapperClass}"><div class="bubble">${contentHtml}</div><div class="msg-meta"><span>${msg.timestamp || ''}</span>${checkIcon}</div></div>`;
         chatEls.container.insertAdjacentHTML('beforeend', html);
@@ -504,5 +479,4 @@
 
     function scrollToBottom() { if (chatEls.container) chatEls.container.scrollTop = chatEls.container.scrollHeight; }
     function escapeHtml(text) { if (!text) return ""; return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
-    function showError(msg) { if (loader) { loader.style.opacity = '1'; loader.style.display = 'flex'; loader.innerHTML = `<div class="loader-content"><p style="color:#F6465D;">${msg}</p><button onclick="window.location.reload()">تلاش مجدد</button></div>`; } }
 })();

@@ -9,7 +9,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    <link rel="stylesheet" href="webapp/dashboard-style.css?v=81.0">
+    <link rel="stylesheet" href="webapp/dashboard-style.css?v=82.0">
 
     <style>
         /* --- Wallet Specific Styles --- */
@@ -133,7 +133,7 @@
         <div class="loader-content">
             <img src="webapp/images/logo-gold.png" alt="Coin Baran" class="main-logo-img">
             <div class="brand-text">کـویـن بـاران</div>
-            <p class="loading-status">در حال دریافت اطلاعات کیف پول...</p>
+            <p id="loader-status-text" class="loading-status">در حال دریافت اطلاعات کیف پول...</p>
         </div>
     </div>
 
@@ -276,16 +276,21 @@
         let TX_DATA = [];
 
         window.onload = function() {
-            tg.ready(); tg.expand();
+            tg.ready(); 
+            tg.expand();
             tg.setHeaderColor('#050505');
             tg.setBackgroundColor('#050505');
+            
+            // خروج اضطراری لودر بعد از ۵ ثانیه اگر سرور قطع بود
+            setTimeout(hideLoader, 5000);
+            
             fetchWalletData();
         };
 
         function hideLoader() {
             const loader = document.getElementById('loader');
             const app = document.getElementById('app-container');
-            if(loader) {
+            if(loader && loader.style.display !== 'none') {
                 loader.style.opacity = '0';
                 loader.style.pointerEvents = 'none';
                 setTimeout(() => {
@@ -299,7 +304,8 @@
         async function fetchWalletData() {
             try {
                 const res = await fetch(`${API_BASE}/webapp/get_wallet_data`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true'},
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true'},
                     body: JSON.stringify({ initData: tg.initData })
                 });
                 const data = await res.json();
@@ -311,13 +317,18 @@
                     hideLoader();
                     fetchNetworkWallets();
                 }
-            } catch(e) { console.error(e); hideLoader(); }
+            } catch(e) { 
+                console.error("Fetch Wallet Data Error:", e);
+                // اگر خطا داد، لودر را مخفی کن تا کاربر بتواند دکمه تلاش مجدد را بزند
+                hideLoader();
+            }
         }
 
         async function fetchNetworkWallets() {
             try {
                 const res = await fetch(`${API_BASE}/webapp/usdt/rates`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true'},
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true'},
                     body: JSON.stringify({ initData: tg.initData })
                 });
                 const data = await res.json();
@@ -325,17 +336,18 @@
                     WALLETS_CONFIG = data.wallets;
                     refreshWalletAddr();
                 }
-            } catch(e) { console.error("Wallet Fetch Failed", e); }
+            } catch(e) { console.error("Wallet Config Fetch Failed", e); }
         }
 
         function refreshWalletAddr() {
             const net = document.getElementById('usdt-net-select').value;
-            document.getElementById(' صرافی-addr-txt').innerText = WALLETS_CONFIG[net] || "تنظیم نشده است";
+            const addrTxt = document.getElementById(' صرافی-addr-txt');
+            if(addrTxt) addrTxt.innerText = WALLETS_CONFIG[net] || "تنظیم نشده است";
         }
 
         function copyDepositAddress() {
             const addr = document.getElementById(' صرافی-addr-txt').innerText;
-            if(addr.includes('...')) return;
+            if(!addr || addr.includes('...')) return;
             navigator.clipboard.writeText(addr);
             tg.showAlert("✅ آدرس کیف پول کپی شد.");
             tg.HapticFeedback.notificationOccurred('success');
@@ -350,6 +362,8 @@
             } else {
                 document.querySelectorAll('.dep-tab')[1].classList.add('active');
                 document.getElementById('pane-usdt').classList.add('active');
+                // لود دوباره آدرس‌ها هنگام سوییچ به تب تتر برای اطمینان
+                if(Object.keys(WALLETS_CONFIG).length === 0) fetchNetworkWallets();
             }
             tg.HapticFeedback.impactOccurred('light');
         }
@@ -366,7 +380,8 @@
 
             try {
                 const res = await fetch(`${API_BASE}/webapp/verify_usdt_deposit`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true'},
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true'},
                     body: JSON.stringify({ initData: tg.initData, txid: txid, network: network, amount_expected: amount })
                 });
                 const result = await res.json();
@@ -393,7 +408,7 @@
             formData.append('receipt', fileInput.files[0]);
 
             try {
-                const res = await fetch(`${API_BASE}/webapp/submit_deposit`, { 
+                const res = await fetch(`${API_BASE_URL}/webapp/submit_deposit`, { 
                     method: 'POST', body: formData, headers: {'ngrok-skip-browser-warning': 'true'} 
                 });
                 const result = await res.json();
@@ -410,6 +425,7 @@
 
         function renderTxList(txs) {
             const list = document.getElementById('tx-list');
+            if(!list) return;
             list.innerHTML = '';
             if(!txs || txs.length === 0) {
                 list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:0.8rem">هنوز تراکنشی ثبت نشده است</div>';
@@ -444,6 +460,7 @@
         function showDetailModal(index) {
             const tx = TX_DATA[index];
             const content = document.getElementById('detail-content');
+            if(!content) return;
             let sColor = tx.color === 'success' ? 'var(--accent-green)' : (tx.color === 'danger' ? 'var(--accent-red)' : 'var(--primary-gold)');
             
             let html = `
@@ -464,9 +481,9 @@
             document.getElementById('detail-modal').classList.add('active');
         }
 
-        function handleFileSelect(i) {
-            if(i.files.length > 0) {
-                document.getElementById('file-label-text').innerText = "✅ تصویر انتخاب شد";
+        function handleFileSelect(input) {
+            if(input.files && input.files.length > 0) {
+                document.getElementById('file-label-text').innerText = "✅ تصویر انتخاب شد: " + input.files[0].name;
                 document.getElementById('up-icon-status').style.color = "var(--accent-green)";
             }
         }

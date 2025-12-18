@@ -3,117 +3,196 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>VIP Wallet | Coin Baran</title>
+    <meta name="theme-color" content="#050505">
+    <title>مدیریت دارایی | کوین باران</title>
+    
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    <link rel="stylesheet" href="webapp/dashboard-style.css?v=85">
-    <link rel="stylesheet" href="webapp/wallet-style.css?v=85">
+    <style>
+        :root {
+            --primary-gold: #f0b90b;
+            --accent-green: #0ecb81;
+            --accent-red: #f6465d;
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+        }
+
+        body { 
+            background: #050505; color: #fff; font-family: 'Vazirmatn', sans-serif; 
+            margin: 0; padding: 0; overflow-x: hidden; -webkit-user-select: none;
+        }
+
+        .ambient-glow { position: fixed; width: 350px; height: 350px; filter: blur(120px); z-index: -1; opacity: 0.12; border-radius: 50%; }
+        .glow-top { top: -100px; left: -100px; background: var(--primary-gold); }
+        .glow-bottom { bottom: -100px; right: -100px; background: var(--accent-green); }
+
+        #loader {
+            position: fixed; inset: 0; background: #050505; z-index: 9999;
+            display: flex; align-items: center; justify-content: center; transition: opacity 0.6s ease;
+        }
+        .loader-content { text-align: center; }
+        .main-logo-img { width: 100px; margin-bottom: 20px; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 1; } }
+
+        .glass-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 20px; position: sticky; top: 0; z-index: 100;
+            background: rgba(5, 5, 5, 0.8); backdrop-filter: blur(15px);
+        }
+
+        /* Luxury Card */
+        .asset-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
+            border: 1px solid var(--glass-border); border-radius: 30px;
+            padding: 25px; margin: 20px; position: relative; overflow: hidden;
+            backdrop-filter: blur(20px); box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+            transform-style: preserve-3d; transition: transform 0.1s ease-out;
+        }
+        .main-digit { font-size: 2.2rem; font-weight: 900; font-family: 'Roboto Mono'; margin: 10px 0; }
+        .currency-symbol { color: var(--primary-gold); font-weight: bold; }
+
+        /* Actions */
+        .wallet-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 20px; }
+        .w-btn {
+            padding: 20px; border-radius: 24px; background: var(--glass);
+            border: 1px solid var(--glass-border); display: flex; flex-direction: column;
+            align-items: center; gap: 12px;
+        }
+        .btn-deposit i { color: var(--accent-green); font-size: 1.8rem; }
+        .btn-withdraw i { color: var(--accent-red); font-size: 1.8rem; }
+
+        /* Transactions */
+        .tx-container { padding: 30px 20px 100px 20px; }
+        .tx-card {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px; margin-bottom: 12px; background: var(--glass);
+            border: 1px solid var(--glass-border); border-radius: 18px;
+        }
+
+        /* Modal */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); display: none; z-index: 1000; align-items: flex-end; }
+        .modal-overlay.active { display: flex; }
+        .glass-panel { background: #0f0f0f; border-radius: 35px 35px 0 0; width: 100%; padding: 25px; border-top: 1px solid rgba(255,255,255,0.1); }
+        
+        .hidden-content { opacity: 0; display: none; }
+        .show-content { display: block; animation: fadeIn 0.6s forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
 </head>
 <body>
+
+    <div class="ambient-glow glow-top"></div>
+    <div class="ambient-glow glow-bottom"></div>
+
     <div id="loader">
-        <img src="webapp/images/logo-gold.png" width="80" style="animation: pulse 2s infinite;">
+        <div class="loader-content">
+            <img src="webapp/images/logo-gold.png" alt="Coin Baran" class="main-logo-img">
+            <div style="font-weight: 900; letter-spacing: 2px; color: var(--primary-gold);">کـویـن بـاران</div>
+        </div>
     </div>
 
+    <header class="glass-header">
+        <div onclick="window.location.href='/'" style="padding:10px;"><i class="fas fa-arrow-right"></i></div>
+        <div style="font-weight:900; font-size:1.1rem;">کیف پول VIP</div>
+        <div onclick="location.reload()" style="padding:10px;"><i class="fas fa-sync-alt"></i></div>
+    </header>
+
     <div id="app-container" class="hidden-content">
-        <div class="asset-card luxe-card">
-            <div class="card-shine"></div>
-            <div class="balance-row">
-                <span class="label-muted">موجودی کل دارایی</span>
-                <button class="privacy-btn" onclick="togglePrivacy()"><i id="privacy-icon" class="fas fa-eye"></i></button>
-            </div>
-            <div class="amount-row" style="margin: 15px 0;">
-                <h1 id="balance-toman" class="main-digit counter">0</h1>
-                <span class="currency-symbol">تومان</span>
-            </div>
-            <div class="card-footer-row">
-                <div class="stat-item">
-                    <span class="stat-label">موجودی تتر</span>
-                    <span class="stat-value color-usd" id="balance-uusd">0.00 USDT</span>
-                </div>
-                <div class="stat-item" style="text-align: left;">
-                    <span class="stat-label">امنیت حساب</span>
-                    <span class="stat-value" style="color:var(--green)">High Security</span>
-                </div>
+        <div class="asset-card" id="parallax-card">
+            <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">موجودی قابل برداشت</div>
+            <div class="main-digit"><span id="balance-toman">0</span> <small class="currency-symbol">T</small></div>
+            <div style="display:flex; justify-content:space-between; margin-top:20px; border-top:1px solid rgba(255,255,255,0.05); padding-top:15px;">
+                <div><span style="font-size:0.6rem; color:#666;">USDT ASSETS</span><div id="balance-uusd" style="color:var(--accent-green); font-weight:bold;">0.00</div></div>
+                <div style="text-align:left;"><span style="font-size:0.6rem; color:#666;">LEVEL</span><div style="color:var(--primary-gold); font-weight:bold;">GOLD</div></div>
             </div>
         </div>
 
         <div class="wallet-actions">
-            <div class="w-btn" onclick="openDepositModal()">
-                <i class="fas fa-arrow-down-to-bracket" style="color:var(--green)"></i>
-                <span>واریز وجه</span>
+            <div class="w-btn btn-deposit" onclick="tg.showAlert('بخش واریز تومانی از منوی اصلی در دسترس است.')">
+                <i class="fas fa-plus-circle"></i><span>واریز تومانی</span>
             </div>
-            <div class="w-btn" onclick="tg.showAlert('بخش برداشت در حال به‌روزرسانی نهایی است.')">
-                <i class="fas fa-arrow-up-from-bracket" style="color:var(--red)"></i>
-                <span>برداشت</span>
+            <div class="w-btn btn-withdraw" onclick="tg.showAlert('برداشت وجه نیازمند احراز هویت سطح ۲ است.')">
+                <i class="fas fa-arrow-up-from-bracket"></i><span>برداشت وجه</span>
             </div>
         </div>
 
         <div class="tx-container">
-            <div class="section-label">تراکنش‌های اخیر</div>
+            <div style="font-weight:900; margin-bottom:15px;">تراکنش‌های اخیر</div>
             <div id="tx-list"></div>
         </div>
     </div>
 
-    <div id="receipt-sheet" class="receipt-sheet">
-        <div style="width:40px; height:4px; background:#333; margin:0 auto 25px; border-radius:10px;"></div>
-        <h3 id="rcp-title" style="text-align:center; margin-bottom:20px;">جزئیات</h3>
-        <div style="background:rgba(255,255,255,0.02); border-radius:20px; padding:20px;">
-            <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                <span style="color:#666;">مبلغ تراکنش:</span><span id="rcp-amount" style="font-weight:bold;">-</span>
-            </div>
-            <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                <span style="color:#666;">زمان ثبت:</span><span id="rcp-date">-</span>
-            </div>
-            <div style="display:flex; justify-content:space-between;">
-                <span style="color:#666;">وضعیت:</span><span id="rcp-status" style="color:var(--green);">تایید شده</span>
-            </div>
-        </div>
-        <button class="btn-confirm-swap" style="background:#222; color:#fff; margin-top:20px;" onclick="closeReceipt()">بستن رسید</button>
-    </div>
-
-    <script src="webapp/wallet-engine.js?v=85"></script>
     <script>
-        // اضافه کردن منطق رندر لیست تراکنش‌ها به موتور اصلی
-        // کد قبلی fetchWalletData را اینجا قرار می‌دهیم با تغییر کوچک در رندر
-        async function fetchWalletData() {
+        const tg = window.Telegram.WebApp;
+        const API_BASE = window.location.origin + "/api/webapp";
+
+        // Failsafe: اگر دیتا لود نشد، لودر را بعد از ۵ ثانیه حذف کن
+        const failsafe = setTimeout(() => {
+            hideLoader();
+        }, 5000);
+
+        window.onload = function() {
+            tg.ready();
+            tg.expand();
+            fetchData();
+            initParallax();
+        };
+
+        async function fetchData() {
             try {
                 const res = await fetch(`${API_BASE}/get_user_data`, {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: {'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true'},
                     body: JSON.stringify({ initData: tg.initData })
                 });
                 const data = await res.json();
                 if(data.status === 'success') {
-                    const balance = parseInt(data.toman_balance.replace(/,/g, ''));
-                    animateValue(document.getElementById('balance-toman'), 0, balance, 1500);
+                    clearTimeout(failsafe);
+                    document.getElementById('balance-toman').innerText = data.toman_balance;
                     document.getElementById('balance-uusd').innerText = data.uusd_balance + " USDT";
-                    TX_DATA = data.transactions;
-                    renderLuxeList(data.transactions);
+                    renderTx(data.transactions || []);
                     hideLoader();
-                    initParallax();
                 }
-            } catch(e) { console.error(e); hideLoader(); }
+            } catch(e) {
+                console.error("Fetch Error:", e);
+                hideLoader(); // حتی در صورت خطا لودر را ببند
+            }
         }
 
-        function renderLuxeList(txs) {
+        function renderTx(txs) {
             const list = document.getElementById('tx-list');
-            list.innerHTML = txs.map((tx, idx) => `
-                <div class="tx-card" onclick="showReceipt(${idx})">
-                    <div class="tx-left">
-                        <div class="tx-icon-luxe ${tx.color === 'success' ? 'tx-up' : 'tx-down'}">
-                            <i class="fas ${tx.color === 'success' ? 'fa-arrow-down' : 'fa-arrow-up'}"></i>
-                        </div>
-                        <div class="tx-details">
-                            <span class="tx-title">${tx.title}</span>
-                            <span class="tx-date">${tx.date}</span>
-                        </div>
+            if(txs.length === 0) { list.innerHTML = '<div style="text-align:center; opacity:0.3;">تراکنشی یافت نشد</div>'; return; }
+            list.innerHTML = txs.map(tx => `
+                <div class="tx-card">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <i class="fas ${tx.color === 'success' ? 'fa-arrow-down' : 'fa-arrow-up'}" style="color:var(--accent-${tx.color === 'success' ? 'green' : 'red'})"></i>
+                        <div><div style="font-size:0.9rem; font-weight:bold;">${tx.title}</div><div style="font-size:0.7rem; color:#555;">${tx.date}</div></div>
                     </div>
-                    <div class="tx-amount" style="color:var(--${tx.color === 'success' ? 'green' : 'red'})">${tx.display_amount}</div>
+                    <div style="font-family:'Roboto Mono'; font-weight:bold; color:var(--accent-${tx.color === 'success' ? 'green' : 'red'})">${tx.display_amount}</div>
                 </div>
             `).join('');
         }
-        fetchWalletData();
+
+        function hideLoader() {
+            const loader = document.getElementById('loader');
+            const app = document.getElementById('app-container');
+            loader.style.opacity = '0';
+            setTimeout(() => {
+                loader.style.display = 'none';
+                app.classList.remove('hidden-content');
+                app.classList.add('show-content');
+            }, 600);
+        }
+
+        function initParallax() {
+            const card = document.getElementById('parallax-card');
+            window.addEventListener('deviceorientation', (e) => {
+                const rotX = (e.beta - 45) / 4;
+                const rotY = e.gamma / 4;
+                if(card) card.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+            });
+        }
     </script>
 </body>
 </html>

@@ -1,6 +1,9 @@
-﻿/* webapp/wallet-style.css (v86.0 - Ultra Luxury - Fully Completed) */
+﻿/* webapp/wallet-style.css (v99.0 - Ultra Luxury & Multi-Panel Integrated) */
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;300;400;500;700;800;900&family=Roboto+Mono:wght@400;700;900&display=swap');
+
 :root {
     --gold: #f0b90b;
+    --gold-glow: rgba(240, 185, 11, 0.3);
     --green: #0ecb81;
     --red: #f6465d;
     --bg: #050505;
@@ -8,21 +11,57 @@
     --glass-bright: rgba(255, 255, 255, 0.08);
     --border: rgba(255, 255, 255, 0.08);
     --radius-xl: 30px;
+    --radius-lg: 20px;
 }
 
-/* پایه و تنظیمات عمومی */
+* { 
+    box-sizing: border-box; 
+    -webkit-tap-highlight-color: transparent; 
+}
+
 body {
     background-color: var(--bg);
     color: #fff;
+    font-family: 'Vazirmatn', sans-serif;
+    margin: 0;
+    padding: 0;
+    direction: rtl;
     -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
 }
 
-/* افکت کارت ۳ بعدی پارالاکس */
+/* --- Header Style --- */
+header {
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    position: sticky;
+    top: 0;
+    background: rgba(5, 5, 5, 0.8);
+    backdrop-filter: blur(15px);
+    z-index: 100;
+    border-bottom: 1px solid var(--border);
+}
+
+.back-btn {
+    width: 40px;
+    height: 40px;
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+/* --- Asset Card (3D Parallax Effect) --- */
 .asset-card {
     background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.02) 100%);
     border: 1px solid var(--border);
     border-radius: var(--radius-xl);
-    padding: 28px;
+    padding: 30px;
     margin: 20px;
     position: relative;
     overflow: hidden;
@@ -32,51 +71,216 @@ body {
     backdrop-filter: blur(15px);
 }
 
-/* لایه درخشش متحرک روی کارت */
 .card-shine {
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), rgba(255,255,255,0.2) 0%, transparent 60%);
+    background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), rgba(255,255,255,0.15) 0%, transparent 60%);
     pointer-events: none;
     z-index: 1;
 }
 
 .balance-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     position: relative;
     z-index: 2;
 }
 
-/* دکمه حریم خصوصی */
-.privacy-btn {
-    background: var(--glass);
-    border: 1px solid var(--border);
-    color: #888;
-    padding: 10px;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: 0.3s;
+.balance-label {
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.5);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.balance-amount {
     display: flex;
-    align-items: center;
-    justify-content: center;
+    align-items: baseline;
+    gap: 10px;
 }
 
-.privacy-btn:active {
-    transform: scale(0.9);
-    background: var(--glass-bright);
-}
-
-/* انیمیشن چرخشی اعداد */
 .counter {
-    display: inline-block;
     font-family: 'Roboto Mono', monospace;
+    font-size: 2.5rem;
     font-weight: 900;
+    margin: 0;
     letter-spacing: -1px;
 }
 
-/* بخش تراکنش‌ها */
+.currency-symbol {
+    font-size: 1.1rem;
+    color: var(--gold);
+    font-weight: 800;
+}
+
+/* --- Navigation Tabs --- */
+.wallet-nav {
+    display: flex;
+    margin: 0 20px 25px;
+    background: var(--glass);
+    padding: 6px;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+}
+
+.nav-item {
+    flex: 1;
+    padding: 12px 5px;
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: #666;
+    border-radius: 15px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+}
+
+.nav-item.active {
+    background: var(--gold);
+    color: #000;
+    box-shadow: 0 8px 20px rgba(240, 185, 11, 0.25);
+}
+
+/* --- Panel Management --- */
+.panel-container {
+    padding: 0 20px 100px;
+}
+
+.wallet-panel {
+    display: none;
+    animation: slideUpFade 0.4s ease-out;
+}
+
+.wallet-panel.active {
+    display: block;
+}
+
+@keyframes slideUpFade {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Luxury Card Components --- */
+.luxe-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 24px;
+    margin-bottom: 20px;
+}
+
+.card-title-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.icon-box {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.icon-gold { background: rgba(240, 185, 11, 0.1); color: var(--gold); }
+.icon-blue { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+.icon-red { background: rgba(246, 70, 93, 0.1); color: var(--red); }
+
+.card-info h3 { margin: 0; font-size: 1rem; font-weight: 800; }
+.card-info p { margin: 5px 0 0; font-size: 0.7rem; color: #666; line-height: 1.5; }
+
+/* --- Destination Card UI --- */
+.destination-card {
+    background: #000;
+    border: 1px dashed #333;
+    border-radius: 18px;
+    padding: 20px;
+    text-align: center;
+    margin: 20px 0;
+}
+
+.card-number {
+    font-family: 'Roboto Mono';
+    font-size: 1.4rem;
+    color: var(--gold);
+    letter-spacing: 2px;
+    display: block;
+    margin-bottom: 12px;
+}
+
+/* --- User Cards List --- */
+.user-cards-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.user-card-item {
+    background: var(--glass);
+    border: 1px solid var(--border);
+    padding: 15px;
+    border-radius: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.bank-name { font-size: 0.85rem; font-weight: 700; }
+.masked-num { font-family: 'Roboto Mono'; font-size: 0.8rem; color: #555; }
+
+/* --- Inputs & Buttons --- */
+.input-group { margin-bottom: 20px; }
+.input-group label { display: block; font-size: 0.75rem; color: #666; margin-bottom: 8px; margin-right: 10px; }
+
+.luxe-input {
+    width: 100%;
+    background: var(--glass);
+    border: 1px solid var(--border);
+    padding: 18px;
+    border-radius: 16px;
+    color: #fff;
+    font-family: inherit;
+    font-size: 1rem;
+    transition: 0.3s;
+}
+
+.luxe-input:focus { border-color: var(--gold); background: rgba(255,255,255,0.05); outline: none; }
+
+.upload-placeholder {
+    border: 2px dashed #222;
+    border-radius: 20px;
+    padding: 40px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-action {
+    width: 100%;
+    padding: 18px;
+    border-radius: 18px;
+    border: none;
+    font-family: inherit;
+    font-weight: 900;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-primary { background: var(--gold); color: #000; box-shadow: 0 10px 25px rgba(240, 185, 11, 0.3); }
+.btn-secondary { background: #fff; color: #000; }
+.btn-action:active { transform: scale(0.96); opacity: 0.9; }
+
+/* --- Transaction History Luxe Cards --- */
 .tx-card {
     display: flex;
     justify-content: space-between;
@@ -86,13 +290,7 @@ body {
     background: var(--glass);
     border: 1px solid var(--border);
     border-radius: 20px;
-    transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    cursor: pointer;
-}
-
-.tx-card:active {
-    transform: scale(0.97) translateX(-5px);
-    background: var(--glass-bright);
+    transition: 0.3s;
 }
 
 .tx-icon-luxe {
@@ -103,80 +301,7 @@ body {
     align-items: center;
     justify-content: center;
     font-size: 1.1rem;
-    box-shadow: 0 8px 16px rgba(0,0,0,0.3);
 }
 
-.tx-up { 
-    background: rgba(14, 203, 129, 0.1); 
-    color: var(--green); 
-    border: 1px solid rgba(14,203,129,0.2); 
-    filter: drop-shadow(0 0 5px rgba(14,203,129,0.2));
-}
-
-.tx-down { 
-    background: rgba(246, 70, 93, 0.1); 
-    color: var(--red); 
-    border: 1px solid rgba(246,70,93,0.2); 
-    filter: drop-shadow(0 0 5px rgba(246,70,93,0.2));
-}
-
-/* استایل مودال جزییات (Bottom Sheet) */
-.modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.85);
-    backdrop-filter: blur(12px);
-    display: none;
-    z-index: 1000;
-    align-items: flex-end;
-}
-
-.modal-overlay.active {
-    display: flex;
-}
-
-.glass-panel { 
-    background: #0d0d0d;
-    border-radius: 35px 35px 0 0;
-    width: 100%;
-    padding: 30px;
-    border-top: 1px solid rgba(255,255,255,0.1);
-    animation: slideUp 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.1);
-    box-sizing: border-box;
-    box-shadow: 0 -20px 40px rgba(0,0,0,0.5);
-}
-
-@keyframes slideUp {
-    from { transform: translateY(100%); }
-    to { transform: translateY(0); }
-}
-
-/* انیمیشن‌های کمکی */
-@keyframes pulse {
-    0%, 100% { transform: scale(1); opacity: 0.8; }
-    50% { transform: scale(1.05); opacity: 1; }
-}
-
-.fade-in-active {
-    animation: fadeIn 0.8s forwards;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(15px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* تگ‌های موجودی */
-.currency-symbol {
-    font-size: 0.9rem;
-    color: var(--gold);
-    font-weight: bold;
-    margin-right: 5px;
-}
-
-.stat-label {
-    font-size: 0.7rem;
-    color: rgba(255,255,255,0.4);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
+.tx-up { background: rgba(14, 203, 129, 0.1); color: var(--green); border: 1px solid rgba(14,203,129,0.2); }
+.tx-down { background: rgba(246, 70, 93, 0.1); color: var(--red); border: 1px solid rgba(246,70,93,0.2); }

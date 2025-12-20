@@ -1,9 +1,9 @@
-﻿/* webapp/script.js (v97.0 - MODULAR & ABSOLUTE FULL VERSION - NO CODE REMOVED) */
+﻿/* webapp/script.js (v98.0 - FULL PRODUCTION - INTEGRATED VERSION) */
 (function () {
     'use strict';
 
     const tg = window.Telegram.WebApp;
-    // آدرس پایه برای روت‌های کاربر در ساختار ماژولار
+    // آدرس پایه برای روت‌های کاربر
     const API_BASE_URL = window.location.origin + "/api/webapp"; 
     
     let MIN_SPLASH_TIME = 3500; 
@@ -200,7 +200,7 @@
     }
 
     // ==========================================
-    // Data Fetching (Updated for Modular API)
+    // Data Fetching
     // ==========================================
     async function fetchDashboardData() {
         try {
@@ -264,12 +264,15 @@
     function updateTickerUI(rates) {
         if (!els.ticker || !rates || rates.length === 0) return;
         let html = '';
+        // تکرار برای انیمیشن بی‌پایان
         const loopRates = [...rates, ...rates, ...rates]; 
         loopRates.forEach(rate => {
+            // مقایسه عددی صحیح
             const changeClass = rate.change >= 0 ? 'up' : 'down';
             const arrow = rate.change > 0 ? '▲' : (rate.change < 0 ? '▼' : '');
             const colorClass = rate.change === 0 ? '' : changeClass;
-            html += `<div class="ticker-item">${rate.symbol} <span class="${colorClass}">${rate.price} ${arrow} <small>(${rate.change}%)</small></span></div>`;
+            // استفاده از display_change که در بک‌اِند فرمت شده است
+            html += `<div class="ticker-item">${rate.symbol} <span class="${colorClass}">${rate.price} ${arrow} <small>(${rate.display_change})</small></span></div>`;
         });
         els.ticker.innerHTML = html;
     }
@@ -355,7 +358,7 @@
     }
 
     // ==========================================
-    // Chat Functions (Updated for Modular API)
+    // Chat Functions
     // ==========================================
     function startChatPolling() {
         if (chatPollInterval) clearInterval(chatPollInterval);

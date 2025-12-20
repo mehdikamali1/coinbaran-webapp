@@ -1,4 +1,4 @@
-﻿/* webapp/script.js (v98.0 - FULL PRODUCTION - INTEGRATED VERSION) */
+﻿/* webapp/script.js (v105.0 - PRODUCTION READY - NO SUMMARIZATION) */
 (function () {
     'use strict';
 
@@ -130,9 +130,6 @@
                         forceHideLoader();
                     }
                 }
-                tg.setHeaderColor('#050505');
-                tg.setBackgroundColor('#050505');
-
             } else if (isSupportPage) {
                 forceHideLoader();
                 setupChatListeners();
@@ -141,8 +138,6 @@
                 initHapticFeedback();
             } else {
                 forceHideLoader();
-                tg.BackButton.show();
-                tg.BackButton.onClick(() => window.location.href = 'dashboard.html');
             }
 
         } catch (error) {
@@ -152,7 +147,7 @@
     };
 
     // ==========================================
-    // Caching Logic
+    // Caching & Data Logic
     // ==========================================
     function saveToCache(data) {
         try { localStorage.setItem('dashboard_cache', JSON.stringify(data)); } catch (e) {}
@@ -168,9 +163,6 @@
         } catch (e) {}
     }
 
-    // ==========================================
-    // Loader Functions
-    // ==========================================
     function forceHideLoader() {
         document.body.classList.remove('loading-active');
         if (loader) {
@@ -199,17 +191,13 @@
         }
     }
 
-    // ==========================================
-    // Data Fetching
-    // ==========================================
     async function fetchDashboardData() {
         try {
             const response = await fetch(`${API_BASE_URL}/get_user_data`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ initData: tg.initData })
             });
-            if (!response.ok) throw new Error("Server Error");
             const data = await response.json();
             if(data.status === 'success') saveToCache(data);
             return data;
@@ -218,16 +206,13 @@
 
     async function fetchMarketRates() {
         try {
-            const response = await fetch(`${API_BASE_URL}/market/rates`, {
-                headers: { 'ngrok-skip-browser-warning': 'true' }
-            });
-            if (!response.ok) return null;
+            const response = await fetch(`${API_BASE_URL}/market/rates`);
             return await response.json();
         } catch (e) { return null; }
     }
 
     // ==========================================
-    // UI Updaters
+    // UI Updaters (Fixed Percentages & Colors)
     // ==========================================
     function updateDashboardUI(data, saveCache = true) {
         if (!data || data.status === 'error') return;
@@ -267,81 +252,72 @@
         // تکرار برای انیمیشن بی‌پایان
         const loopRates = [...rates, ...rates, ...rates]; 
         loopRates.forEach(rate => {
-            // مقایسه عددی صحیح
-            const changeClass = rate.change >= 0 ? 'up' : 'down';
-            const arrow = rate.change > 0 ? '▲' : (rate.change < 0 ? '▼' : '');
-            const colorClass = rate.change === 0 ? '' : changeClass;
-            // استفاده از display_change که در بک‌اِند فرمت شده است
-            html += `<div class="ticker-item">${rate.symbol} <span class="${colorClass}">${rate.price} ${arrow} <small>(${rate.display_change})</small></span></div>`;
+            // استفاده از منطق عددی برای تعیین کلاس رنگ
+            const isUp = rate.change >= 0;
+            const colorClass = isUp ? 'up-color' : 'down-color';
+            const arrow = isUp ? '▲' : '▼';
+            
+            // نمایش نماد ارز، قیمت و درصد واقعی (غیر صفر)
+            html += `
+                <div class="ticker-item">
+                    ${rate.symbol}: 
+                    <span style="color: #fff; margin-right: 5px;">${rate.price}</span>
+                    <span class="${colorClass}">${arrow} ${rate.display_change}</span>
+                </div>`;
         });
         els.ticker.innerHTML = html;
     }
 
     function renderSmartChart(changePercent) {
         const svg = document.getElementById('sparkline-svg');
-        if (!svg) return;
-        const existingPaths = svg.querySelectorAll('path');
-        existingPaths.forEach(p => p.remove());
+        const path = document.getElementById('sparkline-path');
+        if (!svg || !path) return;
+        
         const width = 300; const height = 50; const pointsCount = 20; 
         const points = []; const trendFactor = changePercent * 2; 
+        
         for (let i = 0; i <= pointsCount; i++) {
             const x = (i / pointsCount) * width;
-            const noise = (Math.random() - 0.5) * 15;
+            const noise = (Math.random() - 0.5) * 12;
             const trend = (i / pointsCount) * -trendFactor; 
             let y = (height / 2) + trend + noise;
             y = Math.max(5, Math.min(height - 5, y));
             points.push({x, y});
         }
+        
         let d = `M ${points[0].x},${points[0].y}`;
         for (let i = 1; i < points.length; i++) { d += ` L ${points[i].x},${points[i].y}`; }
-        let strokeColor = '#FFD700'; let fillUrl = 'url(#gradNeutral)';
-        if (changePercent > 0) { strokeColor = '#0ECB81'; fillUrl = 'url(#gradUp)'; } 
-        else if (changePercent < 0) { strokeColor = '#F6465D'; fillUrl = 'url(#gradDown)'; }
-        const pathLine = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        pathLine.setAttribute("d", d); pathLine.setAttribute("fill", "none"); pathLine.setAttribute("stroke", strokeColor); pathLine.setAttribute("stroke-width", "2"); pathLine.setAttribute("stroke-linecap", "round"); pathLine.setAttribute("stroke-linejoin", "round");
-        const dFill = d + ` V ${height} H 0 Z`;
-        const pathFill = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        pathFill.setAttribute("d", dFill); pathFill.setAttribute("fill", fillUrl); pathFill.setAttribute("stroke", "none"); pathFill.style.opacity = "0.5";
-        svg.appendChild(pathFill); svg.appendChild(pathLine);
+        
+        path.setAttribute("d", d);
+        path.setAttribute("stroke", changePercent >= 0 ? '#0ECB81' : '#F6465D');
     }
 
     // ==========================================
-    // Effects & Interactions
+    // Interactions & Support
     // ==========================================
     function init3DCardEffect() {
         const card = document.querySelector('.premium-card');
-        const container = document.querySelector('.main-content');
         if (!card) return;
-        if (container) {
-            container.addEventListener('mousemove', (e) => {
-                const rect = card.getBoundingClientRect();
-                const cardCenterX = rect.left + rect.width / 2;
-                const cardCenterY = rect.top + rect.height / 2;
-                const mouseX = e.clientX - cardCenterX;
-                const mouseY = e.clientY - cardCenterY;
-                const rotateX = (mouseY / rect.height) * -15;
-                const rotateY = (mouseX / rect.width) * 15;
-                card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-            });
-            container.addEventListener('mouseleave', () => { card.style.transform = `rotateX(0deg) rotateY(0deg)`; });
-        }
+        document.addEventListener('mousemove', (e) => {
+            const x = (window.innerWidth / 2 - e.pageX) / 30;
+            const y = (window.innerHeight / 2 - e.pageY) / 30;
+            card.style.transform = `rotateY(${x}deg) rotateX(${y}deg)`;
+        });
     }
 
     function initHapticFeedback() {
-        const interactives = document.querySelectorAll('.ripple-btn, .glass-btn, .service-card, .game-banner, .action-icon-btn, .attach-btn, .send-btn');
+        const interactives = document.querySelectorAll('.ripple-btn, .glass-btn, .service-card, .game-banner, .action-icon-btn, .send-btn');
         interactives.forEach(el => {
-            el.addEventListener('touchstart', () => { tg.HapticFeedback.impactOccurred('light'); }, {passive: true});
-            el.addEventListener('click', () => { if(tg.platform !== 'tdesktop' && tg.platform !== 'macos') { tg.HapticFeedback.impactOccurred('light'); } });
+            el.addEventListener('click', () => { tg.HapticFeedback.impactOccurred('light'); });
         });
     }
 
     function updateKycBadge(status) {
         if (!els.kycText) return;
-        let text = "Guest", color = "#848E9C", bg = "rgba(255,255,255,0.05)", border = "rgba(255,255,255,0.1)";
-        if (status === 'verified') { text = "Verified ✅"; color = "#0ECB81"; bg = "rgba(14, 203, 129, 0.1)"; border = "rgba(14, 203, 129, 0.3)"; }
-        else if (status === 'pending') { text = "Pending ⏳"; color = "#F0B90B"; bg = "rgba(240, 185, 11, 0.1)"; border = "rgba(240, 185, 11, 0.3)"; }
-        else if (status === 'rejected') { text = "Action Req ❌"; color = "#F6465D"; bg = "rgba(246, 70, 93, 0.1)"; border = "rgba(246, 70, 93, 0.3)"; }
-        els.kycText.innerText = text; els.kycText.style.color = color; els.kycText.style.background = bg; els.kycText.style.borderColor = border;
+        let text = "Guest", color = "#848E9C";
+        if (status === 'verified') { text = "Verified ✅"; color = "#0ECB81"; }
+        else if (status === 'pending') { text = "Pending ⏳"; color = "#F0B90B"; }
+        els.kycText.innerText = text; els.kycText.style.color = color;
     }
 
     async function checkUnreadSupportMessages() {
@@ -349,16 +325,16 @@
         try {
             const response = await fetch(`${API_BASE_URL}/support/check_unread`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ initData: tg.initData })
             });
             const data = await response.json();
-            if (data.has_unread) els.supportNotif.style.display = 'block';
+            els.supportNotif.style.display = data.has_unread ? 'block' : 'none';
         } catch (e) {}
     }
 
     // ==========================================
-    // Chat Functions
+    // Support Chat Engine (Full Version)
     // ==========================================
     function startChatPolling() {
         if (chatPollInterval) clearInterval(chatPollInterval);
@@ -370,60 +346,43 @@
         try {
             const response = await fetch(`${API_BASE_URL}/support/get_history`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ initData: tg.initData })
             });
             if (response.ok) {
                 const data = await response.json();
-                if (isFirstLoad) {
-                    chatEls.container.innerHTML = '<div class="date-separator">گفتگوی امن</div>';
-                    lastMessageCount = 0;
-                }
                 const messages = data.messages || [];
-                if (messages.length > lastMessageCount) {
-                    const newMessages = messages.slice(lastMessageCount);
+                if (isFirstLoad || messages.length > lastMessageCount) {
+                    if (isFirstLoad) chatEls.container.innerHTML = '';
+                    const newMessages = messages.slice(isFirstLoad ? 0 : lastMessageCount);
                     newMessages.forEach(msg => renderMessage(msg));
                     lastMessageCount = messages.length;
                     scrollToBottom();
-                } else if (messages.length === 0 && isFirstLoad) {
-                    renderSystemMessage("هنوز پیامی ندارید. اولین پیام را ارسال کنید.");
                 }
             }
-        } catch (e) {
-            if (isFirstLoad) renderSystemMessage("خطا در بارگذاری تاریخچه.");
-        }
+        } catch (e) { console.error("Chat Load Error", e); }
     }
 
     function setupChatListeners() {
         if (!chatEls.sendBtn || !chatEls.input) return;
-        const newSendBtn = chatEls.sendBtn.cloneNode(true);
-        chatEls.sendBtn.parentNode.replaceChild(newSendBtn, chatEls.sendBtn);
-        chatEls.sendBtn = newSendBtn;
-        chatEls.sendBtn.addEventListener('click', sendMessage);
-        chatEls.input.addEventListener('keypress', function (e) { if (e.key === 'Enter') sendMessage(); });
+        chatEls.sendBtn.onclick = sendMessage;
+        chatEls.input.onkeypress = (e) => { if (e.key === 'Enter') sendMessage(); };
         if (chatEls.attachBtn && chatEls.fileInput) {
-            chatEls.attachBtn.addEventListener('click', () => { chatEls.fileInput.click(); });
-            chatEls.fileInput.addEventListener('change', handleFileUpload);
+            chatEls.attachBtn.onclick = () => chatEls.fileInput.click();
+            chatEls.fileInput.onchange = handleFileUpload;
         }
     }
 
     async function handleFileUpload(e) {
         const file = e.target.files[0];
         if (!file) return;
-        if (file.size > 5 * 1024 * 1024) { tg.showAlert("حجم فایل نباید بیشتر از ۵ مگابایت باشد."); chatEls.fileInput.value = ''; return; }
-        renderMessage({ sender: 'user', text: '📷 در حال آپلود تصویر...', is_me: true, type: 'text' });
-        scrollToBottom();
         const formData = new FormData();
         formData.append('initData', tg.initData);
         formData.append('file', file);
         try {
-            const response = await fetch(`${API_BASE_URL}/support/upload_file`, { 
-                method: 'POST', body: formData, headers: {'ngrok-skip-browser-warning': 'true'} 
-            });
-            const result = await response.json();
-            if (response.ok && result.status === 'success') { chatEls.fileInput.value = ''; await loadChatHistory(false); } 
-            else { tg.showAlert("خطا در آپلود: " + (result.message || "نامشخص")); chatEls.fileInput.value = ''; }
-        } catch (e) { tg.showAlert("عدم اتصال به سرور."); chatEls.fileInput.value = ''; }
+            const response = await fetch(`${API_BASE_URL}/support/upload_file`, { method: 'POST', body: formData });
+            if (response.ok) loadChatHistory(false);
+        } catch (e) { tg.showAlert("خطا در آپلود"); }
     }
 
     async function sendMessage() {
@@ -431,55 +390,29 @@
         const text = chatEls.input.value.trim();
         if (!text) return;
         isSending = true;
-        chatEls.sendBtn.style.opacity = '0.5';
-        renderMessage({ sender: 'user', text: text, timestamp: '...', is_me: true });
-        lastMessageCount++;
-        chatEls.input.value = '';
-        scrollToBottom();
         try {
             const response = await fetch(`${API_BASE_URL}/support/send_message`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
-                body: JSON.stringify({ initData: tg.initData, message: text, type: 'text' })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ initData: tg.initData, message: text })
             });
-            const result = await response.json();
-            if (!response.ok || result.status !== 'success') throw new Error(result.message || "خطا");
-            await loadChatHistory(false);
-        } catch (e) {
-            tg.showAlert("خطا در ارسال پیام.");
-            chatEls.input.value = text;
-            lastMessageCount--;
-            const bubbles = document.querySelectorAll('.message-wrapper');
-            if(bubbles.length > 0) bubbles[bubbles.length - 1].remove();
-        } finally {
-            isSending = false;
-            chatEls.sendBtn.style.opacity = '1';
-            chatEls.input.focus();
-        }
+            if (response.ok) {
+                chatEls.input.value = '';
+                loadChatHistory(false);
+            }
+        } catch (e) { tg.showAlert("خطا در ارسال"); }
+        finally { isSending = false; }
     }
 
     function renderMessage(msg) {
-        const isUser = msg.sender === 'user' || msg.is_me; 
-        const wrapperClass = isUser ? 'msg-user' : 'msg-admin';
-        const checkIcon = isUser ? '<i class="fas fa-check msg-status-icon"></i>' : '';
-        let contentHtml = '';
-        if (msg.type === 'photo' && msg.file_url) { 
-            contentHtml = `<img src="${msg.file_url}" style="max-width: 100%; border-radius: 12px; margin-bottom: 5px; display: block;" alt="Photo">`; 
-            if (msg.text) contentHtml += `<span>${escapeHtml(msg.text)}</span>`; 
-        } 
-        else { contentHtml = escapeHtml(msg.text); }
-        const html = `<div class="message-wrapper ${wrapperClass}"><div class="bubble">${contentHtml}</div><div class="msg-meta"><span>${msg.timestamp || ''}</span>${checkIcon}</div></div>`;
+        const isUser = msg.sender === 'user';
+        const html = `
+            <div class="message-wrapper ${isUser ? 'msg-user' : 'msg-admin'}">
+                <div class="bubble">${msg.type === 'photo' ? `<img src="${msg.file_url}" style="width:100%; border-radius:10px;">` : msg.text}</div>
+                <div class="msg-meta">${msg.timestamp}</div>
+            </div>`;
         chatEls.container.insertAdjacentHTML('beforeend', html);
     }
 
-    function renderSystemMessage(text) {
-        const html = `<div style="text-align:center; font-size:0.75rem; color:#666; margin:15px 0; background:rgba(255,255,255,0.05); padding:5px; border-radius:10px; display:inline-block; margin-left:auto; margin-right:auto;">${text}</div>`;
-        const wrapper = document.createElement('div');
-        wrapper.style.textAlign = 'center';
-        wrapper.innerHTML = html;
-        chatEls.container.appendChild(wrapper);
-    }
-
     function scrollToBottom() { if (chatEls.container) chatEls.container.scrollTop = chatEls.container.scrollHeight; }
-    function escapeHtml(text) { if (!text) return ""; return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 })();

@@ -1,11 +1,11 @@
-﻿/* webapp/wallet-engine.js (v105.0 - FINAL OPERATIONAL VERSION) */
+﻿/* webapp/wallet-engine.js (v106.0 - FULL VERSION - SMART DEPOSIT INTEGRATED) */
 (function () {
     'use strict';
 
     const tg = window.Telegram.WebApp;
     const API_BASE_URL = window.location.origin + "/api/webapp"; 
     
-    // کش کردن المان‌های UI برای سرعت بیشتر
+    // کش کردن المان‌های UI
     const els = {
         tomanBalance: document.getElementById('balance-toman'),
         cardsContainer: document.getElementById('user-cards-container'),
@@ -13,10 +13,15 @@
         manualAmount: document.getElementById('manual-amount-input'),
         receiptFile: document.getElementById('receipt-file'),
         withdrawAmount: document.getElementById('withdraw-amount-input'),
-        adminCardNum: document.getElementById('admin-card')
+        adminCardNum: document.getElementById('admin-card'),
+        // المان‌های جدید برای واریز هوشمند
+        autoAmountInput: document.getElementById('auto-amount-input'),
+        autoInputGroup: document.getElementById('auto-deposit-input-group'),
+        smartDetails: document.getElementById('smart-payment-details'),
+        smartUniqueAmount: document.getElementById('smart-unique-amount')
     };
 
-    // ۱. انیمیشن لوکس شمارش اعداد
+    // ۱. انیمیشن لوکس شمارش اعداد (بدون تغییر)
     function animateValue(obj, start, end, duration) {
         if (!obj) return;
         let startTimestamp = null;
@@ -32,7 +37,7 @@
         window.requestAnimationFrame(step);
     }
 
-    // ۲. مقداردهی اولیه و دریافت زنده داده‌ها
+    // ۲. مقداردهی اولیه و دریافت زنده داده‌ها (کامل)
     async function initWallet() {
         try {
             const response = await fetch(`${API_BASE_URL}/get_user_data`, {
@@ -43,16 +48,13 @@
             const data = await response.json();
 
             if (data.status === 'success') {
-                // آپدیت موجودی با انیمیشن
                 const targetBal = parseInt(data.toman_balance.replace(/,/g, '')) || 0;
                 animateValue(els.tomanBalance, 0, targetBal, 1200);
 
-                // نمایش شماره کارت ادمین (در صورت ارسال از سمت سرور)
                 if (data.admin_card && els.adminCardNum) {
                     els.adminCardNum.innerText = data.admin_card;
                 }
 
-                // رندر کارت‌های بانکی تایید شده کاربر
                 renderUserCards(data.approved_cards || []);
             } else {
                 tg.showPopup({ message: "خطا در بارگذاری: " + data.message });
@@ -63,7 +65,7 @@
         }
     }
 
-    // ۳. رندر داینامیک کارت‌ها برای واریز هوشمند و برداشت
+    // ۳. رندر داینامیک کارت‌ها (بدون تغییر)
     function renderUserCards(cards) {
         if (!els.cardsContainer || !els.withdrawSelect) return;
 
@@ -78,7 +80,6 @@
             return;
         }
 
-        // بخش واریز هوشمند: نمایش کارت‌هایی که کاربر اجازه دارد از آن‌ها واریز کند
         els.cardsContainer.innerHTML = cards.map(card => `
             <div class="user-card-item">
                 <div style="display:flex; align-items:center; gap:10px;">
@@ -91,14 +92,62 @@
             </div>
         `).join('');
 
-        // بخش برداشت: پر کردن منوی انتخابی
         els.withdrawSelect.innerHTML = '<option value="" disabled selected>انتخاب کارت مقصد</option>' + 
             cards.map(card => `
                 <option value="${card.card_number}">${card.bank_name} - ${card.card_number.slice(-4)}</option>
             `).join('');
     }
 
-    // ۴. منطق ثبت واریز دستی (آپلود فیش)
+    // ۴. منطق جدید: ایجاد کد پرداخت هوشمند (اتصال به سرور)
+    window.generateSmartPayment = async function() {
+        const amount = els.autoAmountInput.value;
+        if (!amount || amount < 10000) {
+            tg.showAlert("حداقل مبلغ واریز ۱۰,۰۰۰ تومان است.");
+            return;
+        }
+
+        const btn = document.querySelector('#auto-deposit-input-group .btn-action');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> در حال ایجاد...';
+
+        try {
+            // در اینجا سرور باید مبلغ یکتا را در جدول تراکنش‌ها ثبت کند
+            const response = await fetch(`${API_BASE_URL}/wallet/deposit/auto/init`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    initData: tg.initData,
+                    amount: parseFloat(amount)
+                })
+            });
+            const result = await response.json();
+
+            if (result.status === 'success') {
+                // نمایش اطلاعات بازگشتی از سمت سرور
+                els.autoInputGroup.style.display = 'none';
+                els.smartDetails.style.display = 'block';
+                els.smartUniqueAmount.innerText = parseFloat(result.unique_amount).toLocaleString();
+                
+                tg.HapticFeedback.notificationOccurred('success');
+            } else {
+                tg.showAlert("خطا: " + result.message);
+            }
+        } catch (error) {
+            tg.showAlert("خطا در برقراری ارتباط با بخش واریز هوشمند.");
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<span>ایجاد کد پرداخت هوشمند</span><i class="fas fa-magic"></i>';
+        }
+    };
+
+    // ۵. بازنشانی پنل هوشمند
+    window.resetSmartPanel = function() {
+        els.autoInputGroup.style.display = 'block';
+        els.smartDetails.style.display = 'none';
+        els.autoAmountInput.value = "";
+    };
+
+    // ۶. منطق ثبت واریز دستی (آپلود فیش - کامل)
     window.submitManualDeposit = async function() {
         const amount = els.manualAmount.value;
         const fileInput = els.receiptFile;
@@ -129,7 +178,6 @@
             const response = await fetch(`${API_BASE_URL}/wallet/deposit/manual`, {
                 method: 'POST',
                 body: formData
-                // توجه: در FormData هدر Content-Type نباید دستی ست شود
             });
             const result = await response.json();
 
@@ -139,7 +187,6 @@
                     message: "فیش شما ثبت شد. پس از تایید توسط حسابداری، موجودی شما شارژ می‌شود.",
                     buttons: [{type: "ok"}]
                 });
-                // پاکسازی فرم
                 els.manualAmount.value = "";
                 fileInput.value = "";
                 document.getElementById('file-name-label').innerText = "انتخاب یا تصویربرداری از فیش";
@@ -147,7 +194,7 @@
                 tg.showAlert("خطا: " + result.message);
             }
         } catch (error) {
-            tg.showAlert("خطا در آپلود. حجم فایل را بررسی کنید.");
+            tg.showAlert("خطا در آپلود فایل.");
         } finally {
             btn.disabled = false;
             btn.style.opacity = "1";
@@ -155,7 +202,7 @@
         }
     };
 
-    // ۵. منطق نهایی درخواست برداشت (Settlement)
+    // ۷. منطق درخواست برداشت (Settlement - کامل)
     window.requestWithdrawal = async function() {
         const amount = els.withdrawAmount.value;
         const cardNum = els.withdrawSelect.value;
@@ -169,7 +216,6 @@
             return;
         }
 
-        // تاییدیه نهایی از کاربر قبل از کسر موجودی
         tg.showConfirm(`مبلغ ${parseInt(amount).toLocaleString()} تومان به کارت منتهی به ${cardNum.slice(-4)} واریز شود؟`, async (ok) => {
             if (!ok) return;
 
@@ -190,13 +236,13 @@
                 const result = await response.json();
 
                 if (result.status === 'success') {
-                    tg.showAlert("درخواست برداشت با موفقیت ثبت شد و در صف واریز پایا قرار گرفت.");
-                    location.reload(); // برای آپدیت لحظه‌ای موجودی کسر شده
+                    tg.showAlert("درخواست برداشت با موفقیت ثبت شد.");
+                    location.reload();
                 } else {
                     tg.showAlert("❌ " + result.message);
                 }
             } catch (e) {
-                tg.showAlert("خطای سیستمی. لطفا به پشتیبانی اطلاع دهید.");
+                tg.showAlert("خطای سیستمی در ثبت درخواست برداشت.");
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<span>ثبت درخواست برداشت</span><i class="fas fa-check-circle"></i>';

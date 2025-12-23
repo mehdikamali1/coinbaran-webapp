@@ -8,6 +8,7 @@
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="webapp/wallet-style.css">
     
     <style>
         /* استایل‌های اختصاصی و لوکس بخش کیف پول */
@@ -60,7 +61,6 @@
             cursor: pointer;
         }
 
-        /* کارت موجودی لوکس - اصلاح شده برای جلوگیری از سرریز */
         .asset-card {
             background: linear-gradient(135deg, #1a1a1a 0%, #000 100%);
             margin: 20px;
@@ -93,18 +93,17 @@
             display: block;
         }
 
-        /* اصلاح بخش نمایش مبلغ برای پشتیبانی از اعداد میلیاردی */
         .balance-amount {
             display: flex;
             align-items: baseline;
             gap: 10px;
-            flex-wrap: wrap; /* اجازه شکستن خط در صورت لزوم */
+            flex-wrap: wrap;
             width: 100%;
         }
 
         .balance-amount h1 {
             font-family: 'Roboto Mono';
-            font-size: clamp(1.5rem, 8vw, 2.5rem); /* تنظیم هوشمند فونت بر اساس عرض صفحه */
+            font-size: clamp(1.5rem, 8vw, 2.5rem);
             font-weight: 900;
             margin: 0;
             letter-spacing: -1px;
@@ -119,7 +118,6 @@
             white-space: nowrap;
         }
 
-        /* سیستم تب‌بندی ۳ بخشی */
         .wallet-nav {
             display: flex;
             margin: 0 20px 25px;
@@ -147,7 +145,6 @@
             box-shadow: 0 8px 20px rgba(240, 185, 11, 0.25);
         }
 
-        /* کانتینر پنل‌ها */
         .panel-container {
             padding: 0 20px 100px;
         }
@@ -166,7 +163,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* کارت‌های متد واریز */
         .luxe-card {
             background: rgba(255, 255, 255, 0.02);
             border: 1px solid var(--border-glass);
@@ -199,46 +195,6 @@
         .card-info h3 { margin: 0; font-size: 1rem; font-weight: 800; }
         .card-info p { margin: 5px 0 0; font-size: 0.7rem; color: #666; line-height: 1.5; }
 
-        /* بخش کارت مقصد */
-        .destination-card {
-            background: #000;
-            border: 1px dashed #333;
-            border-radius: 18px;
-            padding: 20px;
-            text-align: center;
-            margin: 20px 0;
-        }
-
-        .card-number {
-            font-family: 'Roboto Mono';
-            font-size: 1.4rem;
-            color: var(--gold-primary);
-            letter-spacing: 2px;
-            display: block;
-            margin-bottom: 12px;
-        }
-
-        /* لیست کارت‌های کاربر */
-        .user-cards-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .user-card-item {
-            background: var(--glass);
-            border: 1px solid var(--border-glass);
-            padding: 15px;
-            border-radius: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .bank-name { font-size: 0.85rem; font-weight: 700; }
-        .masked-num { font-family: 'Roboto Mono'; font-size: 0.8rem; color: #555; }
-
-        /* فیلدها و دکمه‌ها */
         .input-group { margin-bottom: 20px; }
         .input-group label { display: block; font-size: 0.75rem; color: #666; margin-bottom: 8px; margin-right: 10px; }
         
@@ -264,8 +220,6 @@
             cursor: pointer;
             transition: 0.3s;
         }
-
-        .upload-placeholder:active { transform: scale(0.98); background: rgba(255,255,255,0.02); }
 
         .btn-action {
             width: 100%;
@@ -320,24 +274,52 @@
                 <div class="card-title-row">
                     <div class="icon-box icon-gold"><i class="fas fa-bolt"></i></div>
                     <div class="card-info">
-                        <h3>شارژ خودکار و آنی</h3>
-                        <p>واریز فقط از طریق کارت‌های تایید شده زیر جهت شارژ آنی:</p>
+                        <h3>واریز هوشمند و آنی</h3>
+                        <p>سیستم خودکار شناسایی واریز (بدون نیاز به ارسال رسید)</p>
                     </div>
                 </div>
 
-                <div id="user-cards-container" class="user-cards-list">
-                    <div style="text-align:center; padding:20px; color:#444; font-size:0.75rem;">در حال بارگذاری کارت‌های شما...</div>
+                <div class="input-group" id="auto-deposit-input-group">
+                    <label>مبلغ مورد نظر جهت شارژ (تومان)</label>
+                    <input type="number" id="auto-amount-input" class="luxe-input" placeholder="مثلاً ۵۰۰,۰۰۰" inputmode="numeric">
+                    <button class="btn-action btn-primary" style="margin-top: 15px;" onclick="generateSmartPayment()">
+                        <span>ایجاد کد پرداخت هوشمند</span>
+                        <i class="fas fa-magic"></i>
+                    </button>
                 </div>
 
-                <div class="destination-card">
-                    <span style="font-size: 0.7rem; color: #666; display: block; margin-bottom: 8px;">شماره کارت مقصد (الهام قاجاری):</span>
-                    <span class="card-number" id="admin-card">۶۲۱۹-۸۶۱۹-۸۷۰۸-۹۹۷۵</span>
-                    <button onclick="copyAdminCard()" style="background: rgba(255,255,255,0.05); border: 1px solid #333; color: #ccc; padding: 6px 15px; border-radius: 8px; font-size: 0.7rem;">کپی شماره کارت</button>
+                <div id="smart-payment-details" class="smart-pay-container" style="display: none;">
+                    
+                    <div class="payment-item">
+                        <div>
+                            <span class="item-label">شماره کارت مقصد</span>
+                            <span class="item-value" id="smart-card-num">۶۲۱۹-۸۶۱۹-۸۷۰۸-۹۹۷۵</span>
+                        </div>
+                        <div class="copy-badge" onclick="copyText('smart-card-num', 'شماره کارت کپی شد')">کپی</div>
+                    </div>
+
+                    <div class="unique-amount-box">
+                        <span class="item-label" style="color: var(--gold-primary);">مبلغ دقیق جهت واریز (بسیار مهم)</span>
+                        <span class="amount-display" id="smart-unique-amount">0</span>
+                        <span class="currency-symbol">تومان</span>
+                        <div style="margin-top: 10px;">
+                            <div class="copy-badge" style="display: inline-block;" onclick="copyText('smart-unique-amount', 'مبلغ دقیق کپی شد')">کپی مبلغ دقیق</div>
+                        </div>
+                    </div>
+
+                    <div class="warning-card">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>حتماً <b>مبلغ دقیق فوق</b> را واریز کنید. در غیر این صورت سیستم قادر به شناسایی تراکنش شما نخواهد بود.</p>
+                    </div>
+
+                    <button class="btn-action btn-secondary" style="margin-top: 20px; background: rgba(255,255,255,0.05); color: #ccc;" onclick="resetSmartPanel()">
+                        <span>تغییر مبلغ</span>
+                    </button>
                 </div>
 
-                <div style="background: rgba(240, 185, 11, 0.05); border-radius: 15px; padding: 15px; border: 1px solid rgba(240, 185, 11, 0.1);">
+                <div style="margin-top: 20px; background: rgba(240, 185, 11, 0.05); border-radius: 15px; padding: 15px; border: 1px solid rgba(240, 185, 11, 0.1);">
                     <p style="margin: 0; font-size: 0.7rem; color: var(--gold-primary); line-height: 1.6;">
-                        <i class="fas fa-info-circle"></i> بعد از انتقال وجه از کارت‌های فوق به کارت مقصد، حساب شما طی ۱ تا ۵ دقیقه به صورت <b>هوشمند</b> شارژ می‌شود.
+                        <i class="fas fa-info-circle"></i> پس از واریز، حساب شما به صورت خودکار طی ۱ تا ۵ دقیقه شارژ می‌شود.
                     </p>
                 </div>
             </div>
@@ -349,7 +331,7 @@
                     <div class="icon-box icon-blue"><i class="fas fa-file-upload"></i></div>
                     <div class="card-info">
                         <h3>واریز با فیش بانکی</h3>
-                        <p>ثبت واریزی‌هایی که از کارت‌های غیر بانکی یا سایر روش‌ها انجام شده.</p>
+                        <p>ثبت فیش واریزی برای بررسی توسط اپراتور</p>
                     </div>
                 </div>
 
@@ -377,7 +359,7 @@
                     <div class="icon-box icon-red"><i class="fas fa-arrow-up"></i></div>
                     <div class="card-info">
                         <h3>تسویه حساب</h3>
-                        <p>انتقال موجودی تومان به کارت‌های بانکی تایید شده شما.</p>
+                        <p>انتقال موجودی به کارت‌های تایید شده</p>
                     </div>
                 </div>
 
@@ -389,12 +371,12 @@
                 <div class="input-group">
                     <label>انتخاب کارت مقصد</label>
                     <select id="withdraw-card-select" class="luxe-input" style="appearance: none;">
-                        </select>
+                    </select>
                 </div>
 
                 <div style="background: rgba(246, 70, 93, 0.05); border-radius: 15px; padding: 15px; border: 1px solid rgba(246, 70, 93, 0.1); margin-bottom: 25px;">
                     <p style="margin: 0; font-size: 0.65rem; color: #f6465d; line-height: 1.6;">
-                        <i class="fas fa-clock"></i> تسویه حساب‌ها طبق سیکل پایا (۱۱ صبح، ۴ عصر و ۸ شب) انجام می‌شود.
+                        <i class="fas fa-clock"></i> تسویه حساب‌ها طبق سیکل پایا انجام می‌شود.
                     </p>
                 </div>
 
@@ -410,22 +392,44 @@
     <script src="webapp/wallet-engine.js"></script>
     <script>
         function showPanel(id) {
-            // تغییر تب‌ها
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             document.getElementById('nav-' + id).classList.add('active');
-
-            // تغییر پنل‌ها
             document.querySelectorAll('.wallet-panel').forEach(el => el.classList.remove('active'));
             document.getElementById('panel-' + id).classList.add('active');
-
-            // فیدبک لرزشی
             window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
         }
 
-        function copyAdminCard() {
-            const cardText = "6219861987089975";
-            navigator.clipboard.writeText(cardText).then(() => {
-                window.Telegram.WebApp.showAlert("شماره کارت مقصد کپی شد.");
+        // تابع جدید برای تولید مبلغ هوشمند در فرانت‌تند (نمایشی)
+        function generateSmartPayment() {
+            const amountInput = document.getElementById('auto-amount-input').value;
+            if (!amountInput || amountInput < 10000) {
+                window.Telegram.WebApp.showAlert("حداقل مبلغ واریز هوشمند ۱۰,۰۰۰ تومان است.");
+                return;
+            }
+            
+            // تولید شناسه رندوم بین ۱ تا ۹۹۹ ریال
+            const randomSuffix = Math.floor(Math.random() * 999) + 1;
+            const uniqueAmount = parseInt(amountInput) + (randomSuffix / 1000); // به صورت تومان با ممیز ریالی
+            
+            // نمایش پنل جزئیات
+            document.getElementById('auto-deposit-input-group').style.display = 'none';
+            document.getElementById('smart-payment-details').style.display = 'block';
+            
+            // نمایش مبلغ (فرمت شده)
+            document.getElementById('smart-unique-amount').innerText = uniqueAmount.toLocaleString();
+            window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+        }
+
+        function resetSmartPanel() {
+            document.getElementById('auto-deposit-input-group').style.display = 'block';
+            document.getElementById('smart-payment-details').style.display = 'none';
+        }
+
+        function copyText(elementId, message) {
+            const text = document.getElementById(elementId).innerText.replace(/-/g, '');
+            navigator.clipboard.writeText(text).then(() => {
+                window.Telegram.WebApp.showScanQrPopup({ text: message }); // یک افکت بصری سریع
+                setTimeout(() => window.Telegram.WebApp.closeScanQrPopup(), 1000);
             });
         }
 

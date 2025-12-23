@@ -60,7 +60,7 @@
             cursor: pointer;
         }
 
-        /* کارت موجودی لوکس */
+        /* کارت موجودی لوکس - اصلاح شده برای جلوگیری از سرریز */
         .asset-card {
             background: linear-gradient(135deg, #1a1a1a 0%, #000 100%);
             margin: 20px;
@@ -70,6 +70,10 @@
             position: relative;
             overflow: hidden;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            min-height: 160px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .card-shine {
@@ -89,24 +93,30 @@
             display: block;
         }
 
+        /* اصلاح بخش نمایش مبلغ برای پشتیبانی از اعداد میلیاردی */
         .balance-amount {
             display: flex;
             align-items: baseline;
             gap: 10px;
+            flex-wrap: wrap; /* اجازه شکستن خط در صورت لزوم */
+            width: 100%;
         }
 
         .balance-amount h1 {
             font-family: 'Roboto Mono';
-            font-size: 2.5rem;
+            font-size: clamp(1.5rem, 8vw, 2.5rem); /* تنظیم هوشمند فونت بر اساس عرض صفحه */
             font-weight: 900;
             margin: 0;
             letter-spacing: -1px;
+            word-break: break-all;
+            max-width: 100%;
         }
 
         .currency {
             color: var(--gold-primary);
             font-size: 1.2rem;
             font-weight: 800;
+            white-space: nowrap;
         }
 
         /* سیستم تب‌بندی ۳ بخشی */

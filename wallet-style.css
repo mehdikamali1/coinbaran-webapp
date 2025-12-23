@@ -1,4 +1,4 @@
-﻿/* webapp/wallet-style.css (v100.1 - FULL VERSION - NO SUMMARIZATION - FIXED OVERFLOW) */
+﻿/* webapp/wallet-style.css (v100.2 - FULL VERSION - NO SUMMARIZATION - FIXED OVERFLOW) */
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;300;400;500;700;800;900&family=Roboto+Mono:wght@400;700;900&display=swap');
 
 :root {
@@ -56,7 +56,7 @@ header {
     cursor: pointer;
 }
 
-/* --- Asset Card (3D Parallax Effect & FIXED OVERFLOW) --- */
+/* --- Asset Card (FIXED FOR LARGE AMOUNTS) --- */
 .asset-card {
     background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.02) 100%);
     border: 1px solid var(--border);
@@ -64,7 +64,7 @@ header {
     padding: 30px;
     margin: 20px;
     position: relative;
-    overflow: hidden; /* اصلاح شد: جلوگیری از خروج محتوا */
+    overflow: hidden;
     transform-style: preserve-3d;
     transition: transform 0.15s ease-out;
     box-shadow: 0 40px 80px rgba(0,0,0,0.6);
@@ -72,7 +72,9 @@ header {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    min-height: 160px;
+    min-height: 180px;
+    align-items: center;
+    text-align: center;
 }
 
 .card-shine {
@@ -100,26 +102,29 @@ header {
 
 .balance-amount {
     display: flex;
-    align-items: baseline;
-    gap: 10px;
-    flex-wrap: nowrap; /* اصلاح شد: جلوگیری از شکستن خط محتوا */
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
     width: 100%;
     overflow: hidden;
 }
 
 .counter {
     font-family: 'Roboto Mono', monospace;
-    font-size: clamp(1.5rem, 8vw, 2.5rem); /* اصلاح شد: تنظیم خودکار اندازه فونت بر اساس عرض صفحه */
+    font-size: clamp(1.4rem, 9vw, 2.8rem);
     font-weight: 900;
     margin: 0;
     letter-spacing: -1px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    max-width: 100%;
+    line-height: 1.2;
 }
 
 .currency-symbol {
-    font-size: 1.1rem;
+    font-size: 1rem;
     color: var(--gold);
     font-weight: 800;
     white-space: nowrap;

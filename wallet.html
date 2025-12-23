@@ -206,7 +206,7 @@
             border-radius: 16px;
             color: #fff;
             font-family: inherit;
-            font-size: 1rem;
+            font-size: 1.1rem;
             transition: 0.3s;
         }
 
@@ -281,7 +281,7 @@
 
                 <div class="input-group" id="auto-deposit-input-group">
                     <label>مبلغ مورد نظر جهت شارژ (تومان)</label>
-                    <input type="number" id="auto-amount-input" class="luxe-input" placeholder="مثلاً ۵۰۰,۰۰۰" inputmode="numeric">
+                    <input type="text" id="auto-amount-input" class="luxe-input" placeholder="مثلاً ۵۰۰,۰۰۰" inputmode="numeric">
                     <button class="btn-action btn-primary" style="margin-top: 15px;" onclick="generateSmartPayment()">
                         <span>ایجاد کد پرداخت هوشمند</span>
                         <i class="fas fa-magic"></i>
@@ -343,7 +343,7 @@
 
                 <div class="input-group">
                     <label>مبلغ واریز شده (تومان)</label>
-                    <input type="number" id="manual-amount-input" class="luxe-input" placeholder="مثلاً ۵۰۰,۰۰۰" inputmode="numeric">
+                    <input type="text" id="manual-amount-input" class="luxe-input" placeholder="مثلاً ۵۰۰,۰۰۰" inputmode="numeric">
                 </div>
 
                 <div class="upload-placeholder" onclick="document.getElementById('receipt-file').click()">
@@ -371,7 +371,7 @@
 
                 <div class="input-group">
                     <label>مبلغ جهت برداشت (تومان)</label>
-                    <input type="number" id="withdraw-amount-input" class="luxe-input" placeholder="حداقل ۱۰۰,۰۰۰">
+                    <input type="text" id="withdraw-amount-input" class="luxe-input" placeholder="حداقل ۱۰۰,۰۰۰" inputmode="numeric">
                 </div>
 
                 <div class="input-group">
@@ -405,18 +405,18 @@
             window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
         }
 
-        // تابع اصلاح شده کپی برای سازگاری با دسکتاپ و نمایش پیام
+        // تابع اصلاح شده کپی برای سازگاری با دسکتاپ (لپ‌تاپ)
         function copyValue(elementId, message) {
             const text = document.getElementById(elementId).innerText.replace(/,/g, '').replace(/-/g, '');
             
-            // روش استاندارد کپی که در همه پلتفرم‌ها (لپ‌تاپ و موبایل) کار می‌کند
+            // ایجاد المان موقت برای کپی
             const textArea = document.createElement("textarea");
             textArea.value = text;
             document.body.appendChild(textArea);
             textArea.select();
             try {
                 document.execCommand('copy');
-                window.Telegram.WebApp.showAlert(message); // نمایش پیام موفقیت ساده برای لپ‌تاپ
+                window.Telegram.WebApp.showAlert(message);
             } catch (err) {
                 console.error('Copy failed', err);
             }

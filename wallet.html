@@ -241,6 +241,33 @@
         .btn-secondary { background: #fff; color: #000; }
         .btn-action:active { transform: scale(0.96); opacity: 0.9; }
 
+        /* استایل اختصاصی برای باکس پرداخت هوشمند */
+        .smart-pay-container {
+            background: linear-gradient(180deg, rgba(240, 185, 11, 0.05) 0%, transparent 100%);
+            border: 1px solid rgba(240, 185, 11, 0.15);
+            border-radius: 24px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+        .payment-item {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-glass);
+            border-radius: 18px;
+            padding: 15px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .item-label { font-size: 0.75rem; color: #888; margin-bottom: 4px; display: block; }
+        .item-value { font-family: 'Roboto Mono'; font-size: 1.1rem; font-weight: 700; color: #fff; }
+        .copy-badge { background: var(--gold-primary); color: #000; padding: 6px 12px; border-radius: 10px; font-size: 0.7rem; font-weight: 900; cursor: pointer; }
+        .unique-amount-box { text-align: center; padding: 20px; border: 2px dashed var(--gold-primary); border-radius: 20px; margin: 15px 0; background: rgba(240, 185, 11, 0.03); }
+        .amount-display { font-family: 'Roboto Mono'; font-size: 1.8rem; font-weight: 900; color: var(--gold-primary); display: block; }
+        .warning-card { background: rgba(246, 70, 93, 0.08); border: 1px solid rgba(246, 70, 93, 0.2); border-radius: 16px; padding: 12px; display: flex; gap: 12px; align-items: center; }
+        .warning-card i { color: #f6465d; font-size: 1.2rem; }
+        .warning-card p { margin: 0; font-size: 0.65rem; color: #ccc; line-height: 1.5; }
+
     </style>
 </head>
 <body>
@@ -281,7 +308,7 @@
 
                 <div class="input-group" id="auto-deposit-input-group">
                     <label>مبلغ مورد نظر جهت شارژ (تومان)</label>
-                    <input type="text" id="auto-amount-input" class="luxe-input" placeholder="مثلاً ۵۰۰,۰۰۰" inputmode="numeric">
+                    <input type="number" id="auto-amount-input" class="luxe-input" placeholder="مثلاً ۵۰۰,۰۰۰" inputmode="numeric">
                     <button class="btn-action btn-primary" style="margin-top: 15px;" onclick="generateSmartPayment()">
                         <span>ایجاد کد پرداخت هوشمند</span>
                         <i class="fas fa-magic"></i>
@@ -343,7 +370,7 @@
 
                 <div class="input-group">
                     <label>مبلغ واریز شده (تومان)</label>
-                    <input type="text" id="manual-amount-input" class="luxe-input" placeholder="مثلاً ۵۰۰,۰۰۰" inputmode="numeric">
+                    <input type="number" id="manual-amount-input" class="luxe-input" placeholder="مثلاً ۵۰۰,۰۰۰" inputmode="numeric">
                 </div>
 
                 <div class="upload-placeholder" onclick="document.getElementById('receipt-file').click()">
@@ -371,7 +398,7 @@
 
                 <div class="input-group">
                     <label>مبلغ جهت برداشت (تومان)</label>
-                    <input type="text" id="withdraw-amount-input" class="luxe-input" placeholder="حداقل ۱۰۰,۰۰۰" inputmode="numeric">
+                    <input type="number" id="withdraw-amount-input" class="luxe-input" placeholder="حداقل ۱۰۰,۰۰۰" inputmode="numeric">
                 </div>
 
                 <div class="input-group">
@@ -405,22 +432,31 @@
             window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
         }
 
-        // تابع اصلاح شده کپی برای سازگاری با دسکتاپ (لپ‌تاپ)
+        // تابع اصلاح شده کپی برای سازگاری با دسکتاپ و موبایل
         function copyValue(elementId, message) {
             const text = document.getElementById(elementId).innerText.replace(/,/g, '').replace(/-/g, '');
             
-            // ایجاد المان موقت برای کپی
-            const textArea = document.createElement("textarea");
-            textArea.value = text;
-            document.body.appendChild(textArea);
-            textArea.select();
-            try {
-                document.execCommand('copy');
-                window.Telegram.WebApp.showAlert(message);
-            } catch (err) {
-                console.error('Copy failed', err);
+            // متد استاندارد کلیپ‌بورد
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(() => {
+                    window.Telegram.WebApp.showAlert(message);
+                });
+            } else {
+                // روش قدیمی برای مرورگرهای خاص
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-9999px";
+                textArea.style.top = "0";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    window.Telegram.WebApp.showAlert(message);
+                } catch (err) {}
+                document.body.removeChild(textArea);
             }
-            document.body.removeChild(textArea);
             window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
         }
 

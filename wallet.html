@@ -275,7 +275,7 @@
                     <div class="icon-box icon-gold"><i class="fas fa-bolt"></i></div>
                     <div class="card-info">
                         <h3>واریز هوشمند و آنی</h3>
-                        <p>سیستم خودکار شناسایی واریز (بدون نیاز به ارسال رسید)</p>
+                        <p>شناسایی خودکار بر اساس مبلغ دقیق (ریالی)</p>
                     </div>
                 </div>
 
@@ -295,21 +295,27 @@
                             <span class="item-label">شماره کارت مقصد</span>
                             <span class="item-value" id="smart-card-num">۶۲۱۹-۸۶۱۹-۸۷۰۸-۹۹۷۵</span>
                         </div>
-                        <div class="copy-badge" onclick="copyText('smart-card-num', 'شماره کارت کپی شد')">کپی</div>
+                        <div class="copy-badge" onclick="copyValue('smart-card-num', 'شماره کارت کپی شد')">کپی</div>
                     </div>
 
                     <div class="unique-amount-box">
-                        <span class="item-label" style="color: var(--gold-primary);">مبلغ دقیق جهت واریز (بسیار مهم)</span>
-                        <span class="amount-display" id="smart-unique-amount">0</span>
-                        <span class="currency-symbol">تومان</span>
-                        <div style="margin-top: 10px;">
-                            <div class="copy-badge" style="display: inline-block;" onclick="copyText('smart-unique-amount', 'مبلغ دقیق کپی شد')">کپی مبلغ دقیق</div>
+                        <span class="item-label" style="color: var(--gold-primary);">مبلغ دقیق جهت واریز به تومان:</span>
+                        <span class="amount-display" id="smart-toman-display">0</span>
+                        
+                        <div style="margin: 15px 0; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 12px;">
+                            <span class="item-label">مبلغ دقیق جهت کپی و واریز (به ریال):</span>
+                            <span id="smart-rial-value" style="font-family:'Roboto Mono'; font-weight:900; font-size:1.4rem; color:#fff;">0</span>
+                            <span style="font-size:0.7rem; color:#888;"> ریال</span>
+                        </div>
+
+                        <div class="copy-badge" style="display: inline-block; padding: 10px 20px;" onclick="copyValue('smart-rial-value', 'مبلغ ریالی جهت واریز کپی شد')">
+                            <i class="fas fa-copy"></i> کپی مبلغ (ریال)
                         </div>
                     </div>
 
                     <div class="warning-card">
                         <i class="fas fa-exclamation-triangle"></i>
-                        <p>حتماً <b>مبلغ دقیق فوق</b> را واریز کنید. در غیر این صورت سیستم قادر به شناسایی تراکنش شما نخواهد بود.</p>
+                        <p>کاربر گرامی، برای شارژ خودکار حتماً باید <b>مبلغ دقیق ریالی</b> فوق را واریز کنید. مبالغ گرد شده شارژ نخواهند شد.</p>
                     </div>
 
                     <button class="btn-action btn-secondary" style="margin-top: 20px; background: rgba(255,255,255,0.05); color: #ccc;" onclick="resetSmartPanel()">
@@ -319,7 +325,7 @@
 
                 <div style="margin-top: 20px; background: rgba(240, 185, 11, 0.05); border-radius: 15px; padding: 15px; border: 1px solid rgba(240, 185, 11, 0.1);">
                     <p style="margin: 0; font-size: 0.7rem; color: var(--gold-primary); line-height: 1.6;">
-                        <i class="fas fa-info-circle"></i> پس از واریز، حساب شما به صورت خودکار طی ۱ تا ۵ دقیقه شارژ می‌شود.
+                        <i class="fas fa-info-circle"></i> پس از واریز صحیح، حساب شما بر اساس پیامک بانکی به صورت آنی شارژ می‌شود.
                     </p>
                 </div>
             </div>
@@ -399,38 +405,23 @@
             window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
         }
 
-        // تابع جدید برای تولید مبلغ هوشمند در فرانت‌تند (نمایشی)
-        function generateSmartPayment() {
-            const amountInput = document.getElementById('auto-amount-input').value;
-            if (!amountInput || amountInput < 10000) {
-                window.Telegram.WebApp.showAlert("حداقل مبلغ واریز هوشمند ۱۰,۰۰۰ تومان است.");
-                return;
+        // تابع اصلاح شده کپی برای سازگاری با دسکتاپ و نمایش پیام
+        function copyValue(elementId, message) {
+            const text = document.getElementById(elementId).innerText.replace(/,/g, '').replace(/-/g, '');
+            
+            // روش استاندارد کپی که در همه پلتفرم‌ها (لپ‌تاپ و موبایل) کار می‌کند
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                window.Telegram.WebApp.showAlert(message); // نمایش پیام موفقیت ساده برای لپ‌تاپ
+            } catch (err) {
+                console.error('Copy failed', err);
             }
-            
-            // تولید شناسه رندوم بین ۱ تا ۹۹۹ ریال
-            const randomSuffix = Math.floor(Math.random() * 999) + 1;
-            const uniqueAmount = parseInt(amountInput) + (randomSuffix / 1000); // به صورت تومان با ممیز ریالی
-            
-            // نمایش پنل جزئیات
-            document.getElementById('auto-deposit-input-group').style.display = 'none';
-            document.getElementById('smart-payment-details').style.display = 'block';
-            
-            // نمایش مبلغ (فرمت شده)
-            document.getElementById('smart-unique-amount').innerText = uniqueAmount.toLocaleString();
+            document.body.removeChild(textArea);
             window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-        }
-
-        function resetSmartPanel() {
-            document.getElementById('auto-deposit-input-group').style.display = 'block';
-            document.getElementById('smart-payment-details').style.display = 'none';
-        }
-
-        function copyText(elementId, message) {
-            const text = document.getElementById(elementId).innerText.replace(/-/g, '');
-            navigator.clipboard.writeText(text).then(() => {
-                window.Telegram.WebApp.showScanQrPopup({ text: message }); // یک افکت بصری سریع
-                setTimeout(() => window.Telegram.WebApp.closeScanQrPopup(), 1000);
-            });
         }
 
         function handleFileSelect() {

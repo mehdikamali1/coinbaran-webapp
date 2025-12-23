@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="webapp/wallet-style.css">
     
     <style>
-        /* استایل‌های اختصاصی و لوکس بخش کیف پول */
+        /* استایل‌های اختصاصی و لوکس بخش کیف پول - نسخه کامل بدون خلاصه */
         @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;300;400;500;700;800;900&family=Roboto+Mono:wght@400;700&display=swap');
 
         :root {
@@ -241,7 +241,6 @@
         .btn-secondary { background: #fff; color: #000; }
         .btn-action:active { transform: scale(0.96); opacity: 0.9; }
 
-        /* استایل اختصاصی برای باکس پرداخت هوشمند */
         .smart-pay-container {
             background: linear-gradient(180deg, rgba(240, 185, 11, 0.05) 0%, transparent 100%);
             border: 1px solid rgba(240, 185, 11, 0.15);
@@ -308,7 +307,7 @@
 
                 <div class="input-group" id="auto-deposit-input-group">
                     <label>مبلغ مورد نظر جهت شارژ (تومان)</label>
-                    <input type="number" id="auto-amount-input" class="luxe-input" placeholder="مثلاً ۵۰۰,۰۰۰" inputmode="numeric">
+                    <input type="text" id="auto-amount-input" class="luxe-input" placeholder="مثلاً ۵۰۰,۰۰۰" inputmode="numeric">
                     <button class="btn-action btn-primary" style="margin-top: 15px;" onclick="generateSmartPayment()">
                         <span>ایجاد کد پرداخت هوشمند</span>
                         <i class="fas fa-magic"></i>
@@ -370,7 +369,7 @@
 
                 <div class="input-group">
                     <label>مبلغ واریز شده (تومان)</label>
-                    <input type="number" id="manual-amount-input" class="luxe-input" placeholder="مثلاً ۵۰۰,۰۰۰" inputmode="numeric">
+                    <input type="text" id="manual-amount-input" class="luxe-input" placeholder="مثلاً ۵۰۰,۰۰۰" inputmode="numeric">
                 </div>
 
                 <div class="upload-placeholder" onclick="document.getElementById('receipt-file').click()">
@@ -398,7 +397,7 @@
 
                 <div class="input-group">
                     <label>مبلغ جهت برداشت (تومان)</label>
-                    <input type="number" id="withdraw-amount-input" class="luxe-input" placeholder="حداقل ۱۰۰,۰۰۰" inputmode="numeric">
+                    <input type="text" id="withdraw-amount-input" class="luxe-input" placeholder="حداقل ۱۰۰,۰۰۰" inputmode="numeric">
                 </div>
 
                 <div class="input-group">
@@ -429,20 +428,20 @@
             document.getElementById('nav-' + id).classList.add('active');
             document.querySelectorAll('.wallet-panel').forEach(el => el.classList.remove('active'));
             document.getElementById('panel-' + id).classList.add('active');
-            window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+            if(window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+            }
         }
 
-        // تابع اصلاح شده کپی برای سازگاری با دسکتاپ و موبایل
         function copyValue(elementId, message) {
-            const text = document.getElementById(elementId).innerText.replace(/,/g, '').replace(/-/g, '');
+            const element = document.getElementById(elementId);
+            const text = element.innerText.replace(/,/g, '').replace(/-/g, '').replace(' تومان', '');
             
-            // متد استاندارد کلیپ‌بورد
             if (navigator.clipboard && window.isSecureContext) {
                 navigator.clipboard.writeText(text).then(() => {
                     window.Telegram.WebApp.showAlert(message);
                 });
             } else {
-                // روش قدیمی برای مرورگرهای خاص
                 const textArea = document.createElement("textarea");
                 textArea.value = text;
                 textArea.style.position = "fixed";
@@ -457,7 +456,9 @@
                 } catch (err) {}
                 document.body.removeChild(textArea);
             }
-            window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+            if(window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+            }
         }
 
         function handleFileSelect() {

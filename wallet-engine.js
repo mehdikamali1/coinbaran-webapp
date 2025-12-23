@@ -1,11 +1,11 @@
-﻿/* webapp/wallet-engine.js (v106.1 - FULL VERSION - SMART RIAL CONVERSION) */
+﻿/* webapp/wallet-engine.js (v107.1 - ULTIMATE FULL VERSION - NO SUMMARIZATION) */
 (function () {
     'use strict';
 
     const tg = window.Telegram.WebApp;
     const API_BASE_URL = window.location.origin + "/api/webapp"; 
     
-    // کش کردن المان‌های UI
+    // ۱. کش کردن کامل تمام المان‌های UI برای دسترسی سریع
     const els = {
         tomanBalance: document.getElementById('balance-toman'),
         cardsContainer: document.getElementById('user-cards-container'),
@@ -14,7 +14,6 @@
         receiptFile: document.getElementById('receipt-file'),
         withdrawAmount: document.getElementById('withdraw-amount-input'),
         adminCardNum: document.getElementById('admin-card'),
-        // المان‌های بخش واریز هوشمند
         autoAmountInput: document.getElementById('auto-amount-input'),
         autoInputGroup: document.getElementById('auto-deposit-input-group'),
         smartDetails: document.getElementById('smart-payment-details'),
@@ -22,7 +21,27 @@
         smartRialValue: document.getElementById('smart-rial-value')
     };
 
-    // ۱. انیمیشن لوکس شمارش اعداد
+    // ۲. سیستم جداکننده ۳ رقم هوشمند (موقع تایپ کردن)
+    function formatInputNumber(e) {
+        let value = e.target.value.replace(/\D/g, ''); // حذف هر چیزی غیر از عدد
+        if (value) {
+            e.target.value = parseInt(value).toLocaleString(); // جدا کردن ۳ رقم
+        }
+    }
+
+    if (els.autoAmountInput) {
+        els.autoAmountInput.addEventListener('input', formatInputNumber);
+    }
+
+    if (els.manualAmount) {
+        els.manualAmount.addEventListener('input', formatInputNumber);
+    }
+
+    if (els.withdrawAmount) {
+        els.withdrawAmount.addEventListener('input', formatInputNumber);
+    }
+
+    // ۳. انیمیشن لوکس و روان شمارش اعداد موجودی
     function animateValue(obj, start, end, duration) {
         if (!obj) return;
         let startTimestamp = null;
@@ -38,7 +57,7 @@
         window.requestAnimationFrame(step);
     }
 
-    // ۲. مقداردهی اولیه و دریافت داده‌ها از سرور
+    // ۴. مقداردهی اولیه و دریافت زنده داده‌های کیف پول از سرور
     async function initWallet() {
         try {
             const response = await fetch(`${API_BASE_URL}/get_user_data`, {
@@ -49,16 +68,19 @@
             const data = await response.json();
 
             if (data.status === 'success') {
+                // آپدیت موجودی تومانی با انیمیشن ۱.۲ ثانیه‌ای
                 const targetBal = parseInt(data.toman_balance.replace(/,/g, '')) || 0;
                 animateValue(els.tomanBalance, 0, targetBal, 1200);
 
+                // نمایش شماره کارت ادمین برای واریز هوشمند
                 if (data.admin_card && els.adminCardNum) {
                     els.adminCardNum.innerText = data.admin_card;
                 }
 
+                // رندر کردن لیست کارت‌های تایید شده کاربر
                 renderUserCards(data.approved_cards || []);
             } else {
-                tg.showPopup({ message: "خطا در بارگذاری اطلاعات: " + data.message });
+                tg.showPopup({ message: "خطا در دریافت اطلاعات: " + data.message });
             }
         } catch (error) {
             console.error("Wallet Init Error:", error);
@@ -66,7 +88,7 @@
         }
     }
 
-    // ۳. رندر داینامیک کارت‌های بانکی
+    // ۵. رندر داینامیک کارت‌های بانکی در لیست و منوی انتخابی
     function renderUserCards(cards) {
         if (!els.cardsContainer || !els.withdrawSelect) return;
 
@@ -77,10 +99,11 @@
                     <small>ابتدا در بخش پروفایل کارت خود را ثبت کنید.</small>
                 </div>`;
             els.cardsContainer.innerHTML = noCardHtml;
-            els.withdrawSelect.innerHTML = '<option value="">کارت بانکی انتخاب نشده</option>';
+            els.withdrawSelect.innerHTML = '<option value="">کارت بانکی تایید شده یافت نشد</option>';
             return;
         }
 
+        // رندر لیست کارت‌ها برای واریز هوشمند
         els.cardsContainer.innerHTML = cards.map(card => `
             <div class="user-card-item">
                 <div style="display:flex; align-items:center; gap:10px;">
@@ -93,44 +116,48 @@
             </div>
         `).join('');
 
+        // رندر منوی انتخابی برای برداشت وجه
         els.withdrawSelect.innerHTML = '<option value="" disabled selected>انتخاب کارت مقصد</option>' + 
             cards.map(card => `
                 <option value="${card.card_number}">${card.bank_name} - ${card.card_number.slice(-4)}</option>
             `).join('');
     }
 
-    // ۴. منطق ایجاد کد پرداخت هوشمند (تبدیل تومان به ریال یکتا)
+    // ۶. منطق ایجاد کد پرداخت هوشمند (تبدیل تومان به ریال یکتا و نمایش)
     window.generateSmartPayment = async function() {
-        const amountToman = els.autoAmountInput.value;
-        if (!amountToman || amountToman < 10000) {
+        // حذف کاماها برای تبدیل به عدد واقعی
+        const cleanAmount = els.autoAmountInput.value.replace(/,/g, '');
+        
+        if (!cleanAmount || parseFloat(cleanAmount) < 10000) {
             tg.showAlert("حداقل مبلغ واریز هوشمند ۱۰,۰۰۰ تومان است.");
             return;
         }
 
         const btn = document.querySelector('#auto-deposit-input-group .btn-action');
+        const originalContent = btn.innerHTML;
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> در حال ایجاد شناسه...';
 
         try {
-            // فراخوانی API برای رزرو مبلغ یکتا در دیتابیس
             const response = await fetch(`${API_BASE_URL}/wallet/deposit/auto/init`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     initData: tg.initData,
-                    amount: parseFloat(amountToman)
+                    amount: parseFloat(cleanAmount)
                 })
             });
             const result = await response.json();
 
             if (result.status === 'success') {
                 const uniqueToman = parseFloat(result.unique_amount);
-                const uniqueRial = Math.round(uniqueToman * 10); // تبدیل به ریال دقیق برای کپی
+                const uniqueRial = Math.round(uniqueToman * 10); // تبدیل به ریال دقیق
 
-                // نمایش اطلاعات در پنل
+                // سوئیچ پنل نمایش
                 els.autoInputGroup.style.display = 'none';
                 els.smartDetails.style.display = 'block';
                 
+                // نمایش مبالغ تفکیک شده
                 els.smartTomanDisplay.innerText = uniqueToman.toLocaleString() + " تومان";
                 els.smartRialValue.innerText = uniqueRial.toLocaleString();
                 
@@ -139,28 +166,29 @@
                 tg.showAlert("خطا: " + result.message);
             }
         } catch (error) {
-            tg.showAlert("خطا در سیستم واریز هوشمند. لطفاً دقایقی دیگر تلاش کنید.");
+            console.error("Smart Deposit Error:", error);
+            tg.showAlert("خطا در سیستم واریز هوشمند.");
         } finally {
             btn.disabled = false;
-            btn.innerHTML = '<span>ایجاد کد پرداخت هوشمند</span><i class="fas fa-magic"></i>';
+            btn.innerHTML = originalContent;
         }
     };
 
-    // ۵. بازگشت از پنل هوشمند به فرم ورود مبلغ
+    // ۷. بازگشت از پنل نمایش مبلغ به فرم ورود مبلغ
     window.resetSmartPanel = function() {
         els.autoInputGroup.style.display = 'block';
         els.smartDetails.style.display = 'none';
         els.autoAmountInput.value = "";
+        window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
     };
 
-    // ۶. منطق ثبت واریز دستی (آپلود فیش)
+    // ۸. منطق ارسال فیش واریز دستی (آپلود فایل)
     window.submitManualDeposit = async function() {
-        const amount = els.manualAmount.value;
-        const fileInput = els.receiptFile;
-        const file = fileInput.files[0];
+        const cleanAmount = els.manualAmount.value.replace(/,/g, '');
+        const file = els.receiptFile.files[0];
 
-        if (!amount || amount < 10000) {
-            tg.showAlert("حداقل مبلغ واریز ۱۰,۰۰۰ تومان است.");
+        if (!cleanAmount || parseFloat(cleanAmount) < 10000) {
+            tg.showAlert("لطفاً مبلغ واریزی را صحیح وارد کنید.");
             return;
         }
         if (!file) {
@@ -177,7 +205,7 @@
 
         const formData = new FormData();
         formData.append('initData', tg.initData);
-        formData.append('amount', amount);
+        formData.append('amount', cleanAmount);
         formData.append('receipt', file);
 
         try {
@@ -189,18 +217,18 @@
 
             if (result.status === 'success') {
                 tg.showPopup({
-                    title: "ثبت موفقیت‌آمیز",
-                    message: "رسید شما دریافت شد. پس از تایید مدیریت، کیف پول شما شارژ می‌شود.",
+                    title: "ثبت شد",
+                    message: "فیش واریزی برای بررسی ارسال گردید.",
                     buttons: [{type: "ok"}]
                 });
                 els.manualAmount.value = "";
-                fileInput.value = "";
+                els.receiptFile.value = "";
                 document.getElementById('file-name-label').innerText = "انتخاب یا تصویربرداری از فیش";
             } else {
-                tg.showAlert("خطا در ثبت: " + result.message);
+                tg.showAlert("خطا: " + result.message);
             }
         } catch (error) {
-            tg.showAlert("خطای فنی در آپلود رسید.");
+            tg.showAlert("خطا در آپلود رسید.");
         } finally {
             btn.disabled = false;
             btn.style.opacity = "1";
@@ -208,13 +236,13 @@
         }
     };
 
-    // ۷. منطق درخواست برداشت وجه (تسویه)
+    // ۹. منطق نهایی درخواست تسویه حساب (برداشت وجه)
     window.requestWithdrawal = async function() {
-        const amount = els.withdrawAmount.value;
+        const cleanAmount = els.withdrawAmount.value.replace(/,/g, '');
         const cardNum = els.withdrawSelect.value;
 
-        if (!amount || amount < 100000) {
-            tg.showAlert("حداقل مبلغ قابل برداشت ۱۰۰,۰۰۰ تومان است.");
+        if (!cleanAmount || parseFloat(cleanAmount) < 100000) {
+            tg.showAlert("حداقل مبلغ برداشت ۱۰۰,۰۰۰ تومان است.");
             return;
         }
         if (!cardNum) {
@@ -222,12 +250,12 @@
             return;
         }
 
-        tg.showConfirm(`آیا از درخواست برداشت مبلغ ${parseInt(amount).toLocaleString()} تومان اطمینان دارید؟`, async (ok) => {
+        tg.showConfirm(`آیا از واریز ${parseInt(cleanAmount).toLocaleString()} تومان به کارت ${cardNum.slice(-4)} اطمینان دارید؟`, async (ok) => {
             if (!ok) return;
 
             const btn = document.querySelector('#panel-withdraw .btn-action');
             btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> در حال ثبت درخواست...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> در حال ثبت...';
 
             try {
                 const response = await fetch(`${API_BASE_URL}/wallet/withdraw/request`, {
@@ -235,7 +263,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         initData: tg.initData,
-                        amount: amount,
+                        amount: parseFloat(cleanAmount),
                         card_number: cardNum
                     })
                 });
@@ -248,7 +276,7 @@
                     tg.showAlert("خطا: " + result.message);
                 }
             } catch (e) {
-                tg.showAlert("خطای غیرمنتظره در ثبت درخواست برداشت.");
+                tg.showAlert("خطا در ثبت درخواست.");
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<span>ثبت درخواست برداشت</span><i class="fas fa-check-circle"></i>';
@@ -256,7 +284,7 @@
         });
     };
 
-    // اجرای اولیه
+    // ۱۰. آماده‌سازی و اجرای اولیه موتور
     tg.ready();
     tg.expand();
     initWallet();

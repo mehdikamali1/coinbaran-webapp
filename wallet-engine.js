@@ -1,8 +1,9 @@
-﻿/* webapp/wallet-engine.js (v112.0 - FINAL FULL VERSION - WITH AUTO-CONFIRMATION) */
+﻿/* webapp/wallet-engine.js (v112.2 - FINAL FULL VERSION - NO SUMMARIZATION - WITH AUTO-CONFIRMATION) */
 (function () {
     'use strict';
 
     const tg = window.Telegram.WebApp;
+    // تشخیص خودکار آدرس API بر اساس دامنه فعلی
     const API_BASE_URL = window.location.origin + "/api/webapp"; 
     
     let depositCheckInterval = null; // برای مدیریت بررسی خودکار واریز
@@ -36,9 +37,12 @@
     function applyInputFormatting(input) {
         if (!input) return;
         input.addEventListener('input', function(e) {
+            // حذف تمام کاراکترهای غیر عددی برای پردازش
             let rawValue = e.target.value.replace(/[^0-9]/g, '');
             if (rawValue) {
+                // نمایش عدد با کاما در فیلد ورودی برای تجربه کاربری بهتر
                 e.target.value = rawValue.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                // ذخیره مقدار خالص بدون کاما در dataset برای استفاده در API
                 e.target.dataset.raw = rawValue;
             } else {
                 e.target.dataset.raw = "";
@@ -85,13 +89,15 @@
                     els.adminCardNum.innerText = data.admin_card;
                 }
                 renderUserCards(data.approved_cards || []);
+            } else {
+                console.error("Server message:", data.message);
             }
         } catch (error) {
             console.error("Wallet Init Error:", error);
         }
     }
 
-    // ۶. رندر کارت‌های بانکی
+    // ۶. رندر کارت‌های بانکی در لیست برداشت
     function renderUserCards(cards) {
         if (!els.withdrawSelect) return;
         if (cards.length === 0) {
@@ -102,14 +108,13 @@
             cards.map(card => `<option value="${card.card_number}">${card.bank_name} - ${card.card_number.slice(-4)}</option>`).join('');
     }
 
-    // ۷. سیستم بررسی خودکار وضعیت واریز (Polling)
+    // ۷. سیستم بررسی خودکار وضعیت واریز (Polling - اضافه شده برای تاییدیه آنی)
     async function startCheckingDeposit(depositId) {
         currentActiveDepositId = depositId;
         if (depositCheckInterval) clearInterval(depositCheckInterval);
 
         depositCheckInterval = setInterval(async () => {
             try {
-                // ارسال درخواست به سرور برای چک کردن وضعیت تراکنش
                 const response = await fetch(`${API_BASE_URL}/wallet/deposit/check_status`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -124,28 +129,28 @@
             } catch (e) {
                 console.log("Status check failed, retrying...");
             }
-        }, 4000); // هر ۴ ثانیه چک کن
+        }, 3000); // هر ۳ ثانیه چک کن
     }
 
-    // ۸. نمایش تاییدیه زیبا و نهایی
+    // ۸. نمایش تاییدیه زیبا و نهایی (اضافه شده برای حس اعتماد کاربر)
     function showSuccessConfirmation(amount) {
         els.smartDetails.innerHTML = `
-            <div style="text-align:center; padding:30px; animation: fadeIn 0.5s ease;">
-                <div style="width:80px; height:80px; background:#0ecb81; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; box-shadow:0 0 20px rgba(14,203,129,0.4);">
-                    <i class="fas fa-check" style="font-size:2rem; color:#000;"></i>
+            <div style="text-align:center; padding:30px; animation: fadeIn 0.8s ease;">
+                <div style="width:85px; height:85px; background:linear-gradient(135deg, #0ecb81, #059669); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; box-shadow:0 0 35px rgba(14,203,129,0.5);">
+                    <i class="fas fa-check" style="font-size:2.5rem; color:#fff;"></i>
                 </div>
-                <h2 style="color:#0ecb81; margin-bottom:10px; font-weight:900;">واریز با موفقیت تایید شد!</h2>
-                <p style="color:#ccc; font-size:0.9rem;">مبلغ ${numberWithCommas(amount)} تومان به کیف پول شما اضافه گردید.</p>
-                <button class="btn-action btn-primary" style="margin-top:20px;" onclick="location.reload()">فهمیدم</button>
+                <h2 style="color:#0ecb81; margin-bottom:10px; font-weight:900; font-size:1.5rem;">واریز با موفقیت تایید شد!</h2>
+                <p style="color:#eee; font-size:1rem; line-height:1.6;">مبلغ <b>${numberWithCommas(amount)}</b> تومان به موجودی شما افزوده شد.</p>
+                <button class="btn-action btn-primary" style="margin-top:25px; background:#fff; color:#000; box-shadow: 0 10px 20px rgba(255,255,255,0.1);" onclick="location.reload()">بسیار عالی</button>
             </div>
         `;
         tg.HapticFeedback.notificationOccurred('success');
-        // آپدیت آنی عدد موجودی در بالای صفحه
-        initWallet(); 
+        initWallet(); // آپدیت آنی موجودی بالای صفحه
     }
 
-    // ۹. منطق دکمه ایجاد کد پرداخت
+    // ۹. منطق دکمه ایجاد کد پرداخت (هسته اصلی حل مشکل)
     window.generateSmartPayment = async function() {
+        // استفاده از مقدار خالص ذخیره شده در dataset به جای value
         const amountValue = els.autoAmountInput.dataset.raw;
         
         if (!amountValue || parseFloat(amountValue) < 10000) {
@@ -168,30 +173,34 @@
 
             if (result.status === 'success') {
                 const uniqueToman = parseFloat(result.unique_amount);
+                // تبدیل دقیق تومان به ریال (ضرب در ۱۰)
                 const uniqueRial = Math.floor(uniqueToman * 10);
 
+                // مدیریت نمایش پنل‌ها
                 els.autoInputGroup.style.display = 'none';
                 els.smartDetails.style.display = 'block';
                 
+                // نمایش مبالغ در فیلدهای مربوطه
                 els.smartTomanDisplay.innerText = numberWithCommas(uniqueToman.toFixed(0)) + " تومان";
                 els.smartRialValue.innerText = numberWithCommas(uniqueRial);
                 
                 tg.HapticFeedback.notificationOccurred('success');
-                
+
                 // شروع بررسی خودکار وضعیت برای نمایش تاییدیه آنی
                 startCheckingDeposit(result.deposit_id);
             } else {
                 tg.showAlert("خطا: " + result.message);
             }
         } catch (error) {
-            tg.showAlert("ارتباط با سرور برقرار نشد.");
+            console.error("Smart Payment Error:", error);
+            tg.showAlert("ارتباط با سرور برقرار نشد. لطفاً اینترنت خود را چک کنید.");
         } finally {
             btn.disabled = false;
             btn.innerHTML = originalContent;
         }
     };
 
-    // ۱۰. بازگشت و ریست کردن
+    // ۱۰. بازگشت به حالت انتخاب مبلغ
     window.resetSmartPanel = function() {
         if (depositCheckInterval) clearInterval(depositCheckInterval);
         els.autoInputGroup.style.display = 'block';
@@ -280,6 +289,7 @@
         });
     };
 
+    // اجرای نهایی
     tg.ready();
     initWallet();
 })();

@@ -241,6 +241,15 @@
         .btn-secondary { background: #fff; color: #000; }
         .btn-action:active { transform: scale(0.96); opacity: 0.9; }
 
+        .upload-placeholder {
+            border: 2px dashed #222;
+            border-radius: 20px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
         .smart-pay-container {
             background: linear-gradient(180deg, rgba(240, 185, 11, 0.05) 0%, transparent 100%);
             border: 1px solid rgba(240, 185, 11, 0.15);
@@ -267,14 +276,6 @@
         .warning-card i { color: #f6465d; font-size: 1.2rem; }
         .warning-card p { margin: 0; font-size: 0.65rem; color: #ccc; line-height: 1.5; }
 
-        .upload-placeholder {
-            border: 2px dashed #222;
-            border-radius: 20px;
-            padding: 40px 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: 0.3s;
-        }
     </style>
 </head>
 <body>
@@ -338,10 +339,6 @@
                         </div>
                         <div class="copy-badge" style="display: inline-block; padding: 10px 20px;" onclick="copyValue('smart-rial-value', 'مبلغ ریالی کپی شد')">کپی مبلغ ریال</div>
                     </div>
-                    <div class="warning-card">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <p>برای شارژ خودکار حتماً باید <b>مبلغ دقیق ریالی</b> فوق را واریز کنید.</p>
-                    </div>
                     <button class="btn-action btn-secondary" style="margin-top: 20px; background: rgba(255,255,255,0.05); color: #ccc;" onclick="resetSmartPanel()">تغییر مبلغ</button>
                 </div>
             </div>
@@ -379,7 +376,7 @@
                     <div class="icon-box icon-blue"><i class="fas fa-credit-card"></i></div>
                     <div class="card-info">
                         <h3>ثبت کارت جدید</h3>
-                        <p>کارت باید به نام صاحب حساب باشد</p>
+                        <p>تصویر کارت باید به نام صاحب حساب باشد</p>
                     </div>
                 </div>
                 <div class="input-group">
@@ -390,12 +387,22 @@
                     <label>نام بانک</label>
                     <input type="text" id="new-bank-name" class="luxe-input" placeholder="مثلاً ملی، ملت، بلو...">
                 </div>
+
+                <div class="input-group">
+                    <label>تصویر روی کارت بانکی</label>
+                    <div class="upload-placeholder" onclick="document.getElementById('card-image-file').click()">
+                        <i class="fas fa-camera" style="font-size: 2.5rem; color: var(--gold-primary); margin-bottom: 15px;"></i>
+                        <div id="card-image-label" style="font-size: 0.8rem; color: #666;">انتخاب یا تصویربرداری از کارت</div>
+                        <input type="file" id="card-image-file" style="display:none" accept="image/*" onchange="handleCardImageSelect()">
+                    </div>
+                </div>
+
                 <div class="warning-card" style="margin-bottom: 20px;">
                     <i class="fas fa-info-circle"></i>
-                    <p>کارت‌های ثبت شده پس از بررسی ادمین در لیست تسویه ظاهر می‌شوند.</p>
+                    <p>کارت‌ها پس از بررسی ادمین در لیست تسویه حساب ظاهر می‌شوند.</p>
                 </div>
                 <button class="btn-action btn-primary" onclick="submitNewCard()">
-                    <span>ارسال جهت تایید ادمین</span>
+                    <span>ارسال جهت تایید</span>
                     <i class="fas fa-plus-circle"></i>
                 </button>
             </div>
@@ -466,6 +473,14 @@
             if (file) {
                 document.getElementById('file-name-label').innerText = "✅ " + file.name;
                 document.getElementById('file-name-label').style.color = "#0ecb81";
+            }
+        }
+
+        function handleCardImageSelect() {
+            const file = document.getElementById('card-image-file').files[0];
+            if (file) {
+                document.getElementById('card-image-label').innerText = "✅ تصویر کارت انتخاب شد";
+                document.getElementById('card-image-label').style.color = "#0ecb81";
             }
         }
     </script>

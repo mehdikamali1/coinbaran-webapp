@@ -1,4 +1,4 @@
-﻿/* webapp/wallet-engine.js (v112.6 - FINAL FULL VERSION - NO SUMMARIZATION - WITH ADD CARD LOGIC) */
+﻿/* webapp/wallet-engine.js (v112.7 - FINAL FULL VERSION - NO SUMMARIZATION - WITH IMAGE UPLOAD SUPPORT) */
 (function () {
     'use strict';
 
@@ -23,9 +23,10 @@
         smartDetails: document.getElementById('smart-payment-details'),
         smartTomanDisplay: document.getElementById('smart-toman-display'),
         smartRialValue: document.getElementById('smart-rial-value'),
-        // فیلدهای جدید مربوط به ثبت کارت بانکی
+        // فیلدهای مربوط به ثبت کارت بانکی
         newCardNumber: document.getElementById('new-card-number'),
-        newBankName: document.getElementById('new-bank-name')
+        newBankName: document.getElementById('new-bank-name'),
+        cardImageFile: document.getElementById('card-image-file')
     };
 
     // ۲. تابع فرمت ۳ رقم ۳ رقم اعداد برای نمایش
@@ -321,12 +322,13 @@
         });
     };
 
-    // ۱۳. ثبت کارت بانکی جدید (اضافه شده برای تکمیل چرخه برداشت)
+    // ۱۳. ثبت کارت بانکی جدید با آپلود تصویر (نسخه نهایی FormData)
     window.submitNewCard = async function() {
-        if (!els.newCardNumber || !els.newBankName) return;
+        if (!els.newCardNumber || !els.newBankName || !els.cardImageFile) return;
 
         const cardNum = els.newCardNumber.value.replace(/[^0-9]/g, '');
         const bankName = els.newBankName.value.trim();
+        const cardImage = els.cardImageFile.files[0];
 
         if (cardNum.length !== 16) {
             tg.showAlert("شماره کارت باید ۱۶ رقم باشد.");
@@ -336,21 +338,27 @@
             tg.showAlert("لطفاً نام بانک را وارد کنید.");
             return;
         }
+        if (!cardImage) {
+            tg.showAlert("لطفاً تصویر کارت بانکی خود را انتخاب یا بارگذاری کنید.");
+            return;
+        }
 
         const btn = document.querySelector('#panel-addcard .btn-action');
         const originalContent = btn.innerHTML;
         btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> در حال ثبت...';
+        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> در حال ارسال...';
+
+        // استفاده از FormData برای ارسال همزمان متن و فایل
+        const formData = new FormData();
+        formData.append('initData', tg.initData);
+        formData.append('card_number', cardNum);
+        formData.append('bank_name', bankName);
+        formData.append('card_image', cardImage);
 
         try {
             const response = await fetch(`${API_BASE_URL}/bank/add_card`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    initData: tg.initData, 
-                    card_number: cardNum, 
-                    bank_name: bankName 
-                })
+                body: formData // در FormData نباید Header Content-Type ست شود، خود مرورگر انجام می‌دهد
             });
             const result = await response.json();
 
@@ -361,8 +369,10 @@
                 // پاکسازی فیلدها
                 els.newCardNumber.value = "";
                 els.newBankName.value = "";
+                els.cardImageFile.value = "";
+                document.getElementById('card-image-label').innerText = "انتخاب تصویر کارت";
                 
-                // انتقال خودکار به پنل برداشت برای مشاهده وضعیت
+                // هدایت به پنل برداشت برای پیگیری
                 if (typeof window.showPanel === 'function') {
                     window.showPanel('withdraw');
                 }

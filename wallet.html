@@ -131,7 +131,7 @@
             flex: 1;
             padding: 12px 5px;
             text-align: center;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: 800;
             color: #666;
             border-radius: 15px;
@@ -212,22 +212,13 @@
 
         .luxe-input:focus { border-color: var(--gold-primary); background: rgba(255,255,255,0.05); outline: none; }
 
-        /* استایل خاص برای Select سفارشی شده */
         select.luxe-input {
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23888888'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-position: left 15px center;
             background-size: 20px;
             padding-left: 45px;
-        }
-
-        .upload-placeholder {
-            border: 2px dashed #222;
-            border-radius: 20px;
-            padding: 40px 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: 0.3s;
+            appearance: none;
         }
 
         .btn-action {
@@ -276,6 +267,14 @@
         .warning-card i { color: #f6465d; font-size: 1.2rem; }
         .warning-card p { margin: 0; font-size: 0.65rem; color: #ccc; line-height: 1.5; }
 
+        .upload-placeholder {
+            border: 2px dashed #222;
+            border-radius: 20px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.3s;
+        }
     </style>
 </head>
 <body>
@@ -298,8 +297,9 @@
 
     <div class="wallet-nav">
         <div id="nav-auto" class="nav-item active" onclick="showPanel('auto')">واریز هوشمند</div>
-        <div id="nav-manual" class="nav-item" onclick="showPanel('manual')">واریز با فیش</div>
         <div id="nav-withdraw" class="nav-item" onclick="showPanel('withdraw')">برداشت وجه</div>
+        <div id="nav-addcard" class="nav-item" onclick="showPanel('addcard')">ثبت کارت</div>
+        <div id="nav-manual" class="nav-item" onclick="showPanel('manual')">فیش</div>
     </div>
 
     <div class="panel-container">
@@ -313,7 +313,6 @@
                         <p>شناسایی خودکار بر اساس مبلغ دقیق (ریالی)</p>
                     </div>
                 </div>
-
                 <div class="input-group" id="auto-deposit-input-group">
                     <label>مبلغ مورد نظر جهت شارژ (تومان)</label>
                     <input type="text" id="auto-amount-input" class="luxe-input" placeholder="مثلاً ۵۰۰,۰۰۰" inputmode="numeric">
@@ -322,7 +321,6 @@
                         <i class="fas fa-magic"></i>
                     </button>
                 </div>
-
                 <div id="smart-payment-details" class="smart-pay-container" style="display: none;">
                     <div class="payment-item">
                         <div>
@@ -331,65 +329,21 @@
                         </div>
                         <div class="copy-badge" onclick="copyValue('smart-card-num', 'شماره کارت کپی شد')">کپی</div>
                     </div>
-
                     <div class="unique-amount-box">
                         <span class="item-label" style="color: var(--gold-primary);">مبلغ دقیق جهت واریز به تومان:</span>
                         <span class="amount-display" id="smart-toman-display">0</span>
-                        
                         <div style="margin: 15px 0; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 12px;">
                             <span class="item-label">مبلغ دقیق جهت کپی و واریز (به ریال):</span>
                             <span id="smart-rial-value" style="font-family:'Roboto Mono'; font-weight:900; font-size:1.4rem; color:#fff;">0</span>
-                            <span style="font-size:0.7rem; color:#888;"> ریال</span>
                         </div>
-
-                        <div class="copy-badge" style="display: inline-block; padding: 10px 20px;" onclick="copyValue('smart-rial-value', 'مبلغ ریالی جهت واریز کپی شد')">
-                            <i class="fas fa-copy"></i> کپی مبلغ (ریال)
-                        </div>
+                        <div class="copy-badge" style="display: inline-block; padding: 10px 20px;" onclick="copyValue('smart-rial-value', 'مبلغ ریالی کپی شد')">کپی مبلغ ریال</div>
                     </div>
-
                     <div class="warning-card">
                         <i class="fas fa-exclamation-triangle"></i>
-                        <p>کاربر گرامی، برای شارژ خودکار حتماً باید <b>مبلغ دقیق ریالی</b> فوق را واریز کنید. مبالغ گرد شده شارژ نخواهند شد.</p>
+                        <p>برای شارژ خودکار حتماً باید <b>مبلغ دقیق ریالی</b> فوق را واریز کنید.</p>
                     </div>
-
-                    <button class="btn-action btn-secondary" style="margin-top: 20px; background: rgba(255,255,255,0.05); color: #ccc;" onclick="resetSmartPanel()">
-                        <span>تغییر مبلغ</span>
-                    </button>
+                    <button class="btn-action btn-secondary" style="margin-top: 20px; background: rgba(255,255,255,0.05); color: #ccc;" onclick="resetSmartPanel()">تغییر مبلغ</button>
                 </div>
-
-                <div style="margin-top: 20px; background: rgba(240, 185, 11, 0.05); border-radius: 15px; padding: 15px; border: 1px solid rgba(240, 185, 11, 0.1);">
-                    <p style="margin: 0; font-size: 0.7rem; color: var(--gold-primary); line-height: 1.6;">
-                        <i class="fas fa-info-circle"></i> پس از واریز صحیح، حساب شما بر اساس پیامک بانکی به صورت آنی شارژ می‌شود.
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <div id="panel-manual" class="wallet-panel">
-            <div class="luxe-card">
-                <div class="card-title-row">
-                    <div class="icon-box icon-blue"><i class="fas fa-file-upload"></i></div>
-                    <div class="card-info">
-                        <h3>واریز با فیش بانکی</h3>
-                        <p>ثبت فیش واریزی برای بررسی توسط اپراتور</p>
-                    </div>
-                </div>
-
-                <div class="input-group">
-                    <label>مبلغ واریز شده (تومان)</label>
-                    <input type="text" id="manual-amount-input" class="luxe-input" placeholder="مثلاً ۵۰۰,۰۰۰" inputmode="numeric">
-                </div>
-
-                <div class="upload-placeholder" onclick="document.getElementById('receipt-file').click()">
-                    <i class="fas fa-camera" style="font-size: 2.5rem; color: var(--gold-primary); margin-bottom: 15px;"></i>
-                    <div id="file-name-label" style="font-size: 0.8rem; color: #666;">انتخاب یا تصویربرداری از فیش</div>
-                    <input type="file" id="receipt-file" style="display:none" accept="image/*" onchange="handleFileSelect()">
-                </div>
-
-                <button class="btn-action btn-primary" style="margin-top: 25px;" onclick="submitManualDeposit()">
-                    <span>ارسال فیش جهت تایید</span>
-                    <i class="fas fa-paper-plane"></i>
-                </button>
             </div>
         </div>
 
@@ -399,31 +353,75 @@
                     <div class="icon-box icon-red"><i class="fas fa-arrow-up"></i></div>
                     <div class="card-info">
                         <h3>تسویه حساب</h3>
-                        <p>انتقال موجودی به کارت‌های تایید شده شما</p>
+                        <p>انتقال موجودی به کارت‌های تایید شده</p>
                     </div>
                 </div>
-
                 <div class="input-group">
                     <label>مبلغ جهت برداشت (تومان)</label>
                     <input type="text" id="withdraw-amount-input" class="luxe-input" placeholder="حداقل ۱۰۰,۰۰۰" inputmode="numeric">
                 </div>
-
                 <div class="input-group">
                     <label>انتخاب کارت مقصد</label>
                     <select id="withdraw-card-select" class="luxe-input">
                         <option value="" disabled selected>در حال بارگذاری کارت‌ها...</option>
                     </select>
                 </div>
-
-                <div style="background: rgba(246, 70, 93, 0.05); border-radius: 15px; padding: 15px; border: 1px solid rgba(246, 70, 93, 0.1); margin-bottom: 25px;">
-                    <p style="margin: 0; font-size: 0.65rem; color: #f6465d; line-height: 1.6;">
-                        <i class="fas fa-clock"></i> تسویه حساب‌ها طبق سیکل پایا انجام می‌شود.
-                    </p>
-                </div>
-
                 <button class="btn-action btn-secondary" onclick="requestWithdrawal()">
-                    <span>ثبت درخواست برداشت</span>
+                    <span>ثبت درخواست تسویه</span>
                     <i class="fas fa-check-circle"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="panel-addcard" class="wallet-panel">
+            <div class="luxe-card">
+                <div class="card-title-row">
+                    <div class="icon-box icon-blue"><i class="fas fa-credit-card"></i></div>
+                    <div class="card-info">
+                        <h3>ثبت کارت جدید</h3>
+                        <p>کارت باید به نام صاحب حساب باشد</p>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>شماره ۱۶ رقمی کارت</label>
+                    <input type="text" id="new-card-number" class="luxe-input" placeholder="---- ---- ---- ----" inputmode="numeric" maxlength="16">
+                </div>
+                <div class="input-group">
+                    <label>نام بانک</label>
+                    <input type="text" id="new-bank-name" class="luxe-input" placeholder="مثلاً ملی، ملت، بلو...">
+                </div>
+                <div class="warning-card" style="margin-bottom: 20px;">
+                    <i class="fas fa-info-circle"></i>
+                    <p>کارت‌های ثبت شده پس از بررسی ادمین در لیست تسویه ظاهر می‌شوند.</p>
+                </div>
+                <button class="btn-action btn-primary" onclick="submitNewCard()">
+                    <span>ارسال جهت تایید ادمین</span>
+                    <i class="fas fa-plus-circle"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="panel-manual" class="wallet-panel">
+            <div class="luxe-card">
+                <div class="card-title-row">
+                    <div class="icon-box icon-blue"><i class="fas fa-file-upload"></i></div>
+                    <div class="card-info">
+                        <h3>واریز با فیش</h3>
+                        <p>ثبت فیش واریزی جهت بررسی اپراتور</p>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>مبلغ (تومان)</label>
+                    <input type="text" id="manual-amount-input" class="luxe-input" placeholder="مثلاً ۵۰۰,۰۰۰" inputmode="numeric">
+                </div>
+                <div class="upload-placeholder" onclick="document.getElementById('receipt-file').click()">
+                    <i class="fas fa-camera" style="font-size: 2.5rem; color: var(--gold-primary); margin-bottom: 15px;"></i>
+                    <div id="file-name-label" style="font-size: 0.8rem; color: #666;">انتخاب یا تصویربرداری از فیش</div>
+                    <input type="file" id="receipt-file" style="display:none" accept="image/*" onchange="handleFileSelect()">
+                </div>
+                <button class="btn-action btn-primary" style="margin-top: 25px;" onclick="submitManualDeposit()">
+                    <span>ارسال فیش</span>
+                    <i class="fas fa-paper-plane"></i>
                 </button>
             </div>
         </div>
@@ -434,9 +432,13 @@
     <script>
         function showPanel(id) {
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            document.getElementById('nav-' + id).classList.add('active');
+            const activeNav = document.getElementById('nav-' + id);
+            if(activeNav) activeNav.classList.add('active');
+            
             document.querySelectorAll('.wallet-panel').forEach(el => el.classList.remove('active'));
-            document.getElementById('panel-' + id).classList.add('active');
+            const activePanel = document.getElementById('panel-' + id);
+            if(activePanel) activePanel.classList.add('active');
+            
             if(window.Telegram && window.Telegram.WebApp) {
                 window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
             }
@@ -445,29 +447,18 @@
         function copyValue(elementId, message) {
             const element = document.getElementById(elementId);
             const text = element.innerText.replace(/,/g, '').replace(/-/g, '').replace(' تومان', '');
-            
             if (navigator.clipboard && window.isSecureContext) {
-                navigator.clipboard.writeText(text).then(() => {
-                    window.Telegram.WebApp.showAlert(message);
-                });
+                navigator.clipboard.writeText(text).then(() => { window.Telegram.WebApp.showAlert(message); });
             } else {
                 const textArea = document.createElement("textarea");
                 textArea.value = text;
-                textArea.style.position = "fixed";
-                textArea.style.left = "-9999px";
-                textArea.style.top = "0";
+                textArea.style.position = "fixed"; textArea.style.left = "-9999px";
                 document.body.appendChild(textArea);
-                textArea.focus();
-                textArea.select();
-                try {
-                    document.execCommand('copy');
-                    window.Telegram.WebApp.showAlert(message);
-                } catch (err) {}
+                textArea.focus(); textArea.select();
+                try { document.execCommand('copy'); window.Telegram.WebApp.showAlert(message); } catch (err) {}
                 document.body.removeChild(textArea);
             }
-            if(window.Telegram && window.Telegram.WebApp) {
-                window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-            }
+            window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
         }
 
         function handleFileSelect() {

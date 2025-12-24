@@ -1,4 +1,4 @@
-﻿/* webapp/wallet-engine.js (v112.4 - FINAL FULL VERSION - NO SUMMARIZATION - WITH AUTO-CONFIRMATION & SECURE WITHDRAW) */
+﻿/* webapp/wallet-engine.js (v112.6 - FINAL FULL VERSION - NO SUMMARIZATION - WITH ADD CARD LOGIC) */
 (function () {
     'use strict';
 
@@ -22,7 +22,10 @@
         autoInputGroup: document.getElementById('auto-deposit-input-group'),
         smartDetails: document.getElementById('smart-payment-details'),
         smartTomanDisplay: document.getElementById('smart-toman-display'),
-        smartRialValue: document.getElementById('smart-rial-value')
+        smartRialValue: document.getElementById('smart-rial-value'),
+        // فیلدهای جدید مربوط به ثبت کارت بانکی
+        newCardNumber: document.getElementById('new-card-number'),
+        newBankName: document.getElementById('new-bank-name')
     };
 
     // ۲. تابع فرمت ۳ رقم ۳ رقم اعداد برای نمایش
@@ -316,6 +319,63 @@
                 btn.innerHTML = originalContent;
             }
         });
+    };
+
+    // ۱۳. ثبت کارت بانکی جدید (اضافه شده برای تکمیل چرخه برداشت)
+    window.submitNewCard = async function() {
+        if (!els.newCardNumber || !els.newBankName) return;
+
+        const cardNum = els.newCardNumber.value.replace(/[^0-9]/g, '');
+        const bankName = els.newBankName.value.trim();
+
+        if (cardNum.length !== 16) {
+            tg.showAlert("شماره کارت باید ۱۶ رقم باشد.");
+            return;
+        }
+        if (bankName.length < 2) {
+            tg.showAlert("لطفاً نام بانک را وارد کنید.");
+            return;
+        }
+
+        const btn = document.querySelector('#panel-addcard .btn-action');
+        const originalContent = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> در حال ثبت...';
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/bank/add_card`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    initData: tg.initData, 
+                    card_number: cardNum, 
+                    bank_name: bankName 
+                })
+            });
+            const result = await response.json();
+
+            if (result.status === 'success') {
+                tg.HapticFeedback.notificationOccurred('success');
+                tg.showAlert(result.message);
+                
+                // پاکسازی فیلدها
+                els.newCardNumber.value = "";
+                els.newBankName.value = "";
+                
+                // انتقال خودکار به پنل برداشت برای مشاهده وضعیت
+                if (typeof window.showPanel === 'function') {
+                    window.showPanel('withdraw');
+                }
+            } else {
+                tg.showAlert("خطا: " + result.message);
+            }
+        } catch (error) {
+            console.error("Add Card Error:", error);
+            tg.showAlert("ارتباط با سرور برقرار نشد.");
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalContent;
+        }
     };
 
     // مقداردهی اولیه برنامه

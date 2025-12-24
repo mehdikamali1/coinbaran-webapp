@@ -1,4 +1,4 @@
-﻿/* webapp/wallet-engine.js (v112.9 - FINAL FULL VERSION - NO SUMMARIZATION - SYNCED WITH DATABASE SCHEMA) */
+﻿/* webapp/wallet-engine.js (v113.0 - FINAL FULL VERSION - FIXED LIST RENDERING CRASH) */
 (function () {
     'use strict';
 
@@ -115,12 +115,16 @@
             return;
         }
         
-        // اصلاح منطق نمایش: نمایش کارت حتی اگر نام بانک ثبت نشده باشد (بر اساس گزارش دیباگ)
         let options = '<option value="" disabled selected>انتخاب کارت بانکی مقصد</option>';
         cards.forEach(card => {
-            const last4 = card.card_number.slice(-4);
-            const bankDisplay = (card.bank_name && card.bank_name !== "None") ? card.bank_name : "کارت تایید شده";
-            options += `<option value="${card.card_number}">${bankDisplay} - ${last4}</option>`;
+            // اصلاح حیاتی: تبدیل اجباری به استرینگ برای جلوگیری از کرش متد slice
+            const strCardNum = String(card.card_number);
+            const last4 = strCardNum.length >= 4 ? strCardNum.slice(-4) : strCardNum;
+            
+            // هندل کردن نام بانک خالی
+            const bankDisplay = (card.bank_name && card.bank_name !== "None") ? card.bank_name : "بانک";
+            
+            options += `<option value="${strCardNum}">${bankDisplay} - ${last4}</option>`;
         });
         els.withdrawSelect.innerHTML = options;
     }

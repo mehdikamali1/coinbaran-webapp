@@ -212,6 +212,15 @@
 
         .luxe-input:focus { border-color: var(--gold-primary); background: rgba(255,255,255,0.05); outline: none; }
 
+        /* استایل خاص برای Select سفارشی شده */
+        select.luxe-input {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23888888'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: left 15px center;
+            background-size: 20px;
+            padding-left: 45px;
+        }
+
         .upload-placeholder {
             border: 2px dashed #222;
             border-radius: 20px;
@@ -315,7 +324,6 @@
                 </div>
 
                 <div id="smart-payment-details" class="smart-pay-container" style="display: none;">
-                    
                     <div class="payment-item">
                         <div>
                             <span class="item-label">شماره کارت مقصد</span>
@@ -391,7 +399,7 @@
                     <div class="icon-box icon-red"><i class="fas fa-arrow-up"></i></div>
                     <div class="card-info">
                         <h3>تسویه حساب</h3>
-                        <p>انتقال موجودی به کارت‌های تایید شده</p>
+                        <p>انتقال موجودی به کارت‌های تایید شده شما</p>
                     </div>
                 </div>
 
@@ -402,7 +410,8 @@
 
                 <div class="input-group">
                     <label>انتخاب کارت مقصد</label>
-                    <select id="withdraw-card-select" class="luxe-input" style="appearance: none;">
+                    <select id="withdraw-card-select" class="luxe-input">
+                        <option value="" disabled selected>در حال بارگذاری کارت‌ها...</option>
                     </select>
                 </div>
 

@@ -1,4 +1,4 @@
-﻿/* webapp/wallet-engine.js (v112.2 - FINAL FULL VERSION - NO SUMMARIZATION - WITH AUTO-CONFIRMATION) */
+﻿/* webapp/wallet-engine.js (v112.4 - FINAL FULL VERSION - NO SUMMARIZATION - WITH AUTO-CONFIRMATION & SECURE WITHDRAW) */
 (function () {
     'use strict';
 
@@ -25,7 +25,7 @@
         smartRialValue: document.getElementById('smart-rial-value')
     };
 
-    // ۲. تابع فرمت ۳ رقم ۳ رقم اعداد
+    // ۲. تابع فرمت ۳ رقم ۳ رقم اعداد برای نمایش
     function numberWithCommas(x) {
         if (!x) return "0";
         let parts = x.toString().split(".");
@@ -33,16 +33,16 @@
         return parts.join(".");
     }
 
-    // ۳. سیستم جداکننده هوشمند موقع تایپ
+    // ۳. سیستم جداکننده هوشمند موقع تایپ (ذخیره مقدار خالص در dataset.raw)
     function applyInputFormatting(input) {
         if (!input) return;
         input.addEventListener('input', function(e) {
             // حذف تمام کاراکترهای غیر عددی برای پردازش
             let rawValue = e.target.value.replace(/[^0-9]/g, '');
             if (rawValue) {
-                // نمایش عدد با کاما در فیلد ورودی برای تجربه کاربری بهتر
+                // نمایش عدد با کاما در فیلد ورودی
                 e.target.value = rawValue.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-                // ذخیره مقدار خالص بدون کاما در dataset برای استفاده در API
+                // ذخیره مقدار خالص بدون کاما برای استفاده در محاسبات و API
                 e.target.dataset.raw = rawValue;
             } else {
                 e.target.dataset.raw = "";
@@ -50,11 +50,12 @@
         });
     }
 
+    // اعمال فرمت روی تمام اینپوت‌های مبلغ
     applyInputFormatting(els.autoAmountInput);
     applyInputFormatting(els.manualAmount);
     applyInputFormatting(els.withdrawAmount);
 
-    // ۴. انیمیشن شماره‌انداز موجودی
+    // ۴. انیمیشن شماره‌انداز موجودی (لوکس)
     function animateValue(obj, start, end, duration) {
         if (!obj) return;
         let startTimestamp = null;
@@ -70,7 +71,7 @@
         window.requestAnimationFrame(step);
     }
 
-    // ۵. دریافت اطلاعات اولیه و موجودی
+    // ۵. دریافت اطلاعات اولیه، موجودی و کارت‌های تایید شده
     async function initWallet() {
         try {
             const response = await fetch(`${API_BASE_URL}/get_user_data`, {
@@ -83,11 +84,16 @@
             if (data.status === 'success') {
                 const rawBal = data.toman_balance.replace(/,/g, '');
                 const targetBal = parseInt(rawBal) || 0;
-                animateValue(els.tomanBalance, 0, targetBal, 1000);
+                
+                // دریافت مقدار فعلی نمایش داده شده برای شروع انیمیشن
+                const currentDisplay = parseInt(els.tomanBalance.innerText.replace(/,/g, '')) || 0;
+                animateValue(els.tomanBalance, currentDisplay, targetBal, 1000);
 
                 if (data.admin_card && els.adminCardNum) {
                     els.adminCardNum.innerText = data.admin_card;
                 }
+                
+                // رندر کردن کارت‌های بانکی در لیست کشویی برداشت
                 renderUserCards(data.approved_cards || []);
             } else {
                 console.error("Server message:", data.message);
@@ -100,15 +106,15 @@
     // ۶. رندر کارت‌های بانکی در لیست برداشت
     function renderUserCards(cards) {
         if (!els.withdrawSelect) return;
-        if (cards.length === 0) {
+        if (!cards || cards.length === 0) {
             els.withdrawSelect.innerHTML = '<option value="" disabled selected>کارت تایید شده‌ای ندارید</option>';
             return;
         }
         els.withdrawSelect.innerHTML = '<option value="" disabled selected>انتخاب کارت بانکی مقصد</option>' + 
-            cards.map(card => `<option value="${card.card_number}">${card.bank_name} - ${card.card_number.slice(-4)}</option>`).join('');
+            cards.map(card => `<option value="${card.card_number}">${card.bank_name || 'کارت'} - ${card.card_number.slice(-4)}</option>`).join('');
     }
 
-    // ۷. سیستم بررسی خودکار وضعیت واریز (Polling - اضافه شده برای تاییدیه آنی)
+    // ۷. سیستم بررسی خودکار وضعیت واریز (Polling - برای تاییدیه آنی)
     async function startCheckingDeposit(depositId) {
         currentActiveDepositId = depositId;
         if (depositCheckInterval) clearInterval(depositCheckInterval);
@@ -132,7 +138,7 @@
         }, 3000); // هر ۳ ثانیه چک کن
     }
 
-    // ۸. نمایش تاییدیه زیبا و نهایی (اضافه شده برای حس اعتماد کاربر)
+    // ۸. نمایش تاییدیه زیبا پس از واریز موفق
     function showSuccessConfirmation(amount) {
         els.smartDetails.innerHTML = `
             <div style="text-align:center; padding:30px; animation: fadeIn 0.8s ease;">
@@ -145,12 +151,13 @@
             </div>
         `;
         tg.HapticFeedback.notificationOccurred('success');
-        initWallet(); // آپدیت آنی موجودی بالای صفحه
+        // به‌روزرسانی آنی موجودی بالای صفحه
+        initWallet(); 
     }
 
-    // ۹. منطق دکمه ایجاد کد پرداخت (هسته اصلی حل مشکل)
+    // ۹. منطق دکمه ایجاد کد پرداخت هوشمند
     window.generateSmartPayment = async function() {
-        // استفاده از مقدار خالص ذخیره شده در dataset به جای value
+        // استفاده از مقدار خالص عددی
         const amountValue = els.autoAmountInput.dataset.raw;
         
         if (!amountValue || parseFloat(amountValue) < 10000) {
@@ -167,40 +174,41 @@
             const response = await fetch(`${API_BASE_URL}/wallet/deposit/auto/init`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ initData: tg.initData, amount: parseFloat(amountValue) })
+                body: JSON.stringify({ 
+                    initData: tg.initData, 
+                    amount: parseFloat(amountValue) 
+                })
             });
             const result = await response.json();
 
             if (result.status === 'success') {
                 const uniqueToman = parseFloat(result.unique_amount);
-                // تبدیل دقیق تومان به ریال (ضرب در ۱۰)
+                // تبدیل دقیق تومان به ریال برای کپی کاربر
                 const uniqueRial = Math.floor(uniqueToman * 10);
 
-                // مدیریت نمایش پنل‌ها
                 els.autoInputGroup.style.display = 'none';
                 els.smartDetails.style.display = 'block';
                 
-                // نمایش مبالغ در فیلدهای مربوطه
                 els.smartTomanDisplay.innerText = numberWithCommas(uniqueToman.toFixed(0)) + " تومان";
                 els.smartRialValue.innerText = numberWithCommas(uniqueRial);
                 
                 tg.HapticFeedback.notificationOccurred('success');
 
-                // شروع بررسی خودکار وضعیت برای نمایش تاییدیه آنی
+                // شروع گوش‌به‌زنگ بودن برای تاییدیه واریز
                 startCheckingDeposit(result.deposit_id);
             } else {
                 tg.showAlert("خطا: " + result.message);
             }
         } catch (error) {
             console.error("Smart Payment Error:", error);
-            tg.showAlert("ارتباط با سرور برقرار نشد. لطفاً اینترنت خود را چک کنید.");
+            tg.showAlert("ارتباط با سرور برقرار نشد.");
         } finally {
             btn.disabled = false;
             btn.innerHTML = originalContent;
         }
     };
 
-    // ۱۰. بازگشت به حالت انتخاب مبلغ
+    // ۱۰. بازگشت به حالت انتخاب مبلغ و توقف پولینگ
     window.resetSmartPanel = function() {
         if (depositCheckInterval) clearInterval(depositCheckInterval);
         els.autoInputGroup.style.display = 'block';
@@ -253,13 +261,17 @@
         }
     };
 
-    // ۱۲. درخواست برداشت وجه
+    // ۱۲. درخواست برداشت وجه (اصلاح شده برای امنیت و دقت بالا)
     window.requestWithdrawal = async function() {
         const rawAmount = els.withdrawAmount.dataset.raw;
         const cardNum = els.withdrawSelect.value;
 
-        if (!rawAmount || !cardNum) {
-            tg.showAlert("مبلغ و کارت مقصد را انتخاب کنید.");
+        if (!rawAmount || parseFloat(rawAmount) < 100000) {
+            tg.showAlert("حداقل مبلغ برداشت ۱۰۰,۰۰۰ تومان است.");
+            return;
+        }
+        if (!cardNum) {
+            tg.showAlert("لطفاً یک کارت مقصد انتخاب کنید.");
             return;
         }
 
@@ -267,29 +279,46 @@
             if (!ok) return;
 
             const btn = document.querySelector('#panel-withdraw .btn-action');
+            const originalContent = btn.innerHTML;
             btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> در حال ثبت...';
+
             try {
                 const response = await fetch(`${API_BASE_URL}/wallet/withdraw/request`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ initData: tg.initData, amount: rawAmount, card_number: cardNum })
+                    body: JSON.stringify({ 
+                        initData: tg.initData, 
+                        amount: parseFloat(rawAmount), 
+                        card_number: cardNum 
+                    })
                 });
                 const result = await response.json();
+
                 if (result.status === 'success') {
-                    tg.showAlert("درخواست برداشت شما با موفقیت ثبت شد.");
-                    setTimeout(() => location.reload(), 2000);
+                    tg.HapticFeedback.notificationOccurred('success');
+                    tg.showAlert("درخواست برداشت شما با موفقیت ثبت شد و مبلغ از موجودی کسر گردید.");
+                    
+                    // پاکسازی فیلد
+                    els.withdrawAmount.value = "";
+                    els.withdrawAmount.dataset.raw = "";
+                    
+                    // به‌روزرسانی آنی موجودی صفحه با انیمیشن
+                    await initWallet();
                 } else {
-                    tg.showAlert(result.message);
+                    tg.showAlert("خطا: " + result.message);
                 }
-            } catch (e) {
-                tg.showAlert("خطا در ثبت درخواست برداشت.");
+            } catch (error) {
+                console.error("Withdrawal Error:", error);
+                tg.showAlert("ارتباط با سرور برقرار نشد.");
             } finally {
                 btn.disabled = false;
+                btn.innerHTML = originalContent;
             }
         });
     };
 
-    // اجرای نهایی
+    // مقداردهی اولیه برنامه
     tg.ready();
     initWallet();
 })();

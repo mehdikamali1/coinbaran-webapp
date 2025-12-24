@@ -1,4 +1,4 @@
-﻿/* webapp/wallet-engine.js (v112.7 - FINAL FULL VERSION - NO SUMMARIZATION - WITH IMAGE UPLOAD SUPPORT) */
+﻿/* webapp/wallet-engine.js (v112.9 - FINAL FULL VERSION - NO SUMMARIZATION - SYNCED WITH DATABASE SCHEMA) */
 (function () {
     'use strict';
 
@@ -114,8 +114,15 @@
             els.withdrawSelect.innerHTML = '<option value="" disabled selected>کارت تایید شده‌ای ندارید</option>';
             return;
         }
-        els.withdrawSelect.innerHTML = '<option value="" disabled selected>انتخاب کارت بانکی مقصد</option>' + 
-            cards.map(card => `<option value="${card.card_number}">${card.bank_name || 'کارت'} - ${card.card_number.slice(-4)}</option>`).join('');
+        
+        // اصلاح منطق نمایش: نمایش کارت حتی اگر نام بانک ثبت نشده باشد (بر اساس گزارش دیباگ)
+        let options = '<option value="" disabled selected>انتخاب کارت بانکی مقصد</option>';
+        cards.forEach(card => {
+            const last4 = card.card_number.slice(-4);
+            const bankDisplay = (card.bank_name && card.bank_name !== "None") ? card.bank_name : "کارت تایید شده";
+            options += `<option value="${card.card_number}">${bankDisplay} - ${last4}</option>`;
+        });
+        els.withdrawSelect.innerHTML = options;
     }
 
     // ۷. سیستم بررسی خودکار وضعیت واریز (Polling - برای تاییدیه آنی)
@@ -358,7 +365,7 @@
         try {
             const response = await fetch(`${API_BASE_URL}/bank/add_card`, {
                 method: 'POST',
-                body: formData // در FormData نباید Header Content-Type ست شود، خود مرورگر انجام می‌دهد
+                body: formData 
             });
             const result = await response.json();
 
@@ -376,6 +383,9 @@
                 if (typeof window.showPanel === 'function') {
                     window.showPanel('withdraw');
                 }
+                
+                // بروزرسانی لیست کارت ها
+                await initWallet();
             } else {
                 tg.showAlert("خطا: " + result.message);
             }

@@ -1,267 +1,161 @@
-﻿/* webapp/dashboard-style.css (v104.0 - FINAL STABLE - NO SUMMARIZATION) */
-@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;300;400;500;700;800;900&family=Cinzel:wght@400;700;900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap');
+﻿/* webapp/dashboard-style.css (v100.1 - ULTRA MODERN LUXURY - FULL VERSION) */
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@200;400;600;800&family=Roboto+Mono:wght@400;600&display=swap');
 
 :root {
-    --bg-deep: #000000;
-    --gold-primary: #FFD700;
-    --gold-rich: #F0B90B;
-    --gold-dark: #B8860B;
-    --text-white: #ffffff;
-    --text-muted: #888888;
+    --bg-dark: #000000;
+    --card-bg: rgba(25, 25, 25, 0.65);
     --glass-border: rgba(255, 255, 255, 0.08);
-    --card-gradient: linear-gradient(145deg, #1c1c1e 0%, #000000 100%);
-    
-    --radius-xl: 24px;
-    --radius-lg: 18px;
-    --radius-md: 14px;
-    --safe-area-bottom: env(safe-area-inset-bottom, 20px);
-    
-    /* Colors for market changes */
-    --up-color: #0ECB81;
-    --down-color: #F6465D;
+    --gold: #FFD700;
+    --gold-glow: rgba(255, 215, 0, 0.4);
+    --green: #0ECB81;
+    --red: #F6465D;
+    --blue: #2979FF;
+    --text-main: #FFFFFF;
+    --text-muted: #8F9098;
+    --radius-l: 24px;
+    --radius-m: 16px;
+    --radius-s: 12px;
 }
 
-* { 
-    box-sizing: border-box; 
-    -webkit-tap-highlight-color: transparent; 
-    outline: none; 
-    user-select: none; 
-}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; user-select: none; }
 
 body {
     margin: 0; padding: 0;
     font-family: 'Vazirmatn', sans-serif;
-    background-color: var(--bg-deep);
-    color: var(--text-white);
-    min-height: 100vh;
-    overflow-x: hidden;
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    overflow: hidden; /* اسکرول فقط در main باشد */
+    height: 100vh;
     direction: rtl;
 }
 
-/* =========================================
-   1. انیمیشن ورودی (Loader Section)
-   ========================================= */
-#loader {
-    position: fixed; inset: 0;
-    background: radial-gradient(circle at center, #0a0a0a 0%, #000000 90%);
-    z-index: 99999;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    transition: opacity 0.6s ease-in-out;
-}
+/* --- پس زمینه و افکت نویز --- */
+.ambient-glow { position: fixed; width: 300px; height: 300px; border-radius: 50%; filter: blur(100px); opacity: 0.15; z-index: -1; }
+.top-glow { top: -100px; left: -50px; background: var(--gold); }
+.bottom-glow { bottom: -100px; right: -50px; background: var(--blue); }
+.noise-overlay { position: fixed; inset: 0; background: url('https://grainy-gradients.vercel.app/noise.svg'); opacity: 0.03; z-index: 0; pointer-events: none; }
 
-.infinity-wrapper { 
-    position: relative; 
-    width: 300px; 
-    height: 150px; 
-    display: flex; 
-    justify-content: center; 
-    align-items: center; 
-}
+/* --- Loader Modern --- */
+#loader { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s; }
+.loader-content { text-align: center; }
+.logo-circle { width: 80px; height: 80px; border-radius: 50%; background: #111; border: 1px solid var(--gold); padding: 5px; margin: 0 auto 20px; box-shadow: 0 0 30px rgba(255,215,0,0.1); position: relative; }
+.logo-circle img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.loader-bar-wrap { width: 120px; height: 3px; background: #222; margin: 0 auto; border-radius: 3px; overflow: hidden; }
+.loader-bar { width: 100%; height: 100%; background: var(--gold); animation: loadSlide 1.5s infinite ease-in-out; transform: translateX(-100%); }
+.loader-status { font-family: 'Roboto Mono'; font-size: 0.7rem; color: #555; margin-top: 10px; letter-spacing: 2px; }
+@keyframes loadSlide { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
 
-.infinity-svg { position: absolute; width: 100%; height: 100%; fill: none; }
-.infinity-path {
-    stroke: url(#goldGrad); stroke-width: 8; stroke-linecap: round;
-    stroke-dasharray: 900; stroke-dashoffset: 900;
-    animation: draw-line 2.5s ease-out forwards;
-    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.5));
-}
+/* --- ساختار اصلی --- */
+#app-container { height: 100%; display: flex; flex-direction: column; max-width: 600px; margin: 0 auto; background: rgba(0,0,0,0.2); position: relative; z-index: 1; }
 
-.loader-logo {
-    width: 70px; height: 70px; border-radius: 50%; position: absolute; z-index: 10;
-    box-shadow: 0 0 40px rgba(255, 215, 0, 0.2);
-    animation: logo-pop 1s ease-out forwards 0.5s; opacity: 0;
-}
-
-.loader-text { margin-top: 40px; text-align: center; }
-.loading-title {
-    font-family: 'Cinzel', serif; font-size: 1.8rem; letter-spacing: 4px; color: var(--gold-primary);
-    opacity: 0; animation: fade-up 0.8s ease forwards 1s;
-}
-.loading-line {
-    width: 150px; height: 2px; background: rgba(255,255,255,0.1); margin: 15px auto;
-    position: relative; overflow: hidden;
-}
-.loading-line::after {
-    content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    background: var(--gold-primary); transform: translateX(-100%);
-    animation: load-bar 2.5s ease-in-out forwards 0.5s;
-}
-.loading-status { font-family: 'Roboto Mono'; font-size: 0.65rem; color: #666; letter-spacing: 2px; }
-
-@keyframes draw-line { to { stroke-dashoffset: 0; } }
-@keyframes logo-pop { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-@keyframes fade-up { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-@keyframes load-bar { to { transform: translateX(0); } }
-
-/* =========================================
-   2. استایل‌های اصلی داشبورد
-   ========================================= */
-#app-container { max-width: 600px; margin: 0 auto; min-height: 100vh; position: relative; z-index: 2; display: flex; flex-direction: column; }
-.ambient-light { position: fixed; top: -100px; left: 50%; transform: translateX(-50%); width: 80%; height: 300px; background: radial-gradient(ellipse at center, rgba(255, 215, 0, 0.08), transparent 70%); z-index: 1; pointer-events: none; }
-.grid-pattern { position: fixed; inset: 0; background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 20px 20px; z-index: 0; pointer-events: none; }
-
-/* Header */
-.glass-header {
+/* --- هدر --- */
+.app-header {
     padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;
-    background: rgba(5, 5, 5, 0.85); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-    border-bottom: 1px solid var(--glass-border); position: sticky; top: 0; z-index: 100;
+    background: rgba(0,0,0,0.7); backdrop-filter: blur(20px); border-bottom: 1px solid var(--glass-border);
 }
-.profile-section { display: flex; align-items: center; gap: 12px; }
-.avatar-container { position: relative; width: 48px; height: 48px; padding: 2px; border: 1px solid rgba(255,215,0,0.3); border-radius: 14px; background: #111; }
+.user-profile { display: flex; align-items: center; gap: 12px; }
+.avatar-wrap { width: 44px; height: 44px; border-radius: 14px; padding: 2px; border: 1px solid rgba(255,255,255,0.1); position: relative; }
 .avatar-img { width: 100%; height: 100%; border-radius: 11px; object-fit: cover; }
-.status-indicator { position: absolute; bottom: -2px; right: -2px; width: 10px; height: 10px; background: #0ECB81; border: 2px solid #000; border-radius: 50%; }
+.online-dot { position: absolute; bottom: -2px; right: -2px; width: 10px; height: 10px; background: var(--green); border: 2px solid #000; border-radius: 50%; }
+.user-details h2 { font-size: 0.95rem; margin: 0; font-weight: 700; color: #fff; }
+.xp-pill { display: flex; align-items: center; gap: 6px; margin-top: 4px; background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 20px; }
+#level-badge { font-size: 0.65rem; color: var(--gold); font-weight: 800; font-family: 'Roboto Mono'; }
+.xp-track { width: 50px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; }
+.xp-fill { height: 100%; background: var(--gold); width: 0%; border-radius: 2px; transition: width 0.5s; box-shadow: 0 0 5px var(--gold); }
 
-.user-info { display: flex; flex-direction: column; justify-content: center; }
-.user-info h2 { font-size: 0.95rem; margin: 0; color: #fff; font-weight: 700; line-height: 1.2; }
+.notif-btn { width: 40px; height: 40px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: #fff; display: flex; align-items: center; justify-content: center; position: relative; }
+.notif-badge { position: absolute; top: 8px; right: 8px; width: 8px; height: 8px; background: var(--red); border-radius: 50%; border: 1px solid #000; display: none; }
 
-/* XP System */
-.xp-container { width: 100px; margin-top: 6px; }
-.xp-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
-.level-badge { 
-    font-size: 0.6rem; font-weight: 800; color: #000; 
-    background: var(--gold-primary); padding: 1px 6px; border-radius: 4px; 
-    font-family: 'Roboto Mono'; letter-spacing: -0.5px;
+/* --- تیکر قیمت --- */
+.ticker-container { background: #050505; border-bottom: 1px solid var(--glass-border); overflow: hidden; padding: 8px 0; }
+.ticker-track { display: inline-block; white-space: nowrap; animation: tick 30s linear infinite; }
+.ticker-item { display: inline-block; padding: 0 20px; font-family: 'Roboto Mono'; font-size: 0.75rem; color: #ccc; }
+.up-color { color: var(--green); } .down-color { color: var(--red); }
+@keyframes tick { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+
+/* --- بدنه اصلی اسکرول --- */
+.content-scroll { flex: 1; overflow-y: auto; padding: 20px; -webkit-overflow-scrolling: touch; }
+
+/* --- کارت موجودی (Hero Card) --- */
+.hero-card {
+    position: relative; border-radius: var(--radius-l); overflow: hidden;
+    background: linear-gradient(160deg, #1a1a1a, #000);
+    border: 1px solid rgba(255,255,255,0.1); padding: 24px;
+    box-shadow: 0 20px 40px -10px rgba(0,0,0,0.7); margin-bottom: 25px;
+    transform-style: preserve-3d; transition: transform 0.1s;
 }
-.next-level { font-size: 0.6rem; color: #666; font-family: 'Roboto Mono'; }
-.xp-bar-bg { width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
-.xp-bar-fill { 
-    height: 100%; 
-    background: linear-gradient(90deg, var(--gold-dark), var(--gold-primary)); 
-    width: 0%; 
-    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 0 10px var(--gold-primary);
+.card-glass-effect { position: absolute; inset: 0; background: radial-gradient(circle at top right, rgba(255,215,0,0.05), transparent 60%); pointer-events: none; }
+.card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.card-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+.card-chip { color: rgba(255,255,255,0.15); font-size: 1.5rem; transform: rotate(90deg); }
+
+.balance-wrapper { display: flex; align-items: flex-start; gap: 5px; direction: ltr; margin-bottom: 10px; }
+.currency-sign { color: var(--gold); font-size: 1.2rem; margin-top: 5px; }
+#toman-balance { font-family: 'Roboto Mono'; font-size: 2.2rem; font-weight: 700; margin: 0; letter-spacing: -1px; color: #fff; text-shadow: 0 0 20px rgba(255,255,255,0.1); }
+
+.sparkline-wrapper { height: 40px; opacity: 0.7; margin-bottom: 15px; }
+#sparkline-svg { width: 100%; height: 100%; }
+
+.card-footer-info { display: flex; justify-content: space-between; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); }
+.info-item { display: flex; flex-direction: column; align-items: center; flex: 1; }
+.info-item .label { font-size: 0.65rem; color: #666; margin-bottom: 2px; }
+.info-item .value { font-family: 'Roboto Mono'; font-size: 0.9rem; font-weight: 600; }
+.xp-gold { color: var(--gold); }
+.divider { width: 1px; background: rgba(255,255,255,0.1); }
+
+/* --- منوی دسترسی سریع (Grid) --- */
+.quick-menu-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 25px; }
+.quick-btn { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
+.icon-box { width: 56px; height: 56px; border-radius: 20px; background: rgba(30,30,30,0.6); border: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; transition: transform 0.2s; position: relative; overflow: hidden; }
+.quick-btn span { font-size: 0.75rem; color: #bbb; font-weight: 500; }
+.quick-btn:active .icon-box { transform: scale(0.92); }
+
+/* افکت‌های درخشش دکمه‌ها */
+.green-glow { color: var(--green); box-shadow: 0 5px 15px rgba(14,203,129,0.15); }
+.red-glow { color: var(--red); box-shadow: 0 5px 15px rgba(246,70,93,0.15); }
+.blue-glow { color: var(--blue); box-shadow: 0 5px 15px rgba(41,121,255,0.15); }
+.gold-glow { color: var(--gold); box-shadow: 0 5px 15px rgba(255,215,0,0.15); }
+
+/* --- بنر تبلیغاتی --- */
+.promo-banner { background: linear-gradient(135deg, #111, #0a0a0a); border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius-m); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; position: relative; overflow: hidden; }
+.promo-banner::before { content: ''; position: absolute; left: 0; top: 0; width: 4px; height: 100%; background: var(--blue); }
+.promo-text h3 { margin: 0 0 4px; font-size: 1rem; color: #fff; }
+.promo-text p { margin: 0; font-size: 0.75rem; color: #777; }
+.promo-icon { font-size: 1.5rem; color: var(--blue); opacity: 0.8; }
+
+/* --- لیست خدمات --- */
+.section-header { font-size: 0.9rem; font-weight: 700; color: #fff; margin-bottom: 12px; padding-right: 10px; border-right: 3px solid var(--gold); }
+.services-list { display: flex; flex-direction: column; gap: 10px; }
+.service-row { display: flex; align-items: center; background: rgba(30,30,30,0.4); padding: 12px 15px; border-radius: var(--radius-m); border: 1px solid rgba(255,255,255,0.03); transition: background 0.2s; }
+.service-row:active { background: rgba(50,50,50,0.5); }
+.srv-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; margin-left: 12px; }
+.i-tether { background: rgba(14,203,129,0.1); color: var(--green); }
+.i-utopia { background: rgba(255,0,122,0.1); color: #FF007A; }
+.i-sport { background: rgba(255,255,255,0.1); color: #fff; }
+.srv-info { flex: 1; }
+.srv-info h4 { margin: 0 0 2px; font-size: 0.9rem; color: #eee; }
+.srv-info span { font-size: 0.7rem; color: #666; }
+.srv-arrow { color: #444; font-size: 0.8rem; }
+
+/* --- نوار ناوبری پایین (App Navigation) --- */
+.bottom-nav {
+    position: fixed; bottom: 20px; left: 20px; right: 20px;
+    background: rgba(15, 15, 15, 0.85); backdrop-filter: blur(25px);
+    height: 65px; border-radius: 20px;
+    display: flex; justify-content: space-around; align-items: center;
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 1000;
 }
+.nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: #666; font-size: 0.7rem; transition: color 0.3s; width: 50px; }
+.nav-item i { font-size: 1.2rem; transition: transform 0.2s; }
+.nav-item.active { color: var(--gold); }
+.nav-item.active i { transform: translateY(-2px); text-shadow: 0 0 10px rgba(255,215,0,0.4); }
 
-.action-icon-btn { width: 40px; height: 40px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 12px; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+/* دکمه شناور وسط */
+.floating-btn { position: relative; top: -25px; }
+.float-inner { width: 55px; height: 55px; background: linear-gradient(135deg, var(--gold), #B8860B); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: #000; box-shadow: 0 5px 15px rgba(255,215,0,0.4); border: 4px solid var(--bg-dark); }
 
-/* =========================================
-   3. Ticker (اصلاح شده: سرعت متعادل)
-   ========================================= */
-.ticker-wrap { 
-    width: 100%; 
-    background: #080808; 
-    border-bottom: 1px solid var(--glass-border); 
-    overflow: hidden; 
-    padding: 10px 0; 
-}
-
-.ticker-move { 
-    display: inline-block; 
-    white-space: nowrap; 
-    /* تغییر از 25 ثانیه به 40 ثانیه برای حرکت آرام‌تر */
-    animation: ticker 40s linear infinite; 
-}
-
-.ticker-item { 
-    display: inline-block; 
-    padding: 0 25px; 
-    font-family: 'Roboto Mono'; 
-    font-size: 0.8rem; 
-    color: #eee; 
-}
-
-/* کلاس‌های رنگی برای درصدها */
-.up-color { color: var(--up-color) !important; font-weight: bold; }
-.down-color { color: var(--down-color) !important; font-weight: bold; }
-
-@keyframes ticker { 
-    0% { transform: translateX(100%); } 
-    100% { transform: translateX(-100%); } 
-}
-
-.main-content { padding: 20px; overflow-y: auto; perspective: 1000px; }
-
-/* Premium Asset Card */
-.premium-card {
-    background: var(--card-gradient);
-    border-radius: var(--radius-xl); padding: 24px; position: relative;
-    border: 1px solid rgba(255, 255, 255, 0.08); overflow: hidden;
-    box-shadow: 0 20px 50px -10px rgba(0,0,0,0.8);
-    margin-bottom: 30px;
-    transform-style: preserve-3d;
-    transform: rotateX(0deg) rotateY(0deg);
-    transition: transform 0.1s ease-out;
-}
-
-.card-bg-texture { position: absolute; inset: 0; background: url('https://www.transparenttextures.com/patterns/carbon-fibre.png'); opacity: 0.05; pointer-events: none; transform: translateZ(0); }
-.card-shine {
-    position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-    background: radial-gradient(circle, rgba(255, 215, 0, 0.05) 0%, transparent 60%);
-    pointer-events: none; mix-blend-mode: overlay; transform: translateZ(1px);
-}
-
-.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; position: relative; z-index: 2; transform: translateZ(25px); }
-.chip-sim { font-size: 2.2rem; color: rgba(255,255,255,0.1); transform: rotate(90deg); text-shadow: 2px 4px 6px rgba(0,0,0,0.5); }
-.card-type { font-family: 'Cinzel'; font-size: 0.7rem; color: var(--gold-dark); letter-spacing: 2px; font-weight: 700; }
-
-.card-balance { text-align: right; margin-bottom: 15px; position: relative; z-index: 2; transform: translateZ(35px); }
-.balance-label { font-size: 0.8rem; color: #666; display: block; margin-bottom: 5px; }
-.balance-amount { display: flex; align-items: baseline; justify-content: flex-end; gap: 8px; }
-.balance-amount h1 { font-family: 'Roboto Mono'; font-size: 2.2rem; margin: 0; color: #fff; letter-spacing: -1px; text-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-.currency-symbol { color: var(--gold-primary); font-size: 1.2rem; }
-
-.mini-chart-container { height: 50px; width: 100%; margin-bottom: 20px; opacity: 0.8; position: relative; z-index: 2; transform: translateZ(15px); }
-.chart-svg { width: 100%; height: 100%; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); }
-
-.card-footer { background: rgba(255,255,255,0.03); border-radius: 12px; padding: 12px; display: flex; border: 1px solid rgba(255,255,255,0.05); position: relative; z-index: 2; transform: translateZ(20px); }
-.asset-row { display: flex; width: 100%; justify-content: space-around; align-items: center; }
-.asset-col { text-align: center; }
-.asset-title { display: block; font-size: 0.6rem; color: #555; letter-spacing: 1px; margin-bottom: 2px; }
-.asset-val { font-family: 'Roboto Mono'; font-size: 0.95rem; font-weight: 700; }
-.usd-color { color: #0ECB81; } .xp-color { color: var(--gold-primary); }
-.vertical-divider { width: 1px; height: 25px; background: rgba(255,255,255,0.1); }
-
-/* Quick Actions */
-.section-title { font-size: 0.9rem; font-weight: 700; color: #fff; margin-bottom: 15px; padding-right: 10px; border-right: 3px solid var(--gold-primary); }
-.quick-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 35px; }
-.glass-btn { display: flex; flex-direction: column; align-items: center; gap: 8px; background: transparent; border: none; cursor: pointer; }
-.btn-icon { width: 54px; height: 54px; border-radius: 18px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; transition: transform 0.2s, box-shadow 0.2s; }
-.glass-btn span { font-size: 0.75rem; color: #888; font-weight: 500; }
-.deposit-color { color: #0ECB81; } .withdraw-color { color: #F6465D; } .trade-color { color: #3B82F6; } .kyc-color { color: var(--gold-primary); }
-
-/* Services Grid */
-.services-grid-modern { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.service-card {
-    background: rgba(20, 20, 20, 0.5); border: 1px solid var(--glass-border);
-    border-radius: var(--radius-md); padding: 16px; display: flex; align-items: center; gap: 15px;
-    cursor: pointer; transition: background 0.2s;
-}
-.service-icon { font-size: 1.6rem; width: 40px; text-align: center; }
-.gold-glow { color: #0ECB81; filter: drop-shadow(0 0 8px rgba(14,203,129,0.3)); }
-.pink-glow { color: #FF007A; filter: drop-shadow(0 0 8px rgba(255,0,122,0.3)); }
-.green-glow { color: #fff; filter: drop-shadow(0 0 8px rgba(255,255,255,0.3)); }
-.blue-glow { color: var(--gold-primary); filter: drop-shadow(0 0 8px rgba(255,215,0,0.3)); }
-.service-meta h4 { margin: 0 0 3px 0; font-size: 0.9rem; color: #e0e0e0; }
-.service-meta span { font-size: 0.7rem; color: #666; }
-
-/* Game Banner */
-.game-banner {
-    position: relative; height: 120px; border-radius: var(--radius-lg); overflow: hidden;
-    background: linear-gradient(135deg, #0f172a 0%, #000 100%); border: 1px solid rgba(59,130,246,0.3);
-    margin-bottom: 20px; display: flex; align-items: center; padding: 0 25px; cursor: pointer;
-}
-.banner-content { display: flex; justify-content: space-between; width: 100%; position: relative; z-index: 2; align-items: center; }
-.game-info h3 { margin: 0 0 5px 0; font-size: 1.2rem; color: #fff; }
-.game-info p { margin: 0; font-size: 0.8rem; color: #888; }
-.play-icon { width: 45px; height: 45px; border-radius: 50%; background: #3B82F6; display: flex; align-items: center; justify-content: center; color: #fff; box-shadow: 0 0 15px rgba(59,130,246,0.5); }
-
-/* Chat UI (Complete) */
-.notif-dot-support {
-    position: absolute; top: -3px; right: -3px; width: 9px; height: 9px;
-    background-color: #ff3b30; border-radius: 50%; border: 1.5px solid #1c1c1e;
-    display: none; z-index: 10; box-shadow: 0 0 4px rgba(255, 59, 48, 0.6);
-}
-.chat-messages-area { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 90px; }
-.message-wrapper { display: flex; flex-direction: column; max-width: 80%; margin-bottom: 15px; }
-.msg-user { align-self: flex-end; align-items: flex-end; }
-.msg-admin { align-self: flex-start; align-items: flex-start; }
-.bubble { padding: 12px 16px; border-radius: 18px; font-size: 0.9rem; line-height: 1.5; position: relative; word-wrap: break-word; }
-.msg-user .bubble { background: linear-gradient(135deg, var(--gold-primary), var(--gold-dark)); color: #000; border-bottom-left-radius: 18px; border-bottom-right-radius: 4px; }
-.msg-admin .bubble { background: #2c2c2e; color: #fff; border-bottom-left-radius: 4px; border-bottom-right-radius: 18px; border: 1px solid rgba(255,255,255,0.1); }
-.chat-input-bar { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(20, 20, 20, 0.9); backdrop-filter: blur(20px); padding: 10px 15px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 10px; z-index: 200; }
-
-.hidden-content { opacity: 0; transform: translateY(20px); }
-.fade-in-active { opacity: 1; transform: translateY(0); transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); }
-.ripple-btn:active { transform: scale(0.96); opacity: 0.8; }
+/* --- Utilities --- */
+.hidden-content { opacity: 0; }
+.ripple-btn { position: relative; overflow: hidden; }
+.ripple-btn:active { transform: scale(0.98); }

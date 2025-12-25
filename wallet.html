@@ -3,497 +3,293 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#050505">
+    <meta name="theme-color" content="#000000">
     <title>مدیریت دارایی | کوین باران</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="webapp/wallet-style.css">
+    <link rel="stylesheet" href="dashboard-style.css?v=100.1">
     
     <style>
-        /* استایل‌های اختصاصی و لوکس بخش کیف پول - نسخه کامل بدون خلاصه */
-        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;300;400;500;700;800;900&family=Roboto+Mono:wght@400;700&display=swap');
-
-        :root {
-            --gold-primary: #f0b90b;
-            --gold-glow: rgba(240, 185, 11, 0.3);
-            --bg-dark: #050505;
-            --card-bg: #121212;
-            --glass: rgba(255, 255, 255, 0.03);
-            --border-glass: rgba(255, 255, 255, 0.08);
-            --text-muted: #888;
+        /* استایل‌های اختصاصی صفحه کیف پول (Overrides) */
+        .wallet-nav-tabs {
+            display: flex; gap: 8px; margin: 0 0 20px;
+            background: rgba(255,255,255,0.03); padding: 5px; border-radius: 16px;
+            border: 1px solid var(--glass-border);
         }
-
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-        body {
-            background-color: var(--bg-dark);
-            font-family: 'Vazirmatn', sans-serif;
-            color: #fff;
-            margin: 0;
-            padding: 0;
-            direction: rtl;
-            overflow-x: hidden;
+        .tab-item {
+            flex: 1; padding: 10px; text-align: center; font-size: 0.75rem;
+            color: #888; border-radius: 12px; cursor: pointer; transition: all 0.3s;
+            font-weight: 600;
         }
-
-        header {
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            position: sticky;
-            top: 0;
-            background: rgba(5, 5, 5, 0.8);
-            backdrop-filter: blur(10px);
-            z-index: 100;
-            border-bottom: 1px solid var(--border-glass);
+        .tab-item.active {
+            background: var(--gold); color: #000; box-shadow: 0 4px 12px rgba(255,215,0,0.2);
         }
-
-        .back-btn {
-            width: 40px;
-            height: 40px;
-            background: var(--glass);
-            border: 1px solid var(--border-glass);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-        }
-
-        .asset-card {
-            background: linear-gradient(135deg, #1a1a1a 0%, #000 100%);
-            margin: 20px;
-            padding: 30px;
-            border-radius: 28px;
-            border: 1px solid var(--border-glass);
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
-            min-height: 160px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .card-shine {
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, var(--gold-glow) 0%, transparent 70%);
-            pointer-events: none;
-        }
-
-        .balance-label {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-            display: block;
-        }
-
-        .balance-amount {
-            display: flex;
-            align-items: baseline;
-            gap: 10px;
-            flex-wrap: wrap;
-            width: 100%;
-        }
-
-        .balance-amount h1 {
-            font-family: 'Roboto Mono';
-            font-size: clamp(1.5rem, 8vw, 2.5rem);
-            font-weight: 900;
-            margin: 0;
-            letter-spacing: -1px;
-            word-break: break-all;
-            max-width: 100%;
-        }
-
-        .currency {
-            color: var(--gold-primary);
-            font-size: 1.2rem;
-            font-weight: 800;
-            white-space: nowrap;
-        }
-
-        .wallet-nav {
-            display: flex;
-            margin: 0 20px 25px;
-            background: var(--glass);
-            padding: 6px;
-            border-radius: 20px;
-            border: 1px solid var(--border-glass);
-        }
-
-        .nav-item {
-            flex: 1;
-            padding: 12px 5px;
-            text-align: center;
-            font-size: 0.75rem;
-            font-weight: 800;
-            color: #666;
-            border-radius: 15px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer;
-        }
-
-        .nav-item.active {
-            background: var(--gold-primary);
-            color: #000;
-            box-shadow: 0 8px 20px rgba(240, 185, 11, 0.25);
-        }
-
-        .panel-container {
-            padding: 0 20px 100px;
-        }
-
-        .wallet-panel {
-            display: none;
-            animation: fadeIn 0.4s ease-out;
-        }
-
-        .wallet-panel.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .luxe-card {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid var(--border-glass);
-            border-radius: 24px;
-            padding: 24px;
-            margin-bottom: 20px;
-        }
-
-        .card-title-row {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .icon-box {
-            width: 48px;
-            height: 48px;
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-        }
-
-        .icon-gold { background: rgba(240, 185, 11, 0.1); color: var(--gold-primary); }
-        .icon-blue { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
-        .icon-red { background: rgba(246, 70, 93, 0.1); color: #f6465d; }
-
-        .card-info h3 { margin: 0; font-size: 1rem; font-weight: 800; }
-        .card-info p { margin: 5px 0 0; font-size: 0.7rem; color: #666; line-height: 1.5; }
-
-        .input-group { margin-bottom: 20px; }
-        .input-group label { display: block; font-size: 0.75rem; color: #666; margin-bottom: 8px; margin-right: 10px; }
         
-        .luxe-input {
-            width: 100%;
-            background: var(--glass);
-            border: 1px solid var(--border-glass);
-            padding: 18px;
-            border-radius: 16px;
-            color: #fff;
-            font-family: inherit;
-            font-size: 1.1rem;
-            transition: 0.3s;
+        .panel-section { display: none; animation: slideUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .panel-section.active { display: block; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .luxe-input-group { margin-bottom: 20px; }
+        .luxe-label { display: block; font-size: 0.75rem; color: #aaa; margin-bottom: 8px; margin-right: 5px; }
+        .luxe-field {
+            width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border);
+            border-radius: 16px; padding: 16px; color: #fff; font-size: 1rem;
+            font-family: 'Roboto Mono', 'Vazirmatn'; transition: 0.3s;
         }
-
-        .luxe-input:focus { border-color: var(--gold-primary); background: rgba(255,255,255,0.05); outline: none; }
-
-        select.luxe-input {
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23888888'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: left 15px center;
-            background-size: 20px;
-            padding-left: 45px;
-            appearance: none;
-            /* اصلاح رنگ متن */
-            color: #fff !important;
-            background-color: rgba(255, 255, 255, 0.05); 
+        .luxe-field:focus { border-color: var(--gold); background: rgba(0,0,0,0.5); }
+        
+        /* استایل دکمه‌های بزرگ */
+        .action-btn-large {
+            width: 100%; padding: 16px; border-radius: 16px; border: none;
+            font-size: 1rem; font-weight: 700; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            transition: transform 0.2s;
         }
+        .btn-gold { background: var(--gold); color: #000; box-shadow: 0 8px 20px rgba(255,215,0,0.2); }
+        .btn-glass { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid var(--glass-border); }
+        .action-btn-large:active { transform: scale(0.96); }
 
-        /* --- فیکس مهم برای دیده شدن گزینه‌های لیست کشویی --- */
-        select.luxe-input option {
-            background-color: #121212 !important; /* پس‌زمینه تیره برای گزینه‌ها */
-            color: #ffffff !important; /* متن سفید */
-            padding: 10px;
+        .smart-details-box {
+            background: linear-gradient(180deg, rgba(255,215,0,0.05), transparent);
+            border: 1px solid rgba(255,215,0,0.2); border-radius: 20px; padding: 20px;
+            margin-top: 20px; text-align: center;
         }
-        /* ------------------------------------------------ */
-
-        .btn-action {
-            width: 100%;
-            padding: 18px;
-            border-radius: 18px;
-            border: none;
-            font-family: inherit;
-            font-weight: 900;
-            font-size: 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            cursor: pointer;
-            transition: 0.3s;
+        .copy-row {
+            background: rgba(0,0,0,0.4); border-radius: 12px; padding: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin: 10px 0; border: 1px solid var(--glass-border);
         }
+        .copy-val { font-family: 'Roboto Mono'; font-size: 1.1rem; color: #fff; letter-spacing: 1px; }
+        .copy-icon { color: var(--gold); cursor: pointer; padding: 5px; }
 
-        .btn-primary { background: var(--gold-primary); color: #000; box-shadow: 0 10px 25px rgba(240, 185, 11, 0.3); }
-        .btn-secondary { background: #fff; color: #000; }
-        .btn-action:active { transform: scale(0.96); opacity: 0.9; }
-
-        .upload-placeholder {
-            border: 2px dashed #222;
-            border-radius: 20px;
-            padding: 40px 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: 0.3s;
+        .upload-area {
+            border: 2px dashed rgba(255,255,255,0.2); border-radius: 16px;
+            padding: 30px; text-align: center; cursor: pointer; transition: 0.3s;
         }
-
-        .smart-pay-container {
-            background: linear-gradient(180deg, rgba(240, 185, 11, 0.05) 0%, transparent 100%);
-            border: 1px solid rgba(240, 185, 11, 0.15);
-            border-radius: 24px;
-            padding: 20px;
-            margin-top: 15px;
+        .upload-area:hover { border-color: var(--gold); background: rgba(255,215,0,0.02); }
+        
+        /* هدر ساده برای صفحات داخلی */
+        .page-header {
+            padding: 20px; font-size: 1.2rem; font-weight: 800; color: #fff;
+            text-align: center; border-bottom: 1px solid var(--glass-border);
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(10px);
+            position: sticky; top: 0; z-index: 100;
         }
-        .payment-item {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--border-glass);
-            border-radius: 18px;
-            padding: 15px;
-            margin-bottom: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .item-label { font-size: 0.75rem; color: #888; margin-bottom: 4px; display: block; }
-        .item-value { font-family: 'Roboto Mono'; font-size: 1.1rem; font-weight: 700; color: #fff; }
-        .copy-badge { background: var(--gold-primary); color: #000; padding: 6px 12px; border-radius: 10px; font-size: 0.7rem; font-weight: 900; cursor: pointer; }
-        .unique-amount-box { text-align: center; padding: 20px; border: 2px dashed var(--gold-primary); border-radius: 20px; margin: 15px 0; background: rgba(240, 185, 11, 0.03); }
-        .amount-display { font-family: 'Roboto Mono'; font-size: 1.8rem; font-weight: 900; color: var(--gold-primary); display: block; }
-        .warning-card { background: rgba(246, 70, 93, 0.08); border: 1px solid rgba(246, 70, 93, 0.2); border-radius: 16px; padding: 12px; display: flex; gap: 12px; align-items: center; }
-        .warning-card i { color: #f6465d; font-size: 1.2rem; }
-        .warning-card p { margin: 0; font-size: 0.65rem; color: #ccc; line-height: 1.5; }
-
     </style>
 </head>
 <body>
 
-    <header>
-        <div class="back-btn" onclick="window.location.href='/'">
-            <i class="fas fa-arrow-right"></i>
-        </div>
-        <div style="font-weight: 900; font-size: 1.1rem;">مدیریت دارایی</div>
-    </header>
+    <div class="ambient-glow top-glow"></div>
+    <div class="page-header">مدیریت کیف پول</div>
 
-    <div class="asset-card">
-        <div class="card-shine"></div>
-        <span class="balance-label">موجودی قابل معامله</span>
-        <div class="balance-amount">
-            <h1 id="balance-toman">0</h1>
-            <span class="currency">تومان</span>
-        </div>
-    </div>
-
-    <div class="wallet-nav">
-        <div id="nav-auto" class="nav-item active" onclick="showPanel('auto')">واریز هوشمند</div>
-        <div id="nav-withdraw" class="nav-item" onclick="showPanel('withdraw')">برداشت</div>
-        <div id="nav-addcard" class="nav-item" onclick="showPanel('addcard')">ثبت کارت</div>
-        <div id="nav-manual" class="nav-item" onclick="showPanel('manual')">فیش</div>
-    </div>
-
-    <div class="panel-container">
+    <main class="content-scroll" style="padding-bottom: 100px;">
         
-        <div id="panel-auto" class="wallet-panel active">
-            <div class="luxe-card">
-                <div class="card-title-row">
-                    <div class="icon-box icon-gold"><i class="fas fa-bolt"></i></div>
-                    <div class="card-info">
-                        <h3>واریز هوشمند و آنی</h3>
-                        <p>شناسایی خودکار بر اساس مبلغ دقیق (ریالی)</p>
-                    </div>
-                </div>
-                <div class="input-group" id="auto-deposit-input-group">
-                    <label>مبلغ مورد نظر جهت شارژ (تومان)</label>
-                    <input type="text" id="auto-amount-input" class="luxe-input" placeholder="مثلاً ۵۰۰,۰۰۰" inputmode="numeric">
-                    <button class="btn-action btn-primary" style="margin-top: 15px;" onclick="generateSmartPayment()">
-                        <span>ایجاد کد پرداخت هوشمند</span>
-                        <i class="fas fa-magic"></i>
-                    </button>
-                </div>
-                <div id="smart-payment-details" class="smart-pay-container" style="display: none;">
-                    <div class="payment-item">
-                        <div>
-                            <span class="item-label">شماره کارت مقصد</span>
-                            <span class="item-value" id="smart-card-num">۶۲۱۹-۸۶۱۹-۸۷۰۸-۹۹۷۵</span>
-                        </div>
-                        <div class="copy-badge" onclick="copyValue('smart-card-num', 'شماره کارت کپی شد')">کپی</div>
-                    </div>
-                    <div class="unique-amount-box">
-                        <span class="item-label" style="color: var(--gold-primary);">مبلغ دقیق جهت واریز به تومان:</span>
-                        <span class="amount-display" id="smart-toman-display">0</span>
-                        <div style="margin: 15px 0; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 12px;">
-                            <span class="item-label">مبلغ دقیق جهت کپی و واریز (به ریال):</span>
-                            <span id="smart-rial-value" style="font-family:'Roboto Mono'; font-weight:900; font-size:1.4rem; color:#fff;">0</span>
-                        </div>
-                        <div class="copy-badge" style="display: inline-block; padding: 10px 20px;" onclick="copyValue('smart-rial-value', 'مبلغ ریالی کپی شد')">کپی مبلغ ریال</div>
-                    </div>
-                    <button class="btn-action btn-secondary" style="margin-top: 20px; background: rgba(255,255,255,0.05); color: #ccc;" onclick="resetSmartPanel()">تغییر مبلغ</button>
-                </div>
+        <div class="hero-card" style="padding: 20px; margin-bottom: 20px;">
+            <div class="card-glass-effect"></div>
+            <div class="card-top" style="margin-bottom: 5px;">
+                <span class="card-label">موجودی قابل برداشت</span>
+                <i class="fas fa-wallet" style="color:rgba(255,255,255,0.2); font-size: 1.2rem;"></i>
+            </div>
+            <div class="balance-wrapper">
+                <span class="currency-sign">T</span>
+                <h1 id="balance-toman">---</h1>
             </div>
         </div>
 
-        <div id="panel-withdraw" class="wallet-panel">
-            <div class="luxe-card">
-                <div class="card-title-row">
-                    <div class="icon-box icon-red"><i class="fas fa-arrow-up"></i></div>
-                    <div class="card-info">
-                        <h3>تسویه حساب</h3>
-                        <p>انتقال موجودی به کارت‌های تایید شده</p>
-                    </div>
+        <div class="wallet-nav-tabs">
+            <div id="nav-auto" class="tab-item active" onclick="showPanel('auto')">واریز سریع</div>
+            <div id="nav-withdraw" class="tab-item" onclick="showPanel('withdraw')">برداشت</div>
+            <div id="nav-addcard" class="tab-item" onclick="showPanel('addcard')">کارت‌ها</div>
+            <div id="nav-manual" class="tab-item" onclick="showPanel('manual')">فیش</div>
+        </div>
+
+        <div id="panel-auto" class="panel-section active">
+            <div class="luxe-input-group">
+                <label class="luxe-label">مبلغ شارژ (تومان)</label>
+                <input type="text" id="auto-amount-input" class="luxe-field" placeholder="مثلاً ۵۰۰,۰۰۰" inputmode="numeric">
+            </div>
+            <button class="action-btn-large btn-gold" onclick="generateSmartPayment()">
+                <i class="fas fa-bolt"></i> دریافت شناسه پرداخت
+            </button>
+
+            <div id="smart-payment-details" class="smart-details-box" style="display: none;">
+                <p style="color:var(--text-muted); font-size:0.8rem; margin-bottom:15px;">مبلغ زیر را دقیقاً واریز کنید:</p>
+                
+                <div class="copy-row">
+                    <span class="luxe-label">مبلغ (ریال):</span>
+                    <span id="smart-rial-value" class="copy-val">---</span>
+                    <i class="far fa-copy copy-icon" onclick="copyValue('smart-rial-value', 'مبلغ کپی شد')"></i>
                 </div>
-                <div class="input-group">
-                    <label>مبلغ جهت برداشت (تومان)</label>
-                    <input type="text" id="withdraw-amount-input" class="luxe-input" placeholder="حداقل ۱۰۰,۰۰۰" inputmode="numeric">
+                
+                <div class="copy-row">
+                    <span class="luxe-label">کارت مقصد:</span>
+                    <span id="smart-card-num" class="copy-val" style="font-size:0.9rem">---</span>
+                    <i class="far fa-copy copy-icon" onclick="copyValue('smart-card-num', 'شماره کارت کپی شد')"></i>
                 </div>
-                <div class="input-group">
-                    <label>انتخاب کارت مقصد</label>
-                    <select id="withdraw-card-select" class="luxe-input">
-                        <option value="" disabled selected>در حال بارگذاری کارت‌ها...</option>
-                    </select>
+
+                <div class="copy-row" style="background:rgba(14,203,129,0.1); border-color:var(--green);">
+                    <span class="luxe-label" style="color:var(--green)">شناسه:</span>
+                    <span id="smart-toman-display" class="copy-val" style="color:var(--green)">---</span>
                 </div>
-                <button class="btn-action btn-secondary" onclick="requestWithdrawal()">
-                    <span>ثبت درخواست تسویه</span>
-                    <i class="fas fa-check-circle"></i>
+
+                <button class="action-btn-large btn-glass" style="margin-top:15px; font-size:0.9rem;" onclick="resetSmartPanel()">
+                    بازگشت و تغییر مبلغ
                 </button>
             </div>
         </div>
 
-        <div id="panel-addcard" class="wallet-panel">
-            <div class="luxe-card">
-                <div class="card-title-row">
-                    <div class="icon-box icon-blue"><i class="fas fa-credit-card"></i></div>
-                    <div class="card-info">
-                        <h3>ثبت کارت جدید</h3>
-                        <p>تصویر کارت باید به نام صاحب حساب باشد</p>
-                    </div>
-                </div>
-                <div class="input-group">
-                    <label>شماره ۱۶ رقمی کارت</label>
-                    <input type="text" id="new-card-number" class="luxe-input" placeholder="---- ---- ---- ----" inputmode="numeric" maxlength="16">
-                </div>
-                <div class="input-group">
-                    <label>نام بانک</label>
-                    <input type="text" id="new-bank-name" class="luxe-input" placeholder="مثلاً ملی، ملت، بلو...">
-                </div>
-
-                <div class="input-group">
-                    <label>تصویر روی کارت بانکی</label>
-                    <div class="upload-placeholder" onclick="document.getElementById('card-image-file').click()">
-                        <i class="fas fa-camera" style="font-size: 2.5rem; color: var(--gold-primary); margin-bottom: 15px;"></i>
-                        <div id="card-image-label" style="font-size: 0.8rem; color: #666;">انتخاب یا تصویربرداری از کارت</div>
-                        <input type="file" id="card-image-file" style="display:none" accept="image/*" onchange="handleCardImageSelect()">
-                    </div>
-                </div>
-
-                <div class="warning-card" style="margin-bottom: 20px;">
-                    <i class="fas fa-info-circle"></i>
-                    <p>کارت‌ها پس از بررسی ادمین در لیست تسویه حساب ظاهر می‌شوند.</p>
-                </div>
-                <button class="btn-action btn-primary" onclick="submitNewCard()">
-                    <span>ارسال جهت تایید</span>
-                    <i class="fas fa-plus-circle"></i>
-                </button>
+        <div id="panel-withdraw" class="panel-section">
+            <div class="luxe-input-group">
+                <label class="luxe-label">مبلغ برداشت (تومان)</label>
+                <input type="text" id="withdraw-amount-input" class="luxe-field" placeholder="حداقل ۱۰۰,۰۰۰" inputmode="numeric">
             </div>
+            <div class="luxe-input-group">
+                <label class="luxe-label">کارت مقصد</label>
+                <select id="withdraw-card-select" class="luxe-field" style="background-color: #111;">
+                    <option value="" disabled selected>در حال بارگذاری...</option>
+                </select>
+            </div>
+            <button class="action-btn-large btn-glass" onclick="requestWithdrawal()">
+                <i class="fas fa-paper-plane"></i> ثبت درخواست تسویه
+            </button>
         </div>
 
-        <div id="panel-manual" class="wallet-panel">
-            <div class="luxe-card">
-                <div class="card-title-row">
-                    <div class="icon-box icon-blue"><i class="fas fa-file-upload"></i></div>
-                    <div class="card-info">
-                        <h3>واریز با فیش</h3>
-                        <p>ثبت فیش واریزی جهت بررسی اپراتور</p>
-                    </div>
+        <div id="panel-addcard" class="panel-section">
+            <div class="luxe-input-group">
+                <label class="luxe-label">شماره کارت (۱۶ رقم)</label>
+                <input type="text" id="new-card-number" class="luxe-field" placeholder="----  ----  ----  ----" maxlength="16" inputmode="numeric">
+            </div>
+            <div class="luxe-input-group">
+                <label class="luxe-label">نام بانک</label>
+                <input type="text" id="new-bank-name" class="luxe-field" placeholder="مثلاً: ملی">
+            </div>
+            <div class="luxe-input-group">
+                <label class="luxe-label">تصویر روی کارت</label>
+                <div class="upload-area" onclick="document.getElementById('card-image-file').click()">
+                    <i class="fas fa-camera" style="font-size: 2rem; color: var(--gold); margin-bottom: 10px;"></i>
+                    <div id="card-image-label" style="font-size: 0.8rem; color: #888;">لمس برای انتخاب عکس</div>
+                    <input type="file" id="card-image-file" style="display:none" accept="image/*" onchange="handleCardImageSelect()">
                 </div>
-                <div class="input-group">
-                    <label>مبلغ (تومان)</label>
-                    <input type="text" id="manual-amount-input" class="luxe-input" placeholder="مثلاً ۵۰۰,۰۰۰" inputmode="numeric">
-                </div>
-                <div class="upload-placeholder" onclick="document.getElementById('receipt-file').click()">
-                    <i class="fas fa-camera" style="font-size: 2.5rem; color: var(--gold-primary); margin-bottom: 15px;"></i>
-                    <div id="file-name-label" style="font-size: 0.8rem; color: #666;">انتخاب یا تصویربرداری از فیش</div>
+            </div>
+            <button class="action-btn-large btn-gold" onclick="submitNewCard()">
+                <i class="fas fa-plus"></i> ثبت کارت
+            </button>
+        </div>
+
+        <div id="panel-manual" class="panel-section">
+            <div class="luxe-input-group">
+                <label class="luxe-label">مبلغ واریزی (تومان)</label>
+                <input type="text" id="manual-amount-input" class="luxe-field" placeholder="مبلغ دقیق فیش" inputmode="numeric">
+            </div>
+            <div class="luxe-input-group">
+                <label class="luxe-label">تصویر فیش واریزی</label>
+                <div class="upload-area" onclick="document.getElementById('receipt-file').click()">
+                    <i class="fas fa-receipt" style="font-size: 2rem; color: var(--blue); margin-bottom: 10px;"></i>
+                    <div id="file-name-label" style="font-size: 0.8rem; color: #888;">انتخاب تصویر فیش</div>
                     <input type="file" id="receipt-file" style="display:none" accept="image/*" onchange="handleFileSelect()">
                 </div>
-                <button class="btn-action btn-primary" style="margin-top: 25px;" onclick="submitManualDeposit()">
-                    <span>ارسال فیش</span>
-                    <i class="fas fa-paper-plane"></i>
-                </button>
             </div>
+            <button class="action-btn-large btn-glass" onclick="submitManualDeposit()">
+                <i class="fas fa-check"></i> ارسال جهت بررسی
+            </button>
         </div>
 
-    </div>
+    </main>
+
+    <nav class="bottom-nav">
+        <a href="/" class="nav-item">
+            <i class="fas fa-home"></i>
+            <span>خانه</span>
+        </a>
+        <a href="#" class="nav-item active">
+            <i class="fas fa-wallet"></i>
+            <span>کیف پول</span>
+        </a>
+        <a href="usdt.html" class="nav-item floating-btn">
+            <div class="float-inner"><i class="fas fa-exchange-alt"></i></div>
+        </a>
+        <a href="game.html" class="nav-item">
+            <i class="fas fa-gamepad"></i>
+            <span>بازی</span>
+        </a>
+        <a href="support.html" class="nav-item">
+            <i class="fas fa-headset"></i>
+            <span>پشتیبانی</span>
+        </a>
+    </nav>
 
     <script src="webapp/wallet-engine.js"></script>
+    
     <script>
+        // تابع تغییر تب‌ها
         function showPanel(id) {
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            // غیرفعال کردن همه تب‌ها
+            document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
+            // فعال کردن تب انتخاب شده
             const activeNav = document.getElementById('nav-' + id);
             if(activeNav) activeNav.classList.add('active');
             
-            document.querySelectorAll('.wallet-panel').forEach(el => el.classList.remove('active'));
+            // مخفی کردن همه پنل‌ها
+            document.querySelectorAll('.panel-section').forEach(el => el.classList.remove('active'));
+            // نمایش پنل انتخاب شده
             const activePanel = document.getElementById('panel-' + id);
             if(activePanel) activePanel.classList.add('active');
             
+            // ویبره هپتیک
             if(window.Telegram && window.Telegram.WebApp) {
-                window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+                window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
             }
         }
 
+        // تابع کپی (حفظ شده از قبل)
         function copyValue(elementId, message) {
             const element = document.getElementById(elementId);
             const text = element.innerText.replace(/,/g, '').replace(/-/g, '').replace(' تومان', '');
+            
             if (navigator.clipboard && window.isSecureContext) {
-                navigator.clipboard.writeText(text).then(() => { window.Telegram.WebApp.showAlert(message); });
+                navigator.clipboard.writeText(text).then(() => { 
+                    if(window.Telegram && window.Telegram.WebApp) window.Telegram.WebApp.showAlert(message);
+                });
             } else {
                 const textArea = document.createElement("textarea");
                 textArea.value = text;
                 textArea.style.position = "fixed"; textArea.style.left = "-9999px";
                 document.body.appendChild(textArea);
                 textArea.focus(); textArea.select();
-                try { document.execCommand('copy'); window.Telegram.WebApp.showAlert(message); } catch (err) {}
+                try { document.execCommand('copy'); if(window.Telegram) window.Telegram.WebApp.showAlert(message); } catch (err) {}
                 document.body.removeChild(textArea);
             }
-            window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+            if(window.Telegram) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
         }
 
+        // توابع انتخاب فایل (بروزرسانی شده برای تغییر رنگ متن)
         function handleFileSelect() {
             const file = document.getElementById('receipt-file').files[0];
             if (file) {
-                document.getElementById('file-name-label').innerText = "✅ " + file.name;
-                document.getElementById('file-name-label').style.color = "#0ecb81";
+                const lbl = document.getElementById('file-name-label');
+                lbl.innerText = "✅ " + file.name;
+                lbl.style.color = "var(--green)";
             }
         }
 
         function handleCardImageSelect() {
             const file = document.getElementById('card-image-file').files[0];
             if (file) {
-                document.getElementById('card-image-label').innerText = "✅ تصویر کارت انتخاب شد";
-                document.getElementById('card-image-label').style.color = "#0ecb81";
+                const lbl = document.getElementById('card-image-label');
+                lbl.innerText = "✅ تصویر انتخاب شد";
+                lbl.style.color = "var(--green)";
             }
         }
+        
+        // هندل کردن پارامتر URL برای باز کردن تب خاص (مثلا ?tab=withdraw)
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const tab = urlParams.get('tab');
+            if(tab && document.getElementById('nav-' + tab)) {
+                showPanel(tab);
+            }
+        });
     </script>
 </body>
 </html>

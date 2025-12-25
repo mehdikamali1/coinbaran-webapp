@@ -219,7 +219,18 @@
             background-size: 20px;
             padding-left: 45px;
             appearance: none;
+            /* اصلاح رنگ متن */
+            color: #fff !important;
+            background-color: rgba(255, 255, 255, 0.05); 
         }
+
+        /* --- فیکس مهم برای دیده شدن گزینه‌های لیست کشویی --- */
+        select.luxe-input option {
+            background-color: #121212 !important; /* پس‌زمینه تیره برای گزینه‌ها */
+            color: #ffffff !important; /* متن سفید */
+            padding: 10px;
+        }
+        /* ------------------------------------------------ */
 
         .btn-action {
             width: 100%;

@@ -3,97 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#000000">
+    <meta name="theme-color" content="#080E13">
     <title>مدیریت دارایی | کوین باران</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="dashboard-style.css?v=100.1">
+    <link rel="stylesheet" href="dashboard-style.css?v=105.1">
     
     <style>
-        /* استایل‌های اختصاصی صفحه کیف پول (Overrides) */
+        /* استایل‌های اختصاصی و بازنویسی شده برای تم اقیانوسی */
         .wallet-nav-tabs {
             display: flex; gap: 8px; margin: 0 0 20px;
-            background: rgba(255,255,255,0.03); padding: 5px; border-radius: 16px;
+            background: rgba(255,255,255,0.02); padding: 5px; border-radius: 18px;
             border: 1px solid var(--glass-border);
         }
         .tab-item {
-            flex: 1; padding: 10px; text-align: center; font-size: 0.75rem;
-            color: #888; border-radius: 12px; cursor: pointer; transition: all 0.3s;
+            flex: 1; padding: 12px; text-align: center; font-size: 0.75rem;
+            color: var(--text-muted); border-radius: 14px; cursor: pointer; transition: all 0.3s;
             font-weight: 600;
         }
         .tab-item.active {
-            background: var(--gold); color: #000; box-shadow: 0 4px 12px rgba(255,215,0,0.2);
+            background: rgba(0, 245, 212, 0.15); 
+            color: var(--neon-cyan); 
+            box-shadow: 0 0 15px rgba(0, 245, 212, 0.1);
+            border: 1px solid rgba(0, 245, 212, 0.2);
         }
         
         .panel-section { display: none; animation: slideUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
         .panel-section.active { display: block; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
         .luxe-input-group { margin-bottom: 20px; }
-        .luxe-label { display: block; font-size: 0.75rem; color: #aaa; margin-bottom: 8px; margin-right: 5px; }
+        .luxe-label { display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px; margin-right: 5px; }
         .luxe-field {
-            width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border);
+            width: 100%; background: rgba(10, 20, 30, 0.4); border: 1px solid var(--glass-border);
             border-radius: 16px; padding: 16px; color: #fff; font-size: 1rem;
             font-family: 'Roboto Mono', 'Vazirmatn'; transition: 0.3s;
         }
-        .luxe-field:focus { border-color: var(--gold); background: rgba(0,0,0,0.5); }
+        .luxe-field:focus { border-color: var(--neon-cyan); background: rgba(0, 245, 212, 0.05); box-shadow: 0 0 10px rgba(0,245,212,0.1); }
         
-        /* استایل دکمه‌های بزرگ */
+        /* دکمه‌های بزرگ اقیانوسی */
         .action-btn-large {
-            width: 100%; padding: 16px; border-radius: 16px; border: none;
+            width: 100%; padding: 18px; border-radius: 18px; border: none;
             font-size: 1rem; font-weight: 700; cursor: pointer;
             display: flex; align-items: center; justify-content: center; gap: 10px;
-            transition: transform 0.2s;
+            transition: transform 0.2s; position: relative; overflow: hidden;
         }
-        .btn-gold { background: var(--gold); color: #000; box-shadow: 0 8px 20px rgba(255,215,0,0.2); }
-        .btn-glass { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid var(--glass-border); }
+        .btn-ocean { 
+            background: linear-gradient(135deg, var(--neon-cyan), var(--deep-ocean)); 
+            color: #000; 
+            box-shadow: 0 10px 25px rgba(0, 245, 212, 0.25); 
+        }
+        .btn-glass { 
+            background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--glass-border); 
+        }
         .action-btn-large:active { transform: scale(0.96); }
 
         .smart-details-box {
-            background: linear-gradient(180deg, rgba(255,215,0,0.05), transparent);
-            border: 1px solid rgba(255,215,0,0.2); border-radius: 20px; padding: 20px;
+            background: linear-gradient(180deg, rgba(0, 245, 212, 0.05) 0%, transparent);
+            border: 1px solid var(--glass-border); border-radius: 20px; padding: 20px;
             margin-top: 20px; text-align: center;
         }
         .copy-row {
-            background: rgba(0,0,0,0.4); border-radius: 12px; padding: 12px;
+            background: rgba(0,0,0,0.3); border-radius: 14px; padding: 14px;
             display: flex; justify-content: space-between; align-items: center;
             margin: 10px 0; border: 1px solid var(--glass-border);
         }
         .copy-val { font-family: 'Roboto Mono'; font-size: 1.1rem; color: #fff; letter-spacing: 1px; }
-        .copy-icon { color: var(--gold); cursor: pointer; padding: 5px; }
+        .copy-icon { color: var(--neon-cyan); cursor: pointer; padding: 5px; font-size: 1.1rem; }
 
         .upload-area {
-            border: 2px dashed rgba(255,255,255,0.2); border-radius: 16px;
-            padding: 30px; text-align: center; cursor: pointer; transition: 0.3s;
+            border: 2px dashed rgba(255,255,255,0.15); border-radius: 18px;
+            padding: 35px; text-align: center; cursor: pointer; transition: 0.3s;
+            background: rgba(0,0,0,0.2);
         }
-        .upload-area:hover { border-color: var(--gold); background: rgba(255,215,0,0.02); }
+        .upload-area:hover { border-color: var(--neon-cyan); background: rgba(0, 245, 212, 0.02); }
         
-        /* هدر ساده برای صفحات داخلی */
         .page-header {
-            padding: 20px; font-size: 1.2rem; font-weight: 800; color: #fff;
+            padding: 20px; font-size: 1.1rem; font-weight: 800; color: #fff;
             text-align: center; border-bottom: 1px solid var(--glass-border);
-            background: rgba(0,0,0,0.8); backdrop-filter: blur(10px);
+            background: rgba(5, 9, 12, 0.85); backdrop-filter: blur(15px);
             position: sticky; top: 0; z-index: 100;
+            display: flex; align-items: center; justify-content: center;
+            gap: 10px;
         }
     </style>
 </head>
-<body>
+<body class="theme-ocean">
 
     <div class="ambient-glow top-glow"></div>
-    <div class="page-header">مدیریت کیف پول</div>
+    <div class="noise-texture"></div>
 
-    <main class="content-scroll" style="padding-bottom: 100px;">
+    <div class="page-header">
+        <i class="fas fa-wallet" style="color: var(--neon-cyan);"></i>
+        مدیریت کیف پول
+    </div>
+
+    <main class="content-scroll" style="padding-bottom: 110px;">
         
-        <div class="hero-card" style="padding: 20px; margin-bottom: 20px;">
-            <div class="card-glass-effect"></div>
+        <div class="hero-card ocean-gradient" style="padding: 20px; margin-bottom: 25px;">
+            <div class="card-glow-overlay"></div>
             <div class="card-top" style="margin-bottom: 5px;">
                 <span class="card-label">موجودی قابل برداشت</span>
-                <i class="fas fa-wallet" style="color:rgba(255,255,255,0.2); font-size: 1.2rem;"></i>
+                <i class="fas fa-wifi" style="color:rgba(255,255,255,0.2); font-size: 1.2rem; transform: rotate(0);"></i>
             </div>
             <div class="balance-wrapper">
                 <span class="currency-sign">T</span>
-                <h1 id="balance-toman">---</h1>
+                <h1 id="balance-toman" style="font-family: 'Roboto Mono'; font-size: 2rem; font-weight: 800; margin: 0; background: linear-gradient(to bottom, #fff, #B0F2FF); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">---</h1>
             </div>
         </div>
 
@@ -109,7 +125,7 @@
                 <label class="luxe-label">مبلغ شارژ (تومان)</label>
                 <input type="text" id="auto-amount-input" class="luxe-field" placeholder="مثلاً ۵۰۰,۰۰۰" inputmode="numeric">
             </div>
-            <button class="action-btn-large btn-gold" onclick="generateSmartPayment()">
+            <button class="action-btn-large btn-ocean" onclick="generateSmartPayment()">
                 <i class="fas fa-bolt"></i> دریافت شناسه پرداخت
             </button>
 
@@ -128,7 +144,7 @@
                     <i class="far fa-copy copy-icon" onclick="copyValue('smart-card-num', 'شماره کارت کپی شد')"></i>
                 </div>
 
-                <div class="copy-row" style="background:rgba(14,203,129,0.1); border-color:var(--green);">
+                <div class="copy-row" style="background:rgba(6, 214, 160, 0.1); border-color:rgba(6, 214, 160, 0.3);">
                     <span class="luxe-label" style="color:var(--green)">شناسه:</span>
                     <span id="smart-toman-display" class="copy-val" style="color:var(--green)">---</span>
                 </div>
@@ -146,7 +162,7 @@
             </div>
             <div class="luxe-input-group">
                 <label class="luxe-label">کارت مقصد</label>
-                <select id="withdraw-card-select" class="luxe-field" style="background-color: #111;">
+                <select id="withdraw-card-select" class="luxe-field" style="background-color: #0d161d;">
                     <option value="" disabled selected>در حال بارگذاری...</option>
                 </select>
             </div>
@@ -167,12 +183,12 @@
             <div class="luxe-input-group">
                 <label class="luxe-label">تصویر روی کارت</label>
                 <div class="upload-area" onclick="document.getElementById('card-image-file').click()">
-                    <i class="fas fa-camera" style="font-size: 2rem; color: var(--gold); margin-bottom: 10px;"></i>
-                    <div id="card-image-label" style="font-size: 0.8rem; color: #888;">لمس برای انتخاب عکس</div>
+                    <i class="fas fa-camera" style="font-size: 2rem; color: var(--neon-cyan); margin-bottom: 10px;"></i>
+                    <div id="card-image-label" style="font-size: 0.8rem; color: var(--text-muted);">لمس برای انتخاب عکس</div>
                     <input type="file" id="card-image-file" style="display:none" accept="image/*" onchange="handleCardImageSelect()">
                 </div>
             </div>
-            <button class="action-btn-large btn-gold" onclick="submitNewCard()">
+            <button class="action-btn-large btn-ocean" onclick="submitNewCard()">
                 <i class="fas fa-plus"></i> ثبت کارت
             </button>
         </div>
@@ -185,8 +201,8 @@
             <div class="luxe-input-group">
                 <label class="luxe-label">تصویر فیش واریزی</label>
                 <div class="upload-area" onclick="document.getElementById('receipt-file').click()">
-                    <i class="fas fa-receipt" style="font-size: 2rem; color: var(--blue); margin-bottom: 10px;"></i>
-                    <div id="file-name-label" style="font-size: 0.8rem; color: #888;">انتخاب تصویر فیش</div>
+                    <i class="fas fa-receipt" style="font-size: 2rem; color: var(--deep-ocean); margin-bottom: 10px;"></i>
+                    <div id="file-name-label" style="font-size: 0.8rem; color: var(--text-muted);">انتخاب تصویر فیش</div>
                     <input type="file" id="receipt-file" style="display:none" accept="image/*" onchange="handleFileSelect()">
                 </div>
             </div>
@@ -197,7 +213,7 @@
 
     </main>
 
-    <nav class="bottom-nav">
+    <nav class="bottom-nav crystal-glass">
         <a href="/" class="nav-item">
             <i class="fas fa-home"></i>
             <span>خانه</span>
@@ -207,7 +223,7 @@
             <span>کیف پول</span>
         </a>
         <a href="usdt.html" class="nav-item floating-btn">
-            <div class="float-inner"><i class="fas fa-exchange-alt"></i></div>
+            <div class="float-inner ocean-gradient"><i class="fas fa-exchange-alt"></i></div>
         </a>
         <a href="game.html" class="nav-item">
             <i class="fas fa-gamepad"></i>
@@ -222,27 +238,20 @@
     <script src="webapp/wallet-engine.js"></script>
     
     <script>
-        // تابع تغییر تب‌ها
         function showPanel(id) {
-            // غیرفعال کردن همه تب‌ها
             document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
-            // فعال کردن تب انتخاب شده
             const activeNav = document.getElementById('nav-' + id);
             if(activeNav) activeNav.classList.add('active');
             
-            // مخفی کردن همه پنل‌ها
             document.querySelectorAll('.panel-section').forEach(el => el.classList.remove('active'));
-            // نمایش پنل انتخاب شده
             const activePanel = document.getElementById('panel-' + id);
             if(activePanel) activePanel.classList.add('active');
             
-            // ویبره هپتیک
             if(window.Telegram && window.Telegram.WebApp) {
                 window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
             }
         }
 
-        // تابع کپی (حفظ شده از قبل)
         function copyValue(elementId, message) {
             const element = document.getElementById(elementId);
             const text = element.innerText.replace(/,/g, '').replace(/-/g, '').replace(' تومان', '');
@@ -263,13 +272,12 @@
             if(window.Telegram) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
         }
 
-        // توابع انتخاب فایل (بروزرسانی شده برای تغییر رنگ متن)
         function handleFileSelect() {
             const file = document.getElementById('receipt-file').files[0];
             if (file) {
                 const lbl = document.getElementById('file-name-label');
                 lbl.innerText = "✅ " + file.name;
-                lbl.style.color = "var(--green)";
+                lbl.style.color = "var(--neon-cyan)";
             }
         }
 
@@ -278,11 +286,10 @@
             if (file) {
                 const lbl = document.getElementById('card-image-label');
                 lbl.innerText = "✅ تصویر انتخاب شد";
-                lbl.style.color = "var(--green)";
+                lbl.style.color = "var(--neon-cyan)";
             }
         }
         
-        // هندل کردن پارامتر URL برای باز کردن تب خاص (مثلا ?tab=withdraw)
         window.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             const tab = urlParams.get('tab');

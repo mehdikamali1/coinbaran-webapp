@@ -1,9 +1,8 @@
-﻿/* webapp/script.js (v108.0 - FULL COMPLETE VERSION) */
+﻿/* webapp/script.js (v110.0 - IRAN TIME & PRO FEATURES) */
 (function () {
     'use strict';
 
     const tg = window.Telegram.WebApp;
-    // آدرس پایه API - در نسخه پروداکشن باید آدرس واقعی سرور شما باشد
     const API_BASE_URL = window.location.origin + "/api/webapp"; 
     
     let MIN_SPLASH_TIME = 3000;
@@ -11,7 +10,6 @@
     const loader = document.getElementById('loader');
     const appContainer = document.getElementById('app-container');
     
-    // تشخیص اینکه در کدام صفحه هستیم
     const isDashboard = !!document.getElementById('toman-balance');
     const isSupportPage = !!document.getElementById('messages-container');
 
@@ -19,7 +17,6 @@
     let lastMessageCount = 0;
     let isSending = false;
 
-    // المان‌های رابط کاربری
     const els = {
         welcomeName: document.getElementById('welcome-name'),
         tomanBalance: document.getElementById('toman-balance'),
@@ -30,38 +27,28 @@
         supportNotif: document.getElementById('support-notif'),
         ticker: document.getElementById('price-ticker'),
         xpFill: document.getElementById('xp-progress-fill'),
-        levelBadge: document.getElementById('level-badge'),
-        nextLevelText: document.getElementById('next-level-text')
+        levelBadge: document.getElementById('level-badge')
     };
 
     const chatEls = {
         container: document.getElementById('messages-container'),
         input: document.getElementById('message-input'),
         sendBtn: document.getElementById('send-btn'),
-        optionsBtn: document.getElementById('chat-options-btn'),
         fileInput: document.getElementById('file-input'),
         attachBtn: document.getElementById('attach-btn')
     };
 
-    // ==========================================
-    // 1. هندل کردن دکمه بازگشت و کش مرورگر
-    // ==========================================
     window.addEventListener('pageshow', function(event) {
-        // اگر صفحه از کش لود شد، لودینگ را مخفی کن
         if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
             forceHideLoader();
         }
     });
 
-    // ==========================================
-    // 2. شروع برنامه (Initialization)
-    // ==========================================
     window.onload = async function() {
         try {
             tg.ready();
             tg.expand();
             
-            // تنظیمات رنگ هدر برای تم اقیانوسی
             if (isDashboard) {
                 tg.setHeaderColor('#080E13'); 
                 tg.setBackgroundColor('#080E13');
@@ -70,27 +57,19 @@
                 tg.setHeaderColor('#080E13');
                 tg.setBackgroundColor('#080E13');
                 tg.BackButton.show();
-                tg.BackButton.onClick(function() {
-                    window.location.href = 'dashboard.html';
-                });
+                tg.BackButton.onClick(() => window.location.href = 'dashboard.html');
             }
 
-            // حالت توسعه (تست)
-            if (!tg.initData) {
-                console.warn("Dev Mode active");
-                tg.initData = "query_id=TEST_DEV_MODE"; 
-            }
+            if (!tg.initData) tg.initData = "query_id=TEST_DEV_MODE"; 
 
             const hasSeenSplash = sessionStorage.getItem('splash_shown');
 
             if (isDashboard) {
                 if (hasSeenSplash) {
-                    // لود سریع بدون اسپلش
                     loadFromCache();
                     forceHideLoader();
                     initHapticFeedback();
                     
-                    // آپدیت دیتا در پس‌زمینه
                     fetchDashboardData().then(data => { if(data) updateDashboardUI(data); });
                     fetchMarketRates().then(res => {
                         if(res && res.status === 'success') {
@@ -102,7 +81,6 @@
                     checkUnreadSupportMessages();
 
                 } else {
-                    // نمایش اسپلش برای بار اول
                     sessionStorage.setItem('splash_shown', 'true');
                     const splashTimer = new Promise(resolve => setTimeout(resolve, MIN_SPLASH_TIME));
                     const dataFetch = fetchDashboardData();
@@ -135,56 +113,36 @@
                 startChatPolling();
                 initHapticFeedback();
             } else {
-                // صفحات داخلی دیگر
                 forceHideLoader();
                 initHapticFeedback();
             }
 
         } catch (error) {
-            console.error("Critical Init Error:", error);
+            console.error("Init Error:", error);
             forceHideLoader();
         }
     };
 
     // ==========================================
-    // توابع کمکی (کش و لودر)
+    // Core Functions
     // ==========================================
-    function saveToCache(data) {
-        try { localStorage.setItem('dashboard_cache', JSON.stringify(data)); } catch (e) {}
-    }
-
-    function loadFromCache() {
-        try {
-            const cached = localStorage.getItem('dashboard_cache');
-            if (cached) {
-                const data = JSON.parse(cached);
-                updateDashboardUI(data, false);
-            }
-        } catch (e) {}
-    }
+    function saveToCache(data) { try { localStorage.setItem('dashboard_cache', JSON.stringify(data)); } catch (e) {} }
+    function loadFromCache() { try { const cached = localStorage.getItem('dashboard_cache'); if (cached) updateDashboardUI(JSON.parse(cached), false); } catch (e) {} }
 
     function forceHideLoader() {
         document.body.classList.remove('loading-active');
-        if (loader) {
-            loader.style.display = 'none';
-            loader.style.opacity = '0';
-        }
-        if (appContainer) {
-            appContainer.classList.remove('hidden-content');
-            appContainer.style.opacity = '1';
-        }
+        if (loader) { loader.style.display = 'none'; loader.style.opacity = '0'; }
+        if (appContainer) { appContainer.classList.remove('hidden-content'); appContainer.style.opacity = '1'; }
     }
 
     function hideLoaderWithAnimation() {
         document.body.classList.remove('loading-active');
         if (loader) {
-            loader.style.opacity = '0';
-            loader.style.pointerEvents = 'none';
+            loader.style.opacity = '0'; loader.style.pointerEvents = 'none';
             setTimeout(() => {
                 loader.style.display = 'none';
                 if (appContainer) {
                     appContainer.classList.remove('hidden-content');
-                    // انیمیشن ورود نرم محتوا
                     appContainer.style.animation = "fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards";
                 }
             }, 600); 
@@ -194,9 +152,7 @@
     async function fetchDashboardData() {
         try {
             const response = await fetch(`${API_BASE_URL}/get_user_data`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ initData: tg.initData })
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ initData: tg.initData })
             });
             const data = await response.json();
             if(data.status === 'success') saveToCache(data);
@@ -205,29 +161,46 @@
     }
 
     async function fetchMarketRates() {
-        try {
-            const response = await fetch(`${API_BASE_URL}/market/rates`);
-            return await response.json();
-        } catch (e) { return null; }
+        try { const response = await fetch(`${API_BASE_URL}/market/rates`); return await response.json(); } catch (e) { return null; }
     }
 
     // ==========================================
-    // آپدیت رابط کاربری (UI) با انیمیشن‌ها
+    // UI Updates (Iran Time Greeting & Animations)
     // ==========================================
+    
+    // تابع محاسبه زمان ایران
+    function getIranTimeGreeting() {
+        try {
+            // دریافت زمان فعلی تهران
+            const tehranTime = new Date().toLocaleTimeString('en-US', { timeZone: 'Asia/Tehran', hour12: false });
+            const hour = parseInt(tehranTime.split(':')[0]);
+            
+            if (hour >= 5 && hour < 11) return "صبح بخیر";
+            if (hour >= 11 && hour < 16) return "ظهر بخیر";
+            if (hour >= 16 && hour < 20) return "عصر بخیر";
+            return "شب بخیر";
+        } catch (e) {
+            return "وقت بخیر";
+        }
+    }
+
     function updateDashboardUI(data, saveCache = true) {
         if (!data || data.status === 'error') return;
         if(saveCache) saveToCache(data);
 
-        if (els.welcomeName) els.welcomeName.innerText = data.first_name || "کاربر گرامی";
+        // اعمال خوش‌آمدگویی هوشمند
+        if (els.welcomeName) {
+            const greeting = getIranTimeGreeting();
+            const userName = data.first_name || "کاربر";
+            // مثلاً: "شب بخیر، مهدی"
+            els.welcomeName.innerHTML = `${greeting}، <span style="color:#fff;">${userName}</span>`;
+        }
         
-        // اجرای انیمیشن شمارش اعداد (Number Counter)
         if (els.tomanBalance) {
             const finalAmount = parseInt(data.toman_balance.replace(/,/g, '')) || 0;
-            // اگر قبلاً مقداری نبوده، انیمیشن اجرا شود
             if (els.tomanBalance.innerText === '---' || els.tomanBalance.innerText === '0') {
                 animateValue(els.tomanBalance, 0, finalAmount, 1500);
             } else {
-                // اگر آپدیت معمولی است، فقط عدد جایگزین شود
                 els.tomanBalance.innerText = finalAmount.toLocaleString();
             }
         }
@@ -243,24 +216,17 @@
         updateKycBadge(data.kyc_status_code);
     }
 
-    // تابع اختصاصی انیمیشن اعداد
     function animateValue(obj, start, end, duration) {
         if (start === end) return;
         let startTimestamp = null;
         const step = (timestamp) => {
             if (!startTimestamp) startTimestamp = timestamp;
             const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-            // افکت Ease Out Expo برای توقف نرم
             const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
-            
             const currentVal = Math.floor(easeProgress * (end - start) + start);
             obj.innerText = currentVal.toLocaleString();
-            
-            if (progress < 1) {
-                window.requestAnimationFrame(step);
-            } else {
-                obj.innerText = end.toLocaleString();
-            }
+            if (progress < 1) window.requestAnimationFrame(step);
+            else obj.innerText = end.toLocaleString();
         };
         window.requestAnimationFrame(step);
     }
@@ -269,36 +235,39 @@
         if (!els.xpFill || !els.levelBadge) return;
         const levels = [0, 500, 1500, 3500, 7000, 15000, 30000]; 
         let currentLevel = 1; let prevThreshold = 0; let nextThreshold = 500;
-        
         for (let i = 0; i < levels.length; i++) {
-            if (xp >= levels[i]) { 
-                currentLevel = i + 1; 
-                prevThreshold = levels[i]; 
-                nextThreshold = levels[i+1] || (levels[i] * 2); 
-            } else { break; }
+            if (xp >= levels[i]) { currentLevel = i + 1; prevThreshold = levels[i]; nextThreshold = levels[i+1] || (levels[i] * 2); } else { break; }
         }
-        
         let percentage = 0;
         if (nextThreshold > prevThreshold) percentage = ((xp - prevThreshold) / (nextThreshold - prevThreshold)) * 100;
         percentage = Math.min(100, Math.max(0, percentage));
-        
         els.xpFill.style.width = `${percentage}%`;
         els.levelBadge.innerText = `LVL ${currentLevel}`;
-        if (els.nextLevelText) els.nextLevelText.innerText = `${Math.floor(percentage)}%`;
     }
+
+    // آیکون‌های ارزها
+    const coinIcons = {
+        'BTC': 'fa-bitcoin',
+        'ETH': 'fa-ethereum',
+        'USDT': 'fa-dollar-sign', // برای تتر دلار
+        'TON': 'fa-gem',
+        'TRX': 'fa-caret-up'
+    };
 
     function updateTickerUI(rates) {
         if (!els.ticker || !rates || rates.length === 0) return;
         let html = '';
-        // تکرار نرخ‌ها برای پر کردن نوار متحرک
         const loopRates = [...rates, ...rates, ...rates]; 
         loopRates.forEach(rate => {
             const isUp = rate.change >= 0;
             const colorClass = isUp ? 'up-color' : 'down-color';
             const arrow = isUp ? '▲' : '▼';
+            // انتخاب آیکون مناسب یا پیش‌فرض
+            const iconClass = coinIcons[rate.symbol] || 'fa-coins';
             
             html += `
                 <div class="ticker-item">
+                    <i class="fab ${iconClass}" style="color: #8E9AAF; margin-left:5px; font-size:0.9rem;"></i>
                     <span style="color:#fff; font-weight:bold;">${rate.symbol}</span> 
                     <span style="color:#8E9AAF; margin:0 5px;">${rate.price}</span>
                     <span class="${colorClass}">${arrow} ${rate.display_change}</span>
@@ -307,9 +276,12 @@
         els.ticker.innerHTML = html;
     }
 
+    // نمودار Area Chart
     function renderSmartChart(changePercent) {
-        const path = document.getElementById('sparkline-path');
-        if (!path) return;
+        const svg = document.getElementById('sparkline-svg');
+        const areaPath = document.getElementById('sparkline-area');
+        const linePath = document.getElementById('sparkline-path');
+        if (!svg || !areaPath || !linePath) return;
         
         const width = 300; const height = 50; const pointsCount = 25; 
         const points = []; const trendFactor = changePercent * 2.5; 
@@ -323,25 +295,26 @@
             points.push({x, y});
         }
         
+        // رسم خط
         let d = `M ${points[0].x},${points[0].y}`;
-        for (let i = 1; i < points.length; i++) {
-            d += ` L ${points[i].x},${points[i].y}`;
-        }
+        for (let i = 1; i < points.length; i++) { d += ` L ${points[i].x},${points[i].y}`; }
+        linePath.setAttribute("d", d);
         
-        path.setAttribute("d", d);
+        // رسم ناحیه پر شده (Area)
+        let areaD = d + ` L ${width},${height} L 0,${height} Z`;
+        areaPath.setAttribute("d", areaD);
+
         const strokeColor = changePercent >= 0 ? '#00F5D4' : '#FF4757';
-        path.setAttribute("stroke", strokeColor);
+        linePath.setAttribute("stroke", strokeColor);
+        
+        // تنظیم رنگ گرادینت بر اساس مثبت/منفی بودن
+        // اینجا ساده نگه می‌داریم، همیشه فیروزه‌ای محو
     }
 
-    // ==========================================
-    // تعاملات و ویبره (Haptic)
-    // ==========================================
     function initHapticFeedback() {
-        const interactives = document.querySelectorAll('.ripple-btn, .nav-item, .privacy-toggle, .tab-item, .action-btn-large');
+        const interactives = document.querySelectorAll('.ripple-btn, .nav-item, .privacy-toggle, .tab-item');
         interactives.forEach(el => {
-            el.addEventListener('click', () => { 
-                if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light'); 
-            });
+            el.addEventListener('click', () => { if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light'); });
         });
     }
 
@@ -357,9 +330,7 @@
         if (!els.supportNotif) return;
         try {
             const response = await fetch(`${API_BASE_URL}/support/check_unread`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ initData: tg.initData })
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ initData: tg.initData })
             });
             const data = await response.json();
             els.supportNotif.style.display = data.has_unread ? 'block' : 'none';
@@ -367,7 +338,7 @@
     }
 
     // ==========================================
-    // سیستم چت پشتیبانی (نسخه کامل)
+    // Support Chat
     // ==========================================
     function startChatPolling() {
         if (chatPollInterval) clearInterval(chatPollInterval);
@@ -378,9 +349,7 @@
         if (!chatEls.container) return;
         try {
             const response = await fetch(`${API_BASE_URL}/support/get_history`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ initData: tg.initData })
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ initData: tg.initData })
             });
             if (response.ok) {
                 const data = await response.json();
@@ -425,14 +394,9 @@
         isSending = true;
         try {
             const response = await fetch(`${API_BASE_URL}/support/send_message`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ initData: tg.initData, message: text })
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ initData: tg.initData, message: text })
             });
-            if (response.ok) {
-                chatEls.input.value = '';
-                loadChatHistory(false);
-            }
+            if (response.ok) { chatEls.input.value = ''; loadChatHistory(false); }
         } catch (e) { tg.showAlert("خطا در ارسال"); }
         finally { isSending = false; }
     }

@@ -12,7 +12,7 @@
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="dashboard-style.css?v=109.0">
+    <link rel="stylesheet" href="dashboard-style.css?v=110.0">
 </head>
 <body class="loading-active theme-ocean">
 
@@ -93,6 +93,13 @@
 
                     <div class="sparkline-wrapper">
                         <svg id="sparkline-svg" viewBox="0 0 300 50" preserveAspectRatio="none">
+                            <defs>
+                                <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="#00F5D4" stop-opacity="0.4"/>
+                                    <stop offset="100%" stop-color="#00F5D4" stop-opacity="0"/>
+                                </linearGradient>
+                            </defs>
+                            <path id="sparkline-area" d="" fill="url(#chartFill)" stroke="none"></path>
                             <path id="sparkline-path" d="" fill="none" stroke-width="2.5"></path>
                         </svg>
                     </div>
@@ -197,7 +204,7 @@
 
     </div>
     
-    <script src="script.js?v=108.0"></script>
+    <script src="script.js?v=110.0"></script>
     
     <script>
         let isBalanceHidden = localStorage.getItem('balance_hidden') === 'true';

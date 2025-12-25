@@ -1,21 +1,17 @@
-﻿/* webapp/dashboard-style.css (v105.1 - FIXED FONT SIZE & LAYOUT) */
+﻿/* webapp/dashboard-style.css (v106.0 - OCEAN THEME + INFINITY LOADER FIX) */
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@200;400;600;800&family=Roboto+Mono:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&display=swap');
 
 :root {
-    /* --- پالت رنگی اقیانوس نئونی --- */
     --bg-deep: #05090C;
     --bg-card: rgba(20, 30, 40, 0.6);
-    
     --neon-cyan: #00F5D4;      
     --neon-blue: #4CC9F0;      
     --deep-ocean: #4361EE;     
-    
     --text-main: #FFFFFF;
     --text-muted: #8E9AAF;
-    
     --glass-border: rgba(0, 245, 212, 0.15);
     --glass-shine: rgba(255, 255, 255, 0.03);
-    
     --radius-xl: 26px;
     --radius-l: 18px;
     --radius-m: 14px;
@@ -30,21 +26,14 @@ body {
     color: var(--text-main);
     overflow: hidden;
     height: 100vh;
-    direction: rtl;
+    direction: rtl; /* جهت کلی راست به چپ */
 }
 
 /* =========================================
    1. پس‌زمینه زنده
    ========================================= */
-.aurora-container {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    z-index: -1; overflow: hidden; pointer-events: none;
-}
-.aurora-blob {
-    position: absolute; border-radius: 50%;
-    filter: blur(80px); opacity: 0.4;
-    animation: float 10s infinite alternate ease-in-out;
-}
+.aurora-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; overflow: hidden; pointer-events: none; }
+.aurora-blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.4; animation: float 10s infinite alternate ease-in-out; }
 .blob-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: var(--deep-ocean); animation-delay: 0s; }
 .blob-2 { bottom: -10%; right: -10%; width: 60vw; height: 60vw; background: var(--neon-cyan); opacity: 0.15; animation-delay: -5s; }
 .blob-3 { top: 40%; left: 40%; width: 40vw; height: 40vw; background: var(--neon-blue); opacity: 0.1; animation: float 15s infinite reverse ease-in-out; }
@@ -52,7 +41,52 @@ body {
 .noise-texture { position: fixed; inset: 0; background: url('https://grainy-gradients.vercel.app/noise.svg'); opacity: 0.03; z-index: 0; pointer-events: none; }
 
 /* =========================================
-   2. استایل‌های شیشه‌ای
+   2. لودینگ (Infinity Loop - Restored)
+   ========================================= */
+#loader {
+    position: fixed; inset: 0;
+    background: radial-gradient(circle at center, #0a1016 0%, #000000 90%);
+    z-index: 9999;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    transition: opacity 0.5s ease-in-out;
+}
+.infinity-wrapper { position: relative; width: 300px; height: 150px; display: flex; justify-content: center; align-items: center; }
+.infinity-svg { position: absolute; width: 100%; height: 100%; fill: none; }
+.infinity-path {
+    stroke: url(#oceanGrad); stroke-width: 6; stroke-linecap: round;
+    stroke-dasharray: 900; stroke-dashoffset: 900;
+    animation: draw-line 2.5s ease-out forwards;
+    filter: drop-shadow(0 0 15px rgba(0, 245, 212, 0.5));
+}
+.loader-logo {
+    width: 70px; height: 70px; border-radius: 50%; position: absolute; z-index: 10;
+    box-shadow: 0 0 40px rgba(0, 245, 212, 0.2);
+    animation: logo-pop 1s ease-out forwards 0.5s; opacity: 0;
+}
+.loader-text { margin-top: 40px; text-align: center; }
+.loading-title {
+    font-family: 'Cinzel', serif; font-size: 1.8rem; letter-spacing: 4px; color: var(--neon-cyan);
+    opacity: 0; animation: fade-up 0.8s ease forwards 1s;
+    text-shadow: 0 0 10px rgba(0,245,212,0.4);
+}
+.loading-line {
+    width: 150px; height: 2px; background: rgba(255,255,255,0.1); margin: 15px auto;
+    position: relative; overflow: hidden;
+}
+.loading-line::after {
+    content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: var(--neon-cyan); transform: translateX(-100%);
+    animation: load-bar 2.5s ease-in-out forwards 0.5s;
+}
+.loader-status { font-family: 'Roboto Mono'; font-size: 0.65rem; color: #888; letter-spacing: 2px; }
+
+@keyframes draw-line { to { stroke-dashoffset: 0; } }
+@keyframes logo-pop { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes fade-up { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes load-bar { to { transform: translateX(0); } }
+
+/* =========================================
+   3. استایل‌های عمومی
    ========================================= */
 .crystal-glass {
     background: rgba(10, 20, 30, 0.5);
@@ -62,24 +96,7 @@ body {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
-/* =========================================
-   3. لودینگ
-   ========================================= */
-#loader { position: fixed; inset: 0; background: var(--bg-deep); z-index: 9999; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s; }
-.logo-circle { width: 90px; height: 90px; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; }
-.logo-circle::before { content: ''; position: absolute; inset: -3px; border-radius: 50%; background: linear-gradient(45deg, var(--neon-cyan), var(--deep-ocean)); animation: spin 2s linear infinite; -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask-composite: exclude; padding: 3px; }
-.real-logo { width: 84px; height: 84px; border-radius: 50%; object-fit: cover; }
-.loader-bar-wrap { width: 140px; height: 3px; background: rgba(255,255,255,0.1); margin: 25px auto 10px; border-radius: 3px; overflow: hidden; }
-.loader-bar { width: 100%; height: 100%; background: var(--neon-cyan); animation: loadSlide 1.5s infinite ease-in-out; transform: translateX(-100%); }
-.loader-status { font-family: 'Roboto Mono'; font-size: 0.7rem; color: var(--text-muted); letter-spacing: 2px; }
-@keyframes spin { 100% { transform: rotate(360deg); } }
-@keyframes loadSlide { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
-
-/* =========================================
-   4. ساختار اصلی
-   ========================================= */
 #app-container { height: 100%; display: flex; flex-direction: column; max-width: 600px; margin: 0 auto; position: relative; z-index: 1; }
-
 .app-header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); }
 .user-profile { display: flex; align-items: center; gap: 12px; }
 .avatar-wrap { width: 46px; height: 46px; border-radius: 16px; padding: 2px; border: 1px solid var(--glass-border); position: relative; }
@@ -105,7 +122,7 @@ body {
 .content-scroll { flex: 1; overflow-y: auto; padding: 25px 20px; -webkit-overflow-scrolling: touch; }
 
 /* =========================================
-   5. کارت اصلی (Hero Card) - اصلاح شده
+   4. کارت اصلی و اصلاح جایگاه T
    ========================================= */
 .hero-card {
     position: relative; border-radius: var(--radius-xl); overflow: hidden;
@@ -123,44 +140,38 @@ body {
 .privacy-toggle { cursor: pointer; color: var(--text-muted); padding: 5px; transition: color 0.2s; }
 .privacy-toggle:hover { color: var(--neon-cyan); }
 
-/* --- اصلاح بخش موجودی --- */
+/* --- اصلاح جایگاه نماد پول --- */
 .balance-wrapper { 
-    display: flex; align-items: baseline; gap: 8px; direction: ltr; 
-    margin-bottom: 10px; position: relative; z-index: 2;
-    /* تضمین می‌کند که کادر از والد خود بیرون نزند */
+    display: flex; 
+    align-items: baseline; 
+    gap: 8px; 
+    /* مهم: حذف ltr قبلی تا از جهت body (که rtl است) پیروی کند. */
+    /* در RTL: عنصر اول (T) سمت راست قرار می‌گیرد، عنصر دوم (عدد) سمت چپ */
+    direction: rtl;
+    margin-bottom: 10px; 
+    position: relative; 
+    z-index: 2;
     max-width: 100%; 
     overflow: hidden;
 }
 
 .currency-sign { 
     color: var(--neon-cyan); font-size: 1.5rem; font-weight: 700; text-shadow: 0 0 10px rgba(0,245,212,0.5); 
-    flex-shrink: 0; /* جلوگیری از جمع شدن نماد ارز */
+    flex-shrink: 0; 
 }
 
-/* تایپوگرافی هوشمند و محدود شده */
 #toman-balance {
     font-family: 'Roboto Mono'; 
-    /* استفاده از clamp برای سایز فونت متغیر: (حداقل، ایده‌آل، حداکثر) */
     font-size: clamp(1.6rem, 7vw, 2.4rem); 
-    font-weight: 800; 
-    margin: 0; 
-    letter-spacing: -1px;
-    
-    /* استایل گرادینت */
+    font-weight: 800; margin: 0; letter-spacing: -1px;
     background: linear-gradient(to bottom, #FFFFFF, #B0F2FF);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     filter: drop-shadow(0 0 15px rgba(0,245,212,0.15));
     transition: filter 0.3s ease;
-
-    /* جلوگیری از شکستن خط و سرریز شدن */
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
 }
 
 .blur-mode { filter: blur(8px) !important; user-select: none; opacity: 0.7; }
-/* ------------------------ */
 
 .sparkline-wrapper { height: 50px; margin-bottom: 20px; position: relative; z-index: 2; }
 #sparkline-svg { width: 100%; height: 100%; overflow: visible; }
@@ -178,7 +189,7 @@ body {
 .divider { width: 1px; background: rgba(255,255,255,0.1); height: 35px; align-self: center; }
 
 /* =========================================
-   6. منو و دکمه‌ها
+   5. منو و دکمه‌ها
    ========================================= */
 .quick-menu-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 30px; }
 .quick-btn { display: flex; flex-direction: column; align-items: center; gap: 10px; cursor: pointer; }
@@ -213,7 +224,7 @@ body {
 .srv-arrow { color: var(--glass-border); font-size: 0.9rem; }
 
 /* =========================================
-   7. نوار ناوبری شناور
+   6. نوار ناوبری شناور
    ========================================= */
 .bottom-nav { position: fixed; bottom: 25px; left: 20px; right: 20px; height: 75px; border-radius: 28px; display: flex; justify-content: space-around; align-items: center; z-index: 1000; box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5); background: rgba(5, 10, 15, 0.85); }
 .nav-item { display: flex; flex-direction: column; align-items: center; gap: 6px; text-decoration: none; color: var(--text-muted); font-size: 0.7rem; transition: 0.3s; width: 60px; font-weight: 600; opacity: 0.7; }

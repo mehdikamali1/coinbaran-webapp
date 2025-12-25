@@ -8,7 +8,7 @@
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="dashboard-style.css?v=105.0">
+    <link rel="stylesheet" href="dashboard-style.css?v=106.0">
 </head>
 <body class="loading-active theme-ocean">
 
@@ -20,15 +20,23 @@
     <div class="noise-texture"></div>
 
     <div id="loader">
-        <div class="loader-content">
-            <div class="logo-circle crystal-effect">
-                <img src="images/logo-gold.png" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'" class="real-logo">
-                <i class="fas fa-gem fallback-icon" style="display:none"></i>
-            </div>
-            <div class="loader-bar-wrap">
-                <div class="loader-bar"></div>
-            </div>
-            <p class="loader-status">LOADING ASSETS...</p>
+        <div class="infinity-wrapper">
+            <svg class="infinity-svg" viewBox="0 0 340 170">
+                <defs>
+                    <linearGradient id="oceanGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" style="stop-color:#00F5D4;stop-opacity:1" />
+                        <stop offset="50%" style="stop-color:#4CC9F0;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#4361EE;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+                <path class="infinity-path" d="M170,85 C 230,145 310,145 310,85 C 310,25 230,25 170,85 C 110,145 30,145 30,85 C 30,25 110,25 170,85" />
+            </svg>
+            <img src="images/logo-gold.png" class="loader-logo" alt="CB">
+        </div>
+        <div class="loader-text">
+            <span class="loading-title">COIN BARAN</span>
+            <div class="loading-line"></div>
+            <span class="loader-status">CONNECTING...</span>
         </div>
     </div>
 
@@ -170,11 +178,9 @@
                 <i class="fas fa-wallet"></i>
                 <span>کیف پول</span>
             </a>
-            
             <a href="usdt.html" class="nav-item floating-btn">
                 <div class="float-inner ocean-gradient"><i class="fas fa-exchange-alt"></i></div>
             </a>
-            
             <a href="game.html" class="nav-item">
                 <i class="fas fa-gamepad"></i>
                 <span>بازی</span>
@@ -209,16 +215,12 @@
             isBalanceHidden = !isBalanceHidden;
             localStorage.setItem('balance_hidden', isBalanceHidden);
             applyPrivacyMode();
-            
             if(window.Telegram && window.Telegram.WebApp) {
                 window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
             }
         }
 
-        // اعمال وضعیت ذخیره شده هنگام لود
         document.addEventListener('DOMContentLoaded', applyPrivacyMode);
-        
-        // گوش دادن به تغییرات DOM (برای وقتی که اسکریپت اصلی عدد را آپدیت می‌کند)
         const observer = new MutationObserver(applyPrivacyMode);
         const target = document.getElementById('toman-balance');
         if(target) observer.observe(target, { childList: true, characterData: true, subtree: true });

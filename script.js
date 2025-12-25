@@ -1,16 +1,17 @@
-﻿/* webapp/script.js (v105.0 - PRODUCTION READY - NO SUMMARIZATION) */
+﻿/* webapp/script.js (v108.0 - FULL COMPLETE VERSION) */
 (function () {
     'use strict';
 
     const tg = window.Telegram.WebApp;
-    // آدرس پایه برای روت‌های کاربر
+    // آدرس پایه API - در نسخه پروداکشن باید آدرس واقعی سرور شما باشد
     const API_BASE_URL = window.location.origin + "/api/webapp"; 
     
-    let MIN_SPLASH_TIME = 3500; 
+    let MIN_SPLASH_TIME = 3000;
 
     const loader = document.getElementById('loader');
     const appContainer = document.getElementById('app-container');
     
+    // تشخیص اینکه در کدام صفحه هستیم
     const isDashboard = !!document.getElementById('toman-balance');
     const isSupportPage = !!document.getElementById('messages-container');
 
@@ -18,6 +19,7 @@
     let lastMessageCount = 0;
     let isSending = false;
 
+    // المان‌های رابط کاربری
     const els = {
         welcomeName: document.getElementById('welcome-name'),
         tomanBalance: document.getElementById('toman-balance'),
@@ -42,39 +44,40 @@
     };
 
     // ==========================================
-    // 1. GLOBAL FIX: BFCache Handler
+    // 1. هندل کردن دکمه بازگشت و کش مرورگر
     // ==========================================
     window.addEventListener('pageshow', function(event) {
+        // اگر صفحه از کش لود شد، لودینگ را مخفی کن
         if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
-            console.log("Restored from cache - Forcing loader hide");
             forceHideLoader();
-            document.body.style.overflow = 'auto';
         }
     });
 
     // ==========================================
-    // 2. MAIN INITIALIZATION
+    // 2. شروع برنامه (Initialization)
     // ==========================================
     window.onload = async function() {
         try {
             tg.ready();
             tg.expand();
             
+            // تنظیمات رنگ هدر برای تم اقیانوسی
             if (isDashboard) {
-                tg.setHeaderColor('#000000'); 
-                tg.setBackgroundColor('#000000');
+                tg.setHeaderColor('#080E13'); 
+                tg.setBackgroundColor('#080E13');
                 tg.BackButton.hide();
             } else {
-                tg.setHeaderColor('#1a1a1a');
-                tg.setBackgroundColor('#000000');
+                tg.setHeaderColor('#080E13');
+                tg.setBackgroundColor('#080E13');
                 tg.BackButton.show();
                 tg.BackButton.onClick(function() {
                     window.location.href = 'dashboard.html';
                 });
             }
 
+            // حالت توسعه (تست)
             if (!tg.initData) {
-                console.warn("Using Test Data");
+                console.warn("Dev Mode active");
                 tg.initData = "query_id=TEST_DEV_MODE"; 
             }
 
@@ -82,14 +85,12 @@
 
             if (isDashboard) {
                 if (hasSeenSplash) {
+                    // لود سریع بدون اسپلش
                     loadFromCache();
                     forceHideLoader();
+                    initHapticFeedback();
                     
-                    setTimeout(() => {
-                        init3DCardEffect();
-                        initHapticFeedback();
-                    }, 50);
-
+                    // آپدیت دیتا در پس‌زمینه
                     fetchDashboardData().then(data => { if(data) updateDashboardUI(data); });
                     fetchMarketRates().then(res => {
                         if(res && res.status === 'success') {
@@ -101,6 +102,7 @@
                     checkUnreadSupportMessages();
 
                 } else {
+                    // نمایش اسپلش برای بار اول
                     sessionStorage.setItem('splash_shown', 'true');
                     const splashTimer = new Promise(resolve => setTimeout(resolve, MIN_SPLASH_TIME));
                     const dataFetch = fetchDashboardData();
@@ -121,11 +123,7 @@
                         }
                         
                         hideLoaderWithAnimation();
-                        
-                        setTimeout(() => {
-                            init3DCardEffect();
-                            initHapticFeedback();
-                        }, 100);
+                        setTimeout(() => initHapticFeedback(), 100);
                     } else {
                         forceHideLoader();
                     }
@@ -137,7 +135,9 @@
                 startChatPolling();
                 initHapticFeedback();
             } else {
+                // صفحات داخلی دیگر
                 forceHideLoader();
+                initHapticFeedback();
             }
 
         } catch (error) {
@@ -147,7 +147,7 @@
     };
 
     // ==========================================
-    // Caching & Data Logic
+    // توابع کمکی (کش و لودر)
     // ==========================================
     function saveToCache(data) {
         try { localStorage.setItem('dashboard_cache', JSON.stringify(data)); } catch (e) {}
@@ -172,7 +172,6 @@
         if (appContainer) {
             appContainer.classList.remove('hidden-content');
             appContainer.style.opacity = '1';
-            appContainer.style.transform = 'translateY(0)';
         }
     }
 
@@ -185,9 +184,10 @@
                 loader.style.display = 'none';
                 if (appContainer) {
                     appContainer.classList.remove('hidden-content');
-                    appContainer.classList.add('fade-in-active');
+                    // انیمیشن ورود نرم محتوا
+                    appContainer.style.animation = "fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards";
                 }
-            }, 800); 
+            }, 600); 
         }
     }
 
@@ -212,14 +212,26 @@
     }
 
     // ==========================================
-    // UI Updaters (Fixed Percentages & Colors)
+    // آپدیت رابط کاربری (UI) با انیمیشن‌ها
     // ==========================================
     function updateDashboardUI(data, saveCache = true) {
         if (!data || data.status === 'error') return;
         if(saveCache) saveToCache(data);
 
         if (els.welcomeName) els.welcomeName.innerText = data.first_name || "کاربر گرامی";
-        if (els.tomanBalance) els.tomanBalance.innerText = data.toman_balance; 
+        
+        // اجرای انیمیشن شمارش اعداد (Number Counter)
+        if (els.tomanBalance) {
+            const finalAmount = parseInt(data.toman_balance.replace(/,/g, '')) || 0;
+            // اگر قبلاً مقداری نبوده، انیمیشن اجرا شود
+            if (els.tomanBalance.innerText === '---' || els.tomanBalance.innerText === '0') {
+                animateValue(els.tomanBalance, 0, finalAmount, 1500);
+            } else {
+                // اگر آپدیت معمولی است، فقط عدد جایگزین شود
+                els.tomanBalance.innerText = finalAmount.toLocaleString();
+            }
+        }
+
         if (els.uusdBalance) els.uusdBalance.innerHTML = `${data.uusd_balance} <small>$</small>`;
         if (els.xpBalance) els.xpBalance.innerHTML = `${data.xp_balance} <small>XP</small>`;
 
@@ -231,37 +243,64 @@
         updateKycBadge(data.kyc_status_code);
     }
 
+    // تابع اختصاصی انیمیشن اعداد
+    function animateValue(obj, start, end, duration) {
+        if (start === end) return;
+        let startTimestamp = null;
+        const step = (timestamp) => {
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            // افکت Ease Out Expo برای توقف نرم
+            const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+            
+            const currentVal = Math.floor(easeProgress * (end - start) + start);
+            obj.innerText = currentVal.toLocaleString();
+            
+            if (progress < 1) {
+                window.requestAnimationFrame(step);
+            } else {
+                obj.innerText = end.toLocaleString();
+            }
+        };
+        window.requestAnimationFrame(step);
+    }
+
     function updateLevelProgress(xp) {
         if (!els.xpFill || !els.levelBadge) return;
         const levels = [0, 500, 1500, 3500, 7000, 15000, 30000]; 
         let currentLevel = 1; let prevThreshold = 0; let nextThreshold = 500;
+        
         for (let i = 0; i < levels.length; i++) {
-            if (xp >= levels[i]) { currentLevel = i + 1; prevThreshold = levels[i]; nextThreshold = levels[i+1] || (levels[i] * 2); } else { break; }
+            if (xp >= levels[i]) { 
+                currentLevel = i + 1; 
+                prevThreshold = levels[i]; 
+                nextThreshold = levels[i+1] || (levels[i] * 2); 
+            } else { break; }
         }
+        
         let percentage = 0;
         if (nextThreshold > prevThreshold) percentage = ((xp - prevThreshold) / (nextThreshold - prevThreshold)) * 100;
         percentage = Math.min(100, Math.max(0, percentage));
+        
         els.xpFill.style.width = `${percentage}%`;
-        els.levelBadge.innerText = `VIP ${currentLevel}`;
+        els.levelBadge.innerText = `LVL ${currentLevel}`;
         if (els.nextLevelText) els.nextLevelText.innerText = `${Math.floor(percentage)}%`;
     }
 
     function updateTickerUI(rates) {
         if (!els.ticker || !rates || rates.length === 0) return;
         let html = '';
-        // تکرار برای انیمیشن بی‌پایان
+        // تکرار نرخ‌ها برای پر کردن نوار متحرک
         const loopRates = [...rates, ...rates, ...rates]; 
         loopRates.forEach(rate => {
-            // استفاده از منطق عددی برای تعیین کلاس رنگ
             const isUp = rate.change >= 0;
             const colorClass = isUp ? 'up-color' : 'down-color';
             const arrow = isUp ? '▲' : '▼';
             
-            // نمایش نماد ارز، قیمت و درصد واقعی (غیر صفر)
             html += `
                 <div class="ticker-item">
-                    ${rate.symbol}: 
-                    <span style="color: #fff; margin-right: 5px;">${rate.price}</span>
+                    <span style="color:#fff; font-weight:bold;">${rate.symbol}</span> 
+                    <span style="color:#8E9AAF; margin:0 5px;">${rate.price}</span>
                     <span class="${colorClass}">${arrow} ${rate.display_change}</span>
                 </div>`;
         });
@@ -269,54 +308,48 @@
     }
 
     function renderSmartChart(changePercent) {
-        const svg = document.getElementById('sparkline-svg');
         const path = document.getElementById('sparkline-path');
-        if (!svg || !path) return;
+        if (!path) return;
         
-        const width = 300; const height = 50; const pointsCount = 20; 
-        const points = []; const trendFactor = changePercent * 2; 
+        const width = 300; const height = 50; const pointsCount = 25; 
+        const points = []; const trendFactor = changePercent * 2.5; 
         
         for (let i = 0; i <= pointsCount; i++) {
             const x = (i / pointsCount) * width;
-            const noise = (Math.random() - 0.5) * 12;
+            const noise = (Math.random() - 0.5) * 10;
             const trend = (i / pointsCount) * -trendFactor; 
             let y = (height / 2) + trend + noise;
-            y = Math.max(5, Math.min(height - 5, y));
+            y = Math.max(2, Math.min(height - 2, y)); 
             points.push({x, y});
         }
         
         let d = `M ${points[0].x},${points[0].y}`;
-        for (let i = 1; i < points.length; i++) { d += ` L ${points[i].x},${points[i].y}`; }
+        for (let i = 1; i < points.length; i++) {
+            d += ` L ${points[i].x},${points[i].y}`;
+        }
         
         path.setAttribute("d", d);
-        path.setAttribute("stroke", changePercent >= 0 ? '#0ECB81' : '#F6465D');
+        const strokeColor = changePercent >= 0 ? '#00F5D4' : '#FF4757';
+        path.setAttribute("stroke", strokeColor);
     }
 
     // ==========================================
-    // Interactions & Support
+    // تعاملات و ویبره (Haptic)
     // ==========================================
-    function init3DCardEffect() {
-        const card = document.querySelector('.premium-card');
-        if (!card) return;
-        document.addEventListener('mousemove', (e) => {
-            const x = (window.innerWidth / 2 - e.pageX) / 30;
-            const y = (window.innerHeight / 2 - e.pageY) / 30;
-            card.style.transform = `rotateY(${x}deg) rotateX(${y}deg)`;
-        });
-    }
-
     function initHapticFeedback() {
-        const interactives = document.querySelectorAll('.ripple-btn, .glass-btn, .service-card, .game-banner, .action-icon-btn, .send-btn');
+        const interactives = document.querySelectorAll('.ripple-btn, .nav-item, .privacy-toggle, .tab-item, .action-btn-large');
         interactives.forEach(el => {
-            el.addEventListener('click', () => { tg.HapticFeedback.impactOccurred('light'); });
+            el.addEventListener('click', () => { 
+                if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light'); 
+            });
         });
     }
 
     function updateKycBadge(status) {
         if (!els.kycText) return;
-        let text = "Guest", color = "#848E9C";
-        if (status === 'verified') { text = "Verified ✅"; color = "#0ECB81"; }
-        else if (status === 'pending') { text = "Pending ⏳"; color = "#F0B90B"; }
+        let text = "Guest", color = "#8E9AAF";
+        if (status === 'verified') { text = "Verified"; color = "#00F5D4"; }
+        else if (status === 'pending') { text = "Pending"; color = "#F0B90B"; }
         els.kycText.innerText = text; els.kycText.style.color = color;
     }
 
@@ -334,7 +367,7 @@
     }
 
     // ==========================================
-    // Support Chat Engine (Full Version)
+    // سیستم چت پشتیبانی (نسخه کامل)
     // ==========================================
     function startChatPolling() {
         if (chatPollInterval) clearInterval(chatPollInterval);
@@ -415,4 +448,5 @@
     }
 
     function scrollToBottom() { if (chatEls.container) chatEls.container.scrollTop = chatEls.container.scrollHeight; }
+
 })();

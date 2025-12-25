@@ -1,229 +1,244 @@
-﻿<!DOCTYPE html>
-<html lang="fa" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#080E13">
-    <title>Coin Baran | Ocean Prime</title>
+﻿/* webapp/dashboard-style.css (v106.1 - INFINITY LOADER COLOR FIX) */
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@200;400;600;800&family=Roboto+Mono:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&display=swap');
+
+:root {
+    --bg-deep: #05090C;
+    --bg-card: rgba(20, 30, 40, 0.6);
+    --neon-cyan: #00F5D4;      
+    --neon-blue: #4CC9F0;      
+    --deep-ocean: #4361EE;     
+    --text-main: #FFFFFF;
+    --text-muted: #8E9AAF;
+    --glass-border: rgba(0, 245, 212, 0.15);
+    --glass-shine: rgba(255, 255, 255, 0.03);
+    --radius-xl: 26px;
+    --radius-l: 18px;
+    --radius-m: 14px;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; user-select: none; }
+
+body {
+    margin: 0; padding: 0;
+    font-family: 'Vazirmatn', sans-serif;
+    background-color: var(--bg-deep);
+    color: var(--text-main);
+    overflow: hidden;
+    height: 100vh;
+    direction: rtl;
+}
+
+/* =========================================
+   1. پس‌زمینه زنده
+   ========================================= */
+.aurora-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; overflow: hidden; pointer-events: none; }
+.aurora-blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.4; animation: float 10s infinite alternate ease-in-out; }
+.blob-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: var(--deep-ocean); animation-delay: 0s; }
+.blob-2 { bottom: -10%; right: -10%; width: 60vw; height: 60vw; background: var(--neon-cyan); opacity: 0.15; animation-delay: -5s; }
+.blob-3 { top: 40%; left: 40%; width: 40vw; height: 40vw; background: var(--neon-blue); opacity: 0.1; animation: float 15s infinite reverse ease-in-out; }
+@keyframes float { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(30px, 50px) scale(1.1); } }
+.noise-texture { position: fixed; inset: 0; background: url('https://grainy-gradients.vercel.app/noise.svg'); opacity: 0.03; z-index: 0; pointer-events: none; }
+
+/* =========================================
+   2. لودینگ (Infinity Loop - Color Fixed)
+   ========================================= */
+#loader {
+    position: fixed; inset: 0;
+    background: radial-gradient(circle at center, #0a1016 0%, #000000 90%);
+    z-index: 9999;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    transition: opacity 0.5s ease-in-out;
+}
+.infinity-wrapper { position: relative; width: 300px; height: 150px; display: flex; justify-content: center; align-items: center; }
+.infinity-svg { position: absolute; width: 100%; height: 100%; fill: none; }
+.infinity-path {
+    stroke: url(#oceanGrad); stroke-width: 6; stroke-linecap: round;
+    stroke-dasharray: 900; stroke-dashoffset: 900;
+    animation: draw-line 2.5s ease-out forwards;
+    filter: drop-shadow(0 0 15px rgba(0, 245, 212, 0.6));
+}
+
+/* --- اصلاح رنگ و درخشش لوگو --- */
+.loader-logo {
+    width: 74px; height: 74px; /* کمی بزرگتر برای جا گرفتن بوردر */
+    border-radius: 50%; 
+    position: absolute; z-index: 10;
+    /* ایجاد یک حلقه درخشان فیروزه‌ای دور لوگوی مشکی */
+    border: 2px solid var(--neon-cyan);
+    box-shadow: 0 0 25px rgba(0, 245, 212, 0.6), inset 0 0 10px rgba(0, 245, 212, 0.3);
+    background: #000; /* پس‌زمینه مشکی برای یکدست شدن */
+    padding: 2px; /* فاصله جزئی بین عکس و بوردر */
     
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="dashboard-style.css?v=106.0">
-</head>
-<body class="loading-active theme-ocean">
+    animation: logo-pop 1s ease-out forwards 0.5s; opacity: 0;
+}
+/* ------------------------------ */
 
-    <div class="aurora-container">
-        <div class="aurora-blob blob-1"></div>
-        <div class="aurora-blob blob-2"></div>
-        <div class="aurora-blob blob-3"></div>
-    </div>
-    <div class="noise-texture"></div>
+.loader-text { margin-top: 40px; text-align: center; }
+.loading-title {
+    font-family: 'Cinzel', serif; font-size: 1.8rem; letter-spacing: 4px; color: var(--neon-cyan);
+    opacity: 0; animation: fade-up 0.8s ease forwards 1s;
+    text-shadow: 0 0 15px rgba(0,245,212,0.5);
+}
+.loading-line {
+    width: 150px; height: 2px; background: rgba(255,255,255,0.1); margin: 15px auto;
+    position: relative; overflow: hidden;
+}
+.loading-line::after {
+    content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: var(--neon-cyan); transform: translateX(-100%);
+    animation: load-bar 2.5s ease-in-out forwards 0.5s;
+    box-shadow: 0 0 10px var(--neon-cyan);
+}
+.loader-status { font-family: 'Roboto Mono'; font-size: 0.65rem; color: var(--text-muted); letter-spacing: 2px; }
 
-    <div id="loader">
-        <div class="infinity-wrapper">
-            <svg class="infinity-svg" viewBox="0 0 340 170">
-                <defs>
-                    <linearGradient id="oceanGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" style="stop-color:#00F5D4;stop-opacity:1" />
-                        <stop offset="50%" style="stop-color:#4CC9F0;stop-opacity:1" />
-                        <stop offset="100%" style="stop-color:#4361EE;stop-opacity:1" />
-                    </linearGradient>
-                </defs>
-                <path class="infinity-path" d="M170,85 C 230,145 310,145 310,85 C 310,25 230,25 170,85 C 110,145 30,145 30,85 C 30,25 110,25 170,85" />
-            </svg>
-            <img src="images/logo-gold.png" class="loader-logo" alt="CB">
-        </div>
-        <div class="loader-text">
-            <span class="loading-title">COIN BARAN</span>
-            <div class="loading-line"></div>
-            <span class="loader-status">CONNECTING...</span>
-        </div>
-    </div>
+@keyframes draw-line { to { stroke-dashoffset: 0; } }
+@keyframes logo-pop { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes fade-up { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes load-bar { to { transform: translateX(0); } }
 
-    <div id="app-container" class="hidden-content">
-        
-        <header class="app-header crystal-glass">
-            <div class="user-profile">
-                <div class="avatar-wrap ripple-effect">
-                    <img src="images/logo-gold.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'" class="avatar-img">
-                    <div class="online-dot"></div>
-                </div>
-                <div class="user-details">
-                    <h2 id="welcome-name">کاربر گرامی</h2>
-                    <div class="xp-pill">
-                        <span id="level-badge">LVL 1</span>
-                        <div class="xp-track">
-                            <div id="xp-progress-fill" class="xp-fill" style="width: 0%"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <button class="notif-btn ripple-btn crystal-glass" onclick="window.location.href='support.html'">
-                <i class="far fa-bell"></i>
-                <span id="support-notif" class="notif-badge"></span>
-            </button>
-        </header>
+/* =========================================
+   3. استایل‌های عمومی
+   ========================================= */
+.crystal-glass {
+    background: rgba(10, 20, 30, 0.5);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
 
-        <div class="ticker-container crystal-glass">
-            <div class="ticker-track" id="price-ticker">
-                <div class="ticker-item">Connecting to global market...</div>
-            </div>
-        </div>
+#app-container { height: 100%; display: flex; flex-direction: column; max-width: 600px; margin: 0 auto; position: relative; z-index: 1; }
+.app-header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); }
+.user-profile { display: flex; align-items: center; gap: 12px; }
+.avatar-wrap { width: 46px; height: 46px; border-radius: 16px; padding: 2px; border: 1px solid var(--glass-border); position: relative; }
+.avatar-img { width: 100%; height: 100%; border-radius: 13px; object-fit: cover; }
+.online-dot { position: absolute; bottom: -1px; right: -1px; width: 12px; height: 12px; background: var(--neon-cyan); border: 2px solid var(--bg-deep); border-radius: 50%; box-shadow: 0 0 8px var(--neon-cyan); }
+.user-details h2 { font-size: 1rem; margin: 0; font-weight: 700; color: #fff; text-shadow: 0 0 10px rgba(0,245,212,0.3); }
+.xp-pill { display: flex; align-items: center; gap: 6px; margin-top: 5px; background: rgba(255,255,255,0.05); padding: 3px 8px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); }
+#level-badge { font-size: 0.65rem; color: var(--neon-cyan); font-weight: 800; font-family: 'Roboto Mono'; }
+.xp-track { width: 50px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; }
+.xp-fill { height: 100%; background: var(--neon-cyan); width: 0%; border-radius: 2px; transition: width 0.5s; box-shadow: 0 0 6px var(--neon-cyan); }
 
-        <main class="content-scroll">
-            
-            <div class="hero-card premium-card ocean-gradient">
-                <div class="card-glow-overlay"></div>
-                <div class="card-content">
-                    <div class="card-top">
-                        <span class="card-label">موجودی کل دارایی</span>
-                        <div class="privacy-toggle" onclick="toggleBalancePrivacy()">
-                            <i class="far fa-eye" id="privacy-icon"></i>
-                        </div>
-                    </div>
-                    
-                    <div class="balance-wrapper">
-                        <span class="currency-sign">T</span>
-                        <h1 id="toman-balance" class="balance-text">---</h1>
-                    </div>
+.notif-btn { width: 42px; height: 42px; border-radius: 14px; color: #fff; display: flex; align-items: center; justify-content: center; position: relative; font-size: 1.2rem; transition: 0.2s; }
+.notif-btn:active { transform: scale(0.95); }
+.notif-badge { position: absolute; top: 10px; right: 10px; width: 8px; height: 8px; background: #FF4757; border-radius: 50%; border: 1px solid var(--bg-deep); display: none; }
 
-                    <div class="sparkline-wrapper">
-                        <svg id="sparkline-svg" viewBox="0 0 300 50" preserveAspectRatio="none">
-                            <path id="sparkline-path" d="" fill="none" stroke-width="2.5"></path>
-                        </svg>
-                    </div>
+.ticker-container { border-bottom: 1px solid var(--glass-border); overflow: hidden; padding: 10px 0; background: rgba(5, 9, 12, 0.7); }
+.ticker-track { display: inline-block; white-space: nowrap; animation: tick 40s linear infinite; }
+.ticker-item { display: inline-block; padding: 0 25px; font-family: 'Roboto Mono'; font-size: 0.8rem; color: var(--text-muted); }
+.up-color { color: var(--neon-cyan) !important; text-shadow: 0 0 5px rgba(0,245,212,0.4); } 
+.down-color { color: #FF4757 !important; }
+@keyframes tick { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
 
-                    <div class="card-footer-info crystal-glass">
-                        <div class="info-item">
-                            <span class="label">معادل دلاری</span>
-                            <span class="value balance-text" id="uusd-balance">0.00 $</span>
-                        </div>
-                        <div class="divider"></div>
-                        <div class="info-item">
-                            <span class="label">امتیاز وفاداری</span>
-                            <span class="value xp-accent" id="xp-balance">0 XP</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+.content-scroll { flex: 1; overflow-y: auto; padding: 25px 20px; -webkit-overflow-scrolling: touch; }
 
-            <div class="quick-menu-grid">
-                <div class="quick-btn ripple-btn" onclick="window.location.href='wallet.html'">
-                    <div class="icon-box cyan-glow"><i class="fas fa-arrow-down"></i></div>
-                    <span>واریز</span>
-                </div>
-                <div class="quick-btn ripple-btn" onclick="window.location.href='wallet.html?tab=withdraw'">
-                    <div class="icon-box purple-glow"><i class="fas fa-arrow-up"></i></div>
-                    <span>برداشت</span>
-                </div>
-                <div class="quick-btn ripple-btn" onclick="window.location.href='usdt.html'">
-                    <div class="icon-box blue-glow"><i class="fas fa-exchange-alt"></i></div>
-                    <span>تبدیل</span>
-                </div>
-                <div class="quick-btn ripple-btn" onclick="window.location.href='kyc.html'">
-                    <div class="icon-box turquoise-glow"><i class="fas fa-fingerprint"></i></div>
-                    <span>احراز</span>
-                </div>
-            </div>
+/* =========================================
+   4. کارت اصلی و اصلاح جایگاه T
+   ========================================= */
+.hero-card {
+    position: relative; border-radius: var(--radius-xl); overflow: hidden;
+    padding: 24px; margin-bottom: 30px;
+    box-shadow: 0 25px 60px -15px rgba(0,0,0,0.6);
+    border: 1px solid rgba(255,255,255,0.08);
+    transform-style: preserve-3d; transition: transform 0.1s;
+}
+.ocean-gradient { background: linear-gradient(145deg, rgba(20, 30, 40, 0.8) 0%, rgba(5, 10, 15, 0.9) 100%); }
+.card-glow-overlay { position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(0,245,212,0.08) 0%, transparent 60%); pointer-events: none; mix-blend-mode: screen; }
 
-            <div class="promo-banner ripple-effect ocean-gradient" onclick="window.location.href='game.html'">
-                <div class="promo-text">
-                    <h3>Game Zone 🎮</h3>
-                    <p>کسب درآمد دلاری با پیش‌بینی</p>
-                </div>
-                <div class="promo-icon">
-                    <i class="fas fa-rocket"></i>
-                </div>
-            </div>
+.card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; position: relative; z-index: 2; }
+.card-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; }
 
-            <div class="section-header">خدمات صرافی</div>
-            <div class="services-list">
-                <div class="service-row ripple-btn crystal-glass" onclick="window.location.href='usdt.html'">
-                    <div class="srv-icon i-tether"><i class="fas fa-dollar-sign"></i></div>
-                    <div class="srv-info">
-                        <h4>خرید و فروش تتر</h4>
-                        <span class="srv-sub">نرخ لحظه‌ای و بهترین قیمت</span>
-                    </div>
-                    <div class="srv-arrow"><i class="fas fa-chevron-left"></i></div>
-                </div>
+.privacy-toggle { cursor: pointer; color: var(--text-muted); padding: 5px; transition: color 0.2s; }
+.privacy-toggle:hover { color: var(--neon-cyan); }
 
-                <div class="service-row ripple-btn crystal-glass" onclick="window.location.href='utopia.html'">
-                    <div class="srv-icon i-utopia"><i class="fas fa-ticket-alt"></i></div>
-                    <div class="srv-info">
-                        <h4>ووچر یوتوپیا</h4>
-                        <span class="srv-sub">نقد کردن سریع و اتوماتیک</span>
-                    </div>
-                    <div class="srv-arrow"><i class="fas fa-chevron-left"></i></div>
-                </div>
+.balance-wrapper { 
+    display: flex; align-items: baseline; gap: 8px; direction: rtl;
+    margin-bottom: 10px; position: relative; z-index: 2;
+    max-width: 100%; overflow: hidden;
+}
 
-                <div class="service-row ripple-btn crystal-glass" onclick="window.location.href='football.html'">
-                    <div class="srv-icon i-sport"><i class="fas fa-futbol"></i></div>
-                    <div class="srv-info">
-                        <h4>پیش‌بینی فوتبال</h4>
-                        <span class="srv-sub">لیگ‌های معتبر جهانی</span>
-                    </div>
-                    <div class="srv-arrow"><i class="fas fa-chevron-left"></i></div>
-                </div>
-            </div>
+.currency-sign { 
+    color: var(--neon-cyan); font-size: 1.5rem; font-weight: 700; text-shadow: 0 0 10px rgba(0,245,212,0.5); 
+    flex-shrink: 0; 
+}
 
-            <div style="height: 110px;"></div>
-        </main>
+#toman-balance {
+    font-family: 'Roboto Mono'; 
+    font-size: clamp(1.6rem, 7vw, 2.4rem); 
+    font-weight: 800; margin: 0; letter-spacing: -1px;
+    background: linear-gradient(to bottom, #FFFFFF, #B0F2FF);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 15px rgba(0,245,212,0.15));
+    transition: filter 0.3s ease;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+}
 
-        <nav class="bottom-nav crystal-glass">
-            <a href="#" class="nav-item active">
-                <i class="fas fa-home"></i>
-                <span>خانه</span>
-            </a>
-            <a href="wallet.html" class="nav-item">
-                <i class="fas fa-wallet"></i>
-                <span>کیف پول</span>
-            </a>
-            <a href="usdt.html" class="nav-item floating-btn">
-                <div class="float-inner ocean-gradient"><i class="fas fa-exchange-alt"></i></div>
-            </a>
-            <a href="game.html" class="nav-item">
-                <i class="fas fa-gamepad"></i>
-                <span>بازی</span>
-            </a>
-            <a href="support.html" class="nav-item">
-                <i class="fas fa-headset"></i>
-                <span>پشتیبانی</span>
-            </a>
-        </nav>
+.blur-mode { filter: blur(8px) !important; user-select: none; opacity: 0.7; }
 
-    </div>
-    
-    <script src="script.js?v=100.1"></script>
-    
-    <script>
-        let isBalanceHidden = localStorage.getItem('balance_hidden') === 'true';
+.sparkline-wrapper { height: 50px; margin-bottom: 20px; position: relative; z-index: 2; }
+#sparkline-svg { width: 100%; height: 100%; overflow: visible; }
+#sparkline-path { stroke: var(--neon-cyan); fill: none; filter: drop-shadow(0 0 8px rgba(0,245,212,0.5)); animation: heartbeat 3s infinite; }
+@keyframes heartbeat {
+    0%, 100% { stroke-opacity: 1; filter: drop-shadow(0 0 8px rgba(0,245,212,0.5)); }
+    50% { stroke-opacity: 0.6; filter: drop-shadow(0 0 2px rgba(0,245,212,0.2)); }
+}
 
-        function applyPrivacyMode() {
-            const elements = document.querySelectorAll('.balance-text');
-            const icon = document.getElementById('privacy-icon');
-            
-            if (isBalanceHidden) {
-                elements.forEach(el => el.classList.add('blur-mode'));
-                if(icon) { icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash'); }
-            } else {
-                elements.forEach(el => el.classList.remove('blur-mode'));
-                if(icon) { icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye'); }
-            }
-        }
+.card-footer-info { display: flex; justify-content: space-between; padding: 15px; border-radius: 18px; position: relative; z-index: 2; }
+.info-item { display: flex; flex-direction: column; align-items: center; flex: 1; }
+.info-item .label { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 4px; }
+.info-item .value { font-family: 'Roboto Mono'; font-size: 1rem; font-weight: 700; color: #fff; }
+.xp-accent { color: var(--neon-cyan); text-shadow: 0 0 8px rgba(0,245,212,0.3); }
+.divider { width: 1px; background: rgba(255,255,255,0.1); height: 35px; align-self: center; }
 
-        function toggleBalancePrivacy() {
-            isBalanceHidden = !isBalanceHidden;
-            localStorage.setItem('balance_hidden', isBalanceHidden);
-            applyPrivacyMode();
-            if(window.Telegram && window.Telegram.WebApp) {
-                window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
-            }
-        }
+/* =========================================
+   5. منو و دکمه‌ها
+   ========================================= */
+.quick-menu-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 30px; }
+.quick-btn { display: flex; flex-direction: column; align-items: center; gap: 10px; cursor: pointer; }
+.icon-box { width: 62px; height: 62px; border-radius: 24px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; transition: all 0.2s; position: relative; overflow: hidden; box-shadow: 0 10px 20px -5px rgba(0,0,0,0.4); }
+.quick-btn span { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
+.quick-btn:active .icon-box { transform: scale(0.92); border-color: var(--neon-cyan); }
 
-        document.addEventListener('DOMContentLoaded', applyPrivacyMode);
-        const observer = new MutationObserver(applyPrivacyMode);
-        const target = document.getElementById('toman-balance');
-        if(target) observer.observe(target, { childList: true, characterData: true, subtree: true });
-    </script>
-</body>
-</html>
+.cyan-glow { color: var(--neon-cyan); box-shadow: inset 0 0 20px rgba(0,245,212,0.05); }
+.purple-glow { color: #D400F5; box-shadow: inset 0 0 20px rgba(212,0,245,0.05); }
+.blue-glow { color: var(--deep-ocean); box-shadow: inset 0 0 20px rgba(67,97,238,0.05); }
+.turquoise-glow { color: #4CC9F0; box-shadow: inset 0 0 20px rgba(76,201,240,0.05); }
+
+.promo-banner { border-radius: var(--radius-l); padding: 20px 25px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; position: relative; overflow: hidden; border: 1px solid var(--glass-border); background: linear-gradient(90deg, rgba(255,255,255,0.02), transparent); }
+.promo-banner::after { content: ''; position: absolute; left: 0; bottom: 0; width: 100%; height: 2px; background: linear-gradient(90deg, var(--deep-ocean), var(--neon-cyan)); }
+.promo-text h3 { margin: 0 0 6px; font-size: 1.1rem; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.1); }
+.promo-text p { margin: 0; font-size: 0.8rem; color: var(--text-muted); }
+.promo-icon { font-size: 2rem; color: var(--neon-cyan); filter: drop-shadow(0 0 15px var(--neon-cyan)); transform: rotate(-10deg); }
+
+.section-header { font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+.section-header::before { content: ''; width: 4px; height: 18px; background: var(--neon-cyan); border-radius: 2px; box-shadow: 0 0 8px var(--neon-cyan); }
+
+.services-list { display: flex; flex-direction: column; gap: 12px; }
+.service-row { display: flex; align-items: center; padding: 16px 20px; border-radius: 20px; transition: 0.2s; border: 1px solid transparent; }
+.service-row:active { transform: scale(0.98); background: rgba(0,245,212,0.05); border-color: rgba(0,245,212,0.2); }
+.srv-icon { width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; margin-left: 15px; }
+.i-tether { background: rgba(0,245,212,0.1); color: var(--neon-cyan); }
+.i-utopia { background: rgba(212,0,245,0.1); color: #D400F5; }
+.i-sport { background: rgba(67,97,238,0.1); color: var(--deep-ocean); }
+.srv-info { flex: 1; }
+.srv-info h4 { margin: 0 0 4px; font-size: 0.95rem; color: #fff; }
+.srv-sub { font-size: 0.75rem; color: var(--text-muted); display: block; }
+.srv-arrow { color: var(--glass-border); font-size: 0.9rem; }
+
+/* =========================================
+   6. نوار ناوبری شناور
+   ========================================= */
+.bottom-nav { position: fixed; bottom: 25px; left: 20px; right: 20px; height: 75px; border-radius: 28px; display: flex; justify-content: space-around; align-items: center; z-index: 1000; box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5); background: rgba(5, 10, 15, 0.85); }
+.nav-item { display: flex; flex-direction: column; align-items: center; gap: 6px; text-decoration: none; color: var(--text-muted); font-size: 0.7rem; transition: 0.3s; width: 60px; font-weight: 600; opacity: 0.7; }
+.nav-item i { font-size: 1.4rem; transition: 0.2s; }
+.nav-item.active { color: var(--neon-cyan); opacity: 1; }
+.nav-item.active i { transform: translateY(-4px); filter: drop-shadow(0 0 10px var(--neon-cyan)); }
+
+.floating-btn { position: relative; top: -35px; opacity: 1 !important; }
+.float-inner { width: 65px; height: 65px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; color: #000; box-shadow: 0 0 30px rgba(0, 245, 212, 0.3); border: 5px solid var(--bg-deep); background: linear-gradient(135deg, var(--neon-cyan), var(--deep-ocean)); animation: pulse-glow 3s infinite; }
+@keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 20px rgba(0, 245, 212, 0.3); } 50% { box-shadow: 0 0 40px rgba(0, 245, 212, 0.6); } }
+
+.hidden-content { opacity: 0; }
+.ripple-btn { position: relative; overflow: hidden; }
+.ripple-btn:active { transform: scale(0.96); }

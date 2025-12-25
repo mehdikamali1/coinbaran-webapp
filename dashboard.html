@@ -4,22 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#080E13">
-    <title>Coin Baran | Turquoise Dashboard</title>
+    <title>Coin Baran | Ocean Prime</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="dashboard-style.css?v=102.0">
+    <link rel="stylesheet" href="dashboard-style.css?v=105.0">
 </head>
 <body class="loading-active theme-ocean">
 
-    <div class="ambient-glow turquoise-glow-top"></div>
-    <div class="ambient-glow deep-blue-glow-bottom"></div>
+    <div class="aurora-container">
+        <div class="aurora-blob blob-1"></div>
+        <div class="aurora-blob blob-2"></div>
+        <div class="aurora-blob blob-3"></div>
+    </div>
     <div class="noise-texture"></div>
 
     <div id="loader">
         <div class="loader-content">
             <div class="logo-circle crystal-effect">
-                <i class="fas fa-gem fallback-icon"></i>
+                <img src="images/logo-gold.png" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'" class="real-logo">
+                <i class="fas fa-gem fallback-icon" style="display:none"></i>
             </div>
             <div class="loader-bar-wrap">
                 <div class="loader-bar"></div>
@@ -54,36 +58,37 @@
 
         <div class="ticker-container crystal-glass">
             <div class="ticker-track" id="price-ticker">
-                <div class="ticker-item">Connecting to market data...</div>
+                <div class="ticker-item">Connecting to global market...</div>
             </div>
         </div>
 
         <main class="content-scroll">
             
             <div class="hero-card premium-card ocean-gradient">
+                <div class="card-glow-overlay"></div>
                 <div class="card-content">
                     <div class="card-top">
-                        <span class="card-label">موجودی کل</span>
-                        <div class="card-chip">
-                            <i class="fas fa-wifi"></i>
+                        <span class="card-label">موجودی کل دارایی</span>
+                        <div class="privacy-toggle" onclick="toggleBalancePrivacy()">
+                            <i class="far fa-eye" id="privacy-icon"></i>
                         </div>
                     </div>
                     
                     <div class="balance-wrapper">
                         <span class="currency-sign">T</span>
-                        <h1 id="toman-balance">---</h1>
+                        <h1 id="toman-balance" class="balance-text">---</h1>
                     </div>
 
                     <div class="sparkline-wrapper">
                         <svg id="sparkline-svg" viewBox="0 0 300 50" preserveAspectRatio="none">
-                            <path id="sparkline-path" d="" fill="none" stroke-width="2"></path>
+                            <path id="sparkline-path" d="" fill="none" stroke-width="2.5"></path>
                         </svg>
                     </div>
 
                     <div class="card-footer-info crystal-glass">
                         <div class="info-item">
                             <span class="label">معادل دلاری</span>
-                            <span class="value" id="uusd-balance">0.00 $</span>
+                            <span class="value balance-text" id="uusd-balance">0.00 $</span>
                         </div>
                         <div class="divider"></div>
                         <div class="info-item">
@@ -116,7 +121,7 @@
             <div class="promo-banner ripple-effect ocean-gradient" onclick="window.location.href='game.html'">
                 <div class="promo-text">
                     <h3>Game Zone 🎮</h3>
-                    <p>پیش‌بینی کن، جایزه دلاری ببر!</p>
+                    <p>کسب درآمد دلاری با پیش‌بینی</p>
                 </div>
                 <div class="promo-icon">
                     <i class="fas fa-rocket"></i>
@@ -129,7 +134,7 @@
                     <div class="srv-icon i-tether"><i class="fas fa-dollar-sign"></i></div>
                     <div class="srv-info">
                         <h4>خرید و فروش تتر</h4>
-                        <span id="kyc-text" style="color: var(--turquoise);">نرخ لحظه‌ای</span>
+                        <span class="srv-sub">نرخ لحظه‌ای و بهترین قیمت</span>
                     </div>
                     <div class="srv-arrow"><i class="fas fa-chevron-left"></i></div>
                 </div>
@@ -138,7 +143,7 @@
                     <div class="srv-icon i-utopia"><i class="fas fa-ticket-alt"></i></div>
                     <div class="srv-info">
                         <h4>ووچر یوتوپیا</h4>
-                        <span>نقد کردن سریع</span>
+                        <span class="srv-sub">نقد کردن سریع و اتوماتیک</span>
                     </div>
                     <div class="srv-arrow"><i class="fas fa-chevron-left"></i></div>
                 </div>
@@ -147,7 +152,7 @@
                     <div class="srv-icon i-sport"><i class="fas fa-futbol"></i></div>
                     <div class="srv-info">
                         <h4>پیش‌بینی فوتبال</h4>
-                        <span>لیگ‌های معتبر</span>
+                        <span class="srv-sub">لیگ‌های معتبر جهانی</span>
                     </div>
                     <div class="srv-arrow"><i class="fas fa-chevron-left"></i></div>
                 </div>
@@ -165,9 +170,11 @@
                 <i class="fas fa-wallet"></i>
                 <span>کیف پول</span>
             </a>
+            
             <a href="usdt.html" class="nav-item floating-btn">
                 <div class="float-inner ocean-gradient"><i class="fas fa-exchange-alt"></i></div>
             </a>
+            
             <a href="game.html" class="nav-item">
                 <i class="fas fa-gamepad"></i>
                 <span>بازی</span>
@@ -181,5 +188,40 @@
     </div>
     
     <script src="script.js?v=100.1"></script>
+    
+    <script>
+        let isBalanceHidden = localStorage.getItem('balance_hidden') === 'true';
+
+        function applyPrivacyMode() {
+            const elements = document.querySelectorAll('.balance-text');
+            const icon = document.getElementById('privacy-icon');
+            
+            if (isBalanceHidden) {
+                elements.forEach(el => el.classList.add('blur-mode'));
+                if(icon) { icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash'); }
+            } else {
+                elements.forEach(el => el.classList.remove('blur-mode'));
+                if(icon) { icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye'); }
+            }
+        }
+
+        function toggleBalancePrivacy() {
+            isBalanceHidden = !isBalanceHidden;
+            localStorage.setItem('balance_hidden', isBalanceHidden);
+            applyPrivacyMode();
+            
+            if(window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+            }
+        }
+
+        // اعمال وضعیت ذخیره شده هنگام لود
+        document.addEventListener('DOMContentLoaded', applyPrivacyMode);
+        
+        // گوش دادن به تغییرات DOM (برای وقتی که اسکریپت اصلی عدد را آپدیت می‌کند)
+        const observer = new MutationObserver(applyPrivacyMode);
+        const target = document.getElementById('toman-balance');
+        if(target) observer.observe(target, { childList: true, characterData: true, subtree: true });
+    </script>
 </body>
 </html>

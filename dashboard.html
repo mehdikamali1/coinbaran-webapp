@@ -3,35 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#000000">
-    <title>Coin Baran | Pro Dashboard</title>
+    <meta name="theme-color" content="#080E13">
+    <title>Coin Baran | Turquoise Dashboard</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="dashboard-style.css?v=100.1">
+    <link rel="stylesheet" href="dashboard-style.css?v=102.0">
 </head>
-<body class="loading-active">
+<body class="loading-active theme-ocean">
 
-    <div class="ambient-glow top-glow"></div>
-    <div class="ambient-glow bottom-glow"></div>
-    <div class="noise-overlay"></div>
+    <div class="ambient-glow turquoise-glow-top"></div>
+    <div class="ambient-glow deep-blue-glow-bottom"></div>
+    <div class="noise-texture"></div>
 
     <div id="loader">
         <div class="loader-content">
-            <div class="logo-circle">
-                <img src="images/logo-gold.png" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'" class="real-logo">
-                <i class="fas fa-gem fallback-icon" style="display:none"></i>
+            <div class="logo-circle crystal-effect">
+                <i class="fas fa-gem fallback-icon"></i>
             </div>
             <div class="loader-bar-wrap">
                 <div class="loader-bar"></div>
             </div>
-            <p class="loader-status">CONNECTING TO BLOCKCHAIN...</p>
+            <p class="loader-status">LOADING ASSETS...</p>
         </div>
     </div>
 
     <div id="app-container" class="hidden-content">
         
-        <header class="app-header">
+        <header class="app-header crystal-glass">
             <div class="user-profile">
                 <div class="avatar-wrap ripple-effect">
                     <img src="images/logo-gold.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'" class="avatar-img">
@@ -47,25 +46,24 @@
                     </div>
                 </div>
             </div>
-            <button class="notif-btn ripple-btn" onclick="window.location.href='support.html'">
-                <i class="fas fa-bell"></i>
+            <button class="notif-btn ripple-btn crystal-glass" onclick="window.location.href='support.html'">
+                <i class="far fa-bell"></i>
                 <span id="support-notif" class="notif-badge"></span>
             </button>
         </header>
 
-        <div class="ticker-container">
+        <div class="ticker-container crystal-glass">
             <div class="ticker-track" id="price-ticker">
-                <div class="ticker-item">Loading Market Data...</div>
+                <div class="ticker-item">Connecting to market data...</div>
             </div>
         </div>
 
         <main class="content-scroll">
             
-            <div class="hero-card premium-card">
-                <div class="card-glass-effect"></div>
+            <div class="hero-card premium-card ocean-gradient">
                 <div class="card-content">
                     <div class="card-top">
-                        <span class="card-label">Total Balance</span>
+                        <span class="card-label">موجودی کل</span>
                         <div class="card-chip">
                             <i class="fas fa-wifi"></i>
                         </div>
@@ -78,19 +76,19 @@
 
                     <div class="sparkline-wrapper">
                         <svg id="sparkline-svg" viewBox="0 0 300 50" preserveAspectRatio="none">
-                            <path id="sparkline-path" d="" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2"></path>
+                            <path id="sparkline-path" d="" fill="none" stroke-width="2"></path>
                         </svg>
                     </div>
 
-                    <div class="card-footer-info">
+                    <div class="card-footer-info crystal-glass">
                         <div class="info-item">
-                            <span class="label">USDT Equity</span>
+                            <span class="label">معادل دلاری</span>
                             <span class="value" id="uusd-balance">0.00 $</span>
                         </div>
                         <div class="divider"></div>
                         <div class="info-item">
-                            <span class="label">Loyalty XP</span>
-                            <span class="value xp-gold" id="xp-balance">0 XP</span>
+                            <span class="label">امتیاز وفاداری</span>
+                            <span class="value xp-accent" id="xp-balance">0 XP</span>
                         </div>
                     </div>
                 </div>
@@ -98,11 +96,11 @@
 
             <div class="quick-menu-grid">
                 <div class="quick-btn ripple-btn" onclick="window.location.href='wallet.html'">
-                    <div class="icon-box green-glow"><i class="fas fa-arrow-down"></i></div>
+                    <div class="icon-box cyan-glow"><i class="fas fa-arrow-down"></i></div>
                     <span>واریز</span>
                 </div>
                 <div class="quick-btn ripple-btn" onclick="window.location.href='wallet.html?tab=withdraw'">
-                    <div class="icon-box red-glow"><i class="fas fa-arrow-up"></i></div>
+                    <div class="icon-box purple-glow"><i class="fas fa-arrow-up"></i></div>
                     <span>برداشت</span>
                 </div>
                 <div class="quick-btn ripple-btn" onclick="window.location.href='usdt.html'">
@@ -110,12 +108,12 @@
                     <span>تبدیل</span>
                 </div>
                 <div class="quick-btn ripple-btn" onclick="window.location.href='kyc.html'">
-                    <div class="icon-box gold-glow"><i class="fas fa-shield-alt"></i></div>
+                    <div class="icon-box turquoise-glow"><i class="fas fa-fingerprint"></i></div>
                     <span>احراز</span>
                 </div>
             </div>
 
-            <div class="promo-banner ripple-effect" onclick="window.location.href='game.html'">
+            <div class="promo-banner ripple-effect ocean-gradient" onclick="window.location.href='game.html'">
                 <div class="promo-text">
                     <h3>Game Zone 🎮</h3>
                     <p>پیش‌بینی کن، جایزه دلاری ببر!</p>
@@ -127,16 +125,16 @@
 
             <div class="section-header">خدمات صرافی</div>
             <div class="services-list">
-                <div class="service-row ripple-btn" onclick="window.location.href='usdt.html'">
+                <div class="service-row ripple-btn crystal-glass" onclick="window.location.href='usdt.html'">
                     <div class="srv-icon i-tether"><i class="fas fa-dollar-sign"></i></div>
                     <div class="srv-info">
                         <h4>خرید و فروش تتر</h4>
-                        <span id="kyc-text">نرخ لحظه‌ای</span>
+                        <span id="kyc-text" style="color: var(--turquoise);">نرخ لحظه‌ای</span>
                     </div>
                     <div class="srv-arrow"><i class="fas fa-chevron-left"></i></div>
                 </div>
 
-                <div class="service-row ripple-btn" onclick="window.location.href='utopia.html'">
+                <div class="service-row ripple-btn crystal-glass" onclick="window.location.href='utopia.html'">
                     <div class="srv-icon i-utopia"><i class="fas fa-ticket-alt"></i></div>
                     <div class="srv-info">
                         <h4>ووچر یوتوپیا</h4>
@@ -145,7 +143,7 @@
                     <div class="srv-arrow"><i class="fas fa-chevron-left"></i></div>
                 </div>
 
-                <div class="service-row ripple-btn" onclick="window.location.href='football.html'">
+                <div class="service-row ripple-btn crystal-glass" onclick="window.location.href='football.html'">
                     <div class="srv-icon i-sport"><i class="fas fa-futbol"></i></div>
                     <div class="srv-info">
                         <h4>پیش‌بینی فوتبال</h4>
@@ -155,9 +153,10 @@
                 </div>
             </div>
 
-            <div style="height: 100px;"></div> </main>
+            <div style="height: 110px;"></div>
+        </main>
 
-        <nav class="bottom-nav">
+        <nav class="bottom-nav crystal-glass">
             <a href="#" class="nav-item active">
                 <i class="fas fa-home"></i>
                 <span>خانه</span>
@@ -167,7 +166,7 @@
                 <span>کیف پول</span>
             </a>
             <a href="usdt.html" class="nav-item floating-btn">
-                <div class="float-inner"><i class="fas fa-exchange-alt"></i></div>
+                <div class="float-inner ocean-gradient"><i class="fas fa-exchange-alt"></i></div>
             </a>
             <a href="game.html" class="nav-item">
                 <i class="fas fa-gamepad"></i>

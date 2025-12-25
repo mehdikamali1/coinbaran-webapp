@@ -1,4 +1,4 @@
-﻿/* webapp/wallet-engine.js (v113.0 - FINAL FULL VERSION - FIXED LIST RENDERING CRASH) */
+﻿/* webapp/wallet-engine.js (v113.2 - FINAL FULL VERSION - FIXED LIST RENDERING) */
 (function () {
     'use strict';
 

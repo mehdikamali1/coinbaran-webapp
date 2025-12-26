@@ -2,8 +2,10 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#080E13">
     <title>تبادل اتوماتیک تتر | کوین باران</title>
+    
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
@@ -19,38 +21,28 @@
             --glass-border: rgba(255, 255, 255, 0.1);
             --text-main: #FFFFFF;
             --text-muted: #94a3b8;
-            --color-up: #00F5D4;
-            --color-down: #f6465d;
         }
 
+        /* جلوگیری از اسکرول عرضی در کل صفحه */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
 
-        body {
+        html, body {
+            margin: 0; padding: 0;
+            width: 100% !important;
+            max-width: 100vw !important;
+            overflow-x: hidden !important;
             background-color: var(--bg-deep);
-            background-image: 
-                radial-gradient(circle at 0% 0%, rgba(0, 245, 212, 0.08) 0%, transparent 40%),
-                radial-gradient(circle at 100% 100%, rgba(0, 187, 255, 0.08) 0%, transparent 40%);
             color: var(--text-main);
             font-family: 'Vazirmatn', sans-serif;
-            margin: 0;
-            padding: 0;
-            overflow-x: hidden;
-            min-height: 100vh;
-            user-select: none;
+            position: relative;
         }
 
-        /* --- Header Section --- */
+        /* --- Header --- */
         .luxury-header {
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            background: rgba(2, 6, 23, 0.85);
-            backdrop-filter: blur(25px);
+            position: sticky; top: 0; z-index: 1000;
+            background: rgba(2, 6, 23, 0.85); backdrop-filter: blur(25px);
             border-bottom: 1px solid var(--glass-border);
-            padding: 15px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            padding: 15px 20px; display: flex; align-items: center; justify-content: space-between;
         }
 
         .header-content { display: flex; align-items: center; gap: 15px; }
@@ -58,9 +50,8 @@
             width: 38px; height: 38px; border-radius: 12px;
             background: var(--card-glass); border: 1px solid var(--glass-border);
             display: flex; align-items: center; justify-content: center;
-            color: var(--accent-turquoise); cursor: pointer; transition: 0.3s;
+            color: var(--accent-turquoise); cursor: pointer;
         }
-        .back-btn:active { transform: scale(0.9); background: rgba(0, 245, 212, 0.1); }
 
         .header-title h1 {
             margin: 0; font-size: 1.1rem; font-weight: 900;
@@ -68,176 +59,128 @@
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
 
-        /* --- Container --- */
+        /* --- Main Container --- */
         .main-container {
             padding: 20px;
+            width: 100%;
             max-width: 500px;
             margin: 0 auto;
-            animation: appEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            animation: appEntrance 0.6s ease-out;
         }
 
         @keyframes appEntrance {
-            from { opacity: 0; transform: translateY(40px); filter: blur(10px); }
-            to { opacity: 1; transform: translateY(0); filter: blur(0); }
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        /* --- Real-time Price Card --- */
+        /* --- Price Card --- */
         .price-card {
-            background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01));
+            background: rgba(255,255,255,0.03);
             border: 1px solid var(--glass-border);
-            border-radius: 28px;
-            padding: 20px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 25px;
-            position: relative;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border-radius: 28px; padding: 20px;
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 20px; margin-bottom: 25px; position: relative;
         }
 
-        .price-card::before {
-            content: ''; position: absolute; left: 50%; top: 20%;
-            width: 1px; height: 60%; background: var(--glass-border);
+        .price-card::after {
+            content: ''; position: absolute; left: 50%; top: 25%;
+            width: 1px; height: 50%; background: var(--glass-border);
         }
 
         .ticker-group { text-align: center; }
         .ticker-label { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 8px; display: block; }
-        .ticker-value { font-family: 'Roboto Mono', monospace; font-size: 1.25rem; font-weight: 800; }
-        .buy-color { color: var(--accent-turquoise); text-shadow: 0 0 15px rgba(0, 245, 212, 0.3); }
-        .sell-color { color: var(--accent-blue); text-shadow: 0 0 15px rgba(0, 187, 255, 0.3); }
+        .ticker-value { font-family: 'Roboto Mono', monospace; font-size: 1.2rem; font-weight: 800; }
+        .buy-color { color: var(--accent-turquoise); }
+        .sell-color { color: var(--accent-blue); }
 
         /* --- Tabs --- */
         .tab-switcher {
-            background: rgba(255, 255, 255, 0.03);
+            background: rgba(255, 255, 255, 0.02);
             border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            padding: 6px;
-            display: flex;
-            margin-bottom: 25px;
+            border-radius: 20px; padding: 5px;
+            display: flex; margin-bottom: 25px;
         }
 
         .tab-btn {
             flex: 1; padding: 14px; text-align: center; border-radius: 16px;
-            font-weight: 800; font-size: 0.9rem; color: var(--text-muted);
-            cursor: pointer; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 800; font-size: 0.85rem; color: var(--text-muted);
+            cursor: pointer; transition: 0.3s;
         }
 
-        .tab-btn.active.buy { background: var(--accent-turquoise); color: #000; box-shadow: 0 5px 20px rgba(0, 245, 212, 0.3); }
-        .tab-btn.active.sell { background: var(--accent-purple); color: #fff; box-shadow: 0 5px 20px rgba(155, 81, 224, 0.3); }
+        .tab-btn.active.buy { background: var(--accent-turquoise); color: #000; }
+        .tab-btn.active.sell { background: var(--accent-purple); color: #fff; }
 
-        /* --- Input Styles --- */
+        /* --- Glass Panel --- */
         .glass-panel {
             background: var(--card-glass);
             border: 1px solid var(--glass-border);
-            border-radius: 30px;
-            padding: 24px;
-            backdrop-filter: blur(10px);
-            margin-bottom: 20px;
+            border-radius: 30px; padding: 25px;
+            backdrop-filter: blur(10px); margin-bottom: 20px;
         }
 
         .input-wrapper { margin-bottom: 24px; }
-        .label-row { display: flex; justify-content: space-between; margin-bottom: 12px; padding: 0 5px; }
-        .label-text { font-size: 0.85rem; font-weight: 700; color: var(--text-muted); }
+        .label-text { font-size: 0.85rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 12px; }
 
         .luxury-inp {
-            width: 100%;
-            background: rgba(0, 0, 0, 0.4);
+            width: 100%; background: rgba(0, 0, 0, 0.4);
             border: 1.5px solid var(--glass-border);
-            border-radius: 18px;
-            padding: 18px 22px;
-            color: #fff;
-            font-size: 1.15rem;
-            font-weight: 700;
+            border-radius: 18px; padding: 18px;
+            color: #fff; font-size: 1.1rem; font-weight: 700;
             font-family: 'Roboto Mono', monospace;
-            transition: 0.3s;
-            text-align: left;
-            direction: ltr;
+            text-align: left; direction: ltr;
         }
 
-        .luxury-inp:focus {
-            border-color: var(--accent-turquoise);
-            background: rgba(0, 0, 0, 0.6);
-            box-shadow: 0 0 25px rgba(0, 245, 212, 0.1);
-        }
+        .luxury-inp:focus { border-color: var(--accent-turquoise); background: rgba(0, 0, 0, 0.6); }
 
         select.luxury-inp {
             direction: rtl; text-align: right; appearance: none;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2300F5D4'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
-            background-repeat: no-repeat; background-position: left 20px center; background-size: 20px;
+            background-repeat: no-repeat; background-position: left 15px center; background-size: 18px;
         }
 
-        /* --- Result Display --- */
         .total-box {
             background: rgba(255, 255, 255, 0.02);
             border-radius: 18px; padding: 18px;
             display: flex; justify-content: space-between; align-items: center;
             margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.05);
         }
-        .total-val { font-family: 'Roboto Mono'; font-weight: 900; font-size: 1.25rem; color: var(--accent-turquoise); }
+        .total-val { font-family: 'Roboto Mono'; font-weight: 900; font-size: 1.2rem; color: var(--accent-turquoise); }
 
-        /* --- Admin Address Card --- */
         .admin-addr-card {
             background: rgba(0, 245, 212, 0.03);
             border: 1px dashed var(--accent-turquoise);
-            border-radius: 20px;
-            padding: 20px;
-            text-align: center;
-            margin-bottom: 25px;
+            border-radius: 20px; padding: 20px;
+            text-align: center; margin-bottom: 25px;
         }
-        .addr-display {
-            font-family: 'Roboto Mono'; font-size: 0.8rem; color: var(--accent-turquoise);
-            display: block; margin: 12px 0; word-break: break-all; line-height: 1.5;
-        }
-        .copy-pill {
-            background: rgba(0, 245, 212, 0.1); border: 1.5px solid var(--accent-turquoise);
-            color: var(--accent-turquoise); padding: 8px 25px; border-radius: 12px;
-            font-size: 0.85rem; font-weight: 800; cursor: pointer; transition: 0.3s;
-        }
-        .copy-pill:active { transform: scale(0.95); background: var(--accent-turquoise); color: #000; }
+        .addr-display { font-family: 'Roboto Mono'; font-size: 0.8rem; color: var(--accent-turquoise); display: block; margin: 10px 0; word-break: break-all; }
+        .copy-pill { background: rgba(0, 245, 212, 0.1); border: 1px solid var(--accent-turquoise); color: var(--accent-turquoise); padding: 8px 20px; border-radius: 12px; font-weight: 800; cursor: pointer; }
 
-        /* --- Primary Action Button --- */
         .action-btn {
             width: 100%; padding: 20px; border-radius: 22px; border: none;
-            font-size: 1.15rem; font-weight: 900; cursor: pointer;
+            font-size: 1.1rem; font-weight: 900; cursor: pointer;
             display: flex; align-items: center; justify-content: center; gap: 12px;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            position: relative; overflow: hidden;
+            transition: 0.3s;
         }
         .btn-buy-mode { background: linear-gradient(135deg, var(--accent-turquoise), var(--accent-blue)); color: #000; }
         .btn-sell-mode { background: linear-gradient(135deg, var(--accent-purple), #7b61ff); color: #fff; }
-        .action-btn:active { transform: scale(0.96); }
+        .action-btn:active { transform: scale(0.97); }
 
-        /* --- Full-Screen Overlay (Processing/Modals) --- */
+        /* --- Modals --- */
         .full-overlay {
-            position: fixed; inset: 0; background: rgba(2, 6, 23, 0.92);
-            backdrop-filter: blur(20px); z-index: 2000;
+            position: fixed; inset: 0; background: rgba(2, 6, 23, 0.95);
+            backdrop-filter: blur(15px); z-index: 2000;
             display: none; align-items: center; justify-content: center; padding: 25px;
         }
         .full-overlay.active { display: flex; }
-
         .status-modal {
             background: #0f172a; border: 1px solid var(--glass-border);
-            border-radius: 35px; padding: 40px 30px; width: 100%; max-width: 400px;
-            text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            border-radius: 35px; padding: 40px 30px; width: 100%; max-width: 400px; text-align: center;
         }
-
-        .status-icon {
-            width: 85px; height: 85px; border-radius: 30px; margin: 0 auto 25px;
-            display: flex; align-items: center; justify-content: center; font-size: 2.5rem;
-        }
+        .status-icon { width: 80px; height: 80px; border-radius: 25px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 2rem; }
         .icon-processing { background: rgba(0, 187, 255, 0.1); color: var(--accent-blue); }
         .icon-done { background: rgba(0, 245, 212, 0.1); color: var(--accent-turquoise); }
         .icon-fail { background: rgba(246, 70, 93, 0.1); color: #f6465d; }
-
-        .modal-btn {
-            width: 100%; padding: 16px; border-radius: 18px; border: 1px solid var(--glass-border);
-            background: var(--card-glass); color: #fff; font-weight: 800; cursor: pointer; margin-top: 30px;
-        }
-
-        .network-tag {
-            font-size: 0.65rem; padding: 3px 8px; border-radius: 6px;
-            background: rgba(0, 245, 212, 0.1); color: var(--accent-turquoise); font-weight: 800;
-        }
+        .modal-btn { width: 100%; padding: 15px; border-radius: 15px; border: 1px solid var(--glass-border); background: var(--card-glass); color: #fff; font-weight: 800; cursor: pointer; margin-top: 25px; }
 
     </style>
 </head>
@@ -246,15 +189,12 @@
     <header class="luxury-header">
         <div class="header-content">
             <div class="back-btn" onclick="window.location.href='/dashboard'"><i class="fas fa-chevron-right"></i></div>
-            <div class="header-title">
-                <h1>تبادل هوشمند USDT</h1>
-            </div>
+            <div class="header-title"><h1>تبادل هوشمند USDT</h1></div>
         </div>
-        <div style="color: var(--accent-turquoise); font-size: 1.2rem;"><i class="fas fa-microchip"></i></div>
+        <div style="color: var(--accent-turquoise);"><i class="fas fa-microchip"></i></div>
     </header>
 
     <div class="main-container">
-
         <div class="price-card">
             <div class="ticker-group">
                 <span class="ticker-label">خرید ما از شما</span>
@@ -274,87 +214,64 @@
         <div id="section-buy" class="trade-section">
             <div class="glass-panel">
                 <div class="input-wrapper">
-                    <div class="label-row">
-                        <span class="label-text">مقدار خرید (Tether)</span>
-                        <span class="network-tag">AUTO-WITHDRAW</span>
-                    </div>
+                    <span class="label-text">مقدار خرید (Tether)</span>
                     <input type="number" id="inp-buy-amount" class="luxury-inp" placeholder="0.00" oninput="runCalc('buy')">
                 </div>
-
                 <div class="total-box">
                     <span class="label-text" style="margin:0">مبلغ پرداختی:</span>
                     <span class="total-val" id="res-buy-total">0 تومان</span>
                 </div>
-
                 <div class="input-wrapper">
-                    <div class="label-row"><span class="label-text">شبکه انتقال</span></div>
+                    <span class="label-text">شبکه انتقال</span>
                     <select id="inp-buy-net" class="luxury-inp">
-                        <option value="TRC20">TRON (TRC20) - آنی</option>
-                        <option value="BEP20">BSC (BEP20) - کارمزد کم</option>
-                        <option value="ERC20">Ethereum (ERC20)</option>
+                        <option value="TRC20">TRON (TRC20)</option>
+                        <option value="BEP20">BSC (BEP20)</option>
                     </select>
                 </div>
-
                 <div class="input-wrapper">
-                    <div class="label-row"><span class="label-text">آدرس ولت مقصد</span></div>
-                    <input type="text" id="inp-buy-addr" class="luxury-inp" placeholder="آدرس خود را وارد کنید" style="font-size: 0.8rem;">
+                    <span class="label-text">آدرس ولت مقصد</span>
+                    <input type="text" id="inp-buy-addr" class="luxury-inp" placeholder="آدرس مقصد را وارد کنید">
                 </div>
-
-                <button class="action-btn btn-buy-mode" onclick="execBuy()">
-                    <i class="fas fa-shopping-cart"></i> ثبت و واریز اتوماتیک
-                </button>
+                <button class="action-btn btn-buy-mode" onclick="execBuy()"><i class="fas fa-shopping-cart"></i> ثبت و واریز اتوماتیک</button>
             </div>
         </div>
 
         <div id="section-sell" class="trade-section" style="display: none;">
             <div class="glass-panel">
                 <div class="input-wrapper">
-                    <div class="label-row"><span class="label-text">شبکه واریز شما</span></div>
+                    <span class="label-text">شبکه واریز شما</span>
                     <select id="inp-sell-net" class="luxury-inp" onchange="refreshAdminWallet()">
                         <option value="TRC20">TRON (TRC20)</option>
                         <option value="BEP20">BSC (BEP20)</option>
                     </select>
                 </div>
-
                 <div class="admin-addr-card">
-                    <span class="label-text">آدرس صرافی جهت واریز تتر:</span>
+                    <span class="label-text">آدرس صرافی جهت واریز:</span>
                     <span class="addr-display" id="display-admin-addr">در حال دریافت...</span>
                     <button class="copy-pill" onclick="copyToClipboard()"><i class="fas fa-copy"></i> کپی آدرس</button>
                 </div>
-
                 <div class="input-wrapper">
-                    <div class="label-row"><span class="label-text">مقدار ارسالی (USDT)</span></div>
+                    <span class="label-text">مقدار ارسالی (USDT)</span>
                     <input type="number" id="inp-sell-amount" class="luxury-inp" placeholder="0.00" oninput="runCalc('sell')">
                 </div>
-
                 <div class="total-box" style="background: rgba(155, 81, 224, 0.03);">
                     <span class="label-text" style="margin:0">دریافتی شما:</span>
                     <span class="total-val" id="res-sell-total" style="color: var(--accent-purple);">0 تومان</span>
                 </div>
-
                 <div class="input-wrapper">
-                    <div class="label-row">
-                        <span class="label-text">شناسه تراکنش (TxID)</span>
-                        <span class="network-tag">ZERO-TRUST VERIFY</span>
-                    </div>
-                    <input type="text" id="inp-sell-txid" class="luxury-inp" placeholder="هش بلاکچین را وارد کنید" style="font-size: 0.8rem;">
+                    <span class="label-text">شناسه تراکنش (TxID)</span>
+                    <input type="text" id="inp-sell-txid" class="luxury-inp" placeholder="هش بلاکچین را وارد کنید">
                 </div>
-
-                <button class="action-btn btn-sell-mode" onclick="execSell()">
-                    <i class="fas fa-bolt"></i> تایید آنی و شارژ کیف پول
-                </button>
+                <button class="action-btn btn-sell-mode" onclick="execSell()"><i class="fas fa-bolt"></i> تایید آنی و شارژ</button>
             </div>
         </div>
-
     </div>
 
     <div id="overlay-status" class="full-overlay">
         <div class="status-modal">
-            <div id="modal-icon-container" class="status-icon icon-processing">
-                <i id="modal-icon-i" class="fas fa-spinner fa-spin"></i>
-            </div>
-            <h2 id="modal-header" style="margin: 0 0 12px 0; font-size: 1.4rem;">در حال پردازش</h2>
-            <p id="modal-body" style="color: var(--text-muted); line-height: 1.7; font-size: 0.95rem;"></p>
+            <div id="modal-icon-container" class="status-icon icon-processing"><i id="modal-icon-i" class="fas fa-spinner fa-spin"></i></div>
+            <h2 id="modal-header" style="margin-bottom: 12px;">در حال پردازش</h2>
+            <p id="modal-body" style="color: var(--text-muted); line-height: 1.6;"></p>
             <button id="modal-close" onclick="closeOverlay()" style="display: none;" class="modal-btn">متوجه شدم</button>
         </div>
     </div>
@@ -367,10 +284,7 @@
         window.onload = async () => {
             telegram.ready();
             telegram.expand();
-            telegram.setHeaderColor('#020617');
             await loadMarketData();
-
-            // Intelligent Address Detection
             document.getElementById('inp-buy-addr').addEventListener('input', (e) => {
                 const a = e.target.value.trim();
                 const net = document.getElementById('inp-buy-net');
@@ -381,20 +295,15 @@
 
         async function loadMarketData() {
             try {
-                const r = await fetch(`${API_BASE}/rates`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ initData: telegram.initData })
-                });
+                const r = await fetch(`${API_BASE}/rates`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ initData: telegram.initData }) });
                 const d = await r.json();
                 if(d.status === 'success') {
-                    appData.rates = { buy: d.buy, sell: d.sell };
-                    appData.wallets = d.wallets;
+                    appData.rates = { buy: d.buy, sell: d.sell }; appData.wallets = d.wallets;
                     document.getElementById('rate-buy').innerText = d.buy.toLocaleString();
                     document.getElementById('rate-sell').innerText = d.sell.toLocaleString();
                     refreshAdminWallet();
                 }
-            } catch(e) { telegram.showAlert("خطا در برقراری ارتباط با صرافی"); }
+            } catch(e) { telegram.showAlert("خطا در دریافت نرخ"); }
         }
 
         function toggleMode(m) {
@@ -415,7 +324,7 @@
 
         function refreshAdminWallet() {
             const n = document.getElementById('inp-sell-net').value;
-            document.getElementById('display-admin-addr').innerText = appData.wallets[n] || "آدرس یافت نشد";
+            document.getElementById('display-admin-addr').innerText = appData.wallets[n] || "تنظیم نشده";
         }
 
         function copyToClipboard() {
@@ -423,7 +332,7 @@
             if(txt.length < 10) return;
             navigator.clipboard.writeText(txt);
             telegram.HapticFeedback.notificationOccurred('success');
-            telegram.showAlert("✅ آدرس صرافی با موفقیت کپی شد.");
+            telegram.showAlert("✅ آدرس صرافی کپی شد.");
         }
 
         function showStatus(h, b, type='process') {
@@ -431,71 +340,44 @@
             const iconBox = document.getElementById('modal-icon-container');
             const iconI = document.getElementById('modal-icon-i');
             const btn = document.getElementById('modal-close');
-
             ov.classList.add('active');
             document.getElementById('modal-header').innerText = h;
             document.getElementById('modal-body').innerText = b;
-
             iconBox.className = `status-icon icon-${type === 'process' ? 'processing' : (type === 'success' ? 'done' : 'fail')}`;
             iconI.className = type === 'process' ? 'fas fa-spinner fa-spin' : (type === 'success' ? 'fas fa-check-double' : 'fas fa-times');
             btn.style.display = type === 'process' ? 'none' : 'block';
         }
 
-        function closeOverlay() {
-            document.getElementById('overlay-status').classList.remove('active');
-            if(document.getElementById('modal-header').innerText.includes("موفق")) location.reload();
-        }
+        function closeOverlay() { document.getElementById('overlay-status').classList.remove('active'); if(document.getElementById('modal-header').innerText.includes("موفق")) location.reload(); }
 
         async function execBuy() {
             const amount = parseFloat(document.getElementById('inp-buy-amount').value);
             const address = document.getElementById('inp-buy-addr').value.trim();
             const network = document.getElementById('inp-buy-net').value;
-
-            if(!amount || amount < 5) return telegram.showAlert("❌ حداقل خرید ۵ تتر می‌باشد.");
-            if(address.length < 20) return telegram.showAlert("❌ آدرس ولت معتبر نمی‌باشد.");
-
-            showStatus("در حال ثبت سفارش", "سیستم در حال کسر موجودی و فراخوانی درگاه اتوماتیک والکس است. لطفاً از صفحه خارج نشوید...", "process");
-
+            if(!amount || amount < 5) return telegram.showAlert("❌ حداقل خرید ۵ تتر.");
+            if(address.length < 20) return telegram.showAlert("❌ آدرس نامعتبر.");
+            showStatus("در حال ثبت سفارش", "اتصال به صرافی والکس...", "process");
             try {
-                const r = await fetch(`${API_BASE}/buy`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ initData: telegram.initData, amount, address, network })
-                });
+                const r = await fetch(`${API_BASE}/buy`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ initData: telegram.initData, amount, address, network }) });
                 const d = await r.json();
-                if(d.status === 'success') {
-                    showStatus("سفارش با موفقیت ثبت شد", "پرداخت شما تایید شد. تترها از طریق API والکس در حال ارسال به ولت شما هستند و به زودی TxID برایتان ارسال می‌گردد.", "success");
-                    telegram.HapticFeedback.notificationOccurred('success');
-                } else {
-                    showStatus("خطا در ثبت", d.message, "fail");
-                }
-            } catch(e) { showStatus("خطای شبکه", "ارتباط با سرور والکس مقدور نمی‌باشد.", "fail"); }
+                if(d.status === 'success') showStatus("سفارش موفق", "تترها در حال ارسال به ولت شما هستند.", "success");
+                else showStatus("خطا", d.message, "fail");
+            } catch(e) { showStatus("خطای شبکه", "عدم اتصال به صرافی.", "fail"); }
         }
 
         async function execSell() {
             const amount = parseFloat(document.getElementById('inp-sell-amount').value);
             const txid = document.getElementById('inp-sell-txid').value.trim();
             const network = document.getElementById('inp-sell-net').value;
-
-            if(!amount || amount < 5) return telegram.showAlert("❌ حداقل فروش ۵ تتر می‌باشد.");
-            if(txid.length < 15) return telegram.showAlert("❌ کد رهگیری (TxID) معتبر نمی‌باشد.");
-
-            showStatus("در حال استعلام آنی", "سیستم در حال بررسی مستقیم هش تراکنش در شبکه بلاکچین است. این پروسه ممکن است تا ۶۰ ثانیه زمان ببرد...", "process");
-
+            if(!amount || amount < 5) return telegram.showAlert("❌ حداقل فروش ۵ تتر.");
+            if(txid.length < 15) return telegram.showAlert("❌ هش نامعتبر.");
+            showStatus("در حال استعلام", "بررسی نودهای بلاکچین...", "process");
             try {
-                const r = await fetch(`${API_BASE}/sell`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ initData: telegram.initData, amount, txid, network })
-                });
+                const r = await fetch(`${API_BASE}/sell`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ initData: telegram.initData, amount, txid, network }) });
                 const d = await r.json();
-                if(d.status === 'success') {
-                    showStatus("تایید و شارژ شد", "تراکنش توسط نودهای شبکه تایید گردید. مبلغ ریالی آنی به کیف پول شما در کوین باران اضافه شد.", "success");
-                    telegram.HapticFeedback.notificationOccurred('success');
-                } else {
-                    showStatus("تراکنش رد شد", d.message, "fail");
-                }
-            } catch(e) { showStatus("خطای فنی", "اختلال در استعلام از شبکه بلاکچین.", "fail"); }
+                if(d.status === 'success') showStatus("تایید شد", "موجودی شما آنی شارژ گردید.", "success");
+                else showStatus("خطا", d.message, "fail");
+            } catch(e) { showStatus("خطای فنی", "اختلال در استعلام بلاکچین.", "fail"); }
         }
     </script>
 </body>

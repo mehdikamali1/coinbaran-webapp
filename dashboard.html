@@ -12,23 +12,7 @@
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="dashboard-style.css?v=111.5">
-
-    <style>
-        /* استایل‌های ضروری برای پایداری و حریم خصوصی (بدون تغییر در ساختار اصلی) */
-        .blur-mode {
-            filter: blur(12px) !important;
-            opacity: 0.6;
-            transition: all 0.3s ease;
-        }
-
-        /* اطمینان از اینکه بدنه اصلی اجازه اسکرول عرضی نمی‌دهد */
-        html, body {
-            overflow-x: hidden !important;
-            width: 100% !important;
-            position: relative;
-        }
-    </style>
+    <link rel="stylesheet" href="dashboard-style.css?v=112.0">
 </head>
 <body class="loading-active theme-ocean">
 
@@ -86,7 +70,7 @@
 
         <div class="ticker-container crystal-glass animate-in delay-1">
             <div class="ticker-track" id="price-ticker">
-                <div class="ticker-item">در حال اتصال به بازار جهانی...</div>
+                <div class="ticker-item">در حال دریافت نرخ‌های زنده...</div>
             </div>
         </div>
 
@@ -109,12 +93,6 @@
 
                     <div class="sparkline-wrapper">
                         <svg id="sparkline-svg" viewBox="0 0 300 50" preserveAspectRatio="none">
-                            <defs>
-                                <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stop-color="#00F5D4" stop-opacity="0.4"/>
-                                    <stop offset="100%" stop-color="#00F5D4" stop-opacity="0"/>
-                                </linearGradient>
-                            </defs>
                             <path id="sparkline-area" d="" fill="url(#chartFill)" stroke="none"></path>
                             <path id="sparkline-path" d="" fill="none" stroke-width="2.5"></path>
                         </svg>
@@ -158,17 +136,13 @@
                     <h3>Game Zone 🎮</h3>
                     <p>کسب درآمد دلاری با پیش‌بینی</p>
                 </div>
-                <div class="promo-icon">
-                    <i class="fas fa-rocket"></i>
-                </div>
+                <div class="promo-icon"><i class="fas fa-rocket"></i></div>
             </div>
 
             <div class="section-header animate-in delay-5">خدمات صرافی</div>
             <div class="services-list animate-in delay-5">
                 <div class="service-row ripple-btn crystal-glass" onclick="window.location.href='usdt.html'">
-                    <div class="srv-icon i-tether">
-                        <img src="images/usdt_logo.png" class="service-img" alt="USDT">
-                    </div>
+                    <div class="srv-icon i-tether"><img src="images/usdt_logo.png" class="service-img" alt="USDT"></div>
                     <div class="srv-info">
                         <h4>خرید و فروش تتر</h4>
                         <span class="srv-sub">نرخ لحظه‌ای و بهترین قیمت</span>
@@ -177,9 +151,7 @@
                 </div>
 
                 <div class="service-row ripple-btn crystal-glass" onclick="window.location.href='utopia.html'">
-                    <div class="srv-icon i-utopia">
-                        <img src="images/utopia_logo.png" class="service-img" alt="Utopia">
-                    </div>
+                    <div class="srv-icon i-utopia"><img src="images/utopia_logo.png" class="service-img" alt="Utopia"></div>
                     <div class="srv-info">
                         <h4>ووچر یوتوپیا</h4>
                         <span class="srv-sub">نقد کردن سریع و اتوماتیک</span>
@@ -201,55 +173,37 @@
         </main>
 
         <nav class="bottom-nav crystal-glass animate-in delay-5">
-            <a href="#" class="nav-item active">
-                <i class="fas fa-home"></i>
-                <span>خانه</span>
-            </a>
-            <a href="wallet.html" class="nav-item">
-                <i class="fas fa-wallet"></i>
-                <span>کیف پول</span>
-            </a>
+            <a href="#" class="nav-item active"><i class="fas fa-home"></i><span>خانه</span></a>
+            <a href="wallet.html" class="nav-item"><i class="fas fa-wallet"></i><span>کیف پول</span></a>
             <a href="usdt.html" class="nav-item floating-btn">
                 <div class="float-inner ocean-gradient"><i class="fas fa-exchange-alt"></i></div>
             </a>
-            <a href="game.html" class="nav-item">
-                <i class="fas fa-gamepad"></i>
-                <span>بازی</span>
-            </a>
-            <a href="support.html" class="nav-item">
-                <i class="fas fa-headset"></i>
-                <span>پشتیبانی</span>
-            </a>
+            <a href="game.html" class="nav-item"><i class="fas fa-gamepad"></i><span>بازی</span></a>
+            <a href="support.html" class="nav-item"><i class="fas fa-headset"></i><span>پشتیبانی</span></a>
         </nav>
 
     </div>
     
     <script src="script.js?v=110.0"></script>
-    
     <script>
         let isBalanceHidden = localStorage.getItem('balance_hidden') === 'true';
-
         function applyPrivacyMode() {
             const elements = document.querySelectorAll('.balance-text');
             const icon = document.getElementById('privacy-icon');
             if (isBalanceHidden) {
                 elements.forEach(el => el.classList.add('blur-mode'));
-                if(icon) { icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash'); }
+                if(icon) { icon.classList.replace('fa-eye', 'fa-eye-slash'); }
             } else {
                 elements.forEach(el => el.classList.remove('blur-mode'));
-                if(icon) { icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye'); }
+                if(icon) { icon.classList.replace('fa-eye-slash', 'fa-eye'); }
             }
         }
-
         function toggleBalancePrivacy() {
             isBalanceHidden = !isBalanceHidden;
             localStorage.setItem('balance_hidden', isBalanceHidden);
             applyPrivacyMode();
-            if(window.Telegram && window.Telegram.WebApp) {
-                window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
-            }
+            if(window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
         }
-
         document.addEventListener('DOMContentLoaded', applyPrivacyMode);
     </script>
 </body>

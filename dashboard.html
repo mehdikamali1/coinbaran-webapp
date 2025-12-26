@@ -12,86 +12,21 @@
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="dashboard-style.css?v=111.2">
+    <link rel="stylesheet" href="dashboard-style.css?v=111.5">
 
     <style>
-        /* --- لایه اصلاحی برای بازگرداندن نظم داشبورد --- */
+        /* استایل‌های ضروری برای پایداری و حریم خصوصی (بدون تغییر در ساختار اصلی) */
+        .blur-mode {
+            filter: blur(12px) !important;
+            opacity: 0.6;
+            transition: all 0.3s ease;
+        }
+
+        /* اطمینان از اینکه بدنه اصلی اجازه اسکرول عرضی نمی‌دهد */
         html, body {
-            margin: 0; padding: 0;
-            width: 100%; height: 100%;
-            overflow: hidden !important; /* جلوگیری از اسکرول دوگانه */
-            background-color: #05090C;
-        }
-
-        #app-container {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            height: 100dvh;
-            width: 100%;
-            max-width: 600px;
-            margin: 0 auto;
-            position: relative;
-        }
-
-        /* فیکس کردن بخش اسکرول که خراب شده بود */
-        .content-scroll {
-            flex: 1;
-            overflow-y: auto !important;
             overflow-x: hidden !important;
-            padding: 20px;
-            display: block; /* بازگرداندن از حالت فلکس در صورت تداخل */
-            -webkit-overflow-scrolling: touch;
-        }
-
-        /* اصلاح گرید دکمه‌ها (Deposit, Withdraw, ...) */
-        .quick-menu-grid {
-            display: grid !important;
-            grid-template-columns: repeat(4, 1fr) !important;
-            gap: 10px !important;
-            margin-bottom: 25px !important;
             width: 100% !important;
-        }
-
-        .quick-btn {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-decoration: none;
-            color: inherit;
-        }
-
-        .quick-btn .icon-box {
-            width: 55px !important;
-            height: 55px !important;
-            margin-bottom: 8px;
-        }
-
-        /* اصلاح لیست خدمات */
-        .services-list {
-            display: flex !important;
-            flex-direction: column !important;
-            gap: 12px !important;
-            width: 100% !important;
-        }
-
-        .service-row {
-            display: flex !important;
-            align-items: center !important;
-            width: 100% !important;
-            box-sizing: border-box !important;
-        }
-
-        /* جلوگیری از مخفی شدن محتوا زیر نوار پایین */
-        .nav-spacer {
-            height: 100px;
-            width: 100%;
-        }
-
-        /* افکت شیشه‌ای بهبود یافته */
-        .crystal-glass {
-            backdrop-filter: blur(15px) !important;
-            -webkit-backdrop-filter: blur(15px) !important;
+            position: relative;
         }
     </style>
 </head>
@@ -130,7 +65,7 @@
         <header class="app-header crystal-glass animate-in delay-1">
             <div class="user-profile">
                 <div class="avatar-wrap ripple-effect">
-                    <img src="images/logo-gold.png" class="avatar-img">
+                    <img src="images/logo-gold.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'" class="avatar-img">
                     <div class="online-dot"></div>
                 </div>
                 <div class="user-details">
@@ -151,7 +86,7 @@
 
         <div class="ticker-container crystal-glass animate-in delay-1">
             <div class="ticker-track" id="price-ticker">
-                <div class="ticker-item">در حال دریافت نرخ‌های زنده بازار...</div>
+                <div class="ticker-item">در حال اتصال به بازار جهانی...</div>
             </div>
         </div>
 
@@ -174,6 +109,12 @@
 
                     <div class="sparkline-wrapper">
                         <svg id="sparkline-svg" viewBox="0 0 300 50" preserveAspectRatio="none">
+                            <defs>
+                                <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="#00F5D4" stop-opacity="0.4"/>
+                                    <stop offset="100%" stop-color="#00F5D4" stop-opacity="0"/>
+                                </linearGradient>
+                            </defs>
                             <path id="sparkline-area" d="" fill="url(#chartFill)" stroke="none"></path>
                             <path id="sparkline-path" d="" fill="none" stroke-width="2.5"></path>
                         </svg>
@@ -194,36 +135,40 @@
             </div>
 
             <div class="quick-menu-grid animate-in delay-3">
-                <div class="quick-btn" onclick="window.location.href='wallet.html'">
-                    <div class="icon-box cyan-glow crystal-glass"><i class="fas fa-arrow-down"></i></div>
+                <div class="quick-btn ripple-btn" onclick="window.location.href='wallet.html'">
+                    <div class="icon-box cyan-glow"><i class="fas fa-arrow-down"></i></div>
                     <span>واریز</span>
                 </div>
-                <div class="quick-btn" onclick="window.location.href='wallet.html?tab=withdraw'">
-                    <div class="icon-box purple-glow crystal-glass"><i class="fas fa-arrow-up"></i></div>
+                <div class="quick-btn ripple-btn" onclick="window.location.href='wallet.html?tab=withdraw'">
+                    <div class="icon-box purple-glow"><i class="fas fa-arrow-up"></i></div>
                     <span>برداشت</span>
                 </div>
-                <div class="quick-btn" onclick="window.location.href='usdt.html'">
-                    <div class="icon-box blue-glow crystal-glass"><i class="fas fa-exchange-alt"></i></div>
+                <div class="quick-btn ripple-btn" onclick="window.location.href='usdt.html'">
+                    <div class="icon-box blue-glow"><i class="fas fa-exchange-alt"></i></div>
                     <span>تبدیل</span>
                 </div>
-                <div class="quick-btn" onclick="window.location.href='kyc.html'">
-                    <div class="icon-box turquoise-glow crystal-glass"><i class="fas fa-fingerprint"></i></div>
+                <div class="quick-btn ripple-btn" onclick="window.location.href='kyc.html'">
+                    <div class="icon-box turquoise-glow"><i class="fas fa-fingerprint"></i></div>
                     <span>احراز</span>
                 </div>
             </div>
 
-            <div class="promo-banner ocean-gradient animate-in delay-4" onclick="window.location.href='game.html'">
+            <div class="promo-banner ripple-effect ocean-gradient animate-in delay-4" onclick="window.location.href='game.html'">
                 <div class="promo-text">
                     <h3>Game Zone 🎮</h3>
                     <p>کسب درآمد دلاری با پیش‌بینی</p>
                 </div>
-                <div class="promo-icon"><i class="fas fa-rocket"></i></div>
+                <div class="promo-icon">
+                    <i class="fas fa-rocket"></i>
+                </div>
             </div>
 
             <div class="section-header animate-in delay-5">خدمات صرافی</div>
             <div class="services-list animate-in delay-5">
-                <div class="service-row crystal-glass" onclick="window.location.href='usdt.html'">
-                    <div class="srv-icon i-tether"><img src="images/usdt_logo.png" class="service-img" alt="USDT"></div>
+                <div class="service-row ripple-btn crystal-glass" onclick="window.location.href='usdt.html'">
+                    <div class="srv-icon i-tether">
+                        <img src="images/usdt_logo.png" class="service-img" alt="USDT">
+                    </div>
                     <div class="srv-info">
                         <h4>خرید و فروش تتر</h4>
                         <span class="srv-sub">نرخ لحظه‌ای و بهترین قیمت</span>
@@ -231,8 +176,10 @@
                     <div class="srv-arrow"><i class="fas fa-chevron-left"></i></div>
                 </div>
 
-                <div class="service-row crystal-glass" onclick="window.location.href='utopia.html'">
-                    <div class="srv-icon i-utopia"><img src="images/utopia_logo.png" class="service-img" alt="Utopia"></div>
+                <div class="service-row ripple-btn crystal-glass" onclick="window.location.href='utopia.html'">
+                    <div class="srv-icon i-utopia">
+                        <img src="images/utopia_logo.png" class="service-img" alt="Utopia">
+                    </div>
                     <div class="srv-info">
                         <h4>ووچر یوتوپیا</h4>
                         <span class="srv-sub">نقد کردن سریع و اتوماتیک</span>
@@ -240,7 +187,7 @@
                     <div class="srv-arrow"><i class="fas fa-chevron-left"></i></div>
                 </div>
 
-                <div class="service-row crystal-glass" onclick="window.location.href='football.html'">
+                <div class="service-row ripple-btn crystal-glass" onclick="window.location.href='football.html'">
                     <div class="srv-icon i-sport"><i class="fas fa-futbol"></i></div>
                     <div class="srv-info">
                         <h4>پیش‌بینی فوتبال</h4>
@@ -250,17 +197,29 @@
                 </div>
             </div>
 
-            <div class="nav-spacer"></div>
+            <div style="height: 110px;"></div>
         </main>
 
         <nav class="bottom-nav crystal-glass animate-in delay-5">
-            <a href="#" class="nav-item active"><i class="fas fa-home"></i><span>خانه</span></a>
-            <a href="wallet.html" class="nav-item"><i class="fas fa-wallet"></i><span>کیف پول</span></a>
+            <a href="#" class="nav-item active">
+                <i class="fas fa-home"></i>
+                <span>خانه</span>
+            </a>
+            <a href="wallet.html" class="nav-item">
+                <i class="fas fa-wallet"></i>
+                <span>کیف پول</span>
+            </a>
             <a href="usdt.html" class="nav-item floating-btn">
                 <div class="float-inner ocean-gradient"><i class="fas fa-exchange-alt"></i></div>
             </a>
-            <a href="game.html" class="nav-item"><i class="fas fa-gamepad"></i><span>بازی</span></a>
-            <a href="support.html" class="nav-item"><i class="fas fa-headset"></i><span>پشتیبانی</span></a>
+            <a href="game.html" class="nav-item">
+                <i class="fas fa-gamepad"></i>
+                <span>بازی</span>
+            </a>
+            <a href="support.html" class="nav-item">
+                <i class="fas fa-headset"></i>
+                <span>پشتیبانی</span>
+            </a>
         </nav>
 
     </div>
@@ -275,10 +234,10 @@
             const icon = document.getElementById('privacy-icon');
             if (isBalanceHidden) {
                 elements.forEach(el => el.classList.add('blur-mode'));
-                if(icon) { icon.classList.replace('fa-eye', 'fa-eye-slash'); }
+                if(icon) { icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash'); }
             } else {
                 elements.forEach(el => el.classList.remove('blur-mode'));
-                if(icon) { icon.classList.replace('fa-eye-slash', 'fa-eye'); }
+                if(icon) { icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye'); }
             }
         }
 
@@ -286,7 +245,9 @@
             isBalanceHidden = !isBalanceHidden;
             localStorage.setItem('balance_hidden', isBalanceHidden);
             applyPrivacyMode();
-            if(window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+            if(window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+            }
         }
 
         document.addEventListener('DOMContentLoaded', applyPrivacyMode);

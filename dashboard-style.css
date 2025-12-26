@@ -1,4 +1,4 @@
-﻿/* webapp/dashboard-style.css (v111.1 - ANTI-STRETCH & OCEAN LUXURY) */
+﻿/* webapp/dashboard-style.css (v111.6 - HARMONIZED OCEAN LUXURY) */
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@200;400;600;800&family=Roboto+Mono:wght@400;500;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&display=swap');
 
@@ -17,308 +17,189 @@
     --radius-m: 14px;
 }
 
-/* اصلاح پایه برای جلوگیری از هرگونه بیرون‌زدگی */
-* { 
-    box-sizing: border-box; 
-    -webkit-tap-highlight-color: transparent; 
-    outline: none; 
-    user-select: none; 
-}
+/* --- تنظیمات پایه (جلوگیری از زوم و کشیدگی) --- */
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; user-select: none; }
 
 html, body {
-    width: 100%;
-    max-width: 100vw;
-    margin: 0;
-    padding: 0;
-    overflow: hidden; /* جلوگیری از اسکرول بدنه اصلی */
-    height: 100vh;
-    height: 100dvh; /* ارتفاع داینامیک برای موبایل */
-    direction: rtl;
+    margin: 0; padding: 0;
+    width: 100%; height: 100%;
     background-color: var(--bg-deep);
+    color: var(--text-main);
     font-family: 'Vazirmatn', sans-serif;
-    display: flex;
-    flex-direction: column;
+    overflow-x: hidden !important; /* قفل عرضی */
+    direction: rtl;
 }
 
-/* =========================================
-   1. پس‌زمینه زنده (مهار شده)
-   ========================================= */
-.aurora-container { 
-    position: fixed; 
-    top: 0; 
-    left: 0; 
-    width: 100%; 
-    height: 100%; 
-    z-index: -1; 
-    overflow: hidden; 
-    pointer-events: none; 
-}
+/* --- پس‌زمینه زنده مهار شده --- */
+.aurora-container { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+.aurora-blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.35; animation: float 12s infinite alternate ease-in-out; }
+.blob-1 { top: -10%; left: -10%; width: 60vw; height: 60vw; background: var(--deep-ocean); }
+.blob-2 { bottom: -10%; right: -10%; width: 70vw; height: 70vw; background: var(--neon-cyan); opacity: 0.12; }
+@keyframes float { 0% { transform: translate(0, 0); } 100% { transform: translate(40px, 60px); } }
 
-.aurora-blob { 
-    position: absolute; 
-    border-radius: 50%; 
-    filter: blur(80px); 
-    opacity: 0.4; 
-    animation: float 10s infinite alternate ease-in-out; 
-}
-
-.blob-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: var(--deep-ocean); animation-delay: 0s; }
-.blob-2 { bottom: -10%; right: -10%; width: 60vw; height: 60vw; background: var(--neon-cyan); opacity: 0.15; animation-delay: -5s; }
-.blob-3 { top: 40%; left: 40%; width: 40vw; height: 40vw; background: var(--neon-blue); opacity: 0.1; animation: float 15s infinite reverse ease-in-out; }
-
-@keyframes float { 
-    0% { transform: translate(0, 0) scale(1); } 
-    100% { transform: translate(30px, 50px) scale(1.1); } 
-}
-
-.noise-texture { 
-    position: fixed; 
-    inset: 0; 
-    background: url('https://grainy-gradients.vercel.app/noise.svg'); 
-    opacity: 0.03; 
-    z-index: 0; 
-    pointer-events: none; 
-}
-
-/* =========================================
-   2. لودینگ (بدون تغییر)
-   ========================================= */
-#loader {
-    position: fixed; inset: 0;
-    background: radial-gradient(circle at center, #0a1016 0%, #000000 90%);
-    z-index: 9999;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    transition: opacity 0.5s ease-in-out;
-}
-.infinity-wrapper { position: relative; width: 300px; height: 150px; display: flex; justify-content: center; align-items: center; }
-.infinity-svg { position: absolute; width: 100%; height: 100%; fill: none; }
-.infinity-path {
-    stroke: url(#oceanGrad); stroke-width: 6; stroke-linecap: round;
-    stroke-dasharray: 900; stroke-dashoffset: 900;
-    animation: draw-line 2.5s ease-out forwards;
-    filter: drop-shadow(0 0 15px rgba(0, 245, 212, 0.6));
-}
-.loader-logo {
-    width: 74px; height: 74px; border-radius: 50%; position: absolute; z-index: 10;
-    border: 2px solid var(--neon-cyan);
-    box-shadow: 0 0 25px rgba(0, 245, 212, 0.5), inset 0 0 10px rgba(0, 245, 212, 0.2);
-    background: #000; padding: 2px;
-    animation: logo-pop 1s ease-out forwards 0.5s; opacity: 0;
-}
-.loader-text { margin-top: 40px; text-align: center; }
-.loading-title {
-    font-family: 'Cinzel', serif; font-size: 1.8rem; letter-spacing: 4px; color: var(--neon-cyan);
-    opacity: 0; animation: fade-up 0.8s ease forwards 1s;
-    text-shadow: 0 0 15px rgba(0,245,212,0.5);
-}
-.loading-line { width: 150px; height: 2px; background: rgba(255,255,255,0.1); margin: 15px auto; position: relative; overflow: hidden; }
-.loading-line::after {
-    content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    background: var(--neon-cyan); transform: translateX(-100%);
-    animation: load-bar 2.5s ease-in-out forwards 0.5s;
-    box-shadow: 0 0 10px var(--neon-cyan);
-}
-.loader-status { font-family: 'Roboto Mono'; font-size: 0.65rem; color: #888; letter-spacing: 2px; }
-
-@keyframes draw-line { to { stroke-dashoffset: 0; } }
-@keyframes logo-pop { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-@keyframes fade-up { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-@keyframes load-bar { to { transform: translateX(0); } }
-
-/* =========================================
-   3. انیمیشن‌های ورود
-   ========================================= */
-.animate-in { opacity: 0; animation: fadeUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
-.delay-1 { animation-delay: 0.1s; }
-.delay-2 { animation-delay: 0.2s; }
-.delay-3 { animation-delay: 0.3s; }
-.delay-4 { animation-delay: 0.4s; }
-.delay-5 { animation-delay: 0.5s; }
-@keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-/* =========================================
-   4. کانتینر اپلیکیشن (اصلاح شده)
-   ========================================= */
-#app-container { 
-    flex: 1;
+/* --- کانتینر اصلی اپلیکیشن --- */
+#app-container {
     width: 100%;
-    max-width: 600px; 
-    margin: 0 auto; 
-    position: relative; 
-    z-index: 1; 
+    max-width: 600px;
+    margin: 0 auto;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
-    overflow-x: hidden;
+    position: relative;
 }
 
-.crystal-glass {
-    background: rgba(10, 20, 30, 0.5);
+/* --- هدر شیشه‌ای --- */
+.app-header {
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid var(--glass-border);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    border-bottom: 1px solid var(--glass-border);
+    background: rgba(10, 20, 30, 0.4);
+    z-index: 100;
 }
 
-.app-header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); flex-shrink: 0; }
-.user-profile { display: flex; align-items: center; gap: 12px; }
-.avatar-wrap { width: 46px; height: 46px; border-radius: 16px; padding: 2px; border: 1px solid var(--glass-border); position: relative; }
-.avatar-img { width: 100%; height: 100%; border-radius: 13px; object-fit: cover; }
-.online-dot { position: absolute; bottom: -1px; right: -1px; width: 12px; height: 12px; background: var(--neon-cyan); border: 2px solid var(--bg-deep); border-radius: 50%; box-shadow: 0 0 8px var(--neon-cyan); }
-.user-details h2 { font-size: 1rem; margin: 0; font-weight: 700; color: #fff; text-shadow: 0 0 10px rgba(0,245,212,0.3); }
-.xp-pill { display: flex; align-items: center; gap: 6px; margin-top: 5px; background: rgba(255,255,255,0.05); padding: 3px 8px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); }
-#level-badge { font-size: 0.65rem; color: var(--neon-cyan); font-weight: 800; font-family: 'Roboto Mono'; }
-.xp-track { width: 50px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; }
-.xp-fill { height: 100%; background: var(--neon-cyan); width: 0%; border-radius: 2px; transition: width 0.5s; box-shadow: 0 0 6px var(--neon-cyan); }
-.notif-btn { width: 42px; height: 42px; border-radius: 14px; color: #fff; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; position: relative; font-size: 1.2rem; transition: 0.2s; }
-.notif-btn:active { transform: scale(0.95); }
-.notif-badge { position: absolute; top: 10px; right: 10px; width: 8px; height: 8px; background: #FF4757; border-radius: 50%; border: 1px solid var(--bg-deep); display: none; }
-
-.ticker-container { border-bottom: 1px solid var(--glass-border); overflow: hidden; padding: 10px 0; background: rgba(5, 9, 12, 0.7); flex-shrink: 0; }
-.ticker-track { display: inline-block; white-space: nowrap; animation: tick 40s linear infinite; }
-.ticker-item { display: inline-block; padding: 0 25px; font-family: 'Roboto Mono'; font-size: 0.8rem; color: var(--text-muted); }
-.up-color { color: var(--neon-cyan) !important; text-shadow: 0 0 5px rgba(0,245,212,0.4); } 
-.down-color { color: #FF4757 !important; }
-
-@keyframes tick { 
-    0% { transform: translateX(100%); } 
-    100% { transform: translateX(-100%); } 
+/* --- بخش اسکرول محتوا (اصلاح شده) --- */
+.content-scroll {
+    padding: 20px;
+    padding-bottom: 120px; /* فضا برای نوار پایین */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
-/* =========================================
-   5. بخش اسکرول‌شونده (قلب تپنده)
-   ========================================= */
-.content-scroll { 
-    flex: 1; 
-    overflow-y: auto; 
-    padding: 25px 20px; 
-    -webkit-overflow-scrolling: touch; /* اسکرول نرم در iOS */
-    display: block;
-    width: 100%;
-}
-
-/* =========================================
-   6. کارت اصلی و Shimmer
-   ========================================= */
+/* --- کارت موجودی (Hero Card) --- */
 .hero-card {
-    position: relative; 
-    width: 100%;
-    border-radius: var(--radius-xl); 
+    position: relative;
+    border-radius: var(--radius-xl);
+    padding: 25px;
+    margin-bottom: 25px;
+    background: linear-gradient(145deg, rgba(20, 30, 40, 0.9) 0%, rgba(5, 10, 15, 0.95) 100%);
+    border: 1px solid var(--glass-border);
     overflow: hidden;
-    padding: 24px; 
-    margin-bottom: 30px;
-    box-shadow: 0 25px 60px -15px rgba(0,0,0,0.6);
-    border: 1px solid rgba(255,255,255,0.08);
 }
 
-.shimmer-card::after {
-    content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
-    background: linear-gradient(to right, transparent, rgba(255,255,255,0.08), transparent);
-    transform: skewX(-25deg); animation: shimmer 6s infinite; pointer-events: none;
+.balance-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 15px 0;
 }
-
-@keyframes shimmer { 0% { left: -100%; } 20% { left: 200%; } 100% { left: 200%; } }
-
-.ocean-gradient { background: linear-gradient(145deg, rgba(20, 30, 40, 0.8) 0%, rgba(5, 10, 15, 0.9) 100%); }
-.card-glow-overlay { position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(0,245,212,0.08) 0%, transparent 60%); pointer-events: none; mix-blend-mode: screen; }
-.card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; position: relative; z-index: 2; }
-.card-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; }
-.privacy-toggle { cursor: pointer; color: var(--text-muted); padding: 5px; transition: color 0.2s; }
-
-.balance-wrapper { 
-    display: flex; 
-    align-items: baseline; 
-    gap: 8px; 
-    direction: rtl;
-    margin-bottom: 10px; 
-    position: relative; 
-    z-index: 2;
-}
-
-.currency-sign { color: var(--neon-cyan); font-size: 1.5rem; font-weight: 700; text-shadow: 0 0 10px rgba(0,245,212,0.5); }
 
 #toman-balance {
-    font-family: 'Roboto Mono'; 
-    font-size: clamp(1.8rem, 6.5vw, 2.4rem); /* اندازه فونت هوشمند */
-    font-weight: 800; margin: 0; letter-spacing: -1px;
-    background: linear-gradient(to bottom, #FFFFFF, #B0F2FF);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    font-family: 'Roboto Mono';
+    font-size: clamp(1.8rem, 7vw, 2.5rem);
+    font-weight: 800;
+    margin: 0;
+    background: linear-gradient(to bottom, #fff, var(--neon-blue));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
-.blur-mode { filter: blur(10px) !important; opacity: 0.6; }
-
-.sparkline-wrapper { height: 50px; margin-bottom: 20px; position: relative; z-index: 2; }
-#sparkline-svg { width: 100%; height: 100%; overflow: visible; }
-#sparkline-path { stroke: var(--neon-cyan); fill: none; filter: drop-shadow(0 0 8px rgba(0,245,212,0.5)); }
-
-.card-footer-info { display: flex; justify-content: space-between; padding: 15px; border-radius: 18px; position: relative; z-index: 2; }
-.info-item { display: flex; flex-direction: column; align-items: center; flex: 1; }
-.info-item .label { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 4px; }
-.info-item .value { font-family: 'Roboto Mono'; font-size: 0.95rem; font-weight: 700; color: #fff; }
-.xp-accent { color: var(--neon-cyan); }
-.divider { width: 1px; background: rgba(255,255,255,0.1); height: 30px; align-self: center; }
-
-/* =========================================
-   7. منو و گرید دکمه‌ها
-   ========================================= */
-.quick-menu-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 30px; }
-.quick-btn { display: flex; flex-direction: column; align-items: center; gap: 10px; cursor: pointer; }
-.icon-box { 
-    width: 60px; height: 60px; border-radius: 22px; 
-    background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); 
-    display: flex; align-items: center; justify-content: center; 
-    font-size: 1.5rem; transition: all 0.2s;
+/* --- منوی دسترسی سریع (فیکس شده) --- */
+.quick-menu-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 12px;
+    margin-bottom: 30px;
 }
-.quick-btn span { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; }
+
+.quick-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.icon-box {
+    width: 60px; height: 60px;
+    border-radius: 22px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--glass-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    transition: 0.2s;
+}
+
 .quick-btn:active .icon-box { transform: scale(0.9); border-color: var(--neon-cyan); }
+.quick-btn span { font-size: 0.75rem; color: var(--text-muted); font-weight: 700; }
 
-.promo-banner { 
-    border-radius: var(--radius-l); 
-    padding: 20px; 
-    display: flex; justify-content: space-between; align-items: center; 
-    margin-bottom: 30px; border: 1px solid var(--glass-border); 
-    background: rgba(255,255,255,0.02);
+/* --- لیست خدمات (بدون به‌هم‌ریختگی) --- */
+.services-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
-.section-header { font-size: 0.95rem; font-weight: 700; color: #fff; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
-.section-header::before { content: ''; width: 4px; height: 16px; background: var(--neon-cyan); border-radius: 2px; }
+.service-row {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--glass-border);
+    transition: 0.2s;
+}
 
-.services-list { display: flex; flex-direction: column; gap: 12px; }
-.service-row { display: flex; align-items: center; padding: 15px; border-radius: 18px; border: 1px solid transparent; }
-.service-row:active { background: rgba(255,255,255,0.05); }
+.service-row:active { background: rgba(255,255,255,0.08); }
 
-/* =========================================
-   8. نوار ناوبری فیکس شده (Bottom Nav)
-   ========================================= */
-.bottom-nav { 
-    position: fixed; 
-    bottom: 20px; 
-    left: 20px; 
-    right: 20px; 
-    height: 70px; 
-    border-radius: 25px; 
-    display: flex; justify-content: space-around; align-items: center; 
-    z-index: 1000; 
+.srv-icon { width: 45px; height: 45px; border-radius: 14px; margin-left: 15px; display: flex; align-items: center; justify-content: center; }
+.srv-info { flex: 1; }
+.srv-info h4 { margin: 0 0 4px; font-size: 0.95rem; }
+.srv-sub { font-size: 0.75rem; color: var(--text-muted); }
+
+/* --- نوار ناوبری پایین (ثابت و شیک) --- */
+.bottom-nav {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    height: 70px;
+    border-radius: 25px;
     background: rgba(5, 10, 15, 0.9);
     backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
     border: 1px solid var(--glass-border);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 1000;
 }
 
-.nav-item { 
-    display: flex; flex-direction: column; align-items: center; gap: 4px; 
-    text-decoration: none; color: var(--text-muted); font-size: 0.65rem; transition: 0.3s;
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    text-decoration: none;
+    color: var(--text-muted);
+    font-size: 0.65rem;
 }
 
 .nav-item.active { color: var(--neon-cyan); }
 .nav-item i { font-size: 1.3rem; }
 
 .floating-btn { position: relative; top: -30px; }
-.float-inner { 
-    width: 60px; height: 60px; border-radius: 50%; 
-    display: flex; align-items: center; justify-content: center; 
-    font-size: 1.5rem; color: #000; 
+.float-inner {
+    width: 65px; height: 65px;
+    border-radius: 50%;
     background: linear-gradient(135deg, var(--neon-cyan), var(--deep-ocean));
-    border: 4px solid var(--bg-deep);
+    border: 5px solid var(--bg-deep);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #000;
+    font-size: 1.5rem;
+    box-shadow: 0 0 20px rgba(0, 245, 212, 0.3);
 }
 
-.ripple-btn { transition: transform 0.2s; }
-.ripple-btn:active { transform: scale(0.95); }
+/* --- افکت مات برای حریم خصوصی --- */
+.blur-mode { filter: blur(10px); opacity: 0.6; }
+
+/* --- انیمیشن ورود --- */
+.animate-in { opacity: 0; animation: fadeUp 0.6s ease forwards; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }

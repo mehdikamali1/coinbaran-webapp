@@ -135,13 +135,13 @@
 
     <script>
         const tg = window.Telegram.WebApp;
-        // FIX: آدرس اصلاح شد تا به API درست اشاره کند (مثل usdt.html)
+        // تغییر مهم: اضافه شدن /api/webapp به انتهای آدرس
         const API_BASE_URL = window.location.origin + "/api/webapp"; 
+        
         let rates = { buy: 0, sell: 0 };
 
         window.onload = function() {
             tg.ready(); tg.expand(); tg.setHeaderColor('#000000');
-            // InitData ساختگی برای تست مرورگر (در تلگرام مقدار واقعی جایگزین می‌شود)
             if (!tg.initData) tg.initData = "query_id=TEST_MODE"; 
             fetchRates();
         };
@@ -161,28 +161,39 @@
 
         async function fetchRates() {
             try {
-                // FIX: مسیر درست API
-                const res = await fetch(`${API_BASE_URL}/utopia/rates`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                // اضافه کردن timestamp برای جلوگیری از کش شدن (?t=...)
+                const url = `${API_BASE_URL}/utopia/rates?t=${Date.now()}`;
+                
+                const res = await fetch(url, {
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ initData: tg.initData })
                 });
+
+                if (res.status !== 200) {
+                    const errText = await res.text();
+                    tg.showAlert(`خطای سرور: ${res.status}\nآدرس: ${url}\nمتن خطا: ${errText.substring(0, 50)}`);
+                    return;
+                }
+
                 const data = await res.json();
                 if(data.status === 'success') {
                     rates.buy = data.buy; 
                     rates.sell = data.sell;
                     
-                    // نمایش با جداکننده هزارگان
-                    document.getElementById('rate-buy').innerText = parseInt(rates.sell).toLocaleString(); // فروش ما به کاربر
-                    document.getElementById('rate-sell').innerText = parseInt(rates.buy).toLocaleString(); // خرید ما از کاربر
+                    document.getElementById('rate-buy').innerText = parseInt(rates.sell).toLocaleString();
+                    document.getElementById('rate-sell').innerText = parseInt(rates.buy).toLocaleString();
+                } else {
+                    tg.showAlert(`خطا در دیتای دریافتی: ${data.message || 'نامشخص'}`);
                 }
             } catch(e) {
-                console.error("Error fetching rates:", e);
+                console.error("Fetch error:", e);
+                tg.showAlert(`خطای اتصال به سرور:\n${e.message}`);
             }
         }
 
         function calcPrice() {
             const val = parseFloat(document.getElementById('buy-amount').value);
-            // محاسبه بر اساس نرخ فروش ما (rates.sell)
             if(val > 0 && rates.sell > 0) {
                 const total = val * rates.sell;
                 document.getElementById('buy-total').innerText = parseInt(total).toLocaleString() + " تومان";
@@ -216,7 +227,7 @@
                     tg.HapticFeedback.notificationOccurred('error');
                     tg.showAlert("❌ " + data.message);
                 }
-            } catch(e) { tg.showAlert("خطای شبکه"); }
+            } catch(e) { tg.showAlert("خطای شبکه: " + e.message); }
             
             btn.disabled = false; btn.innerHTML = '<i class="fas fa-shopping-cart"></i> خرید آنی';
         }
@@ -244,7 +255,7 @@
                     tg.HapticFeedback.notificationOccurred('error');
                     tg.showAlert("❌ " + data.message);
                 }
-            } catch(e) { tg.showAlert("خطای شبکه"); }
+            } catch(e) { tg.showAlert("خطای شبکه: " + e.message); }
 
             btn.disabled = false; btn.innerHTML = '<i class="fas fa-exchange-alt"></i> نقد کردن';
         }

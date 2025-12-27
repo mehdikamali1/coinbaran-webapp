@@ -135,12 +135,14 @@
 
     <script>
         const tg = window.Telegram.WebApp;
-        const API_BASE_URL = window.location.origin;
+        // FIX: آدرس اصلاح شد تا به API درست اشاره کند (مثل usdt.html)
+        const API_BASE_URL = window.location.origin + "/api/webapp"; 
         let rates = { buy: 0, sell: 0 };
 
         window.onload = function() {
             tg.ready(); tg.expand(); tg.setHeaderColor('#000000');
-            if (!tg.initData) tg.initData = "query_id=TEST&user=%7B%22id%22%3A111111111%7D&auth_date=1700000000&hash=fake";
+            // InitData ساختگی برای تست مرورگر (در تلگرام مقدار واقعی جایگزین می‌شود)
+            if (!tg.initData) tg.initData = "query_id=TEST_MODE"; 
             fetchRates();
         };
 
@@ -154,27 +156,35 @@
                 document.querySelector('.u-tab:nth-child(2)').classList.add('active');
                 document.getElementById('sell-section').classList.add('active');
             }
+            if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         }
 
         async function fetchRates() {
             try {
-                const res = await fetch(`${API_BASE_URL}/webapp/utopia/rates`, {
+                // FIX: مسیر درست API
+                const res = await fetch(`${API_BASE_URL}/utopia/rates`, {
                     method: 'POST', headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ initData: tg.initData })
                 });
                 const data = await res.json();
                 if(data.status === 'success') {
-                    rates.buy = data.buy; rates.sell = data.sell;
-                    document.getElementById('rate-buy').innerText = parseInt(rates.buy).toLocaleString();
-                    document.getElementById('rate-sell').innerText = parseInt(rates.sell).toLocaleString();
+                    rates.buy = data.buy; 
+                    rates.sell = data.sell;
+                    
+                    // نمایش با جداکننده هزارگان
+                    document.getElementById('rate-buy').innerText = parseInt(rates.sell).toLocaleString(); // فروش ما به کاربر
+                    document.getElementById('rate-sell').innerText = parseInt(rates.buy).toLocaleString(); // خرید ما از کاربر
                 }
-            } catch(e) {}
+            } catch(e) {
+                console.error("Error fetching rates:", e);
+            }
         }
 
         function calcPrice() {
             const val = parseFloat(document.getElementById('buy-amount').value);
-            if(val > 0 && rates.buy > 0) {
-                const total = val * rates.buy;
+            // محاسبه بر اساس نرخ فروش ما (rates.sell)
+            if(val > 0 && rates.sell > 0) {
+                const total = val * rates.sell;
                 document.getElementById('buy-total').innerText = parseInt(total).toLocaleString() + " تومان";
             } else {
                 document.getElementById('buy-total').innerText = "0";
@@ -191,7 +201,7 @@
             document.getElementById('buy-result').style.display = 'none';
 
             try {
-                const res = await fetch(`${API_BASE_URL}/webapp/utopia/buy`, {
+                const res = await fetch(`${API_BASE_URL}/utopia/buy`, {
                     method: 'POST', headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ initData: tg.initData, amount_usd: amount })
                 });
@@ -220,7 +230,7 @@
             btn.disabled = true; btn.innerText = 'در حال استعلام...';
 
             try {
-                const res = await fetch(`${API_BASE_URL}/webapp/utopia/sell`, {
+                const res = await fetch(`${API_BASE_URL}/utopia/sell`, {
                     method: 'POST', headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ initData: tg.initData, voucher_code: code })
                 });

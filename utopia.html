@@ -6,7 +6,6 @@
     <title>صرافی یوتوپیا</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    
     <link rel="stylesheet" href="webapp/dashboard-style.css?v=30.0">
 
     <style>
@@ -15,13 +14,13 @@
         .utopia-ticker {
             background: linear-gradient(135deg, rgba(255, 0, 122, 0.1) 0%, rgba(0,0,0,0) 100%);
             border: 1px solid rgba(255, 0, 122, 0.3);
-            border-radius: var(--radius-lg);
+            border-radius: 20px;
             padding: 20px; display: flex; justify-content: space-between;
             margin-bottom: 25px;
         }
         
         .tick-item { display: flex; flex-direction: column; gap: 5px; }
-        .tick-label { font-size: 0.75rem; color: var(--text-muted); }
+        .tick-label { font-size: 0.75rem; color: #848e9c; }
         .tick-val { font-family: monospace; font-size: 1.2rem; font-weight: 800; }
         .c-buy { color: var(--color-up); }
         .c-sell { color: var(--utopia-pink); }
@@ -32,7 +31,7 @@
         }
         .u-tab {
             flex: 1; padding: 12px; text-align: center; border-radius: 12px;
-            font-weight: 700; font-size: 0.9rem; color: var(--text-muted);
+            font-weight: 700; font-size: 0.9rem; color: #848e9c;
             cursor: pointer; transition: all 0.3s;
         }
         .u-tab.active { color: #fff; background: var(--utopia-pink); box-shadow: 0 0 15px rgba(255,0,122,0.3); }
@@ -42,9 +41,10 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         .glass-inp {
-            width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border);
+            width: 100%; background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border);
             color: #fff; padding: 16px; border-radius: 16px;
             font-size: 1.1rem; font-weight: 700; font-family: monospace; text-align: center;
+            outline: none;
         }
         
         .btn-pink { 
@@ -65,17 +65,17 @@
 <body>
 
     <div class="ambient-glow glow-top" style="background:var(--utopia-pink)"></div>
-    <div class="scanlines"></div>
 
-    <header class="glass-header">
-        <div class="profile-section">
-            <div class="icon-btn" onclick="window.location.href='/'"><i class="fas fa-arrow-right"></i></div>
-            <div style="font-weight:800; font-size:1.1rem">صرافی <span style="color:var(--utopia-pink)">یوتوپیا</span></div>
+    <header class="glass-header" style="position: sticky; top:0; z-index:100; background: rgba(5,5,5,0.9); backdrop-filter: blur(15px); border-bottom: 1px solid var(--glass-border);">
+        <div class="profile-section" style="padding: 15px; display: flex; align-items: center;">
+            <div class="icon-btn" onclick="window.location.href='/'" style="cursor:pointer; padding: 10px;">
+                <i class="fas fa-arrow-right"></i>
+            </div>
+            <div style="font-weight:800; font-size:1.1rem; margin-right: 10px;">صرافی <span style="color:var(--utopia-pink)">یوتوپیا</span></div>
         </div>
-        <div style="width:40px"></div>
     </header>
 
-    <div class="glass-wrapper main-scroll-area">
+    <div class="main-scroll-area" style="padding: 20px; padding-bottom: 100px;">
         
         <div class="utopia-ticker">
             <div class="tick-item">
@@ -101,7 +101,7 @@
             </div>
             <div style="display:flex; justify-content:space-between; padding:0 10px;">
                 <span style="color:#888; font-size:0.9rem;">مبلغ قابل پرداخت:</span>
-                <span id="buy-total" style="color:var(--gold-primary); font-weight:bold; font-family:monospace;">0</span>
+                <span id="buy-total" style="color:var(--gold-primary); font-weight:bold; font-family:monospace;">0 تومان</span>
             </div>
 
             <button id="btn-do-buy" class="btn-pink" onclick="doBuy()">
@@ -112,7 +112,7 @@
                 <div style="color:var(--color-up); font-weight:800; margin-bottom:10px">✅ خرید موفق!</div>
                 <div style="font-size:0.8rem; color:#aaa">کد ووچر شما:</div>
                 <div id="new-voucher-code" style="font-family:monospace; font-size:1.1rem; color:#fff; background:rgba(255,0,122,0.1); padding:10px; border-radius:8px; margin:10px 0; word-break:break-all;">...</div>
-                <button onclick="copyCode()" style="background:transparent; border:1px solid #fff; color:#fff; padding:5px 15px; border-radius:15px;">کپی</button>
+                <button onclick="copyCode()" style="background:transparent; border:1px solid #fff; color:#fff; padding:5px 15px; border-radius:15px; cursor:pointer;">کپی</button>
             </div>
         </div>
 
@@ -135,12 +135,12 @@
 
     <script>
         const tg = window.Telegram.WebApp;
-        const API_BASE_URL = window.location.origin;
+        // --- FIX: Correct API Base URL (Added /api/webapp) ---
+        const API_BASE_URL = window.location.origin + "/api/webapp";
         let rates = { buy: 0, sell: 0 };
 
         window.onload = function() {
-            tg.ready(); tg.expand(); tg.setHeaderColor('#000000');
-            if (!tg.initData) tg.initData = "query_id=TEST&user=%7B%22id%22%3A111111111%7D&auth_date=1700000000&hash=fake";
+            tg.ready(); tg.expand(); tg.setHeaderColor('#050505');
             fetchRates();
         };
 
@@ -154,12 +154,14 @@
                 document.querySelector('.u-tab:nth-child(2)').classList.add('active');
                 document.getElementById('sell-section').classList.add('active');
             }
+            tg.HapticFeedback.impactOccurred('light');
         }
 
         async function fetchRates() {
             try {
-                const res = await fetch(`${API_BASE_URL}/webapp/utopia/rates`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                // --- FIX: Correct Route ---
+                const res = await fetch(`${API_BASE_URL}/utopia/rates`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true'},
                     body: JSON.stringify({ initData: tg.initData })
                 });
                 const data = await res.json();
@@ -167,8 +169,9 @@
                     rates.buy = data.buy; rates.sell = data.sell;
                     document.getElementById('rate-buy').innerText = parseInt(rates.buy).toLocaleString();
                     document.getElementById('rate-sell').innerText = parseInt(rates.sell).toLocaleString();
+                    calcPrice(); // Recalculate if amount is entered
                 }
-            } catch(e) {}
+            } catch(e) { console.error(e); }
         }
 
         function calcPrice() {
@@ -177,7 +180,7 @@
                 const total = val * rates.buy;
                 document.getElementById('buy-total').innerText = parseInt(total).toLocaleString() + " تومان";
             } else {
-                document.getElementById('buy-total').innerText = "0";
+                document.getElementById('buy-total').innerText = "0 تومان";
             }
         }
 
@@ -191,8 +194,9 @@
             document.getElementById('buy-result').style.display = 'none';
 
             try {
-                const res = await fetch(`${API_BASE_URL}/webapp/utopia/buy`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                // --- FIX: Correct Route ---
+                const res = await fetch(`${API_BASE_URL}/utopia/buy`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true'},
                     body: JSON.stringify({ initData: tg.initData, amount_usd: amount })
                 });
                 const data = await res.json();
@@ -220,8 +224,9 @@
             btn.disabled = true; btn.innerText = 'در حال استعلام...';
 
             try {
-                const res = await fetch(`${API_BASE_URL}/webapp/utopia/sell`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                // --- FIX: Correct Route ---
+                const res = await fetch(`${API_BASE_URL}/utopia/sell`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true'},
                     body: JSON.stringify({ initData: tg.initData, voucher_code: code })
                 });
                 const data = await res.json();

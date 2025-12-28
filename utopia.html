@@ -9,13 +9,21 @@
     <link rel="stylesheet" href="webapp/dashboard-style.css?v=33.0">
 
     <style>
+        /* --- تعریف متغیرهای رنگی اختصاصی تم فیروزه‌ای --- */
         :root {
-            --gold-primary: #f0b90b;
-            --color-up: #0ecb81;
-            --color-down: #f6465d;
-            --glass-border: rgba(255, 255, 255, 0.1);
+            --cyan-primary: #00E5FF; /* رنگ اصلی فیروزه‌ای نئونی */
+            --cyan-dark: #00bcd4;
+            --cyan-glow: rgba(0, 229, 255, 0.4); /* رنگ درخشش */
+            
+            --color-up: #0ecb81;     /* سبز برای فروش کاربر (کسب درآمد) */
+            --color-down: #f6465d;   /* قرمز برای خرید کاربر (هزینه) */
+            
             --bg-dark: #050505;
-            --card-bg: rgba(255, 255, 255, 0.05);
+            /* پس‌زمینه کارت‌ها با تینت خفیف فیروزه‌ای */
+            --card-bg-cyan: rgba(0, 229, 255, 0.03);
+            /* بوردر شیشه‌ای با درخشش فیروزه‌ای */
+            --glass-border-cyan: rgba(0, 229, 255, 0.25);
+            --text-muted: #848e9c;
         }
 
         body {
@@ -24,6 +32,9 @@
             font-family: 'Vazirmatn', sans-serif;
             margin: 0; padding: 0;
             overflow-x: hidden;
+            /* اضافه کردن اسکن‌لاین برای حس سایبرپانک مشابه بقیه صفحات */
+            background-image: linear-gradient(rgba(0, 229, 255, 0.03) 1px, transparent 1px);
+            background-size: 100% 3px;
         }
 
         .main-scroll-area { padding: 20px; padding-bottom: 150px; }
@@ -32,85 +43,124 @@
         .glass-header {
             position: sticky; top:0; z-index:100;
             background: rgba(5,5,5,0.9); backdrop-filter: blur(15px);
-            border-bottom: 1px solid var(--glass-border);
+            border-bottom: 1px solid var(--glass-border-cyan);
             padding: 15px; display: flex; align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
         }
 
         /* --- Ticker Card --- */
         .ticker-card {
-            background: var(--card-bg);
-            border: 1px solid var(--glass-border);
+            background: var(--card-bg-cyan);
+            border: 1px solid var(--glass-border-cyan);
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.05) inset;
             border-radius: 20px; padding: 20px;
             margin-bottom: 25px; display: flex; justify-content: space-between;
         }
         .ticker-col { display: flex; flex-direction: column; gap: 6px; }
-        .ticker-label { font-size: 0.75rem; color: #848e9c; }
+        .ticker-label { font-size: 0.75rem; color: var(--text-muted); }
         .ticker-val { font-family: 'Roboto Mono', monospace; font-size: 1.25rem; font-weight: 800; }
-        .col-buy { color: var(--color-down); } 
-        .col-sell { color: var(--color-up); }
+        /* اصلاح منطق رنگی: خرید کاربر هزینه است (قرمز)، فروش کاربر درآمد است (سبز) */
+        .col-buy-cost { color: var(--color-down); } 
+        .col-sell-gain { color: var(--color-up); }
 
-        /* --- Tabs --- */
+        /* --- Tabs (Theme: Turquoise) --- */
         .switch-tabs {
-            background: var(--card-bg); border: 1px solid var(--glass-border);
+            background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border-cyan);
             border-radius: 16px; padding: 5px; display: flex; margin-bottom: 25px;
         }
         .tab-btn {
             flex: 1; padding: 12px; text-align: center; border-radius: 12px;
-            font-weight: 700; font-size: 0.9rem; color: #848e9c;
+            font-weight: 700; font-size: 0.9rem; color: var(--text-muted);
             cursor: pointer; transition: all 0.3s;
+            position: relative; overflow: hidden;
         }
-        .tab-btn.active { background: var(--gold-primary); color: #000; box-shadow: 0 4px 12px rgba(240, 185, 11, 0.2); }
+        .tab-btn.active { 
+            background: linear-gradient(135deg, var(--cyan-primary), var(--cyan-dark));
+            color: #000; 
+            box-shadow: 0 0 15px var(--cyan-glow);
+            border: 1px solid var(--cyan-primary);
+        }
 
         /* --- Inputs --- */
         .input-box { margin-bottom: 20px; }
-        .inp-label { display: block; color: #848e9c; font-size: 0.85rem; margin-bottom: 8px; }
+        .inp-label { display: block; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 8px; }
         .glass-inp {
-            width: 100%; background: rgba(255, 255, 255, 0.08) !important;
-            border: 1px solid var(--glass-border); color: #fff !important;
+            width: 100%; background: rgba(0, 229, 255, 0.05) !important;
+            border: 1px solid var(--glass-border-cyan); color: #fff !important;
             padding: 16px; border-radius: 16px;
             font-size: 1.1rem; font-weight: 700; font-family: 'Roboto Mono', monospace;
             text-align: left; direction: ltr; outline: none; transition: 0.3s;
         }
-        .glass-inp:focus { border-color: var(--gold-primary); background: rgba(255,255,255,0.12) !important; }
-        
-        .glass-inp::placeholder { color: #555; }
+        .glass-inp:focus { 
+            border-color: var(--cyan-primary); 
+            background: rgba(0, 229, 255, 0.1) !important;
+            box-shadow: 0 0 10px var(--cyan-glow) inset;
+        }
+        .glass-inp::placeholder { color: rgba(255,255,255,0.3); }
 
         /* --- Calc Row --- */
         .calc-row { display: flex; justify-content: space-between; padding: 0 5px; margin-bottom: 20px; }
-        .calc-val { font-family: 'Roboto Mono'; font-weight: 700; color: var(--gold-primary); font-size: 1.1rem; }
+        .calc-val { 
+            font-family: 'Roboto Mono'; font-weight: 700; 
+            color: var(--cyan-primary); font-size: 1.1rem;
+            text-shadow: 0 0 8px var(--cyan-glow);
+        }
 
-        /* --- Buttons --- */
+        /* --- Buttons (Theme: Turquoise/Green gradients) --- */
         .btn-submit {
             width: 100%; padding: 18px; border-radius: 18px; border: none;
             font-size: 1.1rem; font-weight: 800; cursor: pointer;
             display: flex; align-items: center; justify-content: center; gap: 10px;
-            transition: all 0.2s; margin-top: 10px;
+            transition: all 0.2s; margin-top: 10px; position: relative; overflow: hidden;
         }
-        .bg-gold { background: var(--gold-primary); color: #000; }
-        .bg-green { background: var(--color-up); color: #000; }
+        /* دکمه اصلی خرید (تم فیروزه‌ای) */
+        .btn-cyan-grad { 
+            background: linear-gradient(135deg, var(--cyan-primary), var(--cyan-dark));
+            color: #000;
+            box-shadow: 0 5px 20px rgba(0, 229, 255, 0.3);
+        }
+        /* دکمه فروش (تم سبز برای "نقد کردن") */
+        .btn-green-grad { 
+            background: linear-gradient(135deg, #0ecb81, #099f65);
+            color: #fff;
+            box-shadow: 0 5px 20px rgba(14, 203, 129, 0.3);
+        }
+        .btn-submit:active { transform: scale(0.98); }
 
-        /* --- Voucher Result Card --- */
+        /* --- Result & Info Cards --- */
+        .info-card {
+            background: rgba(0, 229, 255, 0.05); border-radius: 12px; padding: 15px; 
+            margin-bottom: 20px; border: 1px solid var(--glass-border-cyan);
+        }
+        
         .result-card {
-            display: none; background: rgba(14, 203, 129, 0.1);
-            border: 1px dashed var(--color-up);
+            display: none; background: rgba(0, 229, 255, 0.05);
+            border: 1px dashed var(--cyan-primary);
             padding: 20px; border-radius: 20px;
             margin-top: 25px; text-align: center;
+            animation: fadeIn 0.5s ease;
         }
         .code-display {
             font-family: 'Roboto Mono', monospace; font-size: 1.1rem;
-            color: #fff; background: rgba(0,0,0,0.3);
+            color: var(--cyan-primary); background: rgba(0,0,0,0.3);
             padding: 12px; border-radius: 10px; margin: 15px 0;
-            word-break: break-all; border: 1px solid var(--glass-border);
+            word-break: break-all; border: 1px solid var(--glass-border-cyan);
+            text-shadow: 0 0 5px var(--cyan-glow);
         }
         .copy-btn {
-            background: transparent; border: 1px solid var(--color-up);
-            color: var(--color-up); padding: 6px 20px; border-radius: 20px;
-            font-size: 0.9rem; cursor: pointer;
+            background: transparent; border: 1px solid var(--cyan-primary);
+            color: var(--cyan-primary); padding: 8px 25px; border-radius: 20px;
+            font-size: 0.9rem; cursor: pointer; transition: 0.3s;
+            font-weight: 700;
         }
+        .copy-btn:hover { background: var(--cyan-primary); color: #000; }
 
         .section-box { display: none; animation: fadeIn 0.3s ease; }
         .section-box.active { display: block; }
-        @keyframes fadeIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+        
+        /* آیکون‌های رنگی */
+        .icon-cyan { color: var(--cyan-primary); filter: drop-shadow(0 0 5px var(--cyan-glow)); }
     </style>
 </head>
 <body>
@@ -119,8 +169,8 @@
         <div class="icon-btn" onclick="window.location.href='/'" style="cursor:pointer; padding: 10px; margin-left:10px;">
             <i class="fas fa-arrow-right" style="font-size:1.2rem; color:#fff;"></i>
         </div>
-        <div style="font-weight:900; font-size:1.2rem; display:flex; align-items:center; gap:8px;">
-            <i class="fas fa-gem" style="color:var(--gold-primary)"></i>
+        <div style="font-weight:900; font-size:1.2rem; display:flex; align-items:center; gap:10px;">
+            <i class="fas fa-gem icon-cyan"></i>
             تبادل یوتوپیا (UUSD)
         </div>
     </header>
@@ -130,12 +180,12 @@
         <div class="ticker-card">
             <div class="ticker-col">
                 <span class="ticker-label">نرخ خرید (از شما)</span>
-                <span class="ticker-val col-sell" id="rate-buy">---</span>
+                <span class="ticker-val col-sell-gain" id="rate-sell">...</span>
             </div>
-            <div style="width:1px; height:40px; background:var(--glass-border)"></div>
+            <div style="width:1px; height:40px; background:var(--glass-border-cyan)"></div>
             <div class="ticker-col" style="align-items:flex-end">
                 <span class="ticker-label">نرخ فروش (به شما)</span>
-                <span class="ticker-val col-buy" id="rate-sell">---</span>
+                <span class="ticker-val col-buy-cost" id="rate-buy">...</span>
             </div>
         </div>
 
@@ -151,20 +201,20 @@
             </div>
             
             <div class="calc-row">
-                <span style="font-size:0.85rem; color:#848e9c">مبلغ پرداختی شما:</span>
+                <span style="font-size:0.85rem; color:var(--text-muted)">مبلغ پرداختی شما:</span>
                 <span class="calc-val" id="buy-total">0 تومان</span>
             </div>
 
-            <button id="btn-do-buy" class="btn-submit bg-gold" onclick="doBuy()">
+            <button id="btn-do-buy" class="btn-submit btn-cyan-grad" onclick="doBuy()">
                 <i class="fas fa-shopping-cart"></i> 
                 <span>خرید آنی ووچر</span>
             </button>
             
             <div id="buy-result" class="result-card">
-                <div style="color:var(--color-up); font-weight:900; font-size:1.1rem; margin-bottom:5px">
-                    <i class="fas fa-check-circle"></i> خرید موفق
+                <div style="color:var(--cyan-primary); font-weight:900; font-size:1.1rem; margin-bottom:5px; display:flex; align-items:center; justify-content:center; gap:8px;">
+                    <i class="fas fa-check-circle icon-cyan"></i> خرید موفق
                 </div>
-                <div style="font-size:0.8rem; color:#aaa">ووچر اختصاصی شما صادر شد:</div>
+                <div style="font-size:0.85rem; color:#ccc; margin-bottom:10px;">ووچر اختصاصی شما صادر شد:</div>
                 <div id="new-voucher-code" class="code-display">---</div>
                 <button class="copy-btn" onclick="copyCode()">
                     <i class="fas fa-copy"></i> کپی کد
@@ -178,17 +228,17 @@
                 <input type="text" id="sell-code" class="glass-inp" placeholder="UTP-..." style="font-size:0.9rem;">
             </div>
             
-            <div style="background:rgba(255,255,255,0.05); border-radius:12px; padding:15px; margin-bottom:20px; border:1px solid var(--glass-border);">
+            <div class="info-card">
                 <div style="display:flex; align-items:center; gap:10px; margin-bottom:5px;">
-                    <i class="fas fa-info-circle" style="color:var(--gold-primary)"></i>
-                    <span style="font-size:0.85rem; font-weight:bold;">نقد کردن آنی</span>
+                    <i class="fas fa-info-circle icon-cyan"></i>
+                    <span style="font-size:0.9rem; font-weight:bold; color:#fff;">نقد کردن آنی</span>
                 </div>
-                <p style="margin:0; font-size:0.75rem; color:#888; line-height:1.6;">
+                <p style="margin:0; font-size:0.8rem; color:#bbb; line-height:1.7;">
                     سیستم به صورت خودکار ووچر را استعلام گرفته و مبلغ ریالی آن را همان لحظه به کیف پول شما واریز می‌کند.
                 </p>
             </div>
 
-            <button id="btn-do-sell" class="btn-submit bg-green" onclick="doSell()">
+            <button id="btn-do-sell" class="btn-submit btn-green-grad" onclick="doSell()">
                 <i class="fas fa-exchange-alt"></i> 
                 <span>استعلام و نقد کردن</span>
             </button>
@@ -198,13 +248,13 @@
 
     <script>
         const tg = window.Telegram.WebApp;
-        // آدرس صحیح API
         const API_BASE_URL = window.location.origin + "/api/webapp"; 
         
         let rates = { buy: 0, sell: 0 };
 
         window.onload = function() {
-            tg.ready(); tg.expand(); tg.setHeaderColor('#050505'); // هماهنگ با رنگ هدر جدید
+            tg.ready(); tg.expand(); 
+            tg.setHeaderColor('#050505'); // رنگ هدر مطابق با پس‌زمینه جدید
             if (!tg.initData) tg.initData = "query_id=TEST_MODE"; 
             fetchRates();
         };
@@ -232,29 +282,23 @@
                     body: JSON.stringify({ initData: tg.initData })
                 });
 
-                if (res.status !== 200) {
-                    console.error("Server Error:", await res.text());
-                    return;
-                }
+                if (res.status !== 200) return;
 
                 const data = await res.json();
                 if(data.status === 'success') {
                     rates.buy = data.buy; 
                     rates.sell = data.sell;
                     
-                    // در اینجا rate-buy یعنی نرخ خرید ما از مشتری (که مشتری میفروشه)
-                    // و rate-sell یعنی نرخ فروش ما به مشتری (که مشتری میخره)
-                    document.getElementById('rate-buy').innerText = parseInt(rates.buy).toLocaleString();
-                    document.getElementById('rate-sell').innerText = parseInt(rates.sell).toLocaleString();
+                    // rate.sell = فروش ما به کاربر (کاربر می‌خرد)
+                    // rate.buy = خرید ما از کاربر (کاربر می‌فروشد)
+                    document.getElementById('rate-buy').innerText = parseInt(rates.sell).toLocaleString();
+                    document.getElementById('rate-sell').innerText = parseInt(rates.buy).toLocaleString();
                 }
-            } catch(e) {
-                console.error("Fetch error:", e);
-            }
+            } catch(e) { console.error(e); }
         }
 
         function calcPrice() {
             const val = parseFloat(document.getElementById('buy-amount').value);
-            // محاسبه بر اساس نرخ فروش ما (rates.sell)
             if(val > 0 && rates.sell > 0) {
                 const total = val * rates.sell;
                 document.getElementById('buy-total').innerText = parseInt(total).toLocaleString() + " تومان";
@@ -285,11 +329,12 @@
                     document.getElementById('new-voucher-code').innerText = data.voucher_code;
                     document.getElementById('buy-result').style.display = 'block';
                     tg.showAlert("✅ خرید موفقیت آمیز بود");
+                    fetchRates(); // آپدیت نرخ‌ها
                 } else {
                     tg.HapticFeedback.notificationOccurred('error');
                     tg.showAlert("❌ " + data.message);
                 }
-            } catch(e) { tg.showAlert("خطای شبکه: " + e.message); }
+            } catch(e) { tg.showAlert("خطای شبکه"); }
             
             btn.disabled = false; 
             btn.innerHTML = '<i class="fas fa-shopping-cart"></i> <span>خرید آنی ووچر</span>';
@@ -315,11 +360,12 @@
                     tg.HapticFeedback.notificationOccurred('success');
                     tg.showAlert(`✅ فروخته شد!\nمبلغ ${parseInt(data.amount_toman).toLocaleString()} تومان به کیف پول شما واریز شد.`);
                     document.getElementById('sell-code').value = "";
+                    fetchRates(); // آپدیت نرخ‌ها
                 } else {
                     tg.HapticFeedback.notificationOccurred('error');
                     tg.showAlert("❌ " + data.message);
                 }
-            } catch(e) { tg.showAlert("خطای شبکه: " + e.message); }
+            } catch(e) { tg.showAlert("خطای شبکه"); }
 
             btn.disabled = false; 
             btn.innerHTML = '<i class="fas fa-exchange-alt"></i> <span>استعلام و نقد کردن</span>';

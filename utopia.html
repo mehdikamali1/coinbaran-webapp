@@ -6,7 +6,7 @@
     <title>صرافی یوتوپیا | کوین باران</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="webapp/dashboard-style.css?v=33.0">
+    <link rel="stylesheet" href="dashboard-style.css?v=110.1">
 
     <style>
         /* --- تعریف متغیرهای رنگی اختصاصی تم فیروزه‌ای --- */
@@ -18,12 +18,12 @@
             --color-up: #0ecb81;     /* سبز برای فروش کاربر (کسب درآمد) */
             --color-down: #f6465d;   /* قرمز برای خرید کاربر (هزینه) */
             
-            --bg-dark: #050505;
+            --bg-dark: #05090C; /* هماهنگ با تم اصلی */
             /* پس‌زمینه کارت‌ها با تینت خفیف فیروزه‌ای */
             --card-bg-cyan: rgba(0, 229, 255, 0.03);
             /* بوردر شیشه‌ای با درخشش فیروزه‌ای */
             --glass-border-cyan: rgba(0, 229, 255, 0.25);
-            --text-muted: #848e9c;
+            --text-muted: #8E9AAF;
         }
 
         body {
@@ -42,7 +42,7 @@
         /* --- Header Style --- */
         .glass-header {
             position: sticky; top:0; z-index:100;
-            background: rgba(5,5,5,0.9); backdrop-filter: blur(15px);
+            background: rgba(5, 9, 12, 0.9); backdrop-filter: blur(15px);
             border-bottom: 1px solid var(--glass-border-cyan);
             padding: 15px; display: flex; align-items: center;
             box-shadow: 0 4px 15px rgba(0,0,0,0.4);
@@ -166,7 +166,7 @@
 <body>
 
     <header class="glass-header">
-        <div class="icon-btn" onclick="window.location.href='/'" style="cursor:pointer; padding: 10px; margin-left:10px;">
+        <div class="icon-btn" onclick="window.location.href='dashboard.html'" style="cursor:pointer; padding: 10px; margin-left:10px;">
             <i class="fas fa-arrow-right" style="font-size:1.2rem; color:#fff;"></i>
         </div>
         <div style="font-weight:900; font-size:1.2rem; display:flex; align-items:center; gap:10px;">
@@ -254,7 +254,7 @@
 
         window.onload = function() {
             tg.ready(); tg.expand(); 
-            tg.setHeaderColor('#050505'); // رنگ هدر مطابق با پس‌زمینه جدید
+            tg.setHeaderColor('#05090C'); // آپدیت رنگ هدر برای هماهنگی با تم اصلی
             if (!tg.initData) tg.initData = "query_id=TEST_MODE"; 
             fetchRates();
         };

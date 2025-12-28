@@ -11,10 +11,10 @@
     <style>
         /* --- اصلاح حیاتی برای فعال‌سازی اسکرول --- */
         html, body {
-            overflow-y: auto !important; /* اجبار به اسکرول خوردن */
+            overflow-y: auto !important;
             height: auto !important;
             min-height: 100vh;
-            -webkit-overflow-scrolling: touch; /* اسکرول نرم در آیفون */
+            -webkit-overflow-scrolling: touch;
         }
 
         /* --- تعریف متغیرهای رنگی اختصاصی تم فیروزه‌ای --- */
@@ -22,8 +22,11 @@
             --cyan-primary: #00E5FF;
             --cyan-dark: #00bcd4;
             --cyan-glow: rgba(0, 229, 255, 0.4);
+            
             --color-up: #0ecb81;
             --color-down: #f6465d;
+            --color-warn: #F0B90B;
+            
             --bg-dark: #05090C;
             --card-bg-cyan: rgba(0, 229, 255, 0.03);
             --glass-border-cyan: rgba(0, 229, 255, 0.25);
@@ -72,7 +75,7 @@
         }
         .tab-btn {
             flex: 1; padding: 12px; text-align: center; border-radius: 12px;
-            font-weight: 700; font-size: 0.9rem; color: var(--text-muted);
+            font-weight: 700; font-size: 0.85rem; color: var(--text-muted);
             cursor: pointer; transition: all 0.3s;
             position: relative; overflow: hidden;
         }
@@ -98,7 +101,7 @@
             background: rgba(0, 229, 255, 0.1) !important;
             box-shadow: 0 0 10px var(--cyan-glow) inset;
         }
-        .glass-inp::placeholder { color: rgba(255,255,255,0.3); }
+        .glass-inp::placeholder { color: rgba(255,255,255,0.3); font-size: 0.9rem;}
 
         /* --- Calc Row --- */
         .calc-row { display: flex; justify-content: space-between; padding: 0 5px; margin-bottom: 20px; }
@@ -124,6 +127,11 @@
             background: linear-gradient(135deg, #0ecb81, #099f65);
             color: #fff;
             box-shadow: 0 5px 20px rgba(14, 203, 129, 0.3);
+        }
+        .btn-warn-grad {
+            background: linear-gradient(135deg, #F0B90B, #d9a404);
+            color: #000;
+            box-shadow: 0 5px 20px rgba(240, 185, 11, 0.3);
         }
         .btn-submit:active { transform: scale(0.98); }
 
@@ -190,13 +198,14 @@
 
         <div class="switch-tabs">
             <div class="tab-btn active" onclick="switchTab('buy')">خرید ووچر</div>
+            <div class="tab-btn" onclick="switchTab('transfer')">انتقال</div>
             <div class="tab-btn" onclick="switchTab('sell')">فروش ووچر</div>
         </div>
 
         <div id="buy-section" class="section-box active">
             <div class="input-box">
                 <label class="inp-label">مقدار خرید (دلار)</label>
-                <input type="number" id="buy-amount" class="glass-inp" placeholder="10.00" oninput="calcPrice()">
+                <input type="number" id="buy-amount" class="glass-inp" placeholder="10.00" oninput="calcPrice('buy')">
             </div>
             
             <div class="calc-row">
@@ -215,8 +224,51 @@
                 </div>
                 <div style="font-size:0.85rem; color:#ccc; margin-bottom:10px;">ووچر اختصاصی شما صادر شد:</div>
                 <div id="new-voucher-code" class="code-display">---</div>
-                <button class="copy-btn" onclick="copyCode()">
+                <button class="copy-btn" onclick="copyCode('new-voucher-code')">
                     <i class="fas fa-copy"></i> کپی کد
+                </button>
+            </div>
+        </div>
+
+        <div id="transfer-section" class="section-box">
+            <div class="input-box">
+                <label class="inp-label">آدرس کیف پول مقصد (Public Key)</label>
+                <input type="text" id="transfer-address" class="glass-inp" placeholder="کلید عمومی ۶۴ رقمی..." style="font-size:0.8rem;">
+            </div>
+
+            <div class="input-box">
+                <label class="inp-label">مقدار انتقال (دلار)</label>
+                <input type="number" id="transfer-amount" class="glass-inp" placeholder="10.00" oninput="calcPrice('transfer')">
+            </div>
+            
+            <div class="calc-row">
+                <span style="font-size:0.85rem; color:var(--text-muted)">هزینه کل (تومان):</span>
+                <span class="calc-val" id="transfer-total">0 تومان</span>
+            </div>
+
+            <div class="info-card" style="border-color:rgba(240, 185, 11, 0.3); background:rgba(240, 185, 11, 0.05);">
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:5px; color:var(--color-warn);">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span style="font-size:0.9rem; font-weight:bold;">دقت کنید!</span>
+                </div>
+                <p style="margin:0; font-size:0.8rem; color:#ccc;">
+                    انتقال در شبکه یوتوپیا غیرقابل بازگشت است. لطفاً آدرس مقصد را با دقت بررسی کنید.
+                </p>
+            </div>
+
+            <button id="btn-do-transfer" class="btn-submit btn-warn-grad" onclick="doTransfer()">
+                <i class="fas fa-paper-plane"></i> 
+                <span>انتقال به کیف پول</span>
+            </button>
+
+            <div id="transfer-result" class="result-card" style="border-color:var(--color-warn);">
+                <div style="color:var(--color-warn); font-weight:900; font-size:1.1rem; margin-bottom:5px; display:flex; align-items:center; justify-content:center; gap:8px;">
+                    <i class="fas fa-check-circle"></i> انتقال انجام شد
+                </div>
+                <div style="font-size:0.85rem; color:#ccc; margin-bottom:10px;">کد رهگیری تراکنش (TxID):</div>
+                <div id="tx-ref-code" class="code-display" style="color:var(--color-warn); border-color:var(--color-warn);">---</div>
+                <button class="copy-btn" onclick="copyCode('tx-ref-code')" style="color:var(--color-warn); border-color:var(--color-warn);">
+                    <i class="fas fa-copy"></i> کپی کد رهگیری
                 </button>
             </div>
         </div>
@@ -263,10 +315,13 @@
             document.querySelectorAll('.section-box').forEach(s => s.classList.remove('active'));
             
             if(tab === 'buy') {
-                document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
                 document.getElementById('buy-section').classList.add('active');
+            } else if (tab === 'transfer') {
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+                document.getElementById('transfer-section').classList.add('active');
             } else {
-                document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
+                document.querySelectorAll('.tab-btn')[2].classList.add('active');
                 document.getElementById('sell-section').classList.add('active');
             }
             if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
@@ -294,13 +349,23 @@
             } catch(e) { console.error(e); }
         }
 
-        function calcPrice() {
-            const val = parseFloat(document.getElementById('buy-amount').value);
-            if(val > 0 && rates.sell > 0) {
-                const total = val * rates.sell;
-                document.getElementById('buy-total').innerText = parseInt(total).toLocaleString() + " تومان";
+        function calcPrice(mode) {
+            let amount = 0;
+            let displayId = '';
+            
+            if(mode === 'buy') {
+                amount = parseFloat(document.getElementById('buy-amount').value);
+                displayId = 'buy-total';
+            } else if(mode === 'transfer') {
+                amount = parseFloat(document.getElementById('transfer-amount').value);
+                displayId = 'transfer-total';
+            }
+
+            if(amount > 0 && rates.sell > 0) {
+                const total = amount * rates.sell;
+                document.getElementById(displayId).innerText = parseInt(total).toLocaleString() + " تومان";
             } else {
-                document.getElementById('buy-total').innerText = "0 تومان";
+                document.getElementById(displayId).innerText = "0 تومان";
             }
         }
 
@@ -327,7 +392,6 @@
                     document.getElementById('buy-result').style.display = 'block';
                     tg.showAlert("✅ خرید موفقیت آمیز بود");
                     fetchRates(); 
-                    // اسکرول خودکار به پایین برای دیدن کد
                     setTimeout(() => {
                         document.getElementById('buy-result').scrollIntoView({ behavior: 'smooth' });
                     }, 500);
@@ -339,6 +403,48 @@
             
             btn.disabled = false; 
             btn.innerHTML = '<i class="fas fa-shopping-cart"></i> <span>خرید آنی ووچر</span>';
+        }
+
+        async function doTransfer() {
+            const amount = parseFloat(document.getElementById('transfer-amount').value);
+            const address = document.getElementById('transfer-address').value.trim();
+            const btn = document.getElementById('btn-do-transfer');
+            
+            if(!amount || amount < 1) { tg.showAlert("حداقل انتقال ۱ دلار است."); return; }
+            if(address.length < 60) { tg.showAlert("آدرس کیف پول نامعتبر است."); return; }
+
+            // تاییدیه گرفتن از کاربر قبل از ارسال
+            const confirmMsg = `آیا از انتقال ${amount} دلار به این آدرس اطمینان دارید؟\nاین عملیات غیرقابل بازگشت است.`;
+            if(!confirm(confirmMsg)) return;
+
+            btn.disabled = true; 
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> در حال انتقال...';
+            document.getElementById('transfer-result').style.display = 'none';
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/utopia/transfer`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ initData: tg.initData, amount_usd: amount, wallet_address: address })
+                });
+                const data = await res.json();
+
+                if(data.status === 'success') {
+                    tg.HapticFeedback.notificationOccurred('success');
+                    document.getElementById('tx-ref-code').innerText = data.tx_ref;
+                    document.getElementById('transfer-result').style.display = 'block';
+                    tg.showAlert("✅ انتقال با موفقیت انجام شد");
+                    fetchRates();
+                    setTimeout(() => {
+                        document.getElementById('transfer-result').scrollIntoView({ behavior: 'smooth' });
+                    }, 500);
+                } else {
+                    tg.HapticFeedback.notificationOccurred('error');
+                    tg.showAlert("❌ " + data.message);
+                }
+            } catch(e) { tg.showAlert("خطای شبکه"); }
+            
+            btn.disabled = false; 
+            btn.innerHTML = '<i class="fas fa-paper-plane"></i> <span>انتقال به کیف پول</span>';
         }
 
         async function doSell() {
@@ -372,8 +478,8 @@
             btn.innerHTML = '<i class="fas fa-exchange-alt"></i> <span>استعلام و نقد کردن</span>';
         }
 
-        function copyCode() {
-            const code = document.getElementById('new-voucher-code').innerText;
+        function copyCode(elementId) {
+            const code = document.getElementById(elementId).innerText;
             navigator.clipboard.writeText(code);
             tg.showAlert("کد کپی شد!");
             tg.HapticFeedback.selectionChanged();

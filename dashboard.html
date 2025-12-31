@@ -13,18 +13,6 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="dashboard-style.css?v=110.1">
-    
-    <style>
-        /* اضافه کردن استایل برای مدیریت وضعیت نمایش */
-        .hidden-content { display: none !important; opacity: 0; }
-        .visible-content { display: block !important; opacity: 1; transition: opacity 0.5s ease-in; }
-        #error-message {
-            display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            background: rgba(255, 0, 0, 0.2); border: 1px solid #ff4444; color: #fff;
-            padding: 10px 20px; border-radius: 12px; font-size: 0.85rem; z-index: 9999;
-            backdrop-filter: blur(10px);
-        }
-    </style>
 </head>
 <body class="loading-active theme-ocean">
 
@@ -47,12 +35,12 @@
                 </defs>
                 <path class="infinity-path" d="M170,85 C 230,145 310,145 310,85 C 310,25 230,25 170,85 C 110,145 30,145 30,85 C 30,25 110,25 170,85" />
             </svg>
-            <img src="images/logo-gold.png" onerror="this.style.display='none'" class="loader-logo" alt="CB">
+            <img src="images/logo-gold.png" class="loader-logo" alt="CB">
         </div>
         <div class="loader-text">
             <span class="loading-title">COIN BARAN</span>
             <div class="loading-line"></div>
-            <span class="loader-status" id="loader-status-text">CONNECTING...</span>
+            <span class="loader-status">CONNECTING...</span>
         </div>
     </div>
 
@@ -69,7 +57,7 @@
                     <div class="xp-pill">
                         <span id="level-badge">LVL 1</span>
                         <div class="xp-track">
-                            <div id="xp-progress-fill" class="xp-fill" style="width: 25%"></div>
+                            <div id="xp-progress-fill" class="xp-fill" style="width: 0%"></div>
                         </div>
                     </div>
                 </div>
@@ -82,7 +70,7 @@
 
         <div class="ticker-container crystal-glass animate-in delay-1">
             <div class="ticker-track" id="price-ticker">
-                <div class="ticker-item">Market Online • USDT/TMN • UUSD/TMN</div>
+                <div class="ticker-item">Connecting to global market...</div>
             </div>
         </div>
 
@@ -111,14 +99,14 @@
                                     <stop offset="100%" stop-color="#00F5D4" stop-opacity="0"/>
                                 </linearGradient>
                             </defs>
-                            <path id="sparkline-area" d="M0,50 L0,20 L50,30 L100,10 L150,40 L200,20 L250,30 L300,50 Z" fill="url(#chartFill)" stroke="none"></path>
-                            <path id="sparkline-path" d="M0,20 L50,30 L100,10 L150,40 L200,20 L250,30 L300,50" fill="none" stroke="#00F5D4" stroke-width="2.5"></path>
+                            <path id="sparkline-area" d="" fill="url(#chartFill)" stroke="none"></path>
+                            <path id="sparkline-path" d="" fill="none" stroke-width="2.5"></path>
                         </svg>
                     </div>
 
                     <div class="card-footer-info crystal-glass">
                         <div class="info-item">
-                            <span class="label">معادل دلاری (Utopia)</span>
+                            <span class="label">معادل دلاری</span>
                             <span class="value balance-text" id="uusd-balance">0.00 $</span>
                         </div>
                         <div class="divider"></div>
@@ -163,8 +151,7 @@
             <div class="services-list animate-in delay-5">
                 <div class="service-row ripple-btn crystal-glass" onclick="window.location.href='usdt.html'">
                     <div class="srv-icon i-tether">
-                        <img src="images/usdt_logo.png" onerror="this.style.display='none'" class="service-img" alt="USDT">
-                        <i class="fas fa-dollar-sign" style="display:none"></i>
+                        <img src="images/usdt_logo.png" class="service-img" alt="USDT">
                     </div>
                     <div class="srv-info">
                         <h4>خرید و فروش تتر</h4>
@@ -175,8 +162,7 @@
 
                 <div class="service-row ripple-btn crystal-glass" onclick="window.location.href='utopia.html'">
                     <div class="srv-icon i-utopia">
-                        <img src="images/utopia_logo.png" onerror="this.style.display='none'" class="service-img" alt="Utopia">
-                        <i class="fas fa-gem" style="display:none"></i>
+                        <img src="images/utopia_logo.png" class="service-img" alt="Utopia">
                     </div>
                     <div class="srv-info">
                         <h4>ووچر یوتوپیا</h4>
@@ -222,12 +208,9 @@
 
     </div>
     
-    <div id="error-message"></div>
-    
     <script src="script.js?v=110.0"></script>
     
     <script>
-        // --- 1. تنظیمات اولیه و افکت مخفی سازی موجودی ---
         let isBalanceHidden = localStorage.getItem('balance_hidden') === 'true';
 
         function applyPrivacyMode() {
@@ -253,86 +236,9 @@
         }
 
         document.addEventListener('DOMContentLoaded', applyPrivacyMode);
-
-        // --- 2. منطق اتصال به سرور و دریافت دیتا (اصلی) ---
-        const tg = window.Telegram.WebApp;
-        tg.ready();
-        tg.expand();
-        
-        // آدرس API به صورت هوشمند (اگر روی لوکال هستید لوکال، اگر روی سرورید آدرس سرور)
-        const API_BASE = window.location.origin + "/api/webapp";
-
-        async function initDashboard() {
-            try {
-                // دریافت دیتای احراز هویت تلگرام
-                const initData = tg.initData || "query_id=TEST_MODE&hash=TEST";
-                
-                // درخواست به سرور
-                const response = await fetch(`${API_BASE}/get_user_data`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ initData: initData })
-                });
-
-                if (!response.ok) throw new Error("Server Response Error");
-
-                const data = await response.json();
-
-                if (data.status === 'success') {
-                    // بروزرسانی UI با دیتای واقعی
-                    updateUI(data);
-                    
-                    // حذف لودر و نمایش برنامه
-                    setTimeout(() => {
-                        document.body.classList.remove('loading-active');
-                        document.getElementById('loader').style.display = 'none';
-                        
-                        const appContainer = document.getElementById('app-container');
-                        appContainer.classList.remove('hidden-content');
-                        appContainer.classList.add('visible-content');
-                    }, 800); // تاخیر کم برای زیبایی انیمیشن
-                } else {
-                    showError("خطا در دریافت اطلاعات کاربری: " + data.message);
-                }
-
-            } catch (error) {
-                console.error(error);
-                showError("عدم برقراری ارتباط با سرور.");
-                // حتی در صورت خطا، لودر را برداریم تا کاربر گیر نکند (با دیتای پیشفرض)
-                document.getElementById('loader-status-text').innerText = "RETRYING...";
-            }
-        }
-
-        function updateUI(data) {
-            // نام کاربر
-            if(data.first_name) document.getElementById('welcome-name').innerText = data.first_name;
-            
-            // موجودی تومان
-            if(data.toman_balance) document.getElementById('toman-balance').innerText = data.toman_balance;
-            
-            // موجودی یوتوپیا
-            if(data.uusd_balance) document.getElementById('uusd-balance').innerText = data.uusd_balance + " $";
-            
-            // موجودی XP
-            if(data.xp_balance) document.getElementById('xp-balance').innerText = data.xp_balance + " XP";
-            
-            // سطح کاربری
-            if(data.kyc_level) document.getElementById('level-badge').innerText = "LVL " + data.kyc_level;
-            
-            // اعمال بلور اگر فعال بود
-            applyPrivacyMode();
-        }
-
-        function showError(msg) {
-            const errDiv = document.getElementById('error-message');
-            errDiv.innerText = msg;
-            errDiv.style.display = 'block';
-            setTimeout(() => { errDiv.style.display = 'none'; }, 5000);
-        }
-
-        // شروع دریافت اطلاعات به محض لود شدن صفحه
-        window.onload = initDashboard;
-
+        const observer = new MutationObserver(applyPrivacyMode);
+        const target = document.getElementById('toman-balance');
+        if(target) observer.observe(target, { childList: true, characterData: true, subtree: true });
     </script>
 </body>
 </html>

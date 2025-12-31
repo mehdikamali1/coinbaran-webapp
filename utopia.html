@@ -9,15 +9,13 @@
     <link rel="stylesheet" href="dashboard-style.css?v=110.1">
 
     <style>
-        /* --- اصلاح حیاتی برای فعال‌سازی اسکرول --- */
         html, body {
-            overflow-y: auto !important; /* اجبار به اسکرول خوردن */
+            overflow-y: auto !important; 
             height: auto !important;
             min-height: 100vh;
-            -webkit-overflow-scrolling: touch; /* اسکرول نرم در آیفون */
+            -webkit-overflow-scrolling: touch;
         }
 
-        /* --- تعریف متغیرهای رنگی اختصاصی تم فیروزه‌ای --- */
         :root {
             --cyan-primary: #00E5FF;
             --cyan-dark: #00bcd4;
@@ -42,7 +40,6 @@
 
         .main-scroll-area { padding: 20px; padding-bottom: 150px; }
 
-        /* --- Header Style --- */
         .glass-header {
             position: sticky; top:0; z-index:100;
             background: rgba(5, 9, 12, 0.95); backdrop-filter: blur(15px);
@@ -51,7 +48,6 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.4);
         }
 
-        /* --- Ticker Card --- */
         .ticker-card {
             background: var(--card-bg-cyan);
             border: 1px solid var(--glass-border-cyan);
@@ -65,7 +61,6 @@
         .col-buy-cost { color: var(--color-down); } 
         .col-sell-gain { color: var(--color-up); }
 
-        /* --- Tabs --- */
         .switch-tabs {
             background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border-cyan);
             border-radius: 16px; padding: 5px; display: flex; margin-bottom: 25px;
@@ -83,10 +78,7 @@
             border: 1px solid var(--cyan-primary);
         }
 
-        /* --- Method Selector (NEW) --- */
-        .method-selector {
-            display: flex; gap: 10px; margin-bottom: 20px;
-        }
+        .method-selector { display: flex; gap: 10px; margin-bottom: 20px; }
         .method-opt {
             flex: 1; padding: 12px; border: 1px solid var(--glass-border-cyan);
             border-radius: 12px; text-align: center; font-size: 0.85rem; font-weight: 600;
@@ -101,7 +93,6 @@
             box-shadow: 0 0 15px rgba(0, 229, 255, 0.1) inset;
         }
 
-        /* --- Inputs --- */
         .input-box { margin-bottom: 20px; }
         .inp-label { display: block; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 8px; }
         .glass-inp {
@@ -116,9 +107,7 @@
             background: rgba(0, 229, 255, 0.1) !important;
             box-shadow: 0 0 10px var(--cyan-glow) inset;
         }
-        .glass-inp::placeholder { color: rgba(255,255,255,0.3); }
 
-        /* --- Calc Row --- */
         .calc-row { display: flex; justify-content: space-between; padding: 0 5px; margin-bottom: 20px; }
         .calc-val { 
             font-family: 'Roboto Mono'; font-weight: 700; 
@@ -126,7 +115,6 @@
             text-shadow: 0 0 8px var(--cyan-glow);
         }
 
-        /* --- Buttons --- */
         .btn-submit {
             width: 100%; padding: 18px; border-radius: 18px; border: none;
             font-size: 1.1rem; font-weight: 800; cursor: pointer;
@@ -135,17 +123,14 @@
         }
         .btn-cyan-grad { 
             background: linear-gradient(135deg, var(--cyan-primary), var(--cyan-dark));
-            color: #000;
-            box-shadow: 0 5px 20px rgba(0, 229, 255, 0.3);
+            color: #000; box-shadow: 0 5px 20px rgba(0, 229, 255, 0.3);
         }
         .btn-green-grad { 
             background: linear-gradient(135deg, #0ecb81, #099f65);
-            color: #fff;
-            box-shadow: 0 5px 20px rgba(14, 203, 129, 0.3);
+            color: #fff; box-shadow: 0 5px 20px rgba(14, 203, 129, 0.3);
         }
         .btn-submit:active { transform: scale(0.98); }
 
-        /* --- Result & Info Cards --- */
         .info-card {
             background: rgba(0, 229, 255, 0.05); border-radius: 12px; padding: 15px; 
             margin-bottom: 20px; border: 1px solid var(--glass-border-cyan);
@@ -159,19 +144,16 @@
             animation: fadeIn 0.5s ease;
         }
         .code-display {
-            font-family: 'Roboto Mono', monospace; font-size: 0.95rem;
+            font-family: 'Roboto Mono', monospace; font-size: 0.9rem;
             color: var(--cyan-primary); background: rgba(0,0,0,0.3);
-            padding: 12px; border-radius: 10px; margin: 15px 0;
+            padding: 12px; border-radius: 10px; margin: 10px 0;
             word-break: break-all; border: 1px solid var(--glass-border-cyan);
-            text-shadow: 0 0 5px var(--cyan-glow);
         }
         .copy-btn {
             background: transparent; border: 1px solid var(--cyan-primary);
-            color: var(--cyan-primary); padding: 8px 25px; border-radius: 20px;
-            font-size: 0.9rem; cursor: pointer; transition: 0.3s;
-            font-weight: 700;
+            color: var(--cyan-primary); padding: 5px 15px; border-radius: 15px;
+            font-size: 0.8rem; cursor: pointer; margin-top:5px;
         }
-        .copy-btn:hover { background: var(--cyan-primary); color: #000; }
 
         .section-box { display: none; animation: fadeIn 0.3s ease; }
         .section-box.active { display: block; }
@@ -212,17 +194,14 @@
         </div>
 
         <div id="buy-section" class="section-box active">
-            
             <div class="input-box">
                 <label class="inp-label">روش دریافت ارز:</label>
                 <div class="method-selector">
-                    <div class="method-opt selected" onclick="setBuyMethod('voucher')" id="opt-voucher">
-                        <i class="fas fa-ticket-alt"></i>
-                        کد ووچر (آنی)
+                    <div class="method-opt selected" onclick="setBuyMethod('voucher')" id="buy-opt-voucher">
+                        <i class="fas fa-ticket-alt"></i> کد ووچر
                     </div>
-                    <div class="method-opt" onclick="setBuyMethod('direct')" id="opt-direct">
-                        <i class="fas fa-wallet"></i>
-                        واریز مستقیم
+                    <div class="method-opt" onclick="setBuyMethod('direct')" id="buy-opt-direct">
+                        <i class="fas fa-wallet"></i> واریز مستقیم
                     </div>
                 </div>
             </div>
@@ -232,68 +211,81 @@
                 <input type="number" id="buy-amount" class="glass-inp" placeholder="10.00" oninput="calcPrice()">
             </div>
 
-            <div id="address-input-box" class="input-box" style="display:none; animation: fadeIn 0.3s;">
-                <label class="inp-label">آدرس کیف پول (Public Key) یوتوپیا</label>
+            <div id="buy-address-box" class="input-box" style="display:none; animation: fadeIn 0.3s;">
+                <label class="inp-label">آدرس کیف پول (Public Key)</label>
                 <input type="text" id="wallet-address" class="glass-inp" placeholder="کلید عمومی ۶۴ رقمی..." style="font-size:0.85rem;">
-                <div style="font-size:0.75rem; color:#e67e22; margin-top:5px; line-height:1.4;">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    دقت کنید! تراکنش‌های یوتوپیا غیرقابل برگشت هستند. آدرس را دقیق وارد کنید.
+                <div style="font-size:0.75rem; color:#e67e22; margin-top:5px;">
+                    <i class="fas fa-exclamation-triangle"></i> آدرس را دقیق وارد کنید.
                 </div>
             </div>
             
             <div class="calc-row">
-                <span style="font-size:0.85rem; color:var(--text-muted)">مبلغ پرداختی شما:</span>
+                <span style="font-size:0.85rem; color:var(--text-muted)">مبلغ پرداختی:</span>
                 <span class="calc-val" id="buy-total">0 تومان</span>
             </div>
 
             <button id="btn-do-buy" class="btn-submit btn-cyan-grad" onclick="doBuy()">
-                <i class="fas fa-shopping-cart"></i> 
-                <span id="btn-buy-text">خرید ووچر</span>
+                <i class="fas fa-shopping-cart"></i> <span id="btn-buy-text">خرید ووچر</span>
             </button>
             
             <div id="buy-result" class="result-card">
-                <div style="color:var(--cyan-primary); font-weight:900; font-size:1.1rem; margin-bottom:5px; display:flex; align-items:center; justify-content:center; gap:8px;">
-                    <i class="fas fa-check-circle icon-cyan"></i> عملیات موفق
+                <div style="color:var(--cyan-primary); font-weight:900; margin-bottom:10px;">
+                    <i class="fas fa-check-circle"></i> عملیات موفق
                 </div>
-                
-                <div id="res-voucher-mode">
-                    <div style="font-size:0.85rem; color:#ccc; margin-bottom:10px;">ووچر اختصاصی شما صادر شد:</div>
-                    <div id="new-voucher-code" class="code-display">---</div>
-                    <button class="copy-btn" onclick="copyCode('new-voucher-code')">
-                        <i class="fas fa-copy"></i> کپی کد
-                    </button>
+                <div id="buy-res-voucher">
+                    <div class="code-display" id="new-voucher-code">---</div>
+                    <button class="copy-btn" onclick="copyCode('new-voucher-code')">کپی کد</button>
                 </div>
-
-                <div id="res-direct-mode" style="display:none;">
-                    <div style="font-size:0.85rem; color:#ccc; margin-bottom:10px;">مبلغ به کیف پول شما واریز شد.</div>
-                    <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:5px;">TXID (شناسه تراکنش):</div>
-                    <div id="tx-id-display" class="code-display" style="font-size:0.8rem;">---</div>
-                    <button class="copy-btn" onclick="copyCode('tx-id-display')">
-                        <i class="fas fa-copy"></i> کپی TXID
-                    </button>
+                <div id="buy-res-direct" style="display:none;">
+                    <div style="font-size:0.8rem; color:#ccc;">TXID (شناسه تراکنش):</div>
+                    <div class="code-display" id="tx-id-display">---</div>
+                    <button class="copy-btn" onclick="copyCode('tx-id-display')">کپی TXID</button>
                 </div>
             </div>
         </div>
 
         <div id="sell-section" class="section-box">
-            <div class="input-box">
-                <label class="inp-label">کد ووچر یوتوپیا</label>
-                <input type="text" id="sell-code" class="glass-inp" placeholder="UTP-..." style="font-size:0.9rem;">
-            </div>
             
-            <div class="info-card">
-                <div style="display:flex; align-items:center; gap:10px; margin-bottom:5px;">
-                    <i class="fas fa-info-circle icon-cyan"></i>
-                    <span style="font-size:0.9rem; font-weight:bold; color:#fff;">نقد کردن آنی</span>
+            <div class="input-box">
+                <label class="inp-label">روش نقد کردن:</label>
+                <div class="method-selector">
+                    <div class="method-opt selected" onclick="setSellMethod('voucher')" id="sell-opt-voucher">
+                        <i class="fas fa-ticket-alt"></i> ووچر
+                    </div>
+                    <div class="method-opt" onclick="setSellMethod('direct')" id="sell-opt-direct">
+                        <i class="fas fa-arrow-down"></i> واریز مستقیم
+                    </div>
                 </div>
-                <p style="margin:0; font-size:0.8rem; color:#bbb; line-height:1.7;">
-                    سیستم به صورت خودکار ووچر را استعلام گرفته و مبلغ ریالی آن را همان لحظه به کیف پول شما واریز می‌کند.
-                </p>
+            </div>
+
+            <div id="sell-voucher-box">
+                <div class="input-box">
+                    <label class="inp-label">کد ووچر یوتوپیا</label>
+                    <input type="text" id="sell-code" class="glass-inp" placeholder="UTP-..." style="font-size:0.9rem;">
+                </div>
+            </div>
+
+            <div id="sell-direct-box" style="display:none;">
+                <div class="info-card">
+                    <div style="font-size:0.85rem; color:var(--cyan-primary); margin-bottom:5px; font-weight:bold;">
+                        <i class="fas fa-wallet"></i> آدرس ولت ما:
+                    </div>
+                    <div class="code-display" id="bot-pk-display" style="font-size:0.75rem; margin:5px 0;">در حال دریافت...</div>
+                    <button class="copy-btn" onclick="copyCode('bot-pk-display')">کپی آدرس</button>
+                    <p style="font-size:0.75rem; color:#bbb; margin-top:10px; line-height:1.4;">
+                        مبلغ مورد نظر را به آدرس بالا واریز کنید، سپس <b>شناسه تراکنش (TXID)</b> را در کادر زیر وارد کنید.
+                    </p>
+                </div>
+
+                <div class="input-box">
+                    <label class="inp-label">شناسه تراکنش (TX Hash)</label>
+                    <input type="text" id="sell-txid" class="glass-inp" placeholder="Hash (64 chars)..." style="font-size:0.85rem;">
+                </div>
             </div>
 
             <button id="btn-do-sell" class="btn-submit btn-green-grad" onclick="doSell()">
                 <i class="fas fa-exchange-alt"></i> 
-                <span>استعلام و نقد کردن</span>
+                <span id="btn-sell-text">نقد کردن ووچر</span>
             </button>
         </div>
 
@@ -304,11 +296,12 @@
         const API_BASE_URL = window.location.origin + "/api/webapp"; 
         
         let rates = { buy: 0, sell: 0 };
-        let buyMethod = 'voucher'; // 'voucher' or 'direct'
+        let buyMethod = 'voucher';
+        let sellMethod = 'voucher';
+        let botPK = "";
 
         window.onload = function() {
-            tg.ready(); tg.expand(); 
-            tg.setHeaderColor('#05090C'); 
+            tg.ready(); tg.expand(); tg.setHeaderColor('#05090C'); 
             if (!tg.initData) tg.initData = "query_id=TEST_MODE"; 
             fetchRates();
         };
@@ -316,7 +309,6 @@
         function switchTab(tab) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.section-box').forEach(s => s.classList.remove('active'));
-            
             if(tab === 'buy') {
                 document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
                 document.getElementById('buy-section').classList.add('active');
@@ -324,55 +316,55 @@
                 document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
                 document.getElementById('sell-section').classList.add('active');
             }
-            if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         }
 
-        // --- NEW: Toggle Buy Method ---
+        // --- Buy Methods ---
         function setBuyMethod(method) {
             buyMethod = method;
-            document.querySelectorAll('.method-opt').forEach(el => el.classList.remove('selected'));
-            document.getElementById('opt-' + method).classList.add('selected');
+            document.getElementById('buy-opt-voucher').classList.toggle('selected', method === 'voucher');
+            document.getElementById('buy-opt-direct').classList.toggle('selected', method === 'direct');
+            document.getElementById('buy-address-box').style.display = method === 'direct' ? 'block' : 'none';
+            document.getElementById('btn-buy-text').innerText = method === 'direct' ? "واریز به کیف پول" : "خرید ووچر";
+            document.getElementById('buy-result').style.display = 'none';
+        }
 
-            const addrBox = document.getElementById('address-input-box');
-            const btnText = document.getElementById('btn-buy-text');
+        // --- Sell Methods (NEW) ---
+        function setSellMethod(method) {
+            sellMethod = method;
+            document.getElementById('sell-opt-voucher').classList.toggle('selected', method === 'voucher');
+            document.getElementById('sell-opt-direct').classList.toggle('selected', method === 'direct');
             
-            if(method === 'direct') {
-                addrBox.style.display = 'block';
-                btnText.innerText = "واریز به کیف پول";
-            } else {
-                addrBox.style.display = 'none';
-                btnText.innerText = "خرید ووچر";
-            }
-            document.getElementById('buy-result').style.display = 'none'; // Reset result
+            document.getElementById('sell-voucher-box').style.display = method === 'voucher' ? 'block' : 'none';
+            document.getElementById('sell-direct-box').style.display = method === 'direct' ? 'block' : 'none';
+            
+            document.getElementById('btn-sell-text').innerText = method === 'direct' ? "بررسی و دریافت وجه" : "نقد کردن ووچر";
         }
 
         async function fetchRates() {
             try {
-                const url = `${API_BASE_URL}/utopia/rates?t=${Date.now()}`;
-                const res = await fetch(url, {
-                    method: 'POST', 
-                    headers: {'Content-Type': 'application/json'},
+                const res = await fetch(`${API_BASE_URL}/utopia/rates?t=${Date.now()}`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ initData: tg.initData })
                 });
-
-                if (res.status !== 200) return;
-
                 const data = await res.json();
                 if(data.status === 'success') {
-                    rates.buy = data.buy; 
-                    rates.sell = data.sell;
-                    
+                    rates = data;
                     document.getElementById('rate-buy').innerText = parseInt(rates.sell).toLocaleString();
                     document.getElementById('rate-sell').innerText = parseInt(rates.buy).toLocaleString();
+                    
+                    // ذخیره و نمایش آدرس ربات
+                    if(data.bot_pk) {
+                        botPK = data.bot_pk;
+                        document.getElementById('bot-pk-display').innerText = botPK;
+                    }
                 }
-            } catch(e) { console.error(e); }
+            } catch(e) {}
         }
 
         function calcPrice() {
             const val = parseFloat(document.getElementById('buy-amount').value);
             if(val > 0 && rates.sell > 0) {
-                const total = val * rates.sell;
-                document.getElementById('buy-total').innerText = parseInt(total).toLocaleString() + " تومان";
+                document.getElementById('buy-total').innerText = parseInt(val * rates.sell).toLocaleString() + " تومان";
             } else {
                 document.getElementById('buy-total').innerText = "0 تومان";
             }
@@ -383,30 +375,60 @@
             const btn = document.getElementById('btn-do-buy');
             
             if(!amount || amount < 1) { tg.showAlert("حداقل خرید ۱ دلار است."); return; }
-
-            // Validate Address for Direct
+            
             let address = null;
             if(buyMethod === 'direct') {
                 address = document.getElementById('wallet-address').value.trim();
-                if(address.length !== 64) {
-                    tg.showAlert("آدرس کیف پول یوتوپیا باید دقیقاً ۶۴ کاراکتر باشد.");
-                    return;
-                }
+                if(address.length !== 64) { tg.showAlert("آدرس نامعتبر است."); return; }
             }
 
-            btn.disabled = true; 
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> در حال پردازش...';
-            document.getElementById('buy-result').style.display = 'none';
+            btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ...';
+            
+            try {
+                const res = await fetch(`${API_BASE_URL}/utopia/buy`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ initData: tg.initData, amount_usd: amount, order_type: buyMethod, wallet_address: address })
+                });
+                const data = await res.json();
+                if(data.status === 'success') {
+                    tg.HapticFeedback.notificationOccurred('success');
+                    document.getElementById('buy-result').style.display = 'block';
+                    if(data.order_type === 'direct') {
+                        document.getElementById('buy-res-voucher').style.display = 'none';
+                        document.getElementById('buy-res-direct').style.display = 'block';
+                        document.getElementById('tx-id-display').innerText = data.tx_id;
+                    } else {
+                        document.getElementById('buy-res-voucher').style.display = 'block';
+                        document.getElementById('buy-res-direct').style.display = 'none';
+                        document.getElementById('new-voucher-code').innerText = data.voucher_code;
+                    }
+                    tg.showAlert("✅ انجام شد!");
+                    document.getElementById('buy-result').scrollIntoView({behavior:'smooth'});
+                } else {
+                    tg.showAlert("❌ " + data.message);
+                }
+            } catch(e) { tg.showAlert("خطای شبکه"); }
+            btn.disabled = false; btn.innerHTML = '<i class="fas fa-shopping-cart"></i> خرید';
+        }
+
+        async function doSell() {
+            const btn = document.getElementById('btn-do-sell');
+            let payload = { initData: tg.initData, order_type: sellMethod };
+
+            if(sellMethod === 'voucher') {
+                const code = document.getElementById('sell-code').value.trim();
+                if(code.length < 5) { tg.showAlert("کد ووچر نامعتبر است."); return; }
+                payload.voucher_code = code;
+            } else {
+                const txid = document.getElementById('sell-txid').value.trim();
+                if(txid.length !== 64) { tg.showAlert("کد تراکنش (TXID) باید ۶۴ کاراکتر باشد."); return; }
+                payload.tx_id = txid;
+            }
+
+            btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> پردازش...';
 
             try {
-                const payload = {
-                    initData: tg.initData,
-                    amount_usd: amount,
-                    order_type: buyMethod,
-                    wallet_address: address
-                };
-
-                const res = await fetch(`${API_BASE_URL}/utopia/buy`, {
+                const res = await fetch(`${API_BASE_URL}/utopia/sell`, {
                     method: 'POST', headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(payload)
                 });
@@ -414,72 +436,20 @@
 
                 if(data.status === 'success') {
                     tg.HapticFeedback.notificationOccurred('success');
-                    document.getElementById('buy-result').style.display = 'block';
-
-                    if(data.order_type === 'direct') {
-                        // Direct Result
-                        document.getElementById('res-voucher-mode').style.display = 'none';
-                        document.getElementById('res-direct-mode').style.display = 'block';
-                        document.getElementById('tx-id-display').innerText = data.tx_id;
-                        tg.showAlert("✅ واریز انجام شد!");
-                    } else {
-                        // Voucher Result
-                        document.getElementById('res-voucher-mode').style.display = 'block';
-                        document.getElementById('res-direct-mode').style.display = 'none';
-                        document.getElementById('new-voucher-code').innerText = data.voucher_code;
-                        tg.showAlert("✅ ووچر صادر شد!");
-                    }
-
-                    fetchRates(); 
-                    setTimeout(() => {
-                        document.getElementById('buy-result').scrollIntoView({ behavior: 'smooth' });
-                    }, 500);
-                } else {
-                    tg.HapticFeedback.notificationOccurred('error');
-                    tg.showAlert("❌ " + data.message);
-                }
-            } catch(e) { tg.showAlert("خطای شبکه"); console.error(e); }
-            
-            btn.disabled = false; 
-            btn.innerHTML = '<i class="fas fa-shopping-cart"></i> <span>' + (buyMethod==='direct' ? 'واریز به کیف پول' : 'خرید ووچر') + '</span>';
-        }
-
-        async function doSell() {
-            const code = document.getElementById('sell-code').value.trim();
-            const btn = document.getElementById('btn-do-sell');
-            
-            if(code.length < 5) { tg.showAlert("کد نامعتبر است."); return; }
-
-            btn.disabled = true; 
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> در حال استعلام...';
-
-            try {
-                const res = await fetch(`${API_BASE_URL}/utopia/sell`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ initData: tg.initData, voucher_code: code })
-                });
-                const data = await res.json();
-
-                if(data.status === 'success') {
-                    tg.HapticFeedback.notificationOccurred('success');
-                    tg.showAlert(`✅ فروخته شد!\nمبلغ ${parseInt(data.amount_toman).toLocaleString()} تومان به کیف پول شما واریز شد.`);
-                    document.getElementById('sell-code').value = "";
-                    fetchRates(); 
+                    tg.showAlert(`✅ موفق!\nمبلغ ${parseInt(data.amount_toman).toLocaleString()} تومان واریز شد.`);
+                    if(sellMethod==='voucher') document.getElementById('sell-code').value = "";
+                    else document.getElementById('sell-txid').value = "";
                 } else {
                     tg.HapticFeedback.notificationOccurred('error');
                     tg.showAlert("❌ " + data.message);
                 }
             } catch(e) { tg.showAlert("خطای شبکه"); }
-
-            btn.disabled = false; 
-            btn.innerHTML = '<i class="fas fa-exchange-alt"></i> <span>استعلام و نقد کردن</span>';
+            btn.disabled = false; btn.innerHTML = '<i class="fas fa-exchange-alt"></i> انجام';
         }
 
-        function copyCode(elemId) {
-            const code = document.getElementById(elemId).innerText;
-            navigator.clipboard.writeText(code);
+        function copyCode(id) {
+            navigator.clipboard.writeText(document.getElementById(id).innerText);
             tg.showAlert("کپی شد!");
-            tg.HapticFeedback.selectionChanged();
         }
     </script>
 </body>

@@ -11,13 +11,12 @@
     <style>
         /* --- اصلاح حیاتی برای فعال‌سازی اسکرول --- */
         html, body {
-            overflow-y: auto !important; /* اجبار به اسکرول خوردن */
+            overflow-y: auto !important;
             height: auto !important;
             min-height: 100vh;
-            -webkit-overflow-scrolling: touch; /* اسکرول نرم در آیفون */
+            -webkit-overflow-scrolling: touch;
         }
 
-        /* --- تعریف متغیرهای رنگی اختصاصی تم فیروزه‌ای --- */
         :root {
             --cyan-primary: #00E5FF;
             --cyan-dark: #00bcd4;
@@ -83,7 +82,7 @@
             border: 1px solid var(--cyan-primary);
         }
 
-        /* --- Method Selector (NEW) --- */
+        /* --- Method Selector --- */
         .method-selector {
             display: flex; gap: 10px; margin-bottom: 20px;
         }
@@ -178,6 +177,13 @@
         @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
         
         .icon-cyan { color: var(--cyan-primary); filter: drop-shadow(0 0 5px var(--cyan-glow)); }
+
+        .admin-wallet-box {
+            background: rgba(255, 152, 0, 0.1); 
+            border: 1px solid rgba(255, 152, 0, 0.4);
+            border-radius: 12px; padding: 15px; margin-bottom: 20px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -216,11 +222,11 @@
             <div class="input-box">
                 <label class="inp-label">روش دریافت ارز:</label>
                 <div class="method-selector">
-                    <div class="method-opt selected" onclick="setBuyMethod('voucher')" id="opt-voucher">
+                    <div class="method-opt selected" onclick="setBuyMethod('voucher')" id="opt-buy-voucher">
                         <i class="fas fa-ticket-alt"></i>
                         کد ووچر (آنی)
                     </div>
-                    <div class="method-opt" onclick="setBuyMethod('direct')" id="opt-direct">
+                    <div class="method-opt" onclick="setBuyMethod('direct')" id="opt-buy-direct">
                         <i class="fas fa-wallet"></i>
                         واریز مستقیم
                     </div>
@@ -232,7 +238,7 @@
                 <input type="number" id="buy-amount" class="glass-inp" placeholder="10.00" oninput="calcPrice()">
             </div>
 
-            <div id="address-input-box" class="input-box" style="display:none; animation: fadeIn 0.3s;">
+            <div id="buy-address-box" class="input-box" style="display:none; animation: fadeIn 0.3s;">
                 <label class="inp-label">آدرس کیف پول (Public Key) یوتوپیا</label>
                 <input type="text" id="wallet-address" class="glass-inp" placeholder="کلید عمومی ۶۴ رقمی..." style="font-size:0.85rem;">
                 <div style="font-size:0.75rem; color:#e67e22; margin-top:5px; line-height:1.4;">
@@ -276,9 +282,46 @@
         </div>
 
         <div id="sell-section" class="section-box">
+            
             <div class="input-box">
-                <label class="inp-label">کد ووچر یوتوپیا</label>
-                <input type="text" id="sell-code" class="glass-inp" placeholder="UTP-..." style="font-size:0.9rem;">
+                <label class="inp-label">روش فروش ارز:</label>
+                <div class="method-selector">
+                    <div class="method-opt selected" onclick="setSellMethod('voucher')" id="opt-sell-voucher">
+                        <i class="fas fa-ticket-alt"></i>
+                        کد ووچر
+                    </div>
+                    <div class="method-opt" onclick="setSellMethod('direct')" id="opt-sell-direct">
+                        <i class="fas fa-exchange-alt"></i>
+                        واریز مستقیم
+                    </div>
+                </div>
+            </div>
+
+            <div id="sell-voucher-input-box">
+                <div class="input-box">
+                    <label class="inp-label">کد ووچر یوتوپیا</label>
+                    <input type="text" id="sell-code" class="glass-inp" placeholder="UTP-..." style="font-size:0.9rem;">
+                </div>
+            </div>
+
+            <div id="sell-direct-input-box" style="display:none;">
+                <div class="admin-wallet-box">
+                    <div style="font-size:0.8rem; color:#e67e22; margin-bottom:8px;">
+                        <i class="fas fa-info-circle"></i> مبلغ را به این آدرس واریز کنید:
+                    </div>
+                    <div id="admin-wallet-display" class="code-display" style="font-size:0.75rem; margin:5px 0;">Loading...</div>
+                    <button class="copy-btn" onclick="copyCode('admin-wallet-display')" style="font-size:0.8rem; padding:5px 15px;">
+                        <i class="fas fa-copy"></i> کپی آدرس
+                    </button>
+                </div>
+
+                <div class="input-box">
+                    <label class="inp-label">هش تراکنش (Transaction Hash)</label>
+                    <input type="text" id="sell-txid" class="glass-inp" placeholder="CAEF..." style="font-size:0.85rem;">
+                    <div style="font-size:0.75rem; color:var(--text-muted); margin-top:5px;">
+                        لطفاً هش ۶۴ رقمی تراکنش را وارد کنید (نه Transaction ID کوتاه).
+                    </div>
+                </div>
             </div>
             
             <div class="info-card">
@@ -287,13 +330,13 @@
                     <span style="font-size:0.9rem; font-weight:bold; color:#fff;">نقد کردن آنی</span>
                 </div>
                 <p style="margin:0; font-size:0.8rem; color:#bbb; line-height:1.7;">
-                    سیستم به صورت خودکار ووچر را استعلام گرفته و مبلغ ریالی آن را همان لحظه به کیف پول شما واریز می‌کند.
+                    سیستم به صورت خودکار ووچر یا تراکنش شما را استعلام گرفته و مبلغ ریالی آن را همان لحظه به کیف پول شما واریز می‌کند.
                 </p>
             </div>
 
             <button id="btn-do-sell" class="btn-submit btn-green-grad" onclick="doSell()">
                 <i class="fas fa-exchange-alt"></i> 
-                <span>استعلام و نقد کردن</span>
+                <span id="btn-sell-text">استعلام و نقد کردن</span>
             </button>
         </div>
 
@@ -303,13 +346,21 @@
         const tg = window.Telegram.WebApp;
         const API_BASE_URL = window.location.origin + "/api/webapp"; 
         
+        // آدرس کیف پول ادمین (از کانفیگ برداشته شده)
+        const ADMIN_WALLET_PK = "1F2E4258B88B8FED73565BF81A90D9AA0F5F781F6856F97A2250C3DD40B7763E";
+        
         let rates = { buy: 0, sell: 0 };
-        let buyMethod = 'voucher'; // 'voucher' or 'direct'
+        let buyMethod = 'voucher'; 
+        let sellMethod = 'voucher'; // 'voucher' or 'direct'
 
         window.onload = function() {
             tg.ready(); tg.expand(); 
             tg.setHeaderColor('#05090C'); 
             if (!tg.initData) tg.initData = "query_id=TEST_MODE"; 
+            
+            // ست کردن آدرس ولت ادمین
+            document.getElementById('admin-wallet-display').innerText = ADMIN_WALLET_PK;
+            
             fetchRates();
         };
 
@@ -327,13 +378,13 @@
             if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         }
 
-        // --- NEW: Toggle Buy Method ---
+        // --- BUY Method Toggle ---
         function setBuyMethod(method) {
             buyMethod = method;
-            document.querySelectorAll('.method-opt').forEach(el => el.classList.remove('selected'));
-            document.getElementById('opt-' + method).classList.add('selected');
+            document.getElementById('opt-buy-voucher').classList.toggle('selected', method === 'voucher');
+            document.getElementById('opt-buy-direct').classList.toggle('selected', method === 'direct');
 
-            const addrBox = document.getElementById('address-input-box');
+            const addrBox = document.getElementById('buy-address-box');
             const btnText = document.getElementById('btn-buy-text');
             
             if(method === 'direct') {
@@ -343,7 +394,25 @@
                 addrBox.style.display = 'none';
                 btnText.innerText = "خرید ووچر";
             }
-            document.getElementById('buy-result').style.display = 'none'; // Reset result
+            document.getElementById('buy-result').style.display = 'none';
+        }
+
+        // --- SELL Method Toggle ---
+        function setSellMethod(method) {
+            sellMethod = method;
+            document.getElementById('opt-sell-voucher').classList.toggle('selected', method === 'voucher');
+            document.getElementById('opt-sell-direct').classList.toggle('selected', method === 'direct');
+            
+            const vBox = document.getElementById('sell-voucher-input-box');
+            const dBox = document.getElementById('sell-direct-input-box');
+            
+            if(method === 'direct') {
+                vBox.style.display = 'none';
+                dBox.style.display = 'block';
+            } else {
+                vBox.style.display = 'block';
+                dBox.style.display = 'none';
+            }
         }
 
         async function fetchRates() {
@@ -417,13 +486,11 @@
                     document.getElementById('buy-result').style.display = 'block';
 
                     if(data.order_type === 'direct') {
-                        // Direct Result
                         document.getElementById('res-voucher-mode').style.display = 'none';
                         document.getElementById('res-direct-mode').style.display = 'block';
                         document.getElementById('tx-id-display').innerText = data.tx_id;
                         tg.showAlert("✅ واریز انجام شد!");
                     } else {
-                        // Voucher Result
                         document.getElementById('res-voucher-mode').style.display = 'block';
                         document.getElementById('res-direct-mode').style.display = 'none';
                         document.getElementById('new-voucher-code').innerText = data.voucher_code;
@@ -445,25 +512,44 @@
         }
 
         async function doSell() {
-            const code = document.getElementById('sell-code').value.trim();
+            let value = "";
             const btn = document.getElementById('btn-do-sell');
-            
-            if(code.length < 5) { tg.showAlert("کد نامعتبر است."); return; }
+
+            if (sellMethod === 'voucher') {
+                value = document.getElementById('sell-code').value.trim();
+                if(value.length < 5) { tg.showAlert("کد ووچر نامعتبر است."); return; }
+            } else {
+                value = document.getElementById('sell-txid').value.trim();
+                if(value.length !== 64) { 
+                    tg.showAlert("هش تراکنش (Transaction Hash) باید دقیقاً ۶۴ کاراکتر باشد."); 
+                    return; 
+                }
+            }
 
             btn.disabled = true; 
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> در حال استعلام...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> در حال استعلام و واریز...';
 
             try {
+                const payload = {
+                    initData: tg.initData,
+                    method: sellMethod, // 'voucher' or 'direct'
+                    value: value
+                };
+
                 const res = await fetch(`${API_BASE_URL}/utopia/sell`, {
                     method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ initData: tg.initData, voucher_code: code })
+                    body: JSON.stringify(payload)
                 });
                 const data = await res.json();
 
                 if(data.status === 'success') {
                     tg.HapticFeedback.notificationOccurred('success');
                     tg.showAlert(`✅ فروخته شد!\nمبلغ ${parseInt(data.amount_toman).toLocaleString()} تومان به کیف پول شما واریز شد.`);
+                    
+                    // Reset inputs
                     document.getElementById('sell-code').value = "";
+                    document.getElementById('sell-txid').value = "";
+                    
                     fetchRates(); 
                 } else {
                     tg.HapticFeedback.notificationOccurred('error');

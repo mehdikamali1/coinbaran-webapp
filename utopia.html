@@ -6,15 +6,16 @@
     <title>صرافی یوتوپیا | کوین باران</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="dashboard-style.css?v=110.1">
+    <link rel="stylesheet" href="dashboard-style.css?v=110.2">
 
     <style>
-        /* --- اصلاح حیاتی برای فعال‌سازی اسکرول --- */
+        /* --- اصلاح حیاتی برای فعال‌سازی اسکرول روان --- */
         html, body {
             overflow-y: auto !important;
             height: auto !important;
             min-height: 100vh;
-            -webkit-overflow-scrolling: touch;
+            -webkit-overflow-scrolling: touch; /* Smooth scroll on iOS */
+            background-color: var(--bg-dark);
         }
 
         :root {
@@ -30,7 +31,6 @@
         }
 
         body {
-            background-color: var(--bg-dark);
             color: #fff;
             font-family: 'Vazirmatn', sans-serif;
             margin: 0; padding: 0;
@@ -109,6 +109,7 @@
             padding: 16px; border-radius: 16px;
             font-size: 1.1rem; font-weight: 700; font-family: 'Roboto Mono', monospace;
             text-align: left; direction: ltr; outline: none; transition: 0.3s;
+            box-sizing: border-box; /* Fix padding issue */
         }
         .glass-inp:focus { 
             border-color: var(--cyan-primary); 
@@ -143,6 +144,7 @@
             box-shadow: 0 5px 20px rgba(14, 203, 129, 0.3);
         }
         .btn-submit:active { transform: scale(0.98); }
+        .btn-submit:disabled { opacity: 0.7; cursor: not-allowed; }
 
         /* --- Result & Info Cards --- */
         .info-card {
@@ -346,7 +348,7 @@
         const tg = window.Telegram.WebApp;
         const API_BASE_URL = window.location.origin + "/api/webapp"; 
         
-        // آدرس کیف پول ادمین (از کانفیگ برداشته شده)
+        // آدرس کیف پول ادمین
         const ADMIN_WALLET_PK = "AA76101D2B816BBC45B12013089171BC2D48CB0A3E6C6EC5D169FC124DE82029";
         
         let rates = { buy: 0, sell: 0 };
@@ -358,7 +360,6 @@
             tg.setHeaderColor('#05090C'); 
             if (!tg.initData) tg.initData = "query_id=TEST_MODE"; 
             
-            // ست کردن آدرس ولت ادمین
             document.getElementById('admin-wallet-display').innerText = ADMIN_WALLET_PK;
             
             fetchRates();
@@ -378,7 +379,6 @@
             if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         }
 
-        // --- BUY Method Toggle ---
         function setBuyMethod(method) {
             buyMethod = method;
             document.getElementById('opt-buy-voucher').classList.toggle('selected', method === 'voucher');
@@ -397,7 +397,6 @@
             document.getElementById('buy-result').style.display = 'none';
         }
 
-        // --- SELL Method Toggle ---
         function setSellMethod(method) {
             sellMethod = method;
             document.getElementById('opt-sell-voucher').classList.toggle('selected', method === 'voucher');
@@ -453,7 +452,6 @@
             
             if(!amount || amount < 1) { tg.showAlert("حداقل خرید ۱ دلار است."); return; }
 
-            // Validate Address for Direct
             let address = null;
             if(buyMethod === 'direct') {
                 address = document.getElementById('wallet-address').value.trim();
@@ -532,7 +530,7 @@
             try {
                 const payload = {
                     initData: tg.initData,
-                    method: sellMethod, // 'voucher' or 'direct'
+                    method: sellMethod, 
                     value: value
                 };
 
@@ -546,7 +544,6 @@
                     tg.HapticFeedback.notificationOccurred('success');
                     tg.showAlert(`✅ فروخته شد!\nمبلغ ${parseInt(data.amount_toman).toLocaleString()} تومان به کیف پول شما واریز شد.`);
                     
-                    // Reset inputs
                     document.getElementById('sell-code').value = "";
                     document.getElementById('sell-txid').value = "";
                     
@@ -555,7 +552,7 @@
                     tg.HapticFeedback.notificationOccurred('error');
                     tg.showAlert("❌ " + data.message);
                 }
-            } catch(e) { tg.showAlert("خطای شبکه"); }
+            } catch(e) { tg.showAlert("خطای شبکه یا سرور"); }
 
             btn.disabled = false; 
             btn.innerHTML = '<i class="fas fa-exchange-alt"></i> <span>استعلام و نقد کردن</span>';
